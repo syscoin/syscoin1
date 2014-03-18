@@ -25,9 +25,9 @@ Services include:
 - Data storage
 - Data alias reservation
 - Distributed marketplate
-- (soon) Gambling
-- (soon) Elections and pools
-- (soon) Encrypted communication & shared content storage
+- (soon) Distributed Gaming
+- (soon) Distributed Elections and polls
+- (soon) Distributed Encrypted communication & shared content storage
 
 For more information, as well as an immediately useable, binary version of
 the SysCoin client sofware, see http://www.syscoin.org.
