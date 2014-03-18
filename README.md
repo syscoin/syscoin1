@@ -9,14 +9,25 @@ Copyright (c) 2011-2013 SysCoin Developers
 What is SysCoin?
 ----------------
 
-SysCoin is a lite version of Bitcoin using scrypt as a proof-of-work algorithm.
- - 2.5 minute block targets
- - subsidy halves in 840k blocks (~4 years)
- - ~84 million total coins
+SysCoin is a merge-minable scrypt coin which provides an array of useful services
+which leverage the bitcoin protocol and blockchain technology.
 
-The rest is the same as Bitcoin.
- - 50 coins per block
- - 2016 blocks to retarget difficulty
+ - 1 minute block targets
+ - subsidy halves in 131.4k blocks (~3 months)
+ - ~268.8 million total coins
+ - Fast-response KGW difficulty adjustment algorithm
+ - Merge mineable with any scrypt coin
+ - Minable either exclusively or via merge-mining 
+
+Services include:
+
+- Alias reservation
+- Data storage
+- Data alias reservation
+- Distributed marketplate
+- (soon) Gambling
+- (soon) Elections and pools
+- (soon) Encrypted communication & shared content storage
 
 For more information, as well as an immediately useable, binary version of
 the SysCoin client sofware, see http://www.syscoin.org.
