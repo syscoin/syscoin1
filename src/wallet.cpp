@@ -584,7 +584,9 @@ int64 CWallet::GetDebitInclName(const CTxIn &txin) const
         {
             const CWalletTx& prev = (*mi).second;
             if (txin.prevout.n < prev.vout.size())
-                if (IsMine(prev.vout[txin.prevout.n]) || IsAliasMine(prev, prev.vout[txin.prevout.n]))
+                if (IsMine(prev.vout[txin.prevout.n]) 
+                    || IsAliasMine(prev, prev.vout[txin.prevout.n]) 
+                    || IsOfferMine(prev, prev.vout[txin.prevout.n]))
                     return prev.vout[txin.prevout.n].nValue;
         }
     }
@@ -724,7 +726,9 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
         if (nDebit > 0)
             listSent.push_back(make_pair(address, txout.nValue));
 
-        if (pwallet->IsMine(txout) || IsAliasMine(*this, txout, true))
+        if (pwallet->IsMine(txout) 
+            || IsAliasMine(*this, txout, true) 
+            || IsOfferMine(*this, txout, true))
             listReceived.push_back(make_pair(address, txout.nValue));
     }
 

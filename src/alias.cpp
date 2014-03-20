@@ -47,6 +47,7 @@ extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint2
 extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 extern bool IsConflictedTx(CBlockTreeDB& txdb, const CTransaction& tx, vector<unsigned char>& name);
 extern void rescanfornames();
+extern void rescanforoffers();
 //extern Value sendtoaddress(const Array& params, bool fHelp);
 
 list<CNameTxnValue> lstNameTxValues;
@@ -58,7 +59,7 @@ bool CheckNameTxPos(const vector<CNameIndex> &vtxPos, const int txPos);
 
 
 bool IsNameOp(int op) {
-    return op == OP_OFFER_NEW || op == OP_OFFER_UPDATE;
+    return op == OP_ALIAS_NEW || op == OP_ALIAS_UPDATE;
 }
 
 bool InsertNameTxFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
@@ -197,14 +198,17 @@ bool IsAliasMine(const CTransaction& tx) {
     // We do the check under the correct rule set (post-hardfork)
     bool good = DecodeNameTx(tx, op, nOut, vvch, -1);
 
+    if(!IsAliasOp(op))
+        return false;
+
     if (!good) {
-        error("IsMine() aliasController : no output out script in name tx %s\n", tx.ToString().c_str());
+        error("IsAliasMine() : no output out script in name tx %s\n", tx.ToString().c_str());
         return false;
     }
 
     const CTxOut& txout = tx.vout[nOut];
     if (IsMyName(tx, txout)) {
-        printf("IsMine() aliasController : found my transaction %s nout %d\n", tx.GetHash().GetHex().c_str(), nOut);
+        printf("IsAliasMine() : found my transaction %s nout %d\n", tx.GetHash().GetHex().c_str(), nOut);
         return true;
     }
     return false;
@@ -221,11 +225,14 @@ bool IsAliasMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasn
     if (!DecodeNameScript(txout.scriptPubKey, op, vvch))
         return false;
 
+    if(!IsAliasOp(op))
+        return false;
+    
     if (ignore_aliasnew && op == OP_ALIAS_NEW)
         return false;
 
     if (IsMyName(tx, txout)) {
-        printf("IsMine() aliasController : found my transaction %s value %d\n", tx.GetHash().GetHex().c_str(), (int)txout.nValue);
+        printf("IsAliasMine()  : found my transaction %s value %d\n", tx.GetHash().GetHex().c_str(), (int)txout.nValue);
         return true;
     }
     return false;
@@ -522,50 +529,52 @@ bool CNameDB::ReconstructNameIndex() {
     CBlockIndex* pindex = pindexGenesisBlock;
 
     {
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+	LOCK(pwalletMain->cs_wallet);
+    while (pindex) {
+        CBlock block;
+        block.ReadFromDisk(pindex);
+        int nHeight = pindex->nHeight;
+        uint256 txblkhash;
 
-	while (pindex) {
-		//TxnBegin();
-		CBlock block;
-		block.ReadFromDisk(pindex);
-		int nHeight = pindex->nHeight;
+        BOOST_FOREACH(CTransaction& tx, block.vtx) {
 
-		BOOST_FOREACH(CTransaction& tx, block.vtx) {
-			if (tx.nVersion != SYSCOIN_TX_VERSION)
-				continue;
+            if (tx.nVersion != SYSCOIN_TX_VERSION)
+                continue;
 
-			vector<vector<unsigned char> > vvchArgs;
-			int op;
-			int nOut;
+            vector<vector<unsigned char> > vvchArgs;
+            int op, nOut;
 
-			if (!DecodeNameTx(tx, op, nOut, vvchArgs, nHeight)) continue;
+            bool o = DecodeNameTx(tx, op, nOut, vvchArgs, nHeight);
+            if (!o || !IsNameOp(op)) continue;
+            if (op == OP_ALIAS_NEW) continue;
 
-			if (op == OP_ALIAS_NEW) continue;
+            const vector<unsigned char> &vchName = vvchArgs[0];
+            const vector<unsigned char> &vchValue = vvchArgs[op == OP_ALIAS_FIRSTUPDATE ? 2 : 1];
 
-			const vector<unsigned char> &vchName = vvchArgs[0];
-			const vector<unsigned char> &vchValue = vvchArgs[op == OP_ALIAS_FIRSTUPDATE ? 2 : 1];
+            if(!GetTransaction(tx.GetHash(), tx, txblkhash, true))
+                continue;
 
-			if(!pblocktree->ReadTxIndex(tx.GetHash(), txindex)) continue;
+            vector<CNameIndex> vtxPos;
+            if (ExistsName(vchName)) {
+                if (!ReadName(vchName, vtxPos))
+                    return error("ReconstructNameIndex() : failed to read from name DB");
+            }
 
-			vector<CNameIndex> vtxPos;
-			if (ExistsName(vchName) && !ReadName(vchName, vtxPos))
-				return error("ReconstructNameIndex() : failed to read from name DB");
-
-			CNameIndex txPos2;
-			txPos2.nHeight = nHeight;
-			txPos2.vValue = vchValue;
-			txPos2.txHash = tx.GetHash();
-
-			vtxPos.push_back(txPos2);
-			if (!WriteName(vchName, vtxPos))
-				return error("ReconstructNameIndex() : failed to write to name DB");
-		}
-		pindex = pindex->pnext;
-	}
-
+            CNameIndex txName;
+            txName.nHeight = nHeight;
+            txName.vValue = vchValue;
+            //txName. = txindex.nPos;
+            vtxPos.push_back(txName);
+            if (!WriteName(vchName, vtxPos))
+                return error("ReconstructNameIndex() : failed to write to name DB");
+        }
+        pindex = pindex->pnext;
+        Flush();
+    }
     }
     return true;
 }
+
 
 // Increase expiration to 36000 gradually starting at block 24000.
 // Use for validation purposes and pass the chain height.

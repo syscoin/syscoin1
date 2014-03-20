@@ -38,17 +38,17 @@ std::string offerFromOp(int op);
 extern std::map<std::vector<unsigned char>, uint256> mapMyOffers;
 extern std::map<std::vector<unsigned char>, std::set<uint256> > mapOfferPending;
 
-class COfferTxn {
+class COfferAccept {
 public:
 	uint256 txHash;
 	unsigned int nHeight;
 	unsigned long nTime;
 	int nQty;
 	uint64 nPrice;
-	COfferTxn() {
+	COfferAccept() {
         SetNull();
     }
-	COfferTxn(uint256 x, unsigned int e, unsigned long t, int q, uint64 p) {
+	COfferAccept(uint256 x, unsigned int e, unsigned long t, int q, uint64 p) {
     	txHash = x;
         nHeight = e;
         nTime = t;
@@ -63,7 +63,7 @@ public:
     	READWRITE(nQty);
     )
 
-    friend bool operator==(const COfferTxn &a, const COfferTxn &b) {
+    friend bool operator==(const COfferAccept &a, const COfferAccept &b) {
         return (a.nPrice == b.nPrice
         && a.nQty == b.nQty
         && a.nTime == b.nTime
@@ -72,7 +72,7 @@ public:
         );
     }
 
-    COfferTxn operator=(const COfferTxn &b) {
+    COfferAccept operator=(const COfferAccept &b) {
         nPrice = b.nPrice ;
         nQty = b.nQty ;
         nTime = b.nTime;
@@ -81,7 +81,7 @@ public:
         return *this;
     }
 
-    friend bool operator!=(const COfferTxn &a, const COfferTxn &b) {
+    friend bool operator!=(const COfferAccept &a, const COfferAccept &b) {
         return !(a == b);
     }
 
@@ -92,7 +92,7 @@ public:
 
 class COffer {
 public:
-	std::vector<unsigned char> rand;
+	std::vector<unsigned char> vchRand;
     uint256 txHash;
     unsigned int nHeight;
     uint256 hash;
@@ -102,14 +102,14 @@ public:
 	std::vector<unsigned char> sDescription;
 	uint64 nPrice;
 	int nQty;
-	std::vector<COfferTxn>accepts;
+	std::vector<COfferAccept>accepts;
 
 	COffer() { 
         SetNull();
     }
 
     COffer(std::vector<unsigned char> r, uint256 x, unsigned int e, uint256 h, unsigned int i, std::vector<unsigned char> c, std::vector<unsigned char> t, std::vector<unsigned char> d, uint64 p, int q) {
-    	rand = r;
+    	vchRand = r;
     	hash = h;
     	txHash = x;
         n = i;
@@ -122,7 +122,7 @@ public:
     }
 
     IMPLEMENT_SERIALIZE (
-        READWRITE(rand);
+        READWRITE(vchRand);
 		READWRITE(txHash);
 		READWRITE(nHeight);
     	READWRITE(hash);
@@ -136,7 +136,9 @@ public:
     )
 
     friend bool operator==(const COffer &a, const COffer &b) {
-        return (a.sCategory==b.sCategory 
+        return (
+           a.vchRand == b.vchRand
+        && a.sCategory==b.sCategory
         && a.sTitle == b.sTitle 
         && a.sDescription == b.sDescription 
         && a.nPrice == b.nPrice 
@@ -145,19 +147,22 @@ public:
         && a.hash == b.hash
         && a.txHash == b.txHash
         && a.nHeight == b.nHeight
+        && a.accepts == b.accepts
         );
     }
 
     COffer operator=(const COffer &b) {
-        sCategory = b.sCategory ;
-        sTitle = b.sTitle ;
-        sDescription = b.sDescription ;
-        nPrice = b.nPrice ;
-        nQty = b.nQty ;
+    	vchRand = b.vchRand;
+        sCategory = b.sCategory;
+        sTitle = b.sTitle;
+        sDescription = b.sDescription;
+        nPrice = b.nPrice;
+        nQty = b.nQty;
         n = b.n;
         hash = b.hash;
         txHash = b.txHash;
         nHeight = b.nHeight;
+        accepts = b.accepts;
         return *this;
     }
 
@@ -165,7 +170,7 @@ public:
         return !(a == b);
     }
     
-    void SetNull() { nHeight = n = nPrice = nQty = 0; txHash = hash = 0; accepts.clear(); }
+    void SetNull() { nHeight = n = nPrice = nQty = 0; txHash = hash = 0; accepts.clear(); vchRand.clear(); sTitle.clear(); sDescription.clear();}
     bool IsNull() const { return (n == 0 && txHash == 0 && hash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0); }
 
     bool UnserializeFromTx(const CTransaction &tx);
@@ -257,6 +262,7 @@ public:
     }
 };
 extern std::list<COfferTxnValue> lstOfferTxValues;
+
 
 class COfferDB : public CLevelDB {
 public:

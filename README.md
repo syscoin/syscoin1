@@ -12,22 +12,26 @@ What is SysCoin?
 SysCoin is a merge-minable scrypt coin which provides an array of useful services
 which leverage the bitcoin protocol and blockchain technology.
 
- - 1 minute block targets
+ - 1 minute block targets, diff retarget each block using KGW(7/98) 
+ - 1024 SYS + regenerated network services fees as subsidies
  - subsidy halves in 131.4k blocks (~3 months)
  - ~268.8 million total coins
+ - Scrypt Proof-of-Work
  - Fast-response KGW difficulty adjustment algorithm
  - Merge mineable with any scrypt coin
  - Minable either exclusively or via merge-mining 
+ - Network service fees regenerated as subsidies
 
 Services include:
 
-- Alias reservation
+- Alias reservation, ownership & exchange
 - Data storage
-- Data alias reservation
-- Distributed marketplate
-- (soon) Distributed Gaming
-- (soon) Distributed Elections and polls
-- (soon) Distributed Encrypted communication & shared content storage
+- Digital document storage, ownership & exchange
+- Distributed marketplate & exchange
+- Digital Services Provider marketplace & platform
+- (soon) Distributed gaming
+- (soon) Distributed elections and polls
+- (soon) Distributed encrypted communication & shared content storage
 
 For more information, as well as an immediately useable, binary version of
 the SysCoin client sofware, see http://www.syscoin.org.

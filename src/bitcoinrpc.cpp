@@ -294,16 +294,17 @@ static const CRPCCommand vRPCCommands[] =
     { "datafiler",        &datafilter,      false,      false,      true },
 
     // use the blockchain as a distributed exchange
-    { "offernew",         &offernew,  false,      false,      true },
-    { "offeractivate", &offeractivate, false,      false,      true },
-    { "offerupdate",      &offerupdate, false,      false,      true },
-    { "offeraccept",      &phrpcfunc, false,      false,      true },
-    { "offercounter",     &phrpcfunc, false,      false,      true },
-    { "offerdeny",        &phrpcfunc, false,      false,      true },
-    { "offerpay",         &phrpcfunc, false,      false,      true },
-    { "offerreceipt",     &phrpcfunc, false,      false,      true },
-    { "offerlist",        &phrpcfunc, false,      false,      true },
-    { "offershow",        &offershow, false,      false,      true },};
+    { "offernew",         &offernew,     false,      false,      true },
+    { "offeractivate",    &offeractivate,false,      false,      true },
+    { "offerupdate",      &offerupdate,  false,      false,      true },
+    { "offeraccept",      &offeraccept,  false,      false,      true },
+    { "offerpay",         &offerpay,     false,      false,      true },
+    { "offerlist",        &offerlist,    false,      false,      true },
+    { "offershow",        &offershow,    false,      false,      true },
+    { "offerhistory",     &offerhistory, false,      false,      true },
+    { "offerscan",        &offerscan,    false,      false,      true },
+    { "offerfilter",      &offerfilter,  false,      false,      true },
+};
 
 CRPCTable::CRPCTable()
 {

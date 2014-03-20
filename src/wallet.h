@@ -231,7 +231,7 @@ public:
         BOOST_FOREACH(const CTxOut& txout, tx.vout)
             if (IsMine(txout) && txout.nValue >= nMinimumInputValue)
                 return true;
-        if (IsAliasMine(tx)) return true;
+        if (IsAliasMine(tx)||IsOfferMine(tx)) return true;
         return false;
     }
     bool IsFromMe(const CTransaction& tx) const

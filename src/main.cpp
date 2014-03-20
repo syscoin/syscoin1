@@ -704,8 +704,12 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 	                    ret[iter] = error("offerupdate tx with value too long");
 	                break;
 	            case OP_OFFER_ACCEPT:
-	                if (ovvch[1].size() > MAX_VALUE_LENGTH)
-	                    ret[iter] = error("offerupdate tx with value too long");
+	            	if (ovvch[0].size() > 20)
+	                    ret[iter] = error("offeraccept tx with rand too big");
+	                if (ovvch[1].size() != 20)
+	                    ret[iter] = error("offeraccept tx with incorrect hash length");
+	                if (ovvch[2].size() > MAX_VALUE_LENGTH)
+	                    ret[iter] = error("offeraccept tx with value too long");
 	                break;
 	            default:
 	                ret[iter] = error("offer transaction has unknown op");
@@ -929,19 +933,16 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 		addUnchecked(hash, tx);
 	}
 
-	if (tx.nVersion == SYSCOIN_TX_VERSION)
-	{	
+	if (tx.nVersion == SYSCOIN_TX_VERSION) {
 	    if (tx.vout.size() < 1) {
 	        error("AcceptToMemoryPool() : no output in syscoin tx %s\n", tx.ToString().c_str());
 	    }
 
 	    vector<vector<unsigned char> > avvch, ovvch;
-	    int aop, oop;
-	    int anOut, onOut;
+	    int aop, oop, anOut, onOut;
 
 	    bool agood = DecodeNameTx(tx, aop, anOut, avvch, -1);
 	    bool ogood = DecodeOfferTx(tx, oop, onOut, ovvch, -1);
-
 
 	    if(agood && IsAliasOp(aop)) {
 			if (aop != OP_ALIAS_NEW) {
@@ -951,7 +952,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 			}
 	    }
 	    if(ogood && IsOfferOp(oop)) {
-			if (oop != OP_OFFER_NEW) {
+			if (oop != OP_OFFER_NEW && oop != OP_OFFER_ACCEPT) {
 		        LOCK(cs_main);
 				mapOfferPending[ovvch[0]].insert(tx.GetHash());
 		        printf("AcceptToMemoryPool() : Added offer transaction '%s' to memory pool.\n", stringFromVch(ovvch[0]).c_str());
@@ -2019,11 +2020,12 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 
 	if (vtx[0].GetValueOut()
 			> GetBlockValue(pindex->nHeight, nFees,
-					pindex->pprev->GetBlockHash()))
+					pindex->pprev->GetBlockHash())&&!
+					1==pindex->nHeight)
 		return state.DoS(100,
 				error(
-						"ConnectBlock() : coinbase pays too much (actual=%"PRI64d" vs limit=%"PRI64d")",
-						vtx[0].GetValueOut(),
+						"ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",
+						pindex->nHeight, vtx[0].GetValueOut(),
 						GetBlockValue(pindex->nHeight, nFees,
 								pindex->pprev->GetBlockHash())));
 
@@ -4755,8 +4757,10 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn) {
 		nLastBlockSize = nBlockSize;
 		printf("CreateNewBlock(): total size %"PRI64u"\n", nBlockSize);
 
-		pblock->vtx[0].vout[0].nValue = GetBlockValue(pindexPrev->nHeight + 1,
-				nFees, pindexPrev->GetBlockHash());
+		pblock->vtx[0].vout[0].nValue = 1 < pindexPrev->nHeight ?
+				GetBlockValue(pindexPrev->nHeight + 1,
+				nFees, pindexPrev->GetBlockHash()) :
+				GetValuedBlock();
 		pblocktemplate->vTxFees[0] = -nFees;
 
 		// Fill in header

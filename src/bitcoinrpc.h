@@ -236,7 +236,12 @@ extern json_spirit::Value offernew(const json_spirit::Array& params, bool fHelp)
 extern json_spirit::Value offeractivate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerupdate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offeraccept(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value offerpay(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offershow(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value offerlist(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value offerhistory(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value offerfilter(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value offerscan(const json_spirit::Array& params, bool fHelp);
 
 extern json_spirit::Value phrpcfunc(const json_spirit::Array& params, bool fHelp);
 

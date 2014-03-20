@@ -29,6 +29,7 @@ extern CNameDB *pnamedb;
 extern COfferDB *pofferdb;
 
 void rescanfornames();
+void rescanforoffers();
 
 CWallet* pwalletMain;
 CClientUIInterface uiInterface;
@@ -1058,10 +1059,14 @@ bool AppInit2(boost::thread_group& threadGroup)
                 // Also delete new file if it exists together with the old one, as it could be the one from a much older version
                 if (filesystem::exists(nameindexfile))
                     filesystem::remove(nameindexfile);
+                
                 rescanfornames();
+                rescanforoffers();
             }
-            else if (!filesystem::exists(nameindexfile))
+            else if (!filesystem::exists(nameindexfile)) {
                 rescanfornames();
+                rescanforoffers();
+            }
 
 
             CPubKey newDefaultKey;
@@ -1074,8 +1079,10 @@ bool AppInit2(boost::thread_group& threadGroup)
             pwalletMain->SetBestChain(CBlockLocator(pindexBest));
         }
 
-        if (!filesystem::exists(nameindexfile))
+        if (!filesystem::exists(nameindexfile)) {
             rescanfornames();
+            rescanforoffers();
+        }
 
         printf("%s", strErrors.str().c_str());
         printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);

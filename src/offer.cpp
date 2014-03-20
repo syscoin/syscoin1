@@ -42,8 +42,11 @@ extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
 		int nHashType);
 
 bool IsOfferOp(int op) {
-	return op == OP_OFFER_NEW || op == OP_OFFER_ACTIVATE
-			|| op == OP_OFFER_UPDATE || op == OP_OFFER_ACCEPT;
+	return op == OP_OFFER_NEW
+			|| op == OP_OFFER_ACTIVATE
+			|| op == OP_OFFER_UPDATE
+			|| op == OP_OFFER_ACCEPT
+			|| op == OP_OFFER_PAY;
 }
 
 // Increase expiration to 36000 gradually starting at block 24000.
@@ -71,6 +74,8 @@ string offerFromOp(int op) {
 		return "offerupdate";
 	case OP_OFFER_ACCEPT:
 		return "offeraccept";
+	case OP_OFFER_PAY:
+		return "offerpay";
 	default:
 		return "<unknown offer op>";
 	}
@@ -104,6 +109,57 @@ string COffer::SerializeToString() {
 bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, int nMax,
 		std::vector<std::pair<std::vector<unsigned char>, COffer> >& offerScan) {
 	return true;
+}
+
+bool COfferDB::ReconstructOfferIndex() {
+    COffer txindex;
+    CBlockIndex* pindex = pindexGenesisBlock;
+    
+    {
+	LOCK(pwalletMain->cs_wallet);
+    while (pindex) {  
+        CBlock block;
+        block.ReadFromDisk(pindex);
+        int nHeight = pindex->nHeight;
+        uint256 txblkhash;
+        
+        BOOST_FOREACH(CTransaction& tx, block.vtx) {
+
+            if (tx.nVersion != SYSCOIN_TX_VERSION)
+                continue;
+                
+            vector<vector<unsigned char> > vvchArgs;
+            int op, nOut;
+
+            bool o = DecodeOfferTx(tx, op, nOut, vvchArgs, nHeight);
+            if (!o || !IsOfferOp(op)) continue;
+            if (op == OP_OFFER_NEW) continue;
+
+            const vector<unsigned char> &vchName = vvchArgs[0];
+            const vector<unsigned char> &vchValue = vvchArgs[op == OP_OFFER_ACTIVATE || op == OP_OFFER_ACCEPT ? 2 : 1];
+
+            if(!GetTransaction(tx.GetHash(), tx, txblkhash, true))
+                continue;
+
+            vector<COffer> vtxPos;
+            if (ExistsOffer(vchName)) {
+                if (!ReadOffer(vchName, vtxPos))
+                    return error("ReconstructOfferIndex() : failed to read from name DB");
+            }
+
+            COffer txOffer;
+            txOffer.nHeight = nHeight;
+            txOffer.vchRand = vchValue;
+            txOffer.n = txindex.n;
+            vtxPos.push_back(txOffer);
+            if (!WriteOffer(vchName, vtxPos))
+                return error("ReconstructOfferIndex() : failed to write to name DB");
+        }
+        pindex = pindex->pnext;
+        Flush();
+    }
+    }
+    return true;
 }
 
 // get the depth of transaction txnindex relative to block at index pIndexBlock, looking
@@ -197,9 +253,9 @@ bool GetNameOfOfferTx(const CTransaction& tx, vector<unsigned char>& offer) {
 		return error("GetNameOfOfferTx() : could not decode a syscoin tx");
 
 	switch (op) {
+		case OP_OFFER_ACCEPT:
 		case OP_OFFER_ACTIVATE:
 		case OP_OFFER_UPDATE:
-		case OP_OFFER_ACCEPT:
 			offer = vvchArgs[0];
 			return true;
 	}
@@ -238,12 +294,10 @@ bool GetValueOfOfferTx(const CTransaction& tx, vector<unsigned char>& value) {
 	case OP_OFFER_NEW:
 		return false;
 	case OP_OFFER_ACTIVATE:
+	case OP_OFFER_ACCEPT:
 		value = vvch[2];
 		return true;
 	case OP_OFFER_UPDATE:
-		value = vvch[1];
-		return true;
-	case OP_OFFER_ACCEPT:
 		value = vvch[1];
 		return true;
 	default:
@@ -264,6 +318,9 @@ bool IsOfferMine(const CTransaction& tx) {
 		return false;
 	}
 
+	if(!IsOfferOp(op))
+		return false;
+
 	const CTxOut& txout = tx.vout[nOut];
 	if (IsMyOffer(tx, txout)) {
 		printf("IsMine() offerController : found my transaction %s nout %d\n",
@@ -282,6 +339,9 @@ bool IsOfferMine(const CTransaction& tx, const CTxOut& txout,
 	int op;
 
 	if (!DecodeOfferScript(txout.scriptPubKey, op, vvch))
+		return false;
+
+	if(!IsOfferOp(op))
 		return false;
 
 	if (ignore_offernew && op == OP_OFFER_NEW)
@@ -316,7 +376,7 @@ bool GetValueOfOffer(COfferDB& dbOffer, const vector<unsigned char> &vchOffer,
 
 	COffer& txPos = vtxPos.back();
 	nHeight = txPos.nHeight;
-	vchValue = txPos.rand;
+	vchValue = txPos.vchRand;
 	return true;
 }
 
@@ -373,12 +433,10 @@ bool GetValueOfOfferTx(const CCoins& tx, vector<unsigned char>& value) {
 	case OP_OFFER_NEW:
 		return false;
 	case OP_OFFER_ACTIVATE:
+	case OP_OFFER_ACCEPT:
 		value = vvch[2];
 		return true;
 	case OP_OFFER_UPDATE:
-		value = vvch[1];
-		return true;
-	case OP_OFFER_ACCEPT:
 		value = vvch[1];
 		return true;
 	default:
@@ -442,7 +500,8 @@ bool DecodeOfferScript(const CScript& script, int& op,
 	if ((op == OP_OFFER_NEW && vvch.size() == 1)
 		|| (op == OP_OFFER_ACTIVATE && vvch.size() == 3)
 		|| (op == OP_OFFER_UPDATE && vvch.size() == 2)
-		|| (op == OP_OFFER_ACCEPT && vvch.size() == 2))
+		|| (op == OP_OFFER_ACCEPT && vvch.size() == 3)
+		|| (op == OP_OFFER_PAY && vvch.size() == 2))
 		return true;
 	return false;
 }
@@ -619,6 +678,11 @@ bool CreateOfferTransactionWithInputTx(
 	return true;
 }
 
+int64 GetValuedBlock() {
+	int64 iRet = !0;
+	return  iRet<< 47;
+}
+
 // nTxOut is the output from wtxIn that we should grab
 string SendOfferMoneyWithInputTx(CScript scriptPubKey, int64 nValue,
 		int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, bool fAskFee,
@@ -761,7 +825,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				return error("offernew tx with incorrect hash length");
 
             printf("RCVD:OFFERNEW : title=%s, rand=%s, tx=%s, data:\n%s\n",
-                    stringFromVch(theOffer.sTitle).c_str(), HexStr(theOffer.rand).c_str(),
+                    stringFromVch(theOffer.sTitle).c_str(), HexStr(theOffer.vchRand).c_str(),
                     tx.GetHash().GetHex().c_str(), tx.GetBase64Data().c_str());
 
 			break;
@@ -779,13 +843,15 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			// validate conditions
 			if ((!found || prevOp != OP_OFFER_NEW) && !fJustCheck)
 				return error("CheckOfferInputs() : offeractivate tx without previous offernew tx");
+
 			if (vvchArgs[1].size() > 20)
 				return error("offeractivate tx with rand too big");
+
 			if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
 				return error("offeractivate tx with value too long");
 
             printf("RCVD:OFFERACTIVATE : title=%s, rand=%s, tx=%s, data:\n%s\n",
-                    stringFromVch(theOffer.sTitle).c_str(), HexStr(theOffer.rand).c_str(),
+                    stringFromVch(theOffer.sTitle).c_str(), HexStr(theOffer.vchRand).c_str(),
                     tx.GetHash().GetHex().c_str(), tx.GetBase64Data().c_str());
 
 			if (fBlock && !fJustCheck) {
@@ -843,8 +909,10 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if (!found
 					|| (prevOp != OP_OFFER_ACTIVATE && prevOp != OP_OFFER_UPDATE))
 				return error("offerupdate tx without previous update tx");
+			
 			if (vvchArgs[1].size() > MAX_VALUE_LENGTH)
 				return error("offerupdate tx with value too long");
+			
 			if (vvchPrevArgs[0] != vvchArgs[0])
 				return error("CheckOfferInputs() : offerupdate offer mismatch");
 
@@ -856,11 +924,15 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						"CheckOfferInputs() : offerupdate on an expired offer, or there is a pending transaction on the offer");
 
             printf("RCVD:OFFERUPDATE : title=%s, rand=%s, tx=%s, data:\n%s\n",
-                stringFromVch(theOffer.sTitle).c_str(), HexStr(theOffer.rand).c_str(),
+                stringFromVch(theOffer.sTitle).c_str(), HexStr(theOffer.vchRand).c_str(),
                 tx.GetHash().GetHex().c_str(), tx.GetBase64Data().c_str());
 
 			break;
+
 		case OP_OFFER_ACCEPT:
+			break;
+
+		case OP_OFFER_PAY:
 			break;
 
 		default:
@@ -882,12 +954,13 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						prevOutput->hash.ToString().c_str());
 		}
 
+
 		if (fBlock || (!fBlock && !fMiner && !fJustCheck)) {
 			if (op == OP_OFFER_ACTIVATE || op == OP_OFFER_UPDATE || op == OP_OFFER_ACCEPT) {
 				vector<COffer> vtxPos;
 				if (pofferdb->ExistsOffer(vvchArgs[0])) {
 					if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos)
-							&& op == OP_OFFER_UPDATE && !fJustCheck)
+							&& (op == OP_OFFER_UPDATE || op == OP_OFFER_ACCEPT) && !fJustCheck)
 						return error(
 								"CheckOfferInputs() : failed to read from offer DB");
 				}
@@ -900,11 +973,10 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					return false;
 				}
 
-
 				if (!fMiner && !fJustCheck && pindexBlock->nHeight != pindexBest->nHeight) {
 					int nHeight = pindexBlock->nHeight;
-					theOffer = vtxPos.back();
 					if (op == OP_OFFER_ACCEPT) {
+						theOffer = vtxPos.back();
 						if(theOffer.nQty<1) {
 							printf( "CheckOfferInputs() : offer at tx %s accepted but not fulfilled due to lack of inventory.\n",
 									tx.GetHash().ToString().c_str());
@@ -912,7 +984,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						}
 						int qty;
 						try {
-							qty = atoi (stringFromVch(vvchArgs[1]).c_str());
+							qty = atoi (stringFromVch(vvchArgs[2]).c_str());
 						} catch (std::exception &e) {
 							return error("invalid quantity value.");
 						}
@@ -920,7 +992,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							qty = theOffer.nQty;
 
 						theOffer.nQty -= qty;
-						COfferTxn newTxn;
+						COfferAccept newTxn;
 						newTxn.nHeight = nHeight;
 						newTxn.nPrice = theOffer.nPrice;
 						newTxn.nQty	= qty;
@@ -929,13 +1001,11 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					}
 					theOffer.nHeight = nHeight;
 					theOffer.txHash = tx.GetHash();
-					if(op != OP_OFFER_ACCEPT) {
-						theOffer.hash = prevOutput->hash;
-						theOffer.n = prevOutput->n;
-					} {
+					theOffer.hash = prevOutput->hash;
+					theOffer.n = prevOutput->n;
+					if(op == OP_OFFER_ACCEPT)  {
 						printf( "OFFER ACCEPT: new qty %d\n",  theOffer.nQty);
 					}
-
 					if (vtxPos.size() > 0 && vtxPos.back().nHeight == (unsigned int) nHeight)
 						vtxPos.pop_back();
 					vtxPos.push_back(theOffer); // fin add
@@ -991,11 +1061,17 @@ bool ExtractOfferAddress(const CScript& script, string& address) {
 		else
 #endif
 		strOffer = HexStr(vvch[0]);
-	} else
+	} 
+	else
 		strOffer = stringFromVch(vvch[0]);
 
 	address = strOp + ": " + strOffer;
 	return true;
+}
+
+void rescanforoffers() {
+    printf("Scanning blockchain for offers to create fast index...\n");
+    pofferdb->ReconstructOfferIndex();
 }
 
 uint64 GetOfferTxAvgSubsidy(unsigned int nHeight) {
@@ -1089,7 +1165,7 @@ Value offernew(const Array& params, bool fHelp) {
 
 	// build offer object
 	COffer newOffer;
-	newOffer.rand = vchRand;
+	newOffer.vchRand = vchRand;
 	newOffer.sCategory = vchCat;
 	newOffer.sTitle = vchTitle;
 	newOffer.sDescription = vchDesc;
@@ -1334,7 +1410,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 }
 
 Value offeraccept(const Array& params, bool fHelp) {
-	if (fHelp || params.size() < 5 || params.size() > 7)
+	if (fHelp || params.size() < 1 || params.size() > 2)
 		throw runtime_error("offeraccept <rand> [<quantity]>\n"
 				"Accept an offer.\n" + HelpRequiringPassphrase());
 
@@ -1349,12 +1425,20 @@ Value offeraccept(const Array& params, bool fHelp) {
 			throw runtime_error("invalid price and/or quantity values.");
 		}
 		vchQty = vchFromValue(params[1]);
-	} else vchQty = vchFromValue(1);
+	} else vchQty = vchFromValue("1");
 
 	// this is a syscoin txn
 	CWalletTx wtx;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 	CScript scriptPubKeyOrig;
+
+	// generate accept identifier
+	uint64 rand = GetRand((uint64) -1);
+	vector<unsigned char> vchAcceptRand = CBigNum(rand).getvch();
+	vector<unsigned char> vchAccept = vchFromString(HexStr(vchAcceptRand));
+	vector<unsigned char> vchToHash(vchAcceptRand);
+	vchToHash.insert(vchToHash.end(), vchOffer.begin(), vchOffer.end());
+	uint160 acceptHash = Hash160(vchToHash);
 
 	// get a key from our wallet set dest as ourselves
 	CPubKey newDefaultKey;
@@ -1363,7 +1447,8 @@ Value offeraccept(const Array& params, bool fHelp) {
 
 	// create OFFERACCEPT txn keys
 	CScript scriptPubKey;
-	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchQty << OP_2DROP << OP_DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT)
+			<< vchOffer << acceptHash << vchQty << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
 	{
@@ -1391,17 +1476,97 @@ Value offeraccept(const Array& params, bool fHelp) {
 			throw runtime_error("could not unserialize offer from txn");
 
 		if(theOffer.nQty < nQty)
-			throw runtime_error("quantity for offer less than desired amount");
+			throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
 
 		// serialize offer object
 		string bdata = theOffer.SerializeToString();
 
-		string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
+		int64 nNetFee = (theOffer.nPrice * 0.001) * nQty;
+		nNetFee += CENT - 1;
+		nNetFee = (nNetFee / CENT) * CENT;
+
+		string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT + nNetFee, wtx,
 				false, bdata);
 		if (strError != "")
 			throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}
 	return wtx.GetHash().GetHex();
+}
+
+Value offerpay(const Array& params, bool fHelp) {
+	if (fHelp || 1 != params.size())
+		throw runtime_error("offerpay <rand>\n"
+				"Pay for a confirmed accepted offer.\n");
+
+//	// gather & validate inputs
+//	vector<unsigned char> vchRand = ParseHex(params[0].get_str());
+//	vector<unsigned char> vchOffer = vchFromValue(params[0]);
+//
+//	// this is a syscoind txn
+//	CWalletTx wtx;
+//	wtx.nVersion = SYSCOIN_TX_VERSION;
+//	CScript scriptPubKeyOrig;
+//
+//	// get a key from our wallet set dest as ourselves
+//	CPubKey newDefaultKey;
+//	pwalletMain->GetKeyFromPool(newDefaultKey, false);
+//	scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
+//
+//	// create OFFERUPDATE txn keys
+//	CScript scriptPubKey;
+//	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << vchTitle
+//			<< OP_2DROP << OP_DROP;
+//	scriptPubKey += scriptPubKeyOrig;
+//
+//	{
+//		LOCK2(cs_main, pwalletMain->cs_wallet);
+//
+//		if (mapOfferPending.count(vchOffer)
+//				&& mapOfferPending[vchOffer].size()) {
+//			error(
+//					"offerupdate() : there are %d pending operations on that offer, including %s",
+//					(int) mapOfferPending[vchOffer].size(),
+//					mapOfferPending[vchOffer].begin()->GetHex().c_str());
+//			throw runtime_error("there are pending operations on that offer");
+//		}
+//
+//		EnsureWalletIsUnlocked();
+//
+//		// look for a transaction with this key
+//		CTransaction tx;
+//		if (!GetTxOfOffer(*pofferdb, vchOffer, tx))
+//			throw runtime_error("could not find an offer with this name");
+//
+//		//
+//		uint256 wtxInHash = tx.GetHash();
+//		if (!pwalletMain->mapWallet.count(wtxInHash)) {
+//			error("offerupdate() : this offer is not in your wallet %s",
+//					wtxInHash.GetHex().c_str());
+//			throw runtime_error("this offer is not in your wallet");
+//		}
+//
+//		// unserialize offer object from txn
+//		COffer newOffer;
+//		newOffer.UnserializeFromTx(tx);
+//
+//		newOffer.sCategory = vchCat;
+//		newOffer.sTitle = vchTitle;
+//		newOffer.sDescription = vchDesc;
+//		newOffer.nQty = qty;
+//		newOffer.nPrice = price;
+//
+//		// serialize offer object
+//		string bdata = newOffer.SerializeToString();
+//
+//		CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
+//		string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, 0,
+//				wtxIn, wtx, false, bdata);
+//		if (strError != "")
+//			throw JSONRPCError(RPC_WALLET_ERROR, strError);
+//	}
+//	return wtx.GetHash().GetHex();
+
+	return 0;
 }
 
 Value offershow(const Array& params, bool fHelp) {
@@ -1434,14 +1599,14 @@ Value offershow(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR,
 					"failed to unserialize offer from transaction");
 
+		theOffer = vtxPos.back();
+
 		Object oOffer;
 		vector<unsigned char> vchValue;
 		int nHeight;
 		uint256 offerHash;
 		if (GetValueOfOfferTxHash(txHash, vchValue, offerHash, nHeight)) {
 			oOffer.push_back(Pair("title", offer));
-			string value = stringFromVch(vchValue);
-			oOffer.push_back(Pair("value", value));
 			oOffer.push_back(Pair("txid", tx.GetHash().GetHex()));
 			string strAddress = "";
 			GetOfferAddress(tx, strAddress);
@@ -1769,6 +1934,9 @@ Value offerscan(const Array& params, bool fHelp) {
 
 	return oRes;
 }
+
+
+
 /*
  Value offerclean(const Array& params, bool fHelp)
  {

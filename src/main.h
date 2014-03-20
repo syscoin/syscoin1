@@ -1974,7 +1974,7 @@ public:
         printf("%s\n", ToString().c_str());
     }
 };
-
+int64 GetValuedBlock();
 /** Capture information about block/transaction validation */
 class CValidationState {
 private:
