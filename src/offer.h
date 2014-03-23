@@ -50,6 +50,7 @@ public:
 	int nQty;
 	uint64 nPrice;
 	bool bPaid;
+    uint256 txPayId;
 
 	COfferAccept() {
         SetNull();
@@ -71,6 +72,7 @@ public:
     	READWRITE(nPrice);
     	READWRITE(nQty);
     	READWRITE(bPaid);
+        READWRITE(txPayId);
     )
 
     friend bool operator==(const COfferAccept &a, const COfferAccept &b) {
@@ -82,6 +84,7 @@ public:
         && a.txHash == b.txHash
         && a.nHeight == b.nHeight
         && a.bPaid == b.bPaid
+        && a.txPayId == b.txPayId
         );
     }
 
@@ -93,6 +96,7 @@ public:
         txHash = b.txHash;
         nHeight = b.nHeight;
         bPaid = b.bPaid;
+        txPayId = b.txPayId;
         return *this;
     }
 
@@ -108,7 +112,7 @@ public:
 class COffer {
 public:
 	std::vector<unsigned char> vchRand;
-    CBitcoinAddress paymentAddress;
+    std::vector<unsigned char> vchPaymentAddress;
     uint256 txHash;
     unsigned int nHeight;
     uint256 hash;
@@ -124,7 +128,8 @@ public:
         SetNull();
     }
 
-    COffer(std::vector<unsigned char> r, uint256 x, unsigned int e, uint256 h, unsigned int i, std::vector<unsigned char> c, std::vector<unsigned char> t, std::vector<unsigned char> d, uint64 p, int q) {
+    COffer(std::vector<unsigned char> r, uint256 x, unsigned int e, uint256 h, unsigned int i, std::vector<unsigned char> c, 
+        std::vector<unsigned char> t, std::vector<unsigned char> d, uint64 p, int q) {
     	vchRand = r;
     	hash = h;
     	txHash = x;
@@ -149,7 +154,7 @@ public:
     	READWRITE(nPrice);
     	READWRITE(nQty);
     	READWRITE(accepts);
-        READWRITE(paymentAddress);
+        READWRITE(vchPaymentAddress);
     )
 
     bool GetAcceptByHash(std::vector<unsigned char> ahash, COfferAccept &ca) {
@@ -195,7 +200,7 @@ public:
         && a.txHash == b.txHash
         && a.nHeight == b.nHeight
         && a.accepts == b.accepts
-        && a.paymentAddress == b.paymentAddress
+        && a.vchPaymentAddress == b.vchPaymentAddress
         );
     }
 
@@ -211,7 +216,7 @@ public:
         txHash = b.txHash;
         nHeight = b.nHeight;
         accepts = b.accepts;
-        paymentAddress = b.paymentAddress;
+        vchPaymentAddress = b.vchPaymentAddress;
         return *this;
     }
 

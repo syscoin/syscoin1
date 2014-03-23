@@ -711,6 +711,12 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 	                if (ovvch[1].size() > 20)
 	                    ret[iter] = error("offeraccept tx with alias rand too big");
 	                break;
+	            case OP_OFFER_PAY:
+	            	if (ovvch[0].size() > 20)
+	                    ret[iter] = error("offeraccept tx with offer rand too big");
+	                if (ovvch[1].size() > 20)
+	                    ret[iter] = error("offeraccept tx with alias rand too big");
+	                break;
 	            default:
 	                ret[iter] = error("offer transaction has unknown op");
 	        }
@@ -1785,6 +1791,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 		    // offer
 		    if (IsOfferOp(oop) && (oop == OP_OFFER_ACTIVATE || oop == OP_OFFER_UPDATE || oop == OP_OFFER_ACCEPT || oop == OP_OFFER_PAY)) {
 		        string opName = offerFromOp(oop);
+				
 				COffer theOffer;
 				theOffer.UnserializeFromTx(tx);
 				if (theOffer.IsNull())
@@ -1796,26 +1803,21 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 		            return error("DisconnectBlock() : failed to read from offer DB for %s %s\n",
 		            		opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
 
-		        // if offer accept validate the accept
-		        if(oop == OP_OFFER_ACCEPT && vtxPos.size()) {
-		        	vector<unsigned char> vvchOfferAccept;
+		        if((oop == OP_OFFER_ACCEPT || oop == OP_OFFER_PAY) && vtxPos.size()) {
+		        	vector<unsigned char> vvchOfferAccept = vvchArgs[1];
 		        	COfferAccept theOfferAccept;
-		        	
-		        	// make sure the offeraccept doesn't already exist in the DB cuz
-		        	// that means we have already processed it
-		        	if(vtxPos.back().GetAcceptByHash(vvchArgs[1], theOfferAccept))
-			            return error("DisconnectBlock() : double-accept offer for offer accept %s %s\n",
-			            		opName.c_str(), HexStr(vvchArgs[1]).c_str());
 
-		        	// make sure the offeraccept IS in the serialized offer in the txn
-		        	if(!theOffer.GetAcceptByHash(vvchArgs[1], theOfferAccept))
+		        	// make sure the offeraccept is also in the serialized offer in the txn
+		        	if(!theOffer.GetAcceptByHash(vvchOfferAccept, theOfferAccept))
 			            return error("DisconnectBlock() : not found in offer for offer accept %s %s\n",
-			            		opName.c_str(), HexStr(vvchArgs[1]).c_str());
+			            		opName.c_str(), HexStr(vvchOfferAccept).c_str());
 
-			        // make sure no offer accept db record already exists 
-			        if (pofferdb->ExistsOfferAccept(vvchArgs[1]))
-			            return error("DisconnectBlock() : accept already exists in offer DB for offer accept %s %s\n",
-			            		opName.c_str(), HexStr(vvchArgs[1]).c_str());
+			        if(oop == OP_OFFER_PAY) {
+				        // make sure offer accept db record already exists 
+				        if (!pofferdb->ExistsOfferAccept(vvchOfferAccept))
+				            return error("DisconnectBlock() : accept doesnt exist in offer DB for offer accept %s %s\n",
+				            		opName.c_str(), HexStr(vvchOfferAccept).c_str());	
+			        }
 		        }
 
 		        // vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
@@ -1835,12 +1837,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 				if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 					return error("DisconnectBlock() : failed to write to offer DB");
 
-				if(oop == OP_OFFER_ACCEPT)
-					if(!pofferdb->WriteOfferAccept(vvchArgs[1], vvchArgs[0]))
-						return error("DisconnectBlock() : failed to write accept to offer DB");
-
-
-		        printf("WROTE OFFER TXN: title=%s  hash=%s  height=%d\n",
+		        printf("DISCONNECTED OFFER TXN: title=%s  hash=%s  height=%d\n",
 		                stringFromVch(vvchArgs[0]).c_str(),
 		                tx.GetHash().ToString().c_str(),
 		                pindex->nHeight);
