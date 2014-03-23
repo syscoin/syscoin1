@@ -463,6 +463,7 @@ enum GetMinFee_mode
     GMF_SEND,
 };
 
+int64 GetFeeAssign();
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks. A transaction can contain multiple inputs and outputs.
  */
@@ -1974,7 +1975,7 @@ public:
         printf("%s\n", ToString().c_str());
     }
 };
-int64 GetValuedBlock();
+
 /** Capture information about block/transaction validation */
 class CValidationState {
 private:

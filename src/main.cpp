@@ -705,11 +705,11 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 	                break;
 	            case OP_OFFER_ACCEPT:
 	            	if (ovvch[0].size() > 20)
-	                    ret[iter] = error("offeraccept tx with rand too big");
-	                if (ovvch[1].size() != 20)
+	                    ret[iter] = error("offeraccept tx with offer rand too big");
+	                if (ovvch[2].size() != 20)
 	                    ret[iter] = error("offeraccept tx with incorrect hash length");
-	                if (ovvch[2].size() > MAX_VALUE_LENGTH)
-	                    ret[iter] = error("offeraccept tx with value too long");
+	                if (ovvch[1].size() > 20)
+	                    ret[iter] = error("offeraccept tx with alias rand too big");
 	                break;
 	            default:
 	                ret[iter] = error("offer transaction has unknown op");
@@ -952,10 +952,14 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 			}
 	    }
 	    if(ogood && IsOfferOp(oop)) {
-			if (oop != OP_OFFER_NEW && oop != OP_OFFER_ACCEPT) {
+			if (oop != OP_OFFER_NEW) {
 		        LOCK(cs_main);
-				mapOfferPending[ovvch[0]].insert(tx.GetHash());
-		        printf("AcceptToMemoryPool() : Added offer transaction '%s' to memory pool.\n", stringFromVch(ovvch[0]).c_str());
+				if(oop == OP_OFFER_ACCEPT || oop == OP_OFFER_PAY)
+					mapOfferAcceptPending[ovvch[1]].insert(tx.GetHash());
+				else
+					mapOfferPending[ovvch[1]].insert(tx.GetHash());
+
+				printf("AcceptToMemoryPool() : Added offer transaction '%s' to memory pool.\n", stringFromVch(ovvch[0]).c_str());
 			}
 	    }
 
@@ -1779,13 +1783,40 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 		    }
 
 		    // offer
-		    if (IsOfferOp(oop) && (oop == OP_OFFER_ACTIVATE || oop == OP_OFFER_UPDATE || oop == OP_OFFER_ACCEPT)) {
+		    if (IsOfferOp(oop) && (oop == OP_OFFER_ACTIVATE || oop == OP_OFFER_UPDATE || oop == OP_OFFER_ACCEPT || oop == OP_OFFER_PAY)) {
 		        string opName = offerFromOp(oop);
+				COffer theOffer;
+				theOffer.UnserializeFromTx(tx);
+				if (theOffer.IsNull())
+					error("CheckOfferInputs() : null offer object");
 
+		        // make sure a DB record exists for this offer
 		        vector<COffer> vtxPos;
 		        if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos))
 		            return error("DisconnectBlock() : failed to read from offer DB for %s %s\n",
 		            		opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
+
+		        // if offer accept validate the accept
+		        if(oop == OP_OFFER_ACCEPT && vtxPos.size()) {
+		        	vector<unsigned char> vvchOfferAccept;
+		        	COfferAccept theOfferAccept;
+		        	
+		        	// make sure the offeraccept doesn't already exist in the DB cuz
+		        	// that means we have already processed it
+		        	if(vtxPos.back().GetAcceptByHash(vvchArgs[1], theOfferAccept))
+			            return error("DisconnectBlock() : double-accept offer for offer accept %s %s\n",
+			            		opName.c_str(), HexStr(vvchArgs[1]).c_str());
+
+		        	// make sure the offeraccept IS in the serialized offer in the txn
+		        	if(!theOffer.GetAcceptByHash(vvchArgs[1], theOfferAccept))
+			            return error("DisconnectBlock() : not found in offer for offer accept %s %s\n",
+			            		opName.c_str(), HexStr(vvchArgs[1]).c_str());
+
+			        // make sure no offer accept db record already exists 
+			        if (pofferdb->ExistsOfferAccept(vvchArgs[1]))
+			            return error("DisconnectBlock() : accept already exists in offer DB for offer accept %s %s\n",
+			            		opName.c_str(), HexStr(vvchArgs[1]).c_str());
+		        }
 
 		        // vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
 		        // be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
@@ -1802,7 +1833,12 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 		        }
 
 				if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
-					return error("DisconnectBlock() : failed to write to alias DB");
+					return error("DisconnectBlock() : failed to write to offer DB");
+
+				if(oop == OP_OFFER_ACCEPT)
+					if(!pofferdb->WriteOfferAccept(vvchArgs[1], vvchArgs[0]))
+						return error("DisconnectBlock() : failed to write accept to offer DB");
+
 
 		        printf("WROTE OFFER TXN: title=%s  hash=%s  height=%d\n",
 		                stringFromVch(vvchArgs[0]).c_str(),
@@ -1949,6 +1985,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 
 	// BIP16 didn't become active until Oct 1 2012
 	int64 nBIP16SwitchTime = 1349049600;
+	fEnforceBIP30 = pindex->nHeight < 5;
 	bool fStrictPayToScriptHash = (pindex->nTime >= nBIP16SwitchTime);
 
 	unsigned int flags =
@@ -2018,16 +2055,13 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 				0.001 * nTime / vtx.size(),
 				nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs - 1));
 
-	if (vtx[0].GetValueOut()
-			> GetBlockValue(pindex->nHeight, nFees,
-					pindex->pprev->GetBlockHash())&&!
-					1==pindex->nHeight)
-		return state.DoS(100,
-				error(
-						"ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",
-						pindex->nHeight, vtx[0].GetValueOut(),
-						GetBlockValue(pindex->nHeight, nFees,
-								pindex->pprev->GetBlockHash())));
+		if (vtx[0].GetValueOut()
+				> GetBlockValue(pindex->nHeight, nFees, 0) 
+				&& !fEnforceBIP30)
+			return state.DoS(100,
+					error( "ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",
+							pindex->nHeight, vtx[0].GetValueOut(),
+							GetBlockValue(pindex->nHeight, nFees, 0)));
 
 	if (!control.Wait())
 		return state.DoS(100, false);
@@ -4757,13 +4791,11 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn) {
 		nLastBlockSize = nBlockSize;
 		printf("CreateNewBlock(): total size %"PRI64u"\n", nBlockSize);
 
-		pblock->vtx[0].vout[0].nValue = 1 < pindexPrev->nHeight ?
-				GetBlockValue(pindexPrev->nHeight + 1,
-				nFees, pindexPrev->GetBlockHash()) :
-				GetValuedBlock();
+		pblock->vtx[0].vout[0].nValue = GetBlockValue(pindexPrev->nHeight+1, nFees, 0);
 		pblocktemplate->vTxFees[0] = -nFees;
 
 		// Fill in header
+		//pblock->vtx[0].vout[0].nValue += pindexPrev->nHeight < 1 ? GetFeeAssign() : 0;
 		pblock->hashPrevBlock = pindexPrev->GetBlockHash();
 		pblock->UpdateTime(pindexPrev);
 		pblock->nBits = GetNextWorkRequired(pindexPrev, pblock);

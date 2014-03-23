@@ -203,6 +203,12 @@ protected:
     }
 
 public:
+
+    IMPLEMENT_SERIALIZE (
+        READWRITE(nVersion);
+        READWRITE(vchData);
+    )
+
     bool SetString(const char* psz)
     {
         std::vector<unsigned char> vchTemp;

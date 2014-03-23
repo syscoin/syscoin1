@@ -37,47 +37,62 @@ std::string offerFromOp(int op);
 
 extern std::map<std::vector<unsigned char>, uint256> mapMyOffers;
 extern std::map<std::vector<unsigned char>, std::set<uint256> > mapOfferPending;
+extern std::map<std::vector<unsigned char>, std::set<uint256> > mapOfferAcceptPending;
+
+class CBitcoinAddress;
 
 class COfferAccept {
 public:
+	std::vector<unsigned char> vchRand;
 	uint256 txHash;
 	unsigned int nHeight;
 	unsigned long nTime;
 	int nQty;
 	uint64 nPrice;
+	bool bPaid;
+
 	COfferAccept() {
         SetNull();
     }
-	COfferAccept(uint256 x, unsigned int e, unsigned long t, int q, uint64 p) {
+	COfferAccept(std::vector<unsigned char> vr, uint256 x, unsigned int e, unsigned long t, int q, uint64 p, bool b) {
+		vchRand = vr;
     	txHash = x;
         nHeight = e;
         nTime = t;
         nPrice = p;
         nQty = q;
+        bPaid = b;
     }
     IMPLEMENT_SERIALIZE (
+        READWRITE(vchRand);
 		READWRITE(txHash);
 		READWRITE(nHeight);
     	READWRITE(nTime);
     	READWRITE(nPrice);
     	READWRITE(nQty);
+    	READWRITE(bPaid);
     )
 
     friend bool operator==(const COfferAccept &a, const COfferAccept &b) {
-        return (a.nPrice == b.nPrice
+        return (
+        a.vchRand == b.vchRand
+        && a.nPrice == b.nPrice
         && a.nQty == b.nQty
         && a.nTime == b.nTime
         && a.txHash == b.txHash
         && a.nHeight == b.nHeight
+        && a.bPaid == b.bPaid
         );
     }
 
     COfferAccept operator=(const COfferAccept &b) {
-        nPrice = b.nPrice ;
+        vchRand = b.vchRand;
+        nPrice = b.nPrice;
         nQty = b.nQty ;
         nTime = b.nTime;
         txHash = b.txHash;
         nHeight = b.nHeight;
+        bPaid = b.bPaid;
         return *this;
     }
 
@@ -85,14 +100,15 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { nHeight = nTime = nPrice = nQty = 0; txHash = 0; }
-    bool IsNull() const { return (nTime == 0 && txHash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0); }
+    void SetNull() { nHeight = nTime = nPrice = nQty = 0; txHash = 0; bPaid = false; }
+    bool IsNull() const { return (nTime == 0 && txHash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 && bPaid == 0); }
 
 };
 
 class COffer {
 public:
 	std::vector<unsigned char> vchRand;
+    CBitcoinAddress paymentAddress;
     uint256 txHash;
     unsigned int nHeight;
     uint256 hash;
@@ -133,7 +149,38 @@ public:
     	READWRITE(nPrice);
     	READWRITE(nQty);
     	READWRITE(accepts);
+        READWRITE(paymentAddress);
     )
+
+    bool GetAcceptByHash(std::vector<unsigned char> ahash, COfferAccept &ca) {
+    	for(unsigned int i=0;i<accepts.size();i++) {
+    		if(accepts[i].vchRand == ahash) {
+    			ca = accepts[i];
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+
+    void PutOfferAccept(COfferAccept &theOA) {
+    	bool bFound = false;
+    	for(unsigned int i=0;i<accepts.size();i++) {
+    		COfferAccept oa = accepts[i];
+    		if(theOA.vchRand == oa.vchRand) {
+    			accepts[i] = theOA;
+    			bFound = true;
+    			break;
+    		}
+    	}
+    	if(!bFound) accepts.push_back(theOA);
+    }
+
+    int GetRemQty() {
+        int nRet = nQty;
+        for(unsigned int i=0;i<accepts.size();i++) 
+            nRet -= accepts[i].nQty;
+        return nRet;
+    }
 
     friend bool operator==(const COffer &a, const COffer &b) {
         return (
@@ -148,6 +195,7 @@ public:
         && a.txHash == b.txHash
         && a.nHeight == b.nHeight
         && a.accepts == b.accepts
+        && a.paymentAddress == b.paymentAddress
         );
     }
 
@@ -163,6 +211,7 @@ public:
         txHash = b.txHash;
         nHeight = b.nHeight;
         accepts = b.accepts;
+        paymentAddress = b.paymentAddress;
         return *this;
     }
 
@@ -283,6 +332,22 @@ public:
 
 	bool ExistsOffer(const std::vector<unsigned char>& name) {
 	    return Exists(make_pair(std::string("offeri"), name));
+	}
+
+	bool WriteOfferAccept(const std::vector<unsigned char>& name, std::vector<unsigned char>& vchValue) {
+		return Write(make_pair(std::string("offera"), name), vchValue);
+	}
+
+	bool EraseOfferAccept(const std::vector<unsigned char>& name) {
+	    return Erase(make_pair(std::string("offera"), name));
+	}
+
+	bool ReadOfferAccept(const std::vector<unsigned char>& name, std::vector<unsigned char>& vchValue) {
+		return Read(make_pair(std::string("offera"), name), vchValue);
+	}
+
+	bool ExistsOfferAccept(const std::vector<unsigned char>& name) {
+	    return Exists(make_pair(std::string("offera"), name));
 	}
 
 	bool WriteOfferTxFees(std::vector<COfferTxnValue>& vtxPos) {
