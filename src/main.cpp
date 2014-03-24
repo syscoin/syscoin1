@@ -703,11 +703,11 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 	                if (ovvch[1].size() > MAX_VALUE_LENGTH)
 	                    ret[iter] = error("offerupdate tx with value too long");
 	                break;
-	            case OP_OFFER_ACCEPT:
+	            case OP_OFFER_ACCEPT: 
 	            	if (ovvch[0].size() > 20)
 	                    ret[iter] = error("offeraccept tx with offer rand too big");
-	                if (ovvch[2].size() != 20)
-	                    ret[iter] = error("offeraccept tx with incorrect hash length");
+	                if (ovvch[2].size() != MAX_VALUE_LENGTH)
+	                    ret[iter] = error("offeraccept tx with invalid hash length");
 	                if (ovvch[1].size() > 20)
 	                    ret[iter] = error("offeraccept tx with alias rand too big");
 	                break;

@@ -87,7 +87,6 @@ bool COffer::UnserializeFromTx(const CTransaction &tx) {
 		CDataStream dsOffer(vchFromString(DecodeBase64(stringFromVch(tx.data))), SER_NETWORK, PROTOCOL_VERSION);
 		dsOffer >> *this;
 	} catch (std::exception &e) {
-        error("Cannot unserialize offer from transaction.");
 		return false;
 	}
 	return true;
