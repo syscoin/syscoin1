@@ -1012,20 +1012,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				// Check hash
 				const vector<unsigned char> &vchOffer = vvchArgs[0];
 				const vector<unsigned char> &vchAcceptRand = vvchArgs[1];
-				const vector<unsigned char> &vchAcceptHash = vvchArgs[2];
-
-				vector<unsigned char> vchToHash(vchAcceptRand);
-				vchToHash.insert(vchToHash.end(), vchOffer.begin(), vchOffer.end());
-
-				uint160 hash = Hash160(vchToHash);
-				if (uint160(vchAcceptHash) != hash)
-					return error(
-							"CheckOfferInputs() : offeraccept hash mismatch : %s vs %s",
-							HexStr(stringFromVch(vchAcceptHash)).c_str(), HexStr(stringFromVch(vchToHash)).c_str());
-
-	            printf("RCVD:OFFERACCEPT : title=%s, rand=%s, tx=%s, data:\n%s\n",
-	                    stringFromVch(theOffer.sTitle).c_str(), HexStr(stringFromVch(vchToHash)).c_str(),
-	                    tx.GetHash().GetHex().c_str(), tx.GetBase64Data().c_str());
 
 				// check for previous offernew
 				nDepth = CheckOfferTransactionAtRelativeDepth(pindexBlock,
@@ -1041,6 +1027,10 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 				if(theOfferAccept.vchRand != vchAcceptRand)
 					return error("accept txn contains invalid txnaccept hash");
+
+	            printf("RCVD:OFFERACCEPT : title=%s, rand=%s, tx=%s, data:\n%s\n",
+	                    stringFromVch(theOffer.sTitle).c_str(), HexStr(stringFromVch(vchAcceptRand)).c_str(),
+	                    tx.GetHash().GetHex().c_str(), tx.GetBase64Data().c_str());
 
 //    				set<uint256>& setPending = mapOfferAcceptPending[vvchArgs[0]];
 //                    BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
