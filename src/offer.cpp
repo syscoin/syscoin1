@@ -154,20 +154,21 @@ bool COfferDB::ReconstructOfferIndex() {
                 if (!ReadOffer(vchOffer, vtxPos))
                     return error("ReconstructOfferIndex() : failed to read offer from DB");
                 if(vtxPos.size()!=0) {
-                	txOffer.txHash = tx.GetHash();
-                	if(!txOffer.GetOfferFromList(vtxPos)) 
-                		printf("ReconstructOfferIndex() : warning - failed to read offer from DB list\n");
+                	txOffer.nHeight = nHeight;
+                	txOffer.GetOfferFromList(vtxPos);
                 }
             }
 
             // read the offer accept from db if exists
             if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
+            	bool bReadOffer = false;
             	vector<unsigned char> vchOfferAccept = vvchArgs[1];
 	            if (ExistsOfferAccept(vchOfferAccept)) {
 	                if (!ReadOfferAccept(vchOfferAccept, vchOffer))
 	                    printf("ReconstructOfferIndex() : warning - failed to read offer accept from offer DB\n");
+	                else bReadOffer = true;
 	            }
-				if(!txOffer.GetAcceptByHash(vchOfferAccept, txCA))
+				if(!bReadOffer && !txOffer.GetAcceptByHash(vchOfferAccept, txCA))
 					return error("ReconstructOfferIndex() : failed to read offer accept from offer");
 
 				// add txn-specific values to offer accept object
@@ -1071,10 +1072,10 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				uint160 hash = Hash160(vchToHash);
 
 				// check offer accept hash against prev txn
-				if (uint160(vvchPrevArgs[1]) != hash)
+				if (uint160(vvchPrevArgs[2]) != hash)
 					return error(
-							"CheckOfferInputs() : offeraccept prev hash mismatch : %s vs %s",
-							HexStr(stringFromVch(vvchPrevArgs[1])).c_str(), HexStr(stringFromVch(vchToHash)).c_str());
+							"CheckOfferInputs() : offerpay prev hash mismatch : %s vs %s",
+							HexStr(stringFromVch(vvchPrevArgs[2])).c_str(), HexStr(stringFromVch(vchToHash)).c_str());
 
 	            printf("RCVD:OFFERPAY : title=%s, rand=%s, tx=%s, data:\n%s\n",
 	                    stringFromVch(theOffer.sTitle).c_str(), HexStr(stringFromVch(vchToHash)).c_str(),
@@ -1154,9 +1155,8 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 						if(op == OP_OFFER_ACCEPT) {
 							// get the offer from the db
-		                	theOffer.txHash = tx.GetHash();
-		                	if(!theOffer.GetOfferFromList(vtxPos)) 
-		                		return error("CheckOfferInputs() : failed to read offer from DB list\n");
+		                	theOffer.nHeight = nHeight;
+		                	theOffer.GetOfferFromList(vtxPos);
 
 							if(theOffer.GetRemQty() < 1)
 								return error( "CheckOfferInputs() : offer at tx %s not fulfilled due to lack of inventory.\n",
@@ -1176,8 +1176,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					// set the offer's txn-dependent values
 					theOffer.txHash = tx.GetHash();
 					theOffer.nHeight = nHeight;
-
-					// add / update offer list with offer
 					theOffer.PutToOfferList(vtxPos);
 
 					// write offer accept <-> offer link

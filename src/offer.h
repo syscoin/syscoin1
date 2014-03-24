@@ -181,7 +181,7 @@ public:
     void PutToOfferList(std::vector<COffer> &offerList) {
         for(unsigned int i=0;i<offerList.size();i++) {
             COffer o = offerList[i];
-            if(o.txHash == txHash) {
+            if(o.nHeight == nHeight) {
                 offerList[i] = *this;
                 return;
             }
@@ -189,15 +189,16 @@ public:
         offerList.push_back(*this);
     }
 
-    bool GetOfferFromList(std::vector<COffer> &offerList) {
+    void GetOfferFromList(std::vector<COffer> &offerList) {
+        if(offerList.size() == 0) return;
         for(unsigned int i=0;i<offerList.size();i++) {
             COffer o = offerList[i];
-            if(o.txHash == txHash) {
+            if(o.nHeight == nHeight) {
                 *this = offerList[i];
-                return true;
+                return;
             }
         }
-        return false;
+        *this = offerList.back();
     }
 
     int GetRemQty() {
