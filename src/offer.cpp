@@ -132,61 +132,71 @@ bool COfferDB::ReconstructOfferIndex() {
             vector<vector<unsigned char> > vvchArgs;
             int op, nOut;
 
+            // decode the offer op, params, height
             bool o = DecodeOfferTx(tx, op, nOut, vvchArgs, nHeight);
             if (!o || !IsOfferOp(op)) continue;
             if (op == OP_OFFER_NEW) continue;
 
-            vector<unsigned char> &vchOffer = vvchArgs[0];
-            const vector<unsigned char> &vchOfferAccept = vvchArgs[1];
-
+            vector<unsigned char> vchOffer = vvchArgs[0];
+        
+            // get the transaction
             if(!GetTransaction(tx.GetHash(), tx, txblkhash, true))
                 continue;
 
-            vector<COffer> vtxPos;
-            if (ExistsOffer(vchOffer)) {
-                if (!ReadOffer(vchOffer, vtxPos))
-                    return error("ReconstructOfferIndex() : failed to read from offer DB");
-            }
-            if (ExistsOfferAccept(vchOfferAccept)) {
-                if (!ReadOfferAccept(vchOfferAccept, vchOffer))
-                    return error("ReconstructOfferIndex() : failed to read offer accept from offer DB");
-
-                if(vchOffer != vvchArgs[0])
-            		return error("ReconstructOfferIndex() : mismatched offer ids tx <-> db");
-            }
-
+            // attempt to read offer from txn
             COffer txOffer;
             COfferAccept txCA;
             if(!txOffer.UnserializeFromTx(tx))
 				return error("ReconstructOfferIndex() : failed to read offer from tx");
 
-			txOffer = vtxPos.back();
+            // read offer from DB if it exists
+            vector<COffer> vtxPos;
+            if (ExistsOffer(vchOffer)) {
+                if (!ReadOffer(vchOffer, vtxPos))
+                    return error("ReconstructOfferIndex() : failed to read offer from DB");
+                if(vtxPos.size()!=0) {
+                	txOffer.txHash = tx.GetHash();
+                	if(!txOffer.GetOfferFromList(vtxPos)) 
+                		printf("ReconstructOfferIndex() : warning - failed to read offer from DB list\n");
+                }
+            }
 
-			if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
-				if(!txOffer.GetAcceptByHash(vvchArgs[1], txCA))
-					return error("ReconstructOfferIndex() : failed to read offer accept from tx");
+            // read the offer accept from db if exists
+            if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
+            	vector<unsigned char> vchOfferAccept = vvchArgs[1];
+	            if (ExistsOfferAccept(vchOfferAccept)) {
+	                if (!ReadOfferAccept(vchOfferAccept, vchOffer))
+	                    printf("ReconstructOfferIndex() : warning - failed to read offer accept from offer DB\n");
+	            }
+				if(!txOffer.GetAcceptByHash(vchOfferAccept, txCA))
+					return error("ReconstructOfferIndex() : failed to read offer accept from offer");
 
-		        txCA.nTime = tx.nLockTime;
+				// add txn-specific values to offer accept object
+		        txCA.nTime = pindex->nTime;
 		        txCA.txHash = tx.GetHash();
 		        txCA.nHeight = nHeight;
-
 				txOffer.PutOfferAccept(txCA);
 			}
 
+			// txn-specific values to offer object
 			txOffer.txHash = tx.GetHash();
             txOffer.nHeight = nHeight;
-
-            if(vtxPos.back().vchRand == vvchArgs[0])
-            	vtxPos.pop_back();
-
-            vtxPos.push_back(txOffer);
+            txOffer.PutToOfferList(vtxPos);
 
             if (!WriteOffer(vchOffer, vtxPos))
                 return error("ReconstructOfferIndex() : failed to write to offer DB");
 
-            if(op == OP_OFFER_ACCEPT)
-            if (!WriteOfferAccept(vvchArgs[1], vvchArgs[0]))
-                return error("ReconstructOfferIndex() : failed to write to offer DB");
+            if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY)
+	            if (!WriteOfferAccept(vvchArgs[1], vvchArgs[0]))
+	                return error("ReconstructOfferIndex() : failed to write to offer DB");
+			
+			printf( "REWROTE OFFER: op=%s offer=%s title=%s qty=%d hash=%s height=%d\n",
+					offerFromOp(op).c_str(),
+					stringFromVch(vvchArgs[0]).c_str(),
+					stringFromVch(txOffer.sTitle).c_str(),
+					txOffer.GetRemQty(),
+					tx.GetHash().ToString().c_str(), 
+					nHeight);	            
         }
         pindex = pindex->pnext;
         Flush();
@@ -1045,13 +1055,65 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			break;
 
 		case OP_OFFER_PAY:
+			if (vvchArgs[0].size() > 20)
+				return error("offeraccept tx with offer hash too big");
+
+			if (vvchArgs[1].size() > 20)
+				return error("offeraccept tx with offer accept hash too big");
+
+			if (fBlock && !fJustCheck) {
+				// Check hash
+				const vector<unsigned char> &vchOffer = vvchArgs[0];
+				const vector<unsigned char> &vchOfferAccept = vvchArgs[1];
+
+				// construct offer accept hash
+				vector<unsigned char> vchToHash(vchOfferAccept);
+				vchToHash.insert(vchToHash.end(), vchOffer.begin(), vchOffer.end());
+				uint160 hash = Hash160(vchToHash);
+
+				// check offer accept hash against prev txn
+				if (uint160(vvchPrevArgs[1]) != hash)
+					return error(
+							"CheckOfferInputs() : offeraccept prev hash mismatch : %s vs %s",
+							HexStr(stringFromVch(vvchPrevArgs[1])).c_str(), HexStr(stringFromVch(vchToHash)).c_str());
+
+	            printf("RCVD:OFFERPAY : title=%s, rand=%s, tx=%s, data:\n%s\n",
+	                    stringFromVch(theOffer.sTitle).c_str(), HexStr(stringFromVch(vchToHash)).c_str(),
+	                    tx.GetHash().GetHex().c_str(), tx.GetBase64Data().c_str());
+
+				// check for previous offernew
+				nDepth = CheckOfferTransactionAtRelativeDepth(pindexBlock,
+						prevCoins, GetOfferExpirationDepth(pindexBlock->nHeight));
+				if (nDepth == -1)
+					return error(
+							"CheckOfferInputs() : offeraccept cannot be mined if offer is not already in chain and unexpired");
+
+				nPrevHeight = GetOfferHeight(vchOffer);
+
+				if(!theOffer.GetAcceptByHash(vchOfferAccept, theOfferAccept))
+					return error("could not read accept from offer txn");
+
+				if(theOfferAccept.vchRand != vchOfferAccept)
+					return error("accept txn contains invalid txnaccept hash");
+
+//    				set<uint256>& setPending = mapOfferAcceptPending[vvchArgs[0]];
+//                    BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
+//                        if (setPending.count(s.second)) {
+//                            printf("CheckInputs() : will not mine %s because it clashes with %s",
+//                                    tx.GetHash().GetHex().c_str(),
+//                                    s.second.GetHex().c_str());
+//                            return false;
+//                        }
+//                    }
+			}
+
 			break;
 
 		default:
 			return error( "CheckOfferInputs() : offer transaction has unknown op");
 		}
 
-		if (!fBlock && fJustCheck && op == OP_OFFER_UPDATE) {
+		if (!fBlock && fJustCheck && (op == OP_OFFER_UPDATE || op == OP_OFFER_PAY)) {
 			vector<COffer> vtxPos;
 			if (pofferdb->ExistsOffer(vvchArgs[0])) {
 				if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos))
@@ -1093,7 +1155,10 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 						if(op == OP_OFFER_ACCEPT) {
 							// get the offer from the db
-							theOffer = vtxPos.back();
+		                	theOffer.txHash = tx.GetHash();
+		                	if(!theOffer.GetOfferFromList(vtxPos)) 
+		                		return error("CheckOfferInputs() : failed to read offer from DB list\n");
+
 							if(theOffer.GetRemQty() < 1)
 								return error( "CheckOfferInputs() : offer at tx %s not fulfilled due to lack of inventory.\n",
 										tx.GetHash().ToString().c_str());
@@ -1105,20 +1170,16 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 						// set the offer accept txn-dependent values and add to the txn
 						theOfferAccept.txHash = tx.GetHash();
-						theOfferAccept.nTime = tx.nLockTime;
+						theOfferAccept.nTime = pindexBlock->nTime;
 						theOfferAccept.nHeight = nHeight;
 						theOffer.PutOfferAccept(theOfferAccept);
-						printf( "OFFER ACCEPT: new qty %d\n",  theOffer.nQty);
 					}
 					// set the offer's txn-dependent values
 					theOffer.txHash = tx.GetHash();
 					theOffer.nHeight = nHeight;
 
-					// make sure no dupes
-					if (vtxPos.size() > 0 && vtxPos.back().nHeight == (unsigned int) nHeight)
-						vtxPos.pop_back();
-
-					vtxPos.push_back(theOffer); // fin add
+					// add / update offer list with offer
+					theOffer.PutToOfferList(vtxPos);
 
 					// write offer accept <-> offer link
 					if(op == OP_OFFER_ACCEPT)
@@ -1133,10 +1194,13 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					InsertOfferTxFee(pindexBlock, tx.GetHash(), GetOfferNetFee(tx));
 
 					// debug
-					printf( "WROTE OFFER: offer=%s title=%s hash=%s  height=%d\n",
+					printf( "WROTE OFFER: op=%s offer=%s title=%s qty=%d hash=%s height=%d\n",
+							offerFromOp(op).c_str(),
 							stringFromVch(vvchArgs[0]).c_str(),
 							stringFromVch(theOffer.sTitle).c_str(),
-							tx.GetHash().ToString().c_str(), nHeight);
+							theOffer.GetRemQty(),
+							tx.GetHash().ToString().c_str(), 
+							nHeight);
 				}
 			}
 
@@ -1563,7 +1627,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 	CScript scriptPubKeyOrig;
 
-	// generate accept identifier
+	// generate offer accept identifier and hash
 	uint64 rand = GetRand((uint64) -1);
 	vector<unsigned char> vchAcceptRand = CBigNum(rand).getvch();
 	vector<unsigned char> vchAccept = vchFromString(HexStr(vchAcceptRand));
@@ -1604,14 +1668,14 @@ Value offeraccept(const Array& params, bool fHelp) {
 		if(!theOffer.UnserializeFromTx(tx))
 			throw runtime_error("could not unserialize offer from txn");
 
-		if(theOffer.GetRemQty() < nQty)
-			throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
-
 		// get the offer id from DB
 		vector<COffer> vtxPos;
 		if (!pofferdb->ReadOffer(vchOffer, vtxPos))
 			throw runtime_error("could not read offer with this name from DB");
 		theOffer = vtxPos.back();
+
+		if(theOffer.GetRemQty() < nQty)
+			throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
 
 		// create accept object
 		COfferAccept txAccept;

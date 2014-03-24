@@ -168,16 +168,36 @@ public:
     }
 
     void PutOfferAccept(COfferAccept &theOA) {
-    	bool bFound = false;
     	for(unsigned int i=0;i<accepts.size();i++) {
     		COfferAccept oa = accepts[i];
     		if(theOA.vchRand == oa.vchRand) {
     			accepts[i] = theOA;
-    			bFound = true;
-    			break;
+    			return;
     		}
     	}
-    	if(!bFound) accepts.push_back(theOA);
+    	accepts.push_back(theOA);
+    }
+
+    void PutToOfferList(std::vector<COffer> &offerList) {
+        for(unsigned int i=0;i<offerList.size();i++) {
+            COffer o = offerList[i];
+            if(o.txHash == txHash) {
+                offerList[i] = *this;
+                return;
+            }
+        }
+        offerList.push_back(*this);
+    }
+
+    bool GetOfferFromList(std::vector<COffer> &offerList) {
+        for(unsigned int i=0;i<offerList.size();i++) {
+            COffer o = offerList[i];
+            if(o.txHash == txHash) {
+                *this = offerList[i];
+                return true;
+            }
+        }
+        return false;
     }
 
     int GetRemQty() {
