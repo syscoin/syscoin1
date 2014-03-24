@@ -1757,7 +1757,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 		        return error("DisconnectBlock() : could not decode syscoin tx\n");
 
 		    // alias, data
-		    if (IsAliasOp(aop) && (aop == OP_ALIAS_FIRSTUPDATE || aop == OP_ALIAS_UPDATE)) {
+		    if (IsAliasOp(aop) && aop != OP_ALIAS_NEW) {
 		        string opName = nameFromOp(aop);
 
 		        vector<CNameIndex> vtxPos;
@@ -1789,7 +1789,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 		    }
 
 		    // offer
-		    if (IsOfferOp(oop) && (oop == OP_OFFER_ACTIVATE || oop == OP_OFFER_UPDATE || oop == OP_OFFER_ACCEPT || oop == OP_OFFER_PAY)) {
+		    if (IsOfferOp(oop) && oop != OP_OFFER_NEW) {
 		        string opName = offerFromOp(oop);
 				
 				COffer theOffer;
@@ -1797,45 +1797,47 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 				if (theOffer.IsNull())
 					error("CheckOfferInputs() : null offer object");
 
-		        // make sure a DB record exists for this offer
-		        vector<COffer> vtxPos;
-		        if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos))
-		            return error("DisconnectBlock() : failed to read from offer DB for %s %s\n",
-		            		opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
+				if(oop != OP_OFFER_NEW) {
+			        // make sure a DB record exists for this offer
+			        vector<COffer> vtxPos;
+			        if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos))
+			            return error("DisconnectBlock() : failed to read from offer DB for %s %s\n",
+			            		opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
 
-		        if((oop == OP_OFFER_ACCEPT || oop == OP_OFFER_PAY) && vtxPos.size()) {
-		        	vector<unsigned char> vvchOfferAccept = vvchArgs[1];
-		        	COfferAccept theOfferAccept;
+			        if( oop == OP_OFFER_PAY || oop == OP_OFFER_ACCEPT ) {
+			        	vector<unsigned char> vvchOfferAccept = vvchArgs[1];
+			        	COfferAccept theOfferAccept;
 
-		        	// make sure the offeraccept is also in the serialized offer in the txn
-		        	if(!theOffer.GetAcceptByHash(vvchOfferAccept, theOfferAccept))
-			            return error("DisconnectBlock() : not found in offer for offer accept %s %s\n",
-			            		opName.c_str(), HexStr(vvchOfferAccept).c_str());
+			        	// make sure the offeraccept is also in the serialized offer in the txn
+			        	if(!theOffer.GetAcceptByHash(vvchOfferAccept, theOfferAccept))
+				            return error("DisconnectBlock() : not found in offer for offer accept %s %s\n",
+				            		opName.c_str(), HexStr(vvchOfferAccept).c_str());
 
-			        if(oop == OP_OFFER_PAY) {
 				        // make sure offer accept db record already exists 
-				        if (!pofferdb->ExistsOfferAccept(vvchOfferAccept))
-				            return error("DisconnectBlock() : accept doesnt exist in offer DB for offer accept %s %s\n",
-				            		opName.c_str(), HexStr(vvchOfferAccept).c_str());	
+				        if (pofferdb->ExistsOfferAccept(vvchOfferAccept))
+				        	pofferdb->EraseOfferAccept(vvchOfferAccept);
 			        }
-		        }
 
-		        // vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
-		        // be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
-		        if (vtxPos.size()) {
-		            CDiskTxPos txindex;
-		            if (!pblocktree->ReadTxIndex(tx.GetHash(), txindex))
-		                return error("DisconnectBlock() : failed to read tx index for offer %s %s %s\n",
-		                		opName.c_str(), stringFromVch(vvchArgs[0]).c_str(), tx.GetHash().ToString().c_str());
+			        // vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
+			        // be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
+			        if (vtxPos.size()) {
+			            CDiskTxPos txindex;
+			            if (!pblocktree->ReadTxIndex(tx.GetHash(), txindex))
+			                return error("DisconnectBlock() : failed to read tx index for offer %s %s %s\n",
+			                		opName.c_str(), stringFromVch(vvchArgs[0]).c_str(), tx.GetHash().ToString().c_str());
 
-		            if (vtxPos.back().txHash == tx.GetHash())
-		                vtxPos.pop_back();
+			            while(vtxPos.back().txHash == tx.GetHash())
+			                vtxPos.pop_back();
 
-		            // TODO validate that the first pos is the current tx pos
-		        }
+			            // TODO validate that the first pos is the current tx pos
+			        }
 
-				if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
-					return error("DisconnectBlock() : failed to write to offer DB");
+			        // write new offer state to db
+					if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
+						return error("DisconnectBlock() : failed to write to offer DB");
+				} else {
+					pofferdb->EraseOffer(theOffer.vchRand);
+				}
 
 		        printf("DISCONNECTED OFFER TXN: title=%s  hash=%s  height=%d\n",
 		                stringFromVch(vvchArgs[0]).c_str(),

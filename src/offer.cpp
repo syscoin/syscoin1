@@ -891,12 +891,14 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if (found)
 				return error(
 						"CheckOfferInputs() : offernew tx pointing to previous syscoin tx");
+
 			if (vvchArgs[0].size() != 20)
 				return error("offernew tx with incorrect hash length");
 
-            printf("RCVD:OFFERNEW : title=%s, rand=%s, tx=%s, data:\n%s\n",
-                    stringFromVch(theOffer.sTitle).c_str(), HexStr(theOffer.vchRand).c_str(),
-                    tx.GetHash().GetHex().c_str(), tx.GetBase64Data().c_str());
+			if (fBlock && !fJustCheck) 
+	            printf("OFFERNEW : title=%s, rand=%s, tx=%s, data:\n%s\n",
+	                    stringFromVch(theOffer.sTitle).c_str(), HexStr(theOffer.vchRand).c_str(),
+	                    tx.GetHash().GetHex().c_str(), tx.GetBase64Data().c_str());
 
 			break;
 
@@ -919,10 +921,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
 				return error("offeractivate tx with value too long");
-
-            printf("RCVD:OFFERACTIVATE : title=%s, rand=%s, tx=%s, data:\n%s\n",
-                    stringFromVch(theOffer.sTitle).c_str(), HexStr(theOffer.vchRand).c_str(),
-                    tx.GetHash().GetHex().c_str(), tx.GetBase64Data().c_str());
 
 			if (fBlock && !fJustCheck) {
 				// Check hash
@@ -952,22 +950,27 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					return error(
 							"CheckOfferInputs() : offeractivate cannot be mined if offernew is not already in chain and unexpired");
 
-				nPrevHeight = GetOfferHeight(vvchArgs[0]);
+				nPrevHeight = GetOfferHeight(vchOffer);
 				if (!fBlock && nPrevHeight >= 0
 						&& pindexBlock->nHeight - nPrevHeight
 								< GetOfferExpirationDepth(pindexBlock->nHeight))
 					return error(
 							"CheckOfferInputs() : offeractivate on an unexpired offer.");
 
-//    				set<uint256>& setPending = mapOfferPending[vvchArgs[1]];
-//                    BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
-//                        if (setPending.count(s.second)) {
-//                            printf("CheckInputs() : will not mine %s because it clashes with %s",
-//                                    tx.GetHash().GetHex().c_str(),
-//                                    s.second.GetHex().c_str());
-//                            return false;
-//                        }
-//                    }
+   				set<uint256>& setPending = mapOfferPending[vchOffer];
+                BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
+                    if (setPending.count(s.second)) {
+                        printf("CheckInputs() : will not mine offeractivate %s because it clashes with %s",
+                               tx.GetHash().GetHex().c_str(),
+                               s.second.GetHex().c_str());
+                        return false;
+                    }
+                }
+
+                printf("OFFERACTIVATE : title=%s, rand=%s, tx=%s\n",
+                	stringFromVch(theOffer.sTitle).c_str(), HexStr(theOffer.vchRand).c_str(),
+                	tx.GetHash().GetHex().c_str());
+
 			}
 
 			break;
@@ -976,10 +979,8 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if (fBlock && fJustCheck && !found)
 				return true;
 
-			if (!found
-					|| (prevOp != OP_OFFER_ACTIVATE && prevOp != OP_OFFER_UPDATE
-							&& prevOp != OP_OFFER_ACCEPT && prevOp != OP_OFFER_PAY))
-				return error("offerupdate tx without previous update tx");
+			if (!found || ( prevOp != OP_OFFER_ACTIVATE && prevOp != OP_OFFER_UPDATE ))
+				return error("offerupdate previous op %s is invalid", offerFromOp(prevOp).c_str());
 			
 			if (vvchArgs[1].size() > MAX_VALUE_LENGTH)
 				return error("offerupdate tx with value too long");
@@ -993,10 +994,22 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if ((fBlock || fMiner) && nDepth < 0)
 				return error(
 						"CheckOfferInputs() : offerupdate on an expired offer, or there is a pending transaction on the offer");
-
-            printf("RCVD:OFFERUPDATE : title=%s, rand=%s, tx=%s, data:\n%s\n",
-                stringFromVch(theOffer.sTitle).c_str(), HexStr(theOffer.vchRand).c_str(),
-                tx.GetHash().GetHex().c_str(), tx.GetBase64Data().c_str());
+			
+			if (fBlock && !fJustCheck) {
+				set<uint256>& setPending = mapOfferPending[vvchArgs[0]];
+	            BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
+	                if (setPending.count(s.second)) {
+	                    printf("CheckInputs() : will not mine offerupdate %s because it clashes with %s",
+	                           tx.GetHash().GetHex().c_str(),
+	                           s.second.GetHex().c_str());
+	                    return false;
+	                }
+	            }
+	
+	            printf("OFFERUPDATE : title=%s, rand=%s, tx=%s\n",
+	                stringFromVch(theOffer.sTitle).c_str(), HexStr(theOffer.vchRand).c_str(),
+	                tx.GetHash().GetHex().c_str());
+        	}
 
 			break;
 
@@ -1013,13 +1026,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				const vector<unsigned char> &vchOffer = vvchArgs[0];
 				const vector<unsigned char> &vchAcceptRand = vvchArgs[1];
 
-				// check for previous offernew
-				nDepth = CheckOfferTransactionAtRelativeDepth(pindexBlock,
-						prevCoins, GetOfferExpirationDepth(pindexBlock->nHeight));
-				if (nDepth == -1)
-					return error(
-							"CheckOfferInputs() : offeraccept cannot be mined if offer is not already in chain and unexpired");
-
 				nPrevHeight = GetOfferHeight(vchOffer);
 
 				if(!theOffer.GetAcceptByHash(vchAcceptRand, theOfferAccept))
@@ -1028,28 +1034,41 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				if(theOfferAccept.vchRand != vchAcceptRand)
 					return error("accept txn contains invalid txnaccept hash");
 
-	            printf("RCVD:OFFERACCEPT : title=%s, rand=%s, tx=%s, data:\n%s\n",
+/*
+   				set<uint256>& setPending = mapOfferAcceptPending[vchAcceptRand];
+                BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
+                    if (setPending.count(s.second)) {
+                        printf("CheckInputs() : will not mine offeraccept %s because it clashes with %s",
+                               tx.GetHash().GetHex().c_str(),
+                               s.second.GetHex().c_str());
+                        return false;
+                    }
+                }
+*/	            
+	            printf("OFFERACCEPT : title=%s, rand=%s, tx=%s\n",
 	                    stringFromVch(theOffer.sTitle).c_str(), HexStr(stringFromVch(vchAcceptRand)).c_str(),
-	                    tx.GetHash().GetHex().c_str(), tx.GetBase64Data().c_str());
-
-//    				set<uint256>& setPending = mapOfferAcceptPending[vvchArgs[0]];
-//                    BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
-//                        if (setPending.count(s.second)) {
-//                            printf("CheckInputs() : will not mine %s because it clashes with %s",
-//                                    tx.GetHash().GetHex().c_str(),
-//                                    s.second.GetHex().c_str());
-//                            return false;
-//                        }
-//                    }
-			}
+	                    tx.GetHash().GetHex().c_str());
+	   		}
 			break;
 
 		case OP_OFFER_PAY:
+			// check for enough fees
+			nNetFee = GetOfferNetFee(tx);
+			if (nNetFee < GetNetworkFee(pindexBlock->nHeight))
+				return error(
+						"CheckOfferInputs() : got offerpay tx %s with fee too low %lu",
+						tx.GetHash().GetHex().c_str(),
+						(long unsigned int) nNetFee);
+
+			// validate conditions
+			if ((!found || prevOp != OP_OFFER_ACCEPT) && !fJustCheck)
+				return error("CheckOfferInputs() : offerpay tx without previous offeraccept tx");
+
 			if (vvchArgs[0].size() > 20)
-				return error("offeraccept tx with offer hash too big");
+				return error("offerpay tx with offer hash too big");
 
 			if (vvchArgs[1].size() > 20)
-				return error("offeraccept tx with offer accept hash too big");
+				return error("offerpay tx with offer accept hash too big");
 
 			if (fBlock && !fJustCheck) {
 				// Check hash
@@ -1061,22 +1080,18 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				vchToHash.insert(vchToHash.end(), vchOffer.begin(), vchOffer.end());
 				uint160 hash = Hash160(vchToHash);
 
+				// check for previous offeraccept
+				nDepth = CheckOfferTransactionAtRelativeDepth(pindexBlock,
+						prevCoins, pindexBlock->nHeight);
+				if (nDepth == -1)
+					return error(
+							"CheckOfferInputs() : offerpay cannot be mined if offeraccept is not already in chain");
+
 				// check offer accept hash against prev txn
 				if (uint160(vvchPrevArgs[2]) != hash)
 					return error(
 							"CheckOfferInputs() : offerpay prev hash mismatch : %s vs %s",
 							HexStr(stringFromVch(vvchPrevArgs[2])).c_str(), HexStr(stringFromVch(vchToHash)).c_str());
-
-	            printf("RCVD:OFFERPAY : title=%s, rand=%s, tx=%s, data:\n%s\n",
-	                    stringFromVch(theOffer.sTitle).c_str(), HexStr(stringFromVch(vchToHash)).c_str(),
-	                    tx.GetHash().GetHex().c_str(), tx.GetBase64Data().c_str());
-
-				// check for previous offernew
-				nDepth = CheckOfferTransactionAtRelativeDepth(pindexBlock,
-						prevCoins, GetOfferExpirationDepth(pindexBlock->nHeight));
-				if (nDepth == -1)
-					return error(
-							"CheckOfferInputs() : offeraccept cannot be mined if offer is not already in chain and unexpired");
 
 				nPrevHeight = GetOfferHeight(vchOffer);
 
@@ -1086,15 +1101,20 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				if(theOfferAccept.vchRand != vchOfferAccept)
 					return error("accept txn contains invalid txnaccept hash");
 
-//    				set<uint256>& setPending = mapOfferAcceptPending[vvchArgs[0]];
-//                    BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
-//                        if (setPending.count(s.second)) {
-//                            printf("CheckInputs() : will not mine %s because it clashes with %s",
-//                                    tx.GetHash().GetHex().c_str(),
-//                                    s.second.GetHex().c_str());
-//                            return false;
-//                        }
-//                    }
+/*
+   				set<uint256>& setPending = mapOfferAcceptPending[vchOfferAccept];
+                BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
+                    if (setPending.count(s.second)) {
+                       printf("CheckInputs() : will not mine offerpay %s because it clashes with %s",
+                               tx.GetHash().GetHex().c_str(),
+                               s.second.GetHex().c_str());
+                       return false;
+                    }
+                }
+*/
+	            printf("OFFERPAY : title=%s, rand=%s, tx=%s\n",
+	                    stringFromVch(theOffer.sTitle).c_str(), HexStr(stringFromVch(vchOfferAccept)).c_str(),
+	                    tx.GetHash().GetHex().c_str());
 			}
 
 			break;
@@ -1103,13 +1123,17 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			return error( "CheckOfferInputs() : offer transaction has unknown op");
 		}
 
-		if (!fBlock && fJustCheck && (op == OP_OFFER_UPDATE || op == OP_OFFER_PAY)) {
-			vector<COffer> vtxPos;
+		// if not an offernew, load the offer data from the DB
+		vector<COffer> vtxPos;
+		if(op != OP_OFFER_NEW)
 			if (pofferdb->ExistsOffer(vvchArgs[0])) {
 				if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos))
 					return error(
 							"CheckOfferInputs() : failed to read from offer DB");
 			}
+
+		// for offerupdate or offerpay check to make sure the previous txn exists and is valid
+		if (!fBlock && fJustCheck && (op == OP_OFFER_UPDATE || op == OP_OFFER_PAY)) {
 			if (!CheckOfferTxPos(vtxPos, prevCoins->nHeight))
 				return error(
 						"CheckOfferInputs() : tx %s rejected, since previous tx (%s) is not in the offer DB\n",
@@ -1117,44 +1141,27 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						prevOutput->hash.ToString().c_str());
 		}
 
-
+		// these ifs are problably total bullshit except for the offernew
 		if (fBlock || (!fBlock && !fMiner && !fJustCheck)) {
 			if (op != OP_OFFER_NEW) {
-				vector<COffer> vtxPos;
-				if (pofferdb->ExistsOffer(vvchArgs[0])) {
-					if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos)
-							&& (op == OP_OFFER_UPDATE || op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) && !fJustCheck)
-						return error(
-								"CheckOfferInputs() : failed to read offer from offer DB");
-				}
-
-				if (fJustCheck && ( op == OP_OFFER_UPDATE || op == OP_OFFER_PAY )
-						&& !CheckOfferTxPos(vtxPos, prevCoins->nHeight)) {
-					printf( "CheckOfferInputs() : tx %s rejected, since previous tx (%s) is not in the offer DB\n",
-							tx.GetHash().ToString().c_str(),
-							prevOutput->hash.ToString().c_str());
-					return false;
-				}
-
 				if (!fMiner && !fJustCheck && pindexBlock->nHeight != pindexBest->nHeight) {
 					int nHeight = pindexBlock->nHeight;
+					
 					if (op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
 						// get the accept out of the offer object in the txn
 						if(!theOffer.GetAcceptByHash(vvchArgs[1], theOfferAccept))
 							return error("could not read accept from offer txn");
 
 						if(op == OP_OFFER_ACCEPT) {
-							// get the offer from the db
+							// get the latest offer from the db
 		                	theOffer.nHeight = nHeight;
 		                	theOffer.GetOfferFromList(vtxPos);
 
-							if(theOffer.GetRemQty() < 1)
-								return error( "CheckOfferInputs() : offer at tx %s not fulfilled due to lack of inventory.\n",
-										tx.GetHash().ToString().c_str());
-
 							// get the offer accept qty, validate
-							if(theOfferAccept.nQty < 1 || theOfferAccept.nQty > theOffer.nQty)
-								return error("invalid quantity value (nQty < 1 or nQty > remaining).");
+							if(theOfferAccept.nQty < 1 || theOfferAccept.nQty > theOffer.GetRemQty())
+								return error("invalid quantity value (nQty < 1 or nQty > remaining qty).");
+						} else {
+							theOfferAccept.bPaid = true;
 						}
 
 						// set the offer accept txn-dependent values and add to the txn
@@ -1181,7 +1188,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					InsertOfferTxFee(pindexBlock, tx.GetHash(), GetOfferNetFee(tx));
 
 					// debug
-					printf( "WROTE OFFER: op=%s offer=%s title=%s qty=%d hash=%s height=%d\n",
+					printf( "CONNECTED OFFER TXN: op=%s offer=%s title=%s qty=%d hash=%s height=%d\n",
 							offerFromOp(op).c_str(),
 							stringFromVch(vvchArgs[0]).c_str(),
 							stringFromVch(theOffer.sTitle).c_str(),
@@ -1688,13 +1695,14 @@ Value offeraccept(const Array& params, bool fHelp) {
 }
 
 Value offerpay(const Array& params, bool fHelp) {
-	if (fHelp || 1 != params.size())
-		throw runtime_error("offerpay <rand>\n"
+	if (fHelp || 2 != params.size())
+		throw runtime_error("offerpay <rand> <message>\n"
 				"Pay for a confirmed accepted offer.\n"
 				+ HelpRequiringPassphrase());
 
 	// gather & validate inputs
 	vector<unsigned char> vchRand = ParseHex(params[0].get_str());
+	vector<unsigned char> vchMessage = ParseHex(params[1].get_str());
 
 	// this is a syscoin txn
 	CWalletTx wtx, wtxPay;
@@ -1766,11 +1774,17 @@ Value offerpay(const Array& params, bool fHelp) {
     if (pwalletMain->IsLocked()) throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, 
     	"Error: Please enter the wallet passphrase with walletpassphrase first.");
 
+	// calculate network fees
+	int64 nNetFee = GetNetworkFee(pindexBest->nHeight);
+	// Round up to CENT
+	nNetFee += CENT - 1;
+	nNetFee = (nNetFee / CENT) * CENT;
+
     // Check for sufficient funds to pay for order
     set<pair<const CWalletTx*,unsigned int> > setCoins;
     int64 nValueIn = 0;
-    uint64 nTotalValue = MIN_AMOUNT + ( theOfferAccept.nPrice * theOfferAccept.nQty );
-    if (!pwalletMain->SelectCoins(nTotalValue, setCoins, nValueIn)) 
+    uint64 nTotalValue = ( theOfferAccept.nPrice * theOfferAccept.nQty );
+    if (!pwalletMain->SelectCoins(nTotalValue + nNetFee, setCoins, nValueIn)) 
         throw runtime_error("insufficient funds to pay for offer");
 
     // send payment to offer address
@@ -1778,9 +1792,7 @@ Value offerpay(const Array& params, bool fHelp) {
     string strError = pwalletMain->SendMoneyToDestination(address.Get(), nTotalValue, wtxPay, false);
     if (strError != "") throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
-    // mark this offer accept as paid, put in offer
     theOfferAccept.txPayId = wtxPay.GetHash();
-    theOfferAccept.bPaid = true;
     theOffer.PutOfferAccept(theOfferAccept);
 
 	// serialize offer object
@@ -1788,7 +1800,7 @@ Value offerpay(const Array& params, bool fHelp) {
 
 	// send the offer pay txn 
 	CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
-	strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, 0,
+	strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
 			wtxIn, wtx, false, bdata);
 	if (strError != "")
 		throw JSONRPCError(RPC_WALLET_ERROR, strError);

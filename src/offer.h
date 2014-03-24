@@ -44,6 +44,8 @@ class CBitcoinAddress;
 class COfferAccept {
 public:
 	std::vector<unsigned char> vchRand;
+    std::vector<unsigned char> vchMessage;
+    std::vector<unsigned char> vchAddress;
 	uint256 txHash;
 	unsigned int nHeight;
 	unsigned long nTime;
@@ -55,15 +57,6 @@ public:
 	COfferAccept() {
         SetNull();
     }
-	COfferAccept(std::vector<unsigned char> vr, uint256 x, unsigned int e, unsigned long t, int q, uint64 p, bool b) {
-		vchRand = vr;
-    	txHash = x;
-        nHeight = e;
-        nTime = t;
-        nPrice = p;
-        nQty = q;
-        bPaid = b;
-    }
     IMPLEMENT_SERIALIZE (
         READWRITE(vchRand);
 		READWRITE(txHash);
@@ -73,6 +66,8 @@ public:
     	READWRITE(nQty);
     	READWRITE(bPaid);
         READWRITE(txPayId);
+        READWRITE(vchMessage);
+        READWRITE(vchAddress);
     )
 
     friend bool operator==(const COfferAccept &a, const COfferAccept &b) {
@@ -126,20 +121,6 @@ public:
 
 	COffer() { 
         SetNull();
-    }
-
-    COffer(std::vector<unsigned char> r, uint256 x, unsigned int e, uint256 h, unsigned int i, std::vector<unsigned char> c, 
-        std::vector<unsigned char> t, std::vector<unsigned char> d, uint64 p, int q) {
-    	vchRand = r;
-    	hash = h;
-    	txHash = x;
-        n = i;
-        nHeight = e;
-        sCategory = c;
-        sTitle = t;
-        sDescription = d;
-        nPrice = p;
-        nQty = q;
     }
 
     IMPLEMENT_SERIALIZE (
