@@ -214,7 +214,7 @@ extern json_spirit::Value dumpdata(const json_spirit::Array& params, bool fHelp)
 
 // register names using the blockchain
 extern json_spirit::Value aliasnew(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value aliasfirstupdate(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value aliasactivate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value aliasupdate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value aliaslist(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value aliasshow(const json_spirit::Array& params, bool fHelp);
@@ -224,7 +224,7 @@ extern json_spirit::Value aliasscan(const json_spirit::Array& params, bool fHelp
 
 // store key-value pairs using the blockchain
 extern json_spirit::Value datanew(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value datafirstupdate(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value dataactivate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value dataupdate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value datalist(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value datashow(const json_spirit::Array& params, bool fHelp);

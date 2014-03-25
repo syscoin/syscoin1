@@ -26,12 +26,15 @@ bool DecodeOfferTx(const CCoins& tx, int& op, int& nOut, std::vector<std::vector
 bool DecodeOfferScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 bool IsOfferOp(int op);
 int IndexOfOfferOutput(const CTransaction& tx);
-uint64 GetOfferTxAvgSubsidy(unsigned int nHeight);
+uint64 GetOfferFeeSubsidy(unsigned int nHeight);
 bool GetValueOfOfferTxHash(const uint256 &txHash, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
 int GetOfferTxHashHeight(const uint256 txHash);
 int GetOfferTxPosHeight(const CDiskTxPos& txPos);
 int GetOfferTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
 int GetOfferDisplayExpirationDepth(int nHeight);
+int64 GetOfferNetworkFee(int seed, int nHeight);
+int64 GetOfferNetFee(const CTransaction& tx);
+bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue);
 
 std::string offerFromOp(int op);
 
@@ -51,6 +54,7 @@ public:
 	unsigned long nTime;
 	int nQty;
 	uint64 nPrice;
+	uint64 nFee;
 	bool bPaid;
     uint256 txPayId;
 
@@ -68,6 +72,7 @@ public:
         READWRITE(txPayId);
         READWRITE(vchMessage);
         READWRITE(vchAddress);
+        READWRITE(nFee);
     )
 
     friend bool operator==(const COfferAccept &a, const COfferAccept &b) {
@@ -110,6 +115,7 @@ public:
     std::vector<unsigned char> vchPaymentAddress;
     uint256 txHash;
     unsigned int nHeight;
+    unsigned long nTime;
     uint256 hash;
     unsigned int n;
 	std::vector<unsigned char> sCategory;
@@ -117,6 +123,7 @@ public:
 	std::vector<unsigned char> sDescription;
 	uint64 nPrice;
 	int nQty;
+	int64 nFee;
 	std::vector<COfferAccept>accepts;
 
 	COffer() { 
@@ -127,6 +134,7 @@ public:
         READWRITE(vchRand);
 		READWRITE(txHash);
 		READWRITE(nHeight);
+		READWRITE(nTime);
     	READWRITE(hash);
     	READWRITE(n);
         READWRITE(sCategory);
@@ -134,6 +142,7 @@ public:
         READWRITE(sDescription);
     	READWRITE(nPrice);
     	READWRITE(nQty);
+    	READWRITE(nFee);
     	READWRITE(accepts);
         READWRITE(vchPaymentAddress);
     )
@@ -197,10 +206,12 @@ public:
         && a.sDescription == b.sDescription 
         && a.nPrice == b.nPrice 
         && a.nQty == b.nQty 
+        && a.nFee == b.nFee
         && a.n == b.n
         && a.hash == b.hash
         && a.txHash == b.txHash
         && a.nHeight == b.nHeight
+        && a.nTime == b.nTime
         && a.accepts == b.accepts
         && a.vchPaymentAddress == b.vchPaymentAddress
         );
@@ -212,11 +223,13 @@ public:
         sTitle = b.sTitle;
         sDescription = b.sDescription;
         nPrice = b.nPrice;
+        nFee = b.nFee;
         nQty = b.nQty;
         n = b.n;
         hash = b.hash;
         txHash = b.txHash;
         nHeight = b.nHeight;
+        nTime = b.nTime;
         accepts = b.accepts;
         vchPaymentAddress = b.vchPaymentAddress;
         return *this;
@@ -234,96 +247,49 @@ public:
     std::string SerializeToString();
 };
 
-
-//class COfferIndex {
-//public:
-//	uint256 hash;
-//    unsigned int n;
-//    uint256 txHash;
-//    int nHeight;
-//    std::vector<unsigned char> vValue;
-//
-//    COfferIndex() {
-//        SetNull();
-//    }
-//
-//    COfferIndex(uint256 txHashIn, uint256 o, unsigned int i, unsigned int nHeightIn, std::vector<unsigned char> vValueIn) {
-//        txHash = txHashIn;
-//        hash = o;
-//        n = i;
-//        nHeight = nHeightIn;
-//        vValue = vValueIn;
-//    }
-//
-//    IMPLEMENT_SERIALIZE (
-//        READWRITE(txHash);
-//        READWRITE(hash);
-//    	READWRITE(n);
-//        READWRITE(VARINT(nHeight));
-//    	READWRITE(vValue);
-//    )
-//
-//    friend bool operator==(const COfferIndex &a, const COfferIndex &b) {
-//        return (a.nHeight == b.nHeight && a.txHash == b.txHash);
-//    }
-//
-//    friend bool operator!=(const COfferIndex &a, const COfferIndex &b) {
-//        return !(a == b);
-//    }
-//
-//    void SetNull() { txHash.SetHex("0x0"); nHeight = -1; vValue.clear(); }
-//    bool IsNull() const { return (nHeight == -1 && txHash == 0); }
-//};
-
-class COfferTxnValue {
+class COfferFee {
 public:
-	unsigned int nBlockTime;
-	unsigned int nHeight;
 	uint256 hash;
-	uint64 nValue;
+	unsigned int nHeight;
+	unsigned long nTime;
+	int64 nFee;
 
-	COfferTxnValue() {
-        SetNull();
-    }
-
-    IMPLEMENT_SERIALIZE (
-        READWRITE(nBlockTime);
-        READWRITE(nHeight);
-        READWRITE(hash);
-    	READWRITE(nValue);
-    )
-
-    void SetNull() { hash = 0; nHeight = 0; nValue = 0; nBlockTime = 0; }
-    bool IsNull() const { return (nHeight == 0 && hash == 0 && nValue == 0 && nBlockTime == 0); }
-
-	COfferTxnValue(uint256 s, unsigned int t, unsigned int h, uint64 v) {
-		hash = s;
-		nBlockTime = t;
-		nHeight = h;
-		nValue = v;
+	COfferFee() {
+		nTime = 0; nHeight = 0; hash = 0; nFee = 0;
 	}
-	bool operator()(uint256 s, unsigned int t, unsigned int h, uint64 v) {
-		hash = s;
-		nBlockTime = t;
-		nHeight = h;
-		nValue = v;
-		return true;
-	}
-    friend bool operator==(const COfferTxnValue &a, const COfferTxnValue &b) {
-        return (a.hash == b.hash && a.nBlockTime == b.nBlockTime && a.nHeight == b.nHeight && a.nValue == b.nValue);
+
+	IMPLEMENT_SERIALIZE (
+	    READWRITE(hash);
+	    READWRITE(nHeight);
+		READWRITE(nTime);
+		READWRITE(nFee);
+	)
+
+    friend bool operator==(const COfferFee &a, const COfferFee &b) {
+        return (
+        a.nTime==b.nTime
+        && a.hash==b.hash
+        && a.nHeight==b.nHeight
+        && a.nFee == b.nFee 
+        );
     }
 
-    friend bool operator!=(const COfferTxnValue &a, const COfferTxnValue &b) {
-        return !(a == b);
+    COfferFee operator=(const COfferFee &b) {
+        nTime = b.nTime;
+        nFee = b.nFee;
+        hash = b.hash;
+        nHeight = b.nHeight;
+        return *this;
     }
+
+    friend bool operator!=(const COfferFee &a, const COfferFee &b) { return !(a == b); }
+	void SetNull() { hash = nTime = nHeight = nFee = 0;}
+    bool IsNull() const { return (nTime == 0 && nFee == 0 && hash == 0 && nHeight == 0); }
 };
-extern std::list<COfferTxnValue> lstOfferTxValues;
-
 
 class COfferDB : public CLevelDB {
 public:
-	COfferDB(size_t nCacheSize, bool fMemory, bool fWipe) : CLevelDB(GetDataDir() / "offers", nCacheSize, fMemory, fWipe) {
-    }
+	COfferDB(size_t nCacheSize, bool fMemory, bool fWipe) : CLevelDB(GetDataDir() / "offers", nCacheSize, fMemory, fWipe) {}
 
 	bool WriteOffer(const std::vector<unsigned char>& name, std::vector<COffer>& vtxPos) {
 		return Write(make_pair(std::string("offeri"), name), vtxPos);
@@ -357,11 +323,12 @@ public:
 	    return Exists(make_pair(std::string("offera"), name));
 	}
 
-	bool WriteOfferTxFees(std::vector<COfferTxnValue>& vtxPos) {
-		return Write(std::string("offertxf"), vtxPos);
+	bool WriteOfferTxFees(std::vector<COfferFee>& vtxPos) {
+		return Write(make_pair(std::string("offera"), std::string("offertxf")), vtxPos);
 	}
-	bool ReadOfferTxFees(std::vector<COfferTxnValue>& vtxPos) {
-		return Read(std::string("offertxf"), vtxPos);
+
+	bool ReadOfferTxFees(std::vector<COfferFee>& vtxPos) {
+		return Read(make_pair(std::string("offera"), std::string("offertxf")), vtxPos);
 	}
 
     bool ScanOffers(
@@ -371,6 +338,7 @@ public:
 
     bool ReconstructOfferIndex();
 };
+extern std::list<COfferFee> lstOfferFees;
 
 
 bool GetTxOfOffer(COfferDB& dbOffer, const std::vector<unsigned char> &vchOffer, CTransaction& tx);

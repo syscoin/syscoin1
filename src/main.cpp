@@ -669,9 +669,9 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 	                break;
 	            case OP_ALIAS_FIRSTUPDATE:
 	                if (avvch[1].size() > 20)
-	                    ret[iter] = error("aliasfirstupdate tx with rand too big");
+	                    ret[iter] = error("aliasactivate tx with rand too big");
 	                if (avvch[2].size() > MAX_VALUE_LENGTH)
-	                    ret[iter] = error("aliasfirstupdate tx with value too long");
+	                    ret[iter] = error("aliasactivate tx with value too long");
 	                break;
 	            case OP_ALIAS_UPDATE:
 	                if (avvch[1].size() > MAX_VALUE_LENGTH)
@@ -706,14 +706,14 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 	            case OP_OFFER_ACCEPT: 
 	            	if (ovvch[0].size() > 20)
 	                    ret[iter] = error("offeraccept tx with offer rand too big");
-	                if (ovvch[2].size() > MAX_VALUE_LENGTH)
+	                if (ovvch[2].size() > 20)
 	                    ret[iter] = error("offeraccept tx with invalid hash length");
 	                if (ovvch[1].size() > 20)
 	                    ret[iter] = error("offeraccept tx with alias rand too big");
 	                break;
 	            case OP_OFFER_PAY:
 	            	if (ovvch[0].size() > 20)
-	                    ret[iter] = error("offeraccept tx with offer rand too big");
+	                    ret[iter] = error("offerpay tx with offer rand too big");
 	                if (ovvch[1].size() > 20)
 	                    ret[iter] = error("offeraccept tx with alias rand too big");
 	                break;
@@ -958,15 +958,15 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 			}
 	    }
 	    if(ogood && IsOfferOp(oop)) {
-			if (oop != OP_OFFER_NEW) {
+			//if (oop != OP_OFFER_NEW) {
 		        LOCK(cs_main);
 				if(oop == OP_OFFER_ACCEPT || oop == OP_OFFER_PAY)
 					mapOfferAcceptPending[ovvch[1]].insert(tx.GetHash());
 				else
-					mapOfferPending[ovvch[1]].insert(tx.GetHash());
+					mapOfferPending[oop == OP_OFFER_NEW ? vchFromString(HexStr(ovvch[0])) : ovvch[0]].insert(tx.GetHash());
 
 				printf("AcceptToMemoryPool() : Added offer transaction '%s' to memory pool.\n", stringFromVch(ovvch[0]).c_str());
-			}
+			//}
 	    }
 
 	   	if (!agood && !ogood) {
@@ -1236,7 +1236,7 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
 	nSubsidy >>= (nHeight / 131400);
 	nSubsidy = (nHeight <= 1314000 ? nSubsidy : 0);
 
-	return nSubsidy + nFees + GetNameTxAvgSubsidy(nHeight);
+	return nSubsidy + nFees + GetAliasFeeSubsidy(nHeight) + GetOfferFeeSubsidy(nHeight);
 }
 
 static const int64 nTargetTimespan = 1 * 60 * 60; // SysCoin: 1 hour
@@ -2783,7 +2783,6 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock,
 		mapOrphanBlocksByPrev.erase(hashPrev);
 	}
 
-	printf("ProcessBlock: ACCEPTED\n");
 	return true;
 }
 
@@ -4740,7 +4739,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn) {
 			if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
 				continue;
 
-	        for (int i = 0; i < (int) tx.vin.size(); i++) {
+	        for (unsigned int i = 0; i < tx.vin.size(); i++) {
 	        	mapTestPool[tx.vin[i].prevout.hash] = tx.GetHash();
 	        }
 
@@ -4748,8 +4747,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn) {
 			if (!tx.CheckInputs(pindexPrev, state, view, true, SCRIPT_VERIFY_P2SH,
 					mapTestPool, NULL, false, true, false))
 				continue;
-
-			mapTestPool[tx.GetHash()] = tx.GetHash();
 
 			CTxUndo txundo;
 			uint256 hash = tx.GetHash();

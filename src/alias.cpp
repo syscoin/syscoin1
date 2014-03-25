@@ -62,8 +62,8 @@ bool IsNameOp(int op) {
     return op == OP_ALIAS_NEW || op == OP_ALIAS_UPDATE;
 }
 
-bool InsertNameTxFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
-    unsigned int h12 = 60 * 60 * 12;
+bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
+    unsigned int h12 = 3600 * 12;
     list<CNameTxnValue> txnDup;
     CNameTxnValue txnVal(hash, pindex->nTime, pindex->nHeight, vValue);
     bool bFound = false;
@@ -85,7 +85,7 @@ bool InsertNameTxFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
 }
 
 
-uint64 GetNameTxAvgSubsidy(unsigned int nHeight) {
+uint64 GetAliasFeeSubsidy(unsigned int nHeight) {
 	unsigned int h12 = 60 * 60 * 12;
 	unsigned int nTargetTime = 0;
 	unsigned int nTarget1hrTime = 0;
@@ -115,7 +115,7 @@ uint64 GetNameTxAvgSubsidy(unsigned int nHeight) {
 	}
 	hr12 /= (nHeight - blk12hrht) + 1;
 	hr1 /= (nHeight - blk1hrht) + 1;
-//	printf("GetNameTxAvgSubsidy() : Alias fee mining reward for height %d: %llu\n", nHeight, nSubsidyOut);
+//	printf("GetAliasFeeSubsidy() : Alias fee mining reward for height %d: %llu\n", nHeight, nSubsidyOut);
 	return ( hr12 + hr1 ) / 2;
 }
 
@@ -139,7 +139,7 @@ string nameFromOp(int op) {
         case OP_ALIAS_UPDATE:
             return "aliasupdate";
         case OP_ALIAS_FIRSTUPDATE:
-            return "aliasfirstupdate";
+            return "aliasactivate";
         default:
             return "<unknown alias op>";
     }
@@ -302,18 +302,18 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
             case OP_ALIAS_FIRSTUPDATE:
 
                 nNetFee = GetNameNetFee(tx);
-                if (nNetFee < GetNetworkFee(pindexBlock->nHeight))
+                if (nNetFee < GetAliasNetworkFee(pindexBlock->nHeight))
                     return error("CheckAliasInputs() : got tx %s with fee too low %lu",
                         tx.GetHash().GetHex().c_str(), (long unsigned int) nNetFee);
 
                 if ((!found || prevOp != OP_ALIAS_NEW) && !fJustCheck)
-                    return error("CheckAliasInputs() : aliasfirstupdate tx without previous aliasnew tx");
+                    return error("CheckAliasInputs() : aliasactivate tx without previous aliasnew tx");
 
                 if (vvchArgs[1].size() > 20)
-                    return error("aliasfirstupdate tx with rand too big");
+                    return error("aliasactivate tx with rand too big");
 
                 if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
-                    return error("aliasfirstupdate tx with value too long");
+                    return error("aliasactivate tx with value too long");
 
                 printf("RCVD:ALIASFIRSTUPDATE : name=%s, tx=%s, data:\n%s\n",
                         stringFromVch(vvchArgs[0]).c_str(),
@@ -328,7 +328,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
     				vchToHash.insert(vchToHash.end(), vchName.begin(), vchName.end());
     				uint160 hash = Hash160(vchToHash);
     				if (uint160(vchHash) != hash)
-    					return error("CheckAliasInputs() : aliasfirstupdate hash mismatch");
+    					return error("CheckAliasInputs() : aliasactivate hash mismatch");
 
     				nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins, MIN_FIRSTUPDATE_DEPTH);
     				printf("ALIAS_FIRSTUPDATE : %s depth %d\n", stringFromVch(vvchArgs[0]).c_str(), nDepth);
@@ -337,11 +337,11 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
                     nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins, GetNameExpirationDepth(pindexBlock->nHeight));
                     if (nDepth == -1)
-                        return error("CheckAliasInputs() : aliasfirstupdate cannot be mined if aliasnew is not already in chain and unexpired");
+                        return error("CheckAliasInputs() : aliasactivate cannot be mined if aliasnew is not already in chain and unexpired");
 
                     nPrevHeight = GetNameHeight(vvchArgs[0]);
     				if (!fBlock && nPrevHeight >= 0 && pindexBlock->nHeight - nPrevHeight < GetNameExpirationDepth(pindexBlock->nHeight))
-    					return error("CheckAliasInputs() : aliasfirstupdate on an unexpired alias");
+    					return error("CheckAliasInputs() : aliasactivate on an unexpired alias");
 
 //    				set<uint256>& setPending = mapNamePending[vvchArgs[0]];
 //                    BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
@@ -421,8 +421,6 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     if (!pnamedb->WriteName(vvchArgs[0], vtxPos))
                         return error("CheckAliasInputs() : failed to write to alias DB");
 
-                    InsertNameTxFee(pindexBlock, tx.GetHash(), GetNameNetFee(tx));
-
                     pnamedb->Flush();
 
                     printf("CheckAliasInputs(): wrote alias transaction: name=%s  hash=%s  height=%d\n",
@@ -433,6 +431,11 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
             }
 
             if(pindexBlock->nHeight != pindexBest->nHeight) {
+            	if(op == OP_ALIAS_FIRSTUPDATE || op == OP_ALIAS_UPDATE) {
+            		int64 nTheFee = GetNameNetFee(tx);
+					InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
+					if( nTheFee != 0) printf("ALIAS FEES: Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
+            	}
 				if (op != OP_ALIAS_NEW) {
 					LOCK(cs_main);
 					std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapNamePending.find(vvchArgs[0]);
@@ -443,7 +446,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					int nHeight;
 					uint256 hash;
 					GetValueOfNameTxHash(tx.GetHash(), vchValue, hash, nHeight);
-					InsertNameTxFee(pindexBlock, tx.GetHash(), GetNetworkFee(nHeight));
+					InsertAliasFee(pindexBlock, tx.GetHash(), GetAliasNetworkFee(nHeight));
 				}
             }
         }
@@ -541,6 +544,8 @@ bool CNameDB::ReconstructNameIndex() {
             if (tx.nVersion != SYSCOIN_TX_VERSION)
                 continue;
 
+            printf("Processing alias txn=%s nHeight=%d ...\n", tx.GetHash().GetHex().c_str(), nHeight);
+
             vector<vector<unsigned char> > vvchArgs;
             int op, nOut;
 
@@ -575,24 +580,30 @@ bool CNameDB::ReconstructNameIndex() {
     return true;
 }
 
+// 10080 blocks = 1 week
+// alias expiration time is ~ 6 months or 26 weeks
+// expiration blocks is 262080 (final)
+// expiration starts at 87360, increases by 1 per block starting at
+// block 174721 until block 349440
 
-// Increase expiration to 36000 gradually starting at block 24000.
+//
+// Increase expiration to 262080 gradually starting at block 174720.
 // Use for validation purposes and pass the chain height.
 int GetNameExpirationDepth(int nHeight) {
-    if (nHeight < 24000) return 12000;
-    if (nHeight < 48000) return nHeight - 12000;
-    return 36000;
+    if (nHeight < 174720) return 87360;
+    if (nHeight < 349440) return nHeight - 87360;
+    return 262080;
 }
 
 // For display purposes, pass the name height.
 int GetNameDisplayExpirationDepth(int nHeight) {
-    if (nHeight < 12000) return 12000;
-    return 36000;
+    if (nHeight < 87360) return 87360;
+    return 262080;
 }
 
-int64 GetNetworkFee(int nHeight) {
-    // Speed up network fee decrease 4x starting at 24000
-    if (nHeight >= 24000) nHeight += (nHeight - 24000) * 3;
+int64 GetAliasNetworkFee(int nHeight) {
+    // Speed up network fee decrease 4x starting at 174720
+    if (nHeight >= 174720) nHeight += (nHeight - 174720) * 3;
     if ((nHeight >> 13) >= 60) return 0;
     int64 nStart = 50 * COIN;
     if (fTestNet) nStart = 10 * CENT;

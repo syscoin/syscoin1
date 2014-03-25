@@ -1239,10 +1239,10 @@ Value aliasnew(const Array& params, bool fHelp) {
 }
 
 
-Value aliasfirstupdate(const Array& params, bool fHelp) {
+Value aliasactivate(const Array& params, bool fHelp) {
     if (fHelp || params.size() < 3 || params.size() > 4)
         throw runtime_error(
-            "aliasfirstupdate <alias> <rand> [<tx>] <value>\n"
+            "aliasactivate <alias> <rand> [<tx>] <value>\n"
             "Perform a first update after an aliasnew reservation.\n"
             "Note that the first update will go into a block 12 blocks after the aliasnew, at the soonest."
             + HelpRequiringPassphrase());
@@ -1263,7 +1263,7 @@ Value aliasfirstupdate(const Array& params, bool fHelp) {
 	LOCK2(cs_main, pwalletMain->cs_wallet);
 
 	if (mapNamePending.count(vchName) && mapNamePending[vchName].size()) {
-		error("aliasfirstupdate() : there are %d pending operations on that alias, including %s",
+		error("aliasactivate() : there are %d pending operations on that alias, including %s",
 				(int)mapNamePending[vchName].size(),
 				mapNamePending[vchName].begin()->GetHex().c_str());
 		throw runtime_error("there are pending operations on that alias");
@@ -1271,7 +1271,7 @@ Value aliasfirstupdate(const Array& params, bool fHelp) {
 
 	CTransaction tx;
 	if (GetTxOfName(*pnamedb, vchName, tx)) {
-		error("aliasfirstupdate() : this alias is already active with tx %s",
+		error("aliasactivate() : this alias is already active with tx %s",
 				tx.GetHash().GetHex().c_str());
 		throw runtime_error("this alias is already active");
 	}
@@ -1323,7 +1323,7 @@ Value aliasfirstupdate(const Array& params, bool fHelp) {
 		throw runtime_error("previous tx used a different random value");
 	}
 
-	int64 nNetFee = GetNetworkFee(pindexBest->nHeight);
+	int64 nNetFee = GetAliasNetworkFee(pindexBest->nHeight);
 
 	// Round up to CENT
 	nNetFee += CENT - 1;
@@ -1393,8 +1393,14 @@ Value aliasupdate(const Array& params, bool fHelp)
 			throw runtime_error("this alias is not in your wallet");
 		}
 
+		int64 nNetFee = GetAliasNetworkFee(pindexBest->nHeight);
+
+		// Round up to CENT
+		nNetFee += CENT - 1;
+		nNetFee = (nNetFee / CENT) * CENT;
+	
 		CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
-		string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, 0, wtxIn, wtx, false);
+		string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee, wtxIn, wtx, false);
 		if (strError != "")
 			throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
@@ -1933,11 +1939,11 @@ Value datanew(const Array& params, bool fHelp)
     return res;
 }
 
-Value datafirstupdate(const Array& params, bool fHelp)
+Value dataactivate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 4)
         throw runtime_error(
-            "datafirstupdate <name> <rand> [<tx>] <data>\n"
+            "dataactivate <name> <rand> [<tx>] <data>\n"
             "Perform a data firstupdate after a datanew reservation.\n"
             "Note that the firstupdate will go into a block 12 blocks after the datanew, at the soonest."
             + HelpRequiringPassphrase());
@@ -1976,6 +1982,7 @@ Value datafirstupdate(const Array& params, bool fHelp)
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
             baSig = EncodeBase64(vchSig.data(), vchSig.size());
             vchValue = vchFromString(baSig);
+            break;
         }
     }
 
@@ -1986,7 +1993,7 @@ Value datafirstupdate(const Array& params, bool fHelp)
     {
     LOCK(cs_main);
     if (mapNamePending.count(vchName) && mapNamePending[vchName].size()) {
-        error("datafirstupdate() : there are %d pending operations on that data, including %s",
+        error("dataactivate() : there are %d pending operations on that data, including %s",
                 (int)mapNamePending[vchName].size(),
                 mapNamePending[vchName].begin()->GetHex().c_str());
         throw runtime_error("there are pending operations on that data");
@@ -1994,7 +2001,7 @@ Value datafirstupdate(const Array& params, bool fHelp)
 
     CTransaction tx;
     if (GetTxOfName(*pnamedb, vchName, tx)) {
-        error("datafirstupdate() : this data is already active with tx %s",
+        error("dataactivate() : this data is already active with tx %s",
                 tx.GetHash().GetHex().c_str());
         throw runtime_error("this data is already active");
     }
@@ -2047,7 +2054,7 @@ Value datafirstupdate(const Array& params, bool fHelp)
     if (uint160(vchHash) != hash)
         throw runtime_error("previous tx used a different random value");
 
-    int64 nNetFee = GetNetworkFee(pindexBest->nHeight);
+    int64 nNetFee = GetAliasNetworkFee(pindexBest->nHeight);
 
     // Round up to CENT
     nNetFee += CENT - 1;
