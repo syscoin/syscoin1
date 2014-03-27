@@ -988,7 +988,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			// check for enough fees
 			nNetFee = GetOfferNetFee(tx);
-			if (nNetFee < GetOfferNetworkFee(8, pindexBlock->nHeight))
+			if (nNetFee < GetOfferNetworkFee(8, pindexBlock->nHeight)-COIN)
 				return error(
 						"CheckOfferInputs() : got tx %s with fee too low %lu",
 						tx.GetHash().GetHex().c_str(),
@@ -1153,7 +1153,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 				// check for enough fees
 				int64 expectedFee = GetOfferNetworkFee(4, pindexBlock->nHeight) 
-				+ ((theOfferAccept.nPrice * theOfferAccept.nQty) / 200);
+				+ ((theOfferAccept.nPrice * theOfferAccept.nQty) / 200) - COIN;
 				nNetFee = GetOfferNetFee(tx);
 				if (nNetFee < expectedFee )
 					return error(
@@ -1228,6 +1228,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						}
 
 						// set the offer accept txn-dependent values and add to the txn
+						theOfferAccept.vchRand = vvchArgs[1];
 						theOfferAccept.txHash = tx.GetHash();
 						theOfferAccept.nTime = pindexBlock->nTime;
 						theOfferAccept.nHeight = nHeight;
@@ -1624,9 +1625,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 
 		// calculate network fees
 		int64 nNetFee = GetOfferNetworkFee(4, pindexBest->nHeight);
-		// Round up to CENT
-		nNetFee += CENT - 1;
-		nNetFee = (nNetFee / CENT) * CENT;
+		if(qty > 0) nNetFee += (price * qty) / 200;
 
 		// update offer values
 		theOffer.sCategory = vchCat;
@@ -1641,7 +1640,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 		string bdata = theOffer.SerializeToString();
 
 		CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
-		string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, 0,
+		string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
 				wtxIn, wtx, false, bdata);
 		if (strError != "")
 			throw JSONRPCError(RPC_WALLET_ERROR, strError);
@@ -1804,7 +1803,7 @@ Value offerpay(const Array& params, bool fHelp) {
 	// use the offer and accept from the DB as basis
     theOffer = vtxPos.back();
     if(!theOffer.GetAcceptByHash(vchRand, theOfferAccept))
-		throw runtime_error("could not find an offer accept with this name in DB");
+		throw runtime_error("could not find an offer accept with this hash in DB");
 
 	// check if paid already
 	if(theOfferAccept.bPaid)
@@ -1832,18 +1831,17 @@ Value offerpay(const Array& params, bool fHelp) {
     if (!pwalletMain->SelectCoins(nTotalValue + nNetFee, setCoins, nValueIn)) 
         throw runtime_error("insufficient funds to pay for offer");
 
-
     theOfferAccept.vchRand = vchRand;
     theOfferAccept.txPayId = wtxPay.GetHash();
     theOfferAccept.vchMessage = vchMessage;
     theOfferAccept.nFee = nNetFee;
+    theOffer.accepts.clear();
     theOffer.PutOfferAccept(theOfferAccept);
-
-	// serialize offer object
-	string bdata = theOffer.SerializeToString();
+    printf("offeraccept msg %s\n", stringFromVch(theOfferAccept.vchMessage).c_str());
 
     // add a copy of the offer object with just
-    // the one accept object to payment txn
+    // the one accept object to payment txn to identify
+    // this txn as an offer payment
     COffer offerCopy = theOffer;
     COfferAccept offerAcceptCopy = theOfferAccept;
     offerAcceptCopy.bPaid = true;
@@ -1852,13 +1850,14 @@ Value offerpay(const Array& params, bool fHelp) {
 
     // send payment to offer address
     CBitcoinAddress address(stringFromVch(theOffer.vchPaymentAddress));
-    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nTotalValue, wtxPay, false, offerCopy.SerializeToString());
+    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nTotalValue, 
+    	wtxPay, false, offerCopy.SerializeToString());
     if (strError != "") throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
 	// send the offer pay txn 
 	CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
 	strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
-			wtxIn, wtx, false, bdata);
+			wtxIn, wtx, false, theOffer.SerializeToString());
 	if (strError != "")
 		throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}

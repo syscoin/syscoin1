@@ -63,46 +63,46 @@ public:
     }
     IMPLEMENT_SERIALIZE (
         READWRITE(vchRand);
+        READWRITE(vchMessage);
+        READWRITE(vchAddress);
 		READWRITE(txHash);
 		READWRITE(nHeight);
     	READWRITE(nTime);
+        READWRITE(nQty);
     	READWRITE(nPrice);
-    	READWRITE(nQty);
+        READWRITE(nFee);
     	READWRITE(bPaid);
         READWRITE(txPayId);
-        READWRITE(vchMessage);
-        READWRITE(vchAddress);
-        READWRITE(nFee);
     )
 
     friend bool operator==(const COfferAccept &a, const COfferAccept &b) {
         return (
         a.vchRand == b.vchRand
-        && a.nPrice == b.nPrice
-        && a.nQty == b.nQty
-        && a.nTime == b.nTime
-        && a.txHash == b.txHash
-        && a.nHeight == b.nHeight
-        && a.bPaid == b.bPaid
-        && a.txPayId == b.txPayId
         && a.vchMessage == b.vchMessage
         && a.vchAddress == b.vchAddress
+        && a.txHash == b.txHash
+        && a.nHeight == b.nHeight
+        && a.nTime == b.nTime
+        && a.nQty == b.nQty
+        && a.nPrice == b.nPrice
         && a.nFee == b.nFee
+        && a.bPaid == b.bPaid
+        && a.txPayId == b.txPayId
         );
     }
 
     COfferAccept operator=(const COfferAccept &b) {
         vchRand = b.vchRand;
-        nPrice = b.nPrice;
-        nQty = b.nQty ;
-        nTime = b.nTime;
-        txHash = b.txHash;
-        nHeight = b.nHeight;
-        bPaid = b.bPaid;
-        txPayId = b.txPayId;
         vchMessage = b.vchMessage;
         vchAddress = b.vchAddress;
+        txHash = b.txHash;
+        nHeight = b.nHeight;
+        nTime = b.nTime;
+        nQty = b.nQty;
+        nPrice = b.nPrice;
         nFee = b.nFee;
+        bPaid = b.bPaid;
+        txPayId = b.txPayId;
         return *this;
     }
 
@@ -138,6 +138,7 @@ public:
 
     IMPLEMENT_SERIALIZE (
         READWRITE(vchRand);
+        READWRITE(vchPaymentAddress);
 		READWRITE(txHash);
 		READWRITE(nHeight);
 		READWRITE(nTime);
@@ -150,7 +151,6 @@ public:
     	READWRITE(nQty);
     	READWRITE(nFee);
     	READWRITE(accepts);
-        READWRITE(vchPaymentAddress);
     )
 
     bool GetAcceptByHash(std::vector<unsigned char> ahash, COfferAccept &ca) {
