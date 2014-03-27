@@ -85,6 +85,9 @@ public:
         && a.nHeight == b.nHeight
         && a.bPaid == b.bPaid
         && a.txPayId == b.txPayId
+        && a.vchMessage == b.vchMessage
+        && a.vchAddress == b.vchAddress
+        && a.nFee == b.nFee
         );
     }
 
@@ -97,6 +100,9 @@ public:
         nHeight = b.nHeight;
         bPaid = b.bPaid;
         txPayId = b.txPayId;
+        vchMessage = b.vchMessage;
+        vchAddress = b.vchAddress;
+        nFee = b.nFee;
         return *this;
     }
 
@@ -179,16 +185,17 @@ public:
         offerList.push_back(*this);
     }
 
-    void GetOfferFromList(std::vector<COffer> &offerList) {
-        if(offerList.size() == 0) return;
+    bool GetOfferFromList(const std::vector<COffer> &offerList) {
+        if(offerList.size() == 0) return false;
         for(unsigned int i=0;i<offerList.size();i++) {
             COffer o = offerList[i];
             if(o.nHeight == nHeight) {
                 *this = offerList[i];
-                return;
+                return true;
             }
         }
         *this = offerList.back();
+        return false;
     }
 
     int GetRemQty() {

@@ -204,7 +204,7 @@ bool COfferDB::ReconstructOfferIndex() {
 	                else bReadOffer = true;
 	            }
 				if(!bReadOffer && !txOffer.GetAcceptByHash(vchOfferAccept, txCA))
-					printf("ReconstructOfferIndex() : failed to read offer accept from offer");
+					printf("ReconstructOfferIndex() : failed to read offer accept from offer\n");
 
 				// add txn-specific values to offer accept object
 		        txCA.nTime = pindex->nTime;
@@ -360,9 +360,10 @@ int GetOfferHeight(vector<unsigned char> vchOffer) {
 
 // Check that the last entry in offer history matches the given tx pos
 bool CheckOfferTxPos(const vector<COffer> &vtxPos, const int txPos) {
-	if (vtxPos.empty())
-		return false;
-	return vtxPos.back().nHeight == (unsigned int) txPos;
+	if (vtxPos.empty()) return false;
+	COffer offer;
+	offer.nHeight = txPos;
+	return offer.GetOfferFromList(vtxPos);
 }
 
 int IndexOfOfferOutput(const CTransaction& tx) {
@@ -445,7 +446,7 @@ bool IsOfferMine(const CTransaction& tx) {
 	int op, nOut;
 	if (!DecodeOfferTx(tx, op, nOut, vvch, -1)) {
 		error(
-				"IsMine() offerController : no output out script in offer tx %s\n",
+				"IsOfferMine() : no output out script in offer tx %s\n",
 				tx.ToString().c_str());
 		return false;
 	}
@@ -455,7 +456,7 @@ bool IsOfferMine(const CTransaction& tx) {
 
 	const CTxOut& txout = tx.vout[nOut];
 	if (IsMyOffer(tx, txout)) {
-		printf("IsMine() offerController : found my transaction %s nout %d\n",
+		printf("IsOfferMine() : found my transaction %s nout %d\n",
 				tx.GetHash().GetHex().c_str(), nOut);
 		return true;
 	}
@@ -480,7 +481,7 @@ bool IsOfferMine(const CTransaction& tx, const CTxOut& txout,
 		return false;
 
 	if (IsMyOffer(tx, txout)) {
-		printf("IsMine() offerController : found my transaction %s value %d\n",
+		printf("IsOfferMine() : found my transaction %s value %d\n",
 				tx.GetHash().GetHex().c_str(), (int) txout.nValue);
 		return true;
 	}
@@ -987,7 +988,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			// check for enough fees
 			nNetFee = GetOfferNetFee(tx);
-			if (nNetFee < GetOfferNetworkFee(4, pindexBlock->nHeight))
+			if (nNetFee < GetOfferNetworkFee(8, pindexBlock->nHeight))
 				return error(
 						"CheckOfferInputs() : got tx %s with fee too low %lu",
 						tx.GetHash().GetHex().c_str(),
@@ -1151,7 +1152,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					return error("could not read accept from offer txn");
 
 				// check for enough fees
-				int64 expectedFee = GetOfferNetworkFee(1, pindexBlock->nHeight) 
+				int64 expectedFee = GetOfferNetworkFee(4, pindexBlock->nHeight) 
 				+ ((theOfferAccept.nPrice * theOfferAccept.nQty) / 200);
 				nNetFee = GetOfferNetFee(tx);
 				if (nNetFee < expectedFee )
@@ -1207,6 +1208,10 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if (op != OP_OFFER_NEW) {
 				if (!fMiner && !fJustCheck && pindexBlock->nHeight != pindexBest->nHeight) {
 					int nHeight = pindexBlock->nHeight;
+
+					// get the latest offer from the db
+                	theOffer.nHeight = nHeight;
+                	theOffer.GetOfferFromList(vtxPos);
 					
 					if (op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
 						// get the accept out of the offer object in the txn
@@ -1214,14 +1219,11 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							return error("could not read accept from offer txn");
 
 						if(op == OP_OFFER_ACCEPT) {
-							// get the latest offer from the db
-		                	theOffer.nHeight = nHeight;
-		                	theOffer.GetOfferFromList(vtxPos);
-
 							// get the offer accept qty, validate
 							if(theOfferAccept.nQty < 1 || theOfferAccept.nQty > theOffer.GetRemQty())
 								return error("invalid quantity value (nQty < 1 or nQty > remaining qty).");
-						} else {
+						} 
+						if(op == OP_OFFER_PAY) {
 							theOfferAccept.bPaid = true;
 						}
 
@@ -1230,16 +1232,14 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						theOfferAccept.nTime = pindexBlock->nTime;
 						theOfferAccept.nHeight = nHeight;
 						theOffer.PutOfferAccept(theOfferAccept);
-					}
-					// set the offer's txn-dependent values
-					theOffer.txHash = tx.GetHash();
-					theOffer.nHeight = nHeight;
-					theOffer.PutToOfferList(vtxPos);
 
-					// write offer accept <-> offer link
-					if(op == OP_OFFER_ACCEPT)
 						if (!pofferdb->WriteOfferAccept(vvchArgs[1], vvchArgs[0]))
 							return error( "CheckOfferInputs() : failed to write to offer DB");
+					}
+					
+					// set the offer's txn-dependent values
+					theOffer.txHash = tx.GetHash();
+					theOffer.PutToOfferList(vtxPos);
 
 					// write offer
 					if (!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
@@ -1358,7 +1358,6 @@ Value offernew(const Array& params, bool fHelp) {
 	CBitcoinAddress payAddr(stringFromVch(vchPaymentAddress));
 	if(payAddr.IsValid()) nParamIdx++;
 	else {
-		    // sign using the first key in wallet
 	    BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& entry, pwalletMain->mapAddressBook) {
 	        if (IsMine(*pwalletMain, entry.first)) {
 	            // sign the data and store it as the alias value
@@ -1379,7 +1378,7 @@ Value offernew(const Array& params, bool fHelp) {
 	nQty = atoi(params[nParamIdx++].get_str().c_str());
 	nPrice = atoi64(params[nParamIdx++].get_str().c_str());
 
-	if(nParamIdx < params.size()-1) vchDesc = vchFromValue(params[nParamIdx++]);
+	if(nParamIdx < params.size()) vchDesc = vchFromValue(params[nParamIdx++]);
     else vchDesc = vchFromString("");
 
     // 64Kbyte offer desc. maxlen
@@ -1508,7 +1507,7 @@ Value offeractivate(const Array& params, bool fHelp) {
 			throw runtime_error("Could not decode offer transaction");
 
 		// calculate network fees
-		int64 nNetFee = GetOfferNetworkFee(4, pindexBest->nHeight);
+		int64 nNetFee = GetOfferNetworkFee(8, pindexBest->nHeight);
 
 		// unserialize offer object from txn, serialize back
 		COffer newOffer;
@@ -1695,7 +1694,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 
 		if (mapOfferPending.count(vchOffer)
 				&& mapOfferPending[vchOffer].size()) {
-			error(  "offerupdate() : there are %d pending operations on that offer, including %s",
+			error(  "offeraccept() : there are %d pending operations on that offer, including %s",
 					(int) mapOfferPending[vchOffer].size(),
 					mapOfferPending[vchOffer].begin()->GetHex().c_str());
 			throw runtime_error("there are pending operations on that offer");
@@ -1829,23 +1828,32 @@ Value offerpay(const Array& params, bool fHelp) {
     set<pair<const CWalletTx*,unsigned int> > setCoins;
     int64 nValueIn = 0;
     uint64 nTotalValue = ( theOfferAccept.nPrice * theOfferAccept.nQty );
-    int64 nNetFee = GetOfferNetworkFee(1, pindexBest->nHeight) + (nTotalValue / 200);
+    int64 nNetFee = GetOfferNetworkFee(4, pindexBest->nHeight) + (nTotalValue / 200);
     if (!pwalletMain->SelectCoins(nTotalValue + nNetFee, setCoins, nValueIn)) 
         throw runtime_error("insufficient funds to pay for offer");
 
-    // send payment to offer address
-    CBitcoinAddress address(stringFromVch(theOffer.vchPaymentAddress));
-    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nTotalValue, wtxPay, false);
-    if (strError != "") throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
+    theOfferAccept.vchRand = vchRand;
     theOfferAccept.txPayId = wtxPay.GetHash();
     theOfferAccept.vchMessage = vchMessage;
     theOfferAccept.nFee = nNetFee;
-
     theOffer.PutOfferAccept(theOfferAccept);
 
 	// serialize offer object
 	string bdata = theOffer.SerializeToString();
+
+    // add a copy of the offer object with just
+    // the one accept object to payment txn
+    COffer offerCopy = theOffer;
+    COfferAccept offerAcceptCopy = theOfferAccept;
+    offerAcceptCopy.bPaid = true;
+    offerCopy.accepts.clear();
+    offerCopy.PutOfferAccept(offerAcceptCopy);
+
+    // send payment to offer address
+    CBitcoinAddress address(stringFromVch(theOffer.vchPaymentAddress));
+    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nTotalValue, wtxPay, false, offerCopy.SerializeToString());
+    if (strError != "") throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
 	// send the offer pay txn 
 	CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
