@@ -2055,7 +2055,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 				nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs - 1));
 
 		if (vtx[0].GetValueOut()
-				> GetBlockValue(pindex->nHeight, nFees, 0) 
+				> GetBlockValue(pindex->nHeight, nFees, 0) * 2 
 				&& !fEnforceBIP30)
 			return state.DoS(100,
 					error( "ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",
