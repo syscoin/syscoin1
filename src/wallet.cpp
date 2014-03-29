@@ -701,8 +701,10 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
         uint160 hash160;
         if(!ExtractDestination(txout.scriptPubKey, address)) {
             if (!ExtractAliasAddress(txout.scriptPubKey, saddress)) {
-                printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
+                if (!ExtractOfferAddress(txout.scriptPubKey, saddress)) {
+                    printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
                        this->GetHash().ToString().c_str());
+                }
             }
         }
         vector<vector<unsigned char> > vvch;

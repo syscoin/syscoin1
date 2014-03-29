@@ -1859,6 +1859,19 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 			        // write new offer state to db
 					if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 						return error("DisconnectBlock() : failed to write to offer DB");
+
+					bool bFound = false;
+                    BOOST_FOREACH(vector<unsigned char> &vch, vecOfferIndex) {
+                        if(vch == vvchArgs[0]) {
+                            bFound = true;
+                            break;
+                        }
+                    }
+                    if(!bFound) vecOfferIndex.push_back(vvchArgs[0]);
+                    
+                    if (!pofferdb->WriteOfferIndex(vecOfferIndex))
+                        return error("CheckOfferInputs() : failed to write index to offer DB");
+
 				} else {
 					pofferdb->EraseOffer(theOffer.vchRand);
 				}
@@ -2079,7 +2092,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 				nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs - 1));
 
 		if (vtx[0].GetValueOut()
-				> GetBlockValue(pindex->nHeight, nFees, 0) 
+				> GetBlockValue(pindex->nHeight, nFees, 0) * 2 
 				&& !fEnforceBIP30)
 			return state.DoS(100,
 					error( "ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",

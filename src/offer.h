@@ -65,26 +65,29 @@ public:
     }
     IMPLEMENT_SERIALIZE (
         READWRITE(vchRand);
+        READWRITE(vchMessage);
+        READWRITE(vchAddress);
 		READWRITE(txHash);
 		READWRITE(nHeight);
     	READWRITE(nTime);
+        READWRITE(nQty);
     	READWRITE(nPrice);
-    	READWRITE(nQty);
+        READWRITE(nFee);
     	READWRITE(bPaid);
         READWRITE(txPayId);
-        READWRITE(vchMessage);
-        READWRITE(vchAddress);
-        READWRITE(nFee);
     )
 
     friend bool operator==(const COfferAccept &a, const COfferAccept &b) {
         return (
         a.vchRand == b.vchRand
-        && a.nPrice == b.nPrice
-        && a.nQty == b.nQty
-        && a.nTime == b.nTime
+        && a.vchMessage == b.vchMessage
+        && a.vchAddress == b.vchAddress
         && a.txHash == b.txHash
         && a.nHeight == b.nHeight
+        && a.nTime == b.nTime
+        && a.nQty == b.nQty
+        && a.nPrice == b.nPrice
+        && a.nFee == b.nFee
         && a.bPaid == b.bPaid
         && a.txPayId == b.txPayId
         );
@@ -92,11 +95,14 @@ public:
 
     COfferAccept operator=(const COfferAccept &b) {
         vchRand = b.vchRand;
-        nPrice = b.nPrice;
-        nQty = b.nQty ;
-        nTime = b.nTime;
+        vchMessage = b.vchMessage;
+        vchAddress = b.vchAddress;
         txHash = b.txHash;
         nHeight = b.nHeight;
+        nTime = b.nTime;
+        nQty = b.nQty;
+        nPrice = b.nPrice;
+        nFee = b.nFee;
         bPaid = b.bPaid;
         txPayId = b.txPayId;
         return *this;
@@ -134,6 +140,7 @@ public:
 
     IMPLEMENT_SERIALIZE (
         READWRITE(vchRand);
+        READWRITE(vchPaymentAddress);
 		READWRITE(txHash);
 		READWRITE(nHeight);
 		READWRITE(nTime);
@@ -146,7 +153,6 @@ public:
     	READWRITE(nQty);
     	READWRITE(nFee);
     	READWRITE(accepts);
-        READWRITE(vchPaymentAddress);
     )
 
     bool GetAcceptByHash(std::vector<unsigned char> ahash, COfferAccept &ca) {
@@ -181,16 +187,17 @@ public:
         offerList.push_back(*this);
     }
 
-    void GetOfferFromList(std::vector<COffer> &offerList) {
-        if(offerList.size() == 0) return;
+    bool GetOfferFromList(const std::vector<COffer> &offerList) {
+        if(offerList.size() == 0) return false;
         for(unsigned int i=0;i<offerList.size();i++) {
             COffer o = offerList[i];
             if(o.nHeight == nHeight) {
                 *this = offerList[i];
-                return;
+                return true;
             }
         }
         *this = offerList.back();
+        return false;
     }
 
     int GetRemQty() {
@@ -332,6 +339,14 @@ public:
 	bool ReadOfferTxFees(std::vector<COfferFee>& vtxPos) {
 		return Read(make_pair(std::string("offera"), std::string("offertxf")), vtxPos);
 	}
+
+    bool WriteOfferIndex(std::vector<std::vector<unsigned char> >& vtxPos) {
+        return Write(make_pair(std::string("offera"), std::string("offerndx")), vtxPos);
+    }
+
+    bool ReadOfferIndex(std::vector<std::vector<unsigned char> >& vtxPos) {
+        return Read(make_pair(std::string("offera"), std::string("offerndx")), vtxPos);
+    }
 
     bool ScanOffers(
             const std::vector<unsigned char>& vchName,
