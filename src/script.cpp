@@ -215,7 +215,7 @@ const char* GetOpName(opcodetype opcode)
     case OP_NOP9                   : return "OP_NOP9";
     case OP_NOP10                  : return "OP_NOP10";
     case OP_ALIAS_NEW              : return "OP_ALIAS_NEW";
-    case OP_ALIAS_FIRSTUPDATE      : return "OP_ALIAS_FIRSTUPDATE";
+    case OP_ALIAS_ACTIVATE      : return "OP_ALIAS_ACTIVATE";
     case OP_ALIAS_UPDATE           : return "OP_ALIAS_UPDATE";
     case OP_OFFER_NEW              : return "OP_OFFER_NEW";
     case OP_OFFER_UPDATE           : return "OP_OFFER_UPDATE";

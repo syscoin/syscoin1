@@ -201,6 +201,13 @@ void BitcoinGUI::createActions()
     addressBookAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
     tabGroup->addAction(addressBookAction);
 
+    aliasListAction = new QAction(QIcon(":/icons/address-book"), tr("A&liases"), this);
+    aliasListAction->setStatusTip(tr("Manage aliases and data aliases"));
+    aliasListAction->setToolTip(aliasListAction->statusTip());
+    aliasListAction->setCheckable(true);
+    aliasListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
+    tabGroup->addAction(aliasListAction);
+
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
     connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
@@ -211,6 +218,8 @@ void BitcoinGUI::createActions()
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
     connect(addressBookAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(addressBookAction, SIGNAL(triggered()), this, SLOT(gotoAddressBookPage()));
+    connect(aliasListAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(aliasListAction, SIGNAL(triggered()), this, SLOT(gotoAliasListPage()));
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
     quitAction->setStatusTip(tr("Quit application"));
@@ -295,6 +304,7 @@ void BitcoinGUI::createToolBars()
     toolbar->addAction(receiveCoinsAction);
     toolbar->addAction(historyAction);
     toolbar->addAction(addressBookAction);
+    toolbar->addAction(aliasListAction);
 }
 
 void BitcoinGUI::setClientModel(ClientModel *clientModel)
@@ -371,6 +381,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     signMessageAction->setEnabled(enabled);
     verifyMessageAction->setEnabled(enabled);
     addressBookAction->setEnabled(enabled);
+    aliasListAction->setEnabled(enabled);
 }
 
 void BitcoinGUI::createTrayIcon()
@@ -485,6 +496,11 @@ void BitcoinGUI::gotoHistoryPage()
 void BitcoinGUI::gotoAddressBookPage()
 {
     if (walletFrame) walletFrame->gotoAddressBookPage();
+}
+
+void BitcoinGUI::gotoAliasListPage()
+{
+    if (walletFrame) walletFrame->gotoAliasListPage();
 }
 
 void BitcoinGUI::gotoReceiveCoinsPage()

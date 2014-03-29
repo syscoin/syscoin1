@@ -39,8 +39,10 @@ bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue);
 std::string offerFromOp(int op);
 
 extern std::map<std::vector<unsigned char>, uint256> mapMyOffers;
+extern std::map<std::vector<unsigned char>, uint256> mapMyOfferAccepts;
 extern std::map<std::vector<unsigned char>, std::set<uint256> > mapOfferPending;
 extern std::map<std::vector<unsigned char>, std::set<uint256> > mapOfferAcceptPending;
+extern std::vector<std::vector<unsigned char> > vecOfferIndex;
 
 class CBitcoinAddress;
 

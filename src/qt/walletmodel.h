@@ -9,6 +9,7 @@
 
 class OptionsModel;
 class AddressTableModel;
+class AliasTableModel;
 class TransactionTableModel;
 class CWallet;
 class CKeyID;
@@ -61,6 +62,7 @@ public:
 
     OptionsModel *getOptionsModel();
     AddressTableModel *getAddressTableModel();
+    AliasTableModel *getAliasTableModel();
     TransactionTableModel *getTransactionTableModel();
     
     qint64 getBalance(const CCoinControl *coinControl=NULL) const;
@@ -71,6 +73,9 @@ public:
 
     // Check address for validity
     bool validateAddress(const QString &address);
+
+    // Check alias for validity
+    bool validateAlias(const QString &alias);
 
     // Return status record for SendCoins, contains error id + information
     struct SendCoinsReturn
@@ -135,6 +140,7 @@ private:
 
     AddressTableModel *addressTableModel;
     TransactionTableModel *transactionTableModel;
+    AliasTableModel *aliasTableModel;
 
     // Cache some values to be able to detect changes
     qint64 cachedBalance;

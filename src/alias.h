@@ -111,6 +111,13 @@ public:
 		return Read(std::string("nametxf"), vtxPos);
 	}
 
+    bool WriteNameIndex(std::vector<std::vector<unsigned char> >& vtxIndex) {
+        return Write(std::string("namendx"), vtxIndex);
+    }
+    bool ReadNameIndex(std::vector<std::vector<unsigned char> >& vtxIndex) {
+        return Read(std::string("namendx"), vtxIndex);
+    }
+
     bool ScanNames(
             const std::vector<unsigned char>& vchName,
             int nMax,
@@ -123,7 +130,7 @@ public:
 
 extern std::map<std::vector<unsigned char>, uint256> mapMyNames;
 extern std::map<std::vector<unsigned char>, std::set<uint256> > mapNamePending;
-extern std::map<std::vector<unsigned char>, CNameIndex> mapNameIndexes;
+extern std::vector<std::vector<unsigned char> > vecNameIndex;
 
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const json_spirit::Value& value);

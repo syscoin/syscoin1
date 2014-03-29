@@ -8,6 +8,7 @@
 #include "bitcoingui.h"
 #include "transactiontablemodel.h"
 #include "addressbookpage.h"
+#include "aliaslistpage.h"
 #include "sendcoinsdialog.h"
 #include "signverifymessagedialog.h"
 #include "clientmodel.h"
@@ -55,6 +56,8 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
 
     addressBookPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab);
 
+    aliasListPage = new AliasListPage(AliasListPage::ForEditing, AliasListPage::AliasTab);
+
     receiveCoinsPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::ReceivingTab);
 
     sendCoinsPage = new SendCoinsDialog(gui);
@@ -64,6 +67,7 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
     addWidget(overviewPage);
     addWidget(transactionsPage);
     addWidget(addressBookPage);
+    addWidget(aliasListPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
 
@@ -102,6 +106,7 @@ void WalletView::setClientModel(ClientModel *clientModel)
     {
         overviewPage->setClientModel(clientModel);
         addressBookPage->setOptionsModel(clientModel->getOptionsModel());
+        aliasListPage->setOptionsModel(clientModel->getOptionsModel());
         receiveCoinsPage->setOptionsModel(clientModel->getOptionsModel());
     }
 }
@@ -117,6 +122,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
         // Put transaction list in tabs
         transactionView->setModel(walletModel);
         overviewPage->setWalletModel(walletModel);
+        aliasListPage->setModel(walletModel->getAliasTableModel());
         addressBookPage->setModel(walletModel->getAddressTableModel());
         receiveCoinsPage->setModel(walletModel->getAddressTableModel());
         sendCoinsPage->setModel(walletModel);
@@ -160,6 +166,12 @@ void WalletView::gotoHistoryPage()
 {
     gui->getHistoryAction()->setChecked(true);
     setCurrentWidget(transactionsPage);
+}
+
+void WalletView::gotoAliasListPage()
+{
+    gui->getAliasListAction()->setChecked(true);
+    setCurrentWidget(aliasListPage);
 }
 
 void WalletView::gotoAddressBookPage()

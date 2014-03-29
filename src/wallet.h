@@ -316,6 +316,11 @@ public:
      */
     boost::signals2::signal<void (CWallet *wallet, const CTxDestination &address, const std::string &label, bool isMine, ChangeType status)> NotifyAddressBookChanged;
 
+    /** Alias list entry changed.
+     * @note called with lock cs_wallet held.
+     */
+    boost::signals2::signal<void (CWallet *wallet, const std::string &alias, const std::string &value, bool isMine, ChangeType status)> NotifyAliasListChanged;
+
     /** Wallet transaction added, removed or updated.
      * @note called with lock cs_wallet held.
      */

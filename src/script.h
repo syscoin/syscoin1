@@ -70,7 +70,7 @@ enum opcodetype {
 
     // aliases, data aliases
     OP_ALIAS_NEW = 0x01,
-    OP_ALIAS_FIRSTUPDATE=0x02,
+    OP_ALIAS_ACTIVATE=0x02,
     OP_ALIAS_UPDATE=0x03,
 
     // distributed exchange

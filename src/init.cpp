@@ -1068,7 +1068,6 @@ bool AppInit2(boost::thread_group& threadGroup)
                 rescanforoffers();
             }
 
-
             CPubKey newDefaultKey;
             if (pwalletMain->GetKeyFromPool(newDefaultKey, false)) {
                 pwalletMain->SetDefaultKey(newDefaultKey);
@@ -1079,7 +1078,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             pwalletMain->SetBestChain(CBlockLocator(pindexBest));
         }
 
-        if (!filesystem::exists(nameindexfile)) {
+        if (!fFirstRun) {
             rescanfornames();
             rescanforoffers();
         }
@@ -1092,8 +1091,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         CBlockIndex *pindexRescan = pindexBest;
         if (GetBoolArg("-rescan"))
             pindexRescan = pindexGenesisBlock;
-        else
-        {
+        else {
             CWalletDB walletdb("wallet.dat");
             CBlockLocator locator;
             if (walletdb.ReadBestBlock(locator))
@@ -1101,8 +1099,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             else
                 pindexRescan = pindexGenesisBlock;
         }
-        if (pindexBest && pindexBest != pindexRescan)
-        {
+        if (pindexBest && pindexBest != pindexRescan) {
             uiInterface.InitMessage(_("Rescanning..."));
             printf("Rescanning last %i blocks (from block %i)...\n", pindexBest->nHeight - pindexRescan->nHeight, pindexRescan->nHeight);
             nStart = GetTimeMillis();

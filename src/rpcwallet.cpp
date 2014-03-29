@@ -1295,7 +1295,7 @@ Value aliasactivate(const Array& params, bool fHelp) {
     CScript scriptPubKeyOrig;
     scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
     CScript scriptPubKey;
-	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_FIRSTUPDATE) << vchName << vchRand << vchValue << OP_2DROP << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchName << vchRand << vchValue << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
 	CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
@@ -1335,8 +1335,7 @@ Value aliasactivate(const Array& params, bool fHelp) {
     return wtx.GetHash().GetHex();
 }
 
-Value aliasupdate(const Array& params, bool fHelp)
-{
+Value aliasupdate(const Array& params, bool fHelp) {
     if (fHelp || 2 > params.size())
         throw runtime_error(
             "aliasupdate <alias> <value> [<toaddress>]\n"
@@ -1370,8 +1369,7 @@ Value aliasupdate(const Array& params, bool fHelp)
     {
 		LOCK2(cs_main, pwalletMain->cs_wallet);
 
-		if (mapNamePending.count(vchName) && mapNamePending[vchName].size())
-		{
+        if (mapNamePending.count(vchName) && mapNamePending[vchName].size()) {
 			error("aliasupdate() : there are %d pending operations on that alias, including %s",
 					(int)mapNamePending[vchName].size(),
 					mapNamePending[vchName].begin()->GetHex().c_str());
@@ -1386,8 +1384,7 @@ Value aliasupdate(const Array& params, bool fHelp)
 
 		uint256 wtxInHash = tx.GetHash();
 
-		if (!pwalletMain->mapWallet.count(wtxInHash))
-		{
+        if (!pwalletMain->mapWallet.count(wtxInHash)) {
 			error("aliasupdate() : this alias is not in your wallet %s",
 					wtxInHash.GetHex().c_str());
 			throw runtime_error("this alias is not in your wallet");
@@ -1408,8 +1405,7 @@ Value aliasupdate(const Array& params, bool fHelp)
 	return wtx.GetHash().GetHex();
 }
 
-Value aliaslist(const Array& params, bool fHelp)
-{
+Value aliaslist(const Array& params, bool fHelp) {
     if (fHelp || 1 != params.size())
         throw runtime_error(
                 "aliaslist [<name>]\n"
@@ -1490,8 +1486,6 @@ Value aliaslist(const Array& params, bool fHelp)
         oRes.push_back(item.second);
 
     return oRes;
-
-    return (double)0;
 }
 
 Value aliasshow(const Array& params, bool fHelp)
@@ -1556,21 +1550,17 @@ Value aliashistory(const Array& params, bool fHelp)
     {
     LOCK(pwalletMain->cs_wallet);
 
-	//vector<CDiskTxPos> vtxPos;
 	vector<CNameIndex> vtxPos;
-	//CNameDB dbName("r");
 	if (!pnamedb->ReadName(vchName, vtxPos))
-		throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from name DB");
+		throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from alias DB");
 
 	CNameIndex txPos2;
 	uint256 txHash;
 	uint256 blockHash;
-	BOOST_FOREACH(txPos2, vtxPos)
-	{
+	BOOST_FOREACH(txPos2, vtxPos) {
 		txHash = txPos2.txHash;
 		CTransaction tx;
-		if (!GetTransaction(txHash, tx, blockHash, true))
-		{
+		if (!GetTransaction(txHash, tx, blockHash, true)) {
 			error("could not read txpos");
 			continue;
 		}
@@ -1608,7 +1598,7 @@ Value aliasfilter(const Array& params, bool fHelp)
                 "[maxage] : look in last [maxage] blocks\n"
                 "[from] : show results from number [from]\n"
                 "[nb] : show [nb] results, 0 means all\n"
-                "[stats] : show some stats instead of results\n"
+                "[stat] : show some stats instead of results\n"
                 "aliasfilter \"\" 5 # list aliases updated in last 5 blocks\n"
                 "aliasfilter \"^name\" # list all aliases starting with \"name\"\n"
                 "aliasfilter 36000 0 0 stat # display stats (number of names) on active aliases\n"
@@ -2027,7 +2017,7 @@ Value dataactivate(const Array& params, bool fHelp)
     scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
     // create a syscoin DATA_FIRSTUPDATE transaction
     CScript scriptPubKey;
-    scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_FIRSTUPDATE) << vchName << vchRand << vchValue << OP_2DROP << OP_2DROP;
+    scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchName << vchRand << vchValue << OP_2DROP << OP_2DROP;
     scriptPubKey += scriptPubKeyOrig;
 
     CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];

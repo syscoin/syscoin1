@@ -14,6 +14,7 @@ class WalletStack;
 class TransactionView;
 class OverviewPage;
 class AddressBookPage;
+class AliasListPage;
 class SendCoinsDialog;
 class SignVerifyMessageDialog;
 class Notificator;
@@ -65,6 +66,7 @@ public:
     QAction * getOverviewAction() { return overviewAction; }
     QAction * getHistoryAction() { return historyAction; }
     QAction * getAddressBookAction() { return addressBookAction; }
+    QAction * getAliasListAction() { return aliasListAction; }
     QAction * getReceiveCoinsAction() { return receiveCoinsAction; }
     QAction * getSendCoinsAction() { return sendCoinsAction; }
 
@@ -91,6 +93,7 @@ private:
     QAction *quitAction;
     QAction *sendCoinsAction;
     QAction *addressBookAction;
+    QAction *aliasListAction;
     QAction *signMessageAction;
     QAction *verifyMessageAction;
     QAction *aboutAction;
@@ -169,6 +172,8 @@ private slots:
     void gotoHistoryPage();
     /** Switch to address book page */
     void gotoAddressBookPage();
+    /** Switch to alias list page */
+    void gotoAliasListPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */

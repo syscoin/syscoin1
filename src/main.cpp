@@ -667,7 +667,7 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 	                if (avvch[0].size() != 20)
 	                    ret[iter] = error("aliasnew tx with incorrect hash length");
 	                break;
-	            case OP_ALIAS_FIRSTUPDATE:
+	            case OP_ALIAS_ACTIVATE:
 	                if (avvch[1].size() > 20)
 	                    ret[iter] = error("aliasactivate tx with rand too big");
 	                if (avvch[2].size() > MAX_VALUE_LENGTH)
@@ -1782,11 +1782,35 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 				if(!pnamedb->WriteName(vvchArgs[0], vtxPos))
 					return error("DisconnectBlock() : failed to write to alias DB");
 
-		        printf("WROTE ALIAS TXN: alias=%s  hash=%s  height=%d\n",
+                // remove the alias from the alias index if vtxPos empty
+                if(!vtxPos.size()) {
+                    for(unsigned int i=0; i< vecNameIndex.size();i++) {
+                        if(vecNameIndex[i] == vvchArgs[0]) {
+                            swap(vecNameIndex[i], vecNameIndex.back());
+                            vecNameIndex.pop_back();
+                            break;
+                        }
+                    }
+                    if (!pnamedb->WriteNameIndex(vecNameIndex))
+                        return error("DisconnectBlock() : failed to write index to alias DB");
+                }
+
+		        printf("DISCONNECTED ALIAS TXN: alias=%s  hash=%s  height=%d\n",
 		                stringFromVch(vvchArgs[0]).c_str(),
 		                tx.GetHash().ToString().c_str(),
 		                pindex->nHeight);
-		    }
+            } else {
+                pnamedb->EraseName(vvchArgs[0]);
+                for(unsigned int i=0; i< vecNameIndex.size();i++) {
+                    if(vecNameIndex[i] == vvchArgs[0]) {
+                        swap(vecNameIndex[i], vecNameIndex.back());
+                        vecNameIndex.pop_back();
+                        break;
+                    }
+                }
+                if (!pnamedb->WriteNameIndex(vecNameIndex))
+                    return error("DisconnectBlock() : failed to write index to alias DB");
+            }
 
 		    // offer
 		    if (IsOfferOp(oop) && oop != OP_OFFER_NEW) {

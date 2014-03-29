@@ -17,9 +17,11 @@ using namespace json_spirit;
 template<typename T> void ConvertTo(Value& value, bool fAllowNull = false);
 
 std::map<std::vector<unsigned char>, uint256> mapMyOffers;
+std::map<std::vector<unsigned char>, uint256> mapMyOfferAccepts;
 std::map<std::vector<unsigned char>, std::set<uint256> > mapOfferPending;
 std::map<std::vector<unsigned char>, std::set<uint256> > mapOfferAcceptPending;
 std::list<COfferFee> lstOfferFees;
+vector<vector<unsigned char> > vecOfferIndex;
 
 #ifdef GUI
 extern std::map<uint160, std::vector<unsigned char> > mapMyOfferHashes;
@@ -93,7 +95,7 @@ bool IsMyOffer(const CTransaction& tx, const CTxOut& txout) {
 	txnouttype whichTypeRet;
 	if (!Solver(*pwalletMain, scriptPubKey, 0, 0, scriptSig, whichTypeRet))
 		return false;
-	return true;
+    return true;
 }
 
 string offerFromOp(int op) {
@@ -143,7 +145,6 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, int nMax,
 }
 
 bool COfferDB::ReconstructOfferIndex() {
-    COffer txindex;
     CBlockIndex* pindex = pindexGenesisBlock;
     
     {
@@ -230,6 +231,16 @@ bool COfferDB::ReconstructOfferIndex() {
 				InsertOfferFee(pindex, tx.GetHash(), nTheFee);
 				if(nTheFee > 0) printf("OFFER FEES: Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
 			}
+
+            if(IsOfferMine(tx)) {
+                if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
+                    mapMyOfferAccepts[vvchArgs[1]] = tx.GetHash();
+                    if(mapMyOffers[vchOffer].count())
+                        mapMyOffers[vchOffer] = tx.GetHash();
+                }
+                else
+                    mapMyOffers[vchOffer] = tx.GetHash();
+            }
 
 			printf( "RECONSTRUCT OFFER: op=%s offer=%s title=%s qty=%d hash=%s height=%d\n",
 					offerFromOp(op).c_str(),
@@ -1727,6 +1738,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 		txAccept.vchRand = vchAcceptRand;
 		txAccept.nQty = nQty;
 		txAccept.nPrice = theOffer.nPrice;
+		theOffer.accepts.clear();
 		theOffer.PutOfferAccept(txAccept);
 
 		// serialize offer object
@@ -1841,7 +1853,7 @@ Value offerpay(const Array& params, bool fHelp) {
     theOfferAccept.txPayId = wtxPay.GetHash();
     theOfferAccept.vchMessage = vchMessage;
     theOfferAccept.nFee = nNetFee;
-
+	theOffer.accepts.clear();
     theOffer.PutOfferAccept(theOfferAccept);
 
 	// serialize offer object

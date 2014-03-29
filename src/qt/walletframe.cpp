@@ -95,6 +95,13 @@ void WalletFrame::gotoAddressBookPage()
         walletStack->gotoAddressBookPage();
 }
 
+void WalletFrame::gotoAliasListPage()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletStack->gotoAliasListPage();
+}
+
 void WalletFrame::gotoReceiveCoinsPage()
 {
     walletStack->gotoReceiveCoinsPage();
