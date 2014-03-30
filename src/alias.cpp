@@ -22,6 +22,7 @@ extern CNameDB *pnamedb;
 map<vector<unsigned char>, uint256> mapMyNames;
 map<vector<unsigned char>, set<uint256> > mapNamePending;
 vector<vector<unsigned char> > vecNameIndex;
+//list<CAliasFee> lstOfferFees;
 
 #ifdef GUI
 extern std::map<uint160, std::vector<unsigned char> > mapMyNameHashes;
@@ -407,19 +408,26 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     int nHeight = pindexBlock->nHeight;
                     uint256 hash;
                     CNameIndex txPos2;
-                    GetValueOfNameTxHash(tx.GetHash(), vchValue, hash, nHeight); //SUSPECT
                     txPos2.nHeight = nHeight;
-                    txPos2.vValue = vchValue;
+                    txPos2.vValue = OP_ALIAS_ACTIVATE ? vvchArgs[2] : vvchArgs[1];
                     txPos2.txHash = tx.GetHash();
                     txPos2.txPrevOut = *prevOutput;
 
                     if(vtxPos.size()>0 && vtxPos.back().nHeight == nHeight)
                     	vtxPos.pop_back();
-
                     vtxPos.push_back(txPos2); // fin add
 
                     if (!pnamedb->WriteName(vvchArgs[0], vtxPos))
                         return error("CheckAliasInputs() : failed to write to alias DB");
+
+                    int64 nTheFee = GetNameNetFee(tx);
+                    InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
+                    if( nTheFee != 0) printf("ALIAS FEES: Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
+
+//                    // write alias fees
+//                    vector<COfferFee> vAliasFees(lstAliasFees.begin(), lstAliasFees.end());
+//                    if (!pnamedb->WriteNameTxFees(vAliasFees))
+//                        return error( "CheckOfferInputs() : failed to write fees to alias DB");
 
                     bool bFound = false;
                     BOOST_FOREACH(vector<unsigned char> &vch, vecNameIndex) {
@@ -433,9 +441,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     if (!pnamedb->WriteNameIndex(vecNameIndex))
                         return error("CheckAliasInputs() : failed to write index to alias DB");
 
-                    pnamedb->Flush();
-
-                    printf("CheckAliasInputs(): wrote alias transaction: name=%s  hash=%s  height=%d\n",
+                    printf("CONNECTED ALIAS: name=%s  hash=%s  height=%d\n",
                         stringFromVch(vvchArgs[0]).c_str(),
                         tx.GetHash().ToString().c_str(),
                         nHeight);
@@ -443,22 +449,14 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
             }
 
             if(pindexBlock->nHeight != pindexBest->nHeight) {
-            	if(op == OP_ALIAS_ACTIVATE || op == OP_ALIAS_UPDATE) {
-            		int64 nTheFee = GetNameNetFee(tx);
-					InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
-					if( nTheFee != 0) printf("ALIAS FEES: Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
-            	}
+
 				if (op != OP_ALIAS_NEW) {
 					LOCK(cs_main);
 					std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapNamePending.find(vvchArgs[0]);
 					if (mi != mapNamePending.end())
 						mi->second.erase(tx.GetHash());
 				} else {
-					vector<unsigned char> vchValue; // add
-					int nHeight;
-					uint256 hash;
-					GetValueOfNameTxHash(tx.GetHash(), vchValue, hash, nHeight);
-					InsertAliasFee(pindexBlock, tx.GetHash(), GetAliasNetworkFee(nHeight));
+					InsertAliasFee(pindexBlock, tx.GetHash(), GetAliasNetworkFee(pindexBlock->nHeight));
 				}
             }
         }

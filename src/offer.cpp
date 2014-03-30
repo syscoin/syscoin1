@@ -1271,17 +1271,14 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     if (!pofferdb->WriteOfferIndex(vecOfferIndex))
                         return error("CheckOfferInputs() : failed to write index to offer DB");
 
-					// track service fees so we can regenerate them as subsidies for miners
-					if(op == OP_OFFER_ACCEPT || op == OP_OFFER_UPDATE || op == OP_OFFER_PAY) {
-						int64 nTheFee = GetOfferNetFee(tx);
-						InsertOfferFee(pindexBlock, tx.GetHash(), nTheFee);
-						if(nTheFee > 0) printf("OFFER FEES: Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
+                    int64 nTheFee = GetOfferNetFee(tx);
+					InsertOfferFee(pindexBlock, tx.GetHash(), nTheFee);
+					if(nTheFee > 0) printf("OFFER FEES: Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
 
-						// write offer fees
-						vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
-						if (!pofferdb->WriteOfferTxFees(vOfferFees))
-							return error( "CheckOfferInputs() : failed to write fees to offer DB");
-					}
+					// write offer fees
+					vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
+					if (!pofferdb->WriteOfferTxFees(vOfferFees))
+						return error( "CheckOfferInputs() : failed to write fees to offer DB");
 
 					// debug
 					printf( "CONNECTED OFFER: op=%s offer=%s title=%s qty=%d hash=%s height=%d\n",

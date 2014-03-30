@@ -8,8 +8,14 @@
 
 #include <QFont>
 
+using namespace std;
+
 const QString AliasTableModel::Alias = "A";
 const QString AliasTableModel::DataAlias = "D";
+
+class CNameDB;
+
+extern CNameDB *pnamedb;
 
 struct AliasTableEntry
 {
@@ -44,6 +50,8 @@ struct AliasTableEntryLessThan
     }
 };
 
+#define NAMEMAPTYPE map<vector<unsigned char>, uint256>
+
 // Private implementation
 class AliasTablePriv
 {
@@ -60,15 +68,31 @@ public:
         cachedAliasTable.clear();
         {
             LOCK(wallet->cs_wallet);
-//            BOOST_FOREACH(const PAIRTYPE(CTxDestination, std::string)& item, wallet->mapAliasBook)
-//            {
-//                const CBitcoinAddress& alias = item.first;
-//                const std::string& strName = item.second;
-//                bool fMine = IsMine(*wallet, alias.Get());
-//                cachedAliasTable.append(AliasTableEntry(fMine ? AliasTableEntry::Receiving : AliasTableEntry::Sending,
-//                                  QString::fromStdString(strName),
-//                                  QString::fromStdString(alias.ToString())));
-//            }
+            for(unsigned int i=0; i< vecNameIndex.size(); i++) {
+                vector<unsigned char> alias = vecNameIndex[i];
+                vector<CNameIndex> vtxPos;
+                if (pnamedb->ExistsName(alias)) {
+                    if (!pnamedb->ReadName(alias, vtxPos))
+                        continue;
+                } else continue;
+                uint256 hash, txblkhash, txHash = vtxPos.back().txHash;
+                CTransaction tx;
+                vector<unsigned char> vchValue;
+                int nHeight;
+
+                // get the transaction
+                if(!GetTransaction(txHash, tx, txblkhash, true))
+                    continue;
+
+                if(!GetValueOfNameTxHash(txHash, vchValue, hash, nHeight))
+                    continue;
+
+                bool fDataAlias = tx.data.size() > 0;
+                cachedAliasTable.append(AliasTableEntry(fDataAlias ? AliasTableEntry::DataAlias : AliasTableEntry::Alias,
+                                  QString::fromStdString(stringFromVch(vchValue)),
+                                  QString::fromStdString(stringFromVch(alias)),
+                                  QString::fromStdString("0")));
+            }
         }
         // qLowerBound() and qUpperBound() require our cachedAliasTable list to be sorted in asc order
         qSort(cachedAliasTable.begin(), cachedAliasTable.end(), AliasTableEntryLessThan());
@@ -142,7 +166,7 @@ public:
 AliasTableModel::AliasTableModel(CWallet *wallet, WalletModel *parent) :
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0)
 {
-    columns << tr("Alias") << tr("Value")<< tr("ExpirationHeight");
+    columns << tr("Alias") << tr("Value") << tr("ExpirationHeight");
     priv = new AliasTablePriv(wallet, this);
     priv->refreshAliasTable();
 }
@@ -230,7 +254,7 @@ bool AliasTableModel::setData(const QModelIndex &index, const QVariant &value, i
                 editStatus = NO_CHANGES;
                 return false;
             }
-            //wallet->SetAliasBookName(CBitcoinAlias(rec->alias.toStdString()).Get(), value.toString().toStdString());
+            //wallet->SetAddressBookName(CBitcoinAlias(rec->alias.toStdString()).Get(), value.toString().toStdString());
             break;
         case Name:
             // Do nothing, if old alias == new alias

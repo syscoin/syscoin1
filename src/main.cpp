@@ -654,7 +654,7 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
         ret[iter] = true;
 
         bool agood = DecodeNameTx(*this, aop, anOut, avvch, iter == 0 ? 0 : -1);
-        bool ogood = DecodeOfferTx(*this, oop, onOut, ovvch, iter == 0 ? 0 : -1);
+        bool ogood = agood ? false : DecodeOfferTx(*this, oop, onOut, ovvch, iter == 0 ? 0 : -1);
 
         // alias
         if(agood && IsAliasOp(aop)) {
@@ -948,7 +948,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 	    int aop, oop, anOut, onOut;
 
 	    bool agood = DecodeNameTx(tx, aop, anOut, avvch, -1);
-	    bool ogood = DecodeOfferTx(tx, oop, onOut, ovvch, -1);
+	    bool ogood = agood ? false : DecodeOfferTx(tx, oop, onOut, ovvch, -1);
 
 	    if(agood && IsAliasOp(aop)) {
 			if (aop != OP_ALIAS_NEW) {
@@ -1752,7 +1752,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 		    // printf("DisconnectBlock : height: %d tx hash: %s\n",
 		    // 		pindexBlock->nHeight, tx.GetHash().ToString().c_str());
 		    bool agood = DecodeNameTx(tx, aop, naOut, vvchArgs, pindex->nHeight);
-		    bool ogood = DecodeOfferTx(tx, oop, noOut, vvchArgs, pindex->nHeight);
+		    bool ogood = agood ? false : DecodeOfferTx(tx, oop, noOut, vvchArgs, pindex->nHeight);
 		    if (!agood && !ogood)
 		        return error("DisconnectBlock() : could not decode syscoin tx\n");
 

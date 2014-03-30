@@ -84,7 +84,6 @@ AliasListPage::~AliasListPage()
 
 void AliasListPage::setModel(AliasTableModel *model)
 {
-    return;
     this->model = model;
     if(!model) return;
 
