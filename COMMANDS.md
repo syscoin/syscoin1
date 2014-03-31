@@ -35,7 +35,7 @@ returns:
 }
 
 
-**aliasshow** <alias>
+**aliasinfo** <alias>
 Show the values for the alias.
 returns:
 {
@@ -87,7 +87,7 @@ returns:
 }
 
 
-**datashow** <alias>
+**datainfo** <alias>
 Show the values for the data alias.
 returns:
 {
@@ -127,7 +127,7 @@ these commands with creating or purchasing offers.
 
 **offerpay**
 
-**offershow**
+**offerinfo**
 
 **offerhistory**
 

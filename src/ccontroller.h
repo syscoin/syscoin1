@@ -5,7 +5,7 @@
 #ifndef BITCOIN_CCONTROLLER_H
 #define BITCOIN_CCONTROLLER_H
 
-class CNameIndex;
+class CAliasIndex;
 
 class CCoinController
 {

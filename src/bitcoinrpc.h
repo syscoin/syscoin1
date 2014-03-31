@@ -217,7 +217,7 @@ extern json_spirit::Value aliasnew(const json_spirit::Array& params, bool fHelp)
 extern json_spirit::Value aliasactivate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value aliasupdate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value aliaslist(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value aliasshow(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value aliasinfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value aliashistory(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value aliasfilter(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value aliasscan(const json_spirit::Array& params, bool fHelp);
@@ -227,7 +227,7 @@ extern json_spirit::Value datanew(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value dataactivate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value dataupdate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value datalist(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value datashow(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value datainfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value datahistory(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value datafilter(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value keyscan(const json_spirit::Array& params, bool fHelp);
@@ -237,7 +237,7 @@ extern json_spirit::Value offeractivate(const json_spirit::Array& params, bool f
 extern json_spirit::Value offerupdate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offeraccept(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerpay(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value offershow(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value offerinfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerlist(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerhistory(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerfilter(const json_spirit::Array& params, bool fHelp);

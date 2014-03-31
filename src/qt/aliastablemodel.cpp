@@ -15,7 +15,7 @@ const QString AliasTableModel::DataAlias = "D";
 
 class CNameDB;
 
-extern CNameDB *pnamedb;
+extern CNameDB *paliasdb;
 
 struct AliasTableEntry
 {
@@ -70,9 +70,9 @@ public:
             LOCK(wallet->cs_wallet);
             for(unsigned int i=0; i< vecNameIndex.size(); i++) {
                 vector<unsigned char> alias = vecNameIndex[i];
-                vector<CNameIndex> vtxPos;
-                if (pnamedb->ExistsName(alias)) {
-                    if (!pnamedb->ReadName(alias, vtxPos))
+                vector<CAliasIndex> vtxPos;
+                if (paliasdb->ExistsName(alias)) {
+                    if (!paliasdb->ReadName(alias, vtxPos))
                         continue;
                 } else continue;
                 uint256 hash, txblkhash, txHash = vtxPos.back().txHash;

@@ -4,18 +4,18 @@
 #include "bitcoinrpc.h"
 #include "leveldb.h"
 
-class CNameIndex {
+class CAliasIndex {
 public:
     uint256 txHash;
     int nHeight;
     COutPoint txPrevOut;
     std::vector<unsigned char> vValue;
 
-    CNameIndex() { 
+    CAliasIndex() { 
         SetNull();
     }
 
-    CNameIndex(uint256 txHashIn, COutPoint txPrevOutIn, unsigned int nHeightIn, std::vector<unsigned char> vValueIn) {
+    CAliasIndex(uint256 txHashIn, COutPoint txPrevOutIn, unsigned int nHeightIn, std::vector<unsigned char> vValueIn) {
         txHash = txHashIn;
         txPrevOut = txPrevOutIn;
         nHeight = nHeightIn;
@@ -29,11 +29,11 @@ public:
     	READWRITE(vValue);
     )
 
-    friend bool operator==(const CNameIndex &a, const CNameIndex &b) {
+    friend bool operator==(const CAliasIndex &a, const CAliasIndex &b) {
         return (a.nHeight == b.nHeight && a.txHash == b.txHash);
     }
 
-    friend bool operator!=(const CNameIndex &a, const CNameIndex &b) {
+    friend bool operator!=(const CAliasIndex &a, const CAliasIndex &b) {
         return !(a == b);
     }
     
@@ -90,14 +90,14 @@ public:
     CNameDB(size_t nCacheSize, bool fMemory, bool fWipe) : CLevelDB(GetDataDir() / "aliases", nCacheSize, fMemory, fWipe) {
     }
 
-	bool WriteName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos) {
+	bool WriteName(const std::vector<unsigned char>& name, std::vector<CAliasIndex>& vtxPos) {
 		return Write(make_pair(std::string("namei"), name), vtxPos);
 	}
 
 	bool EraseName(const std::vector<unsigned char>& name) {
 	    return Erase(make_pair(std::string("namei"), name));
 	}
-	bool ReadName(const std::vector<unsigned char>& name, std::vector<CNameIndex>& vtxPos) {
+	bool ReadName(const std::vector<unsigned char>& name, std::vector<CAliasIndex>& vtxPos) {
 		return Read(make_pair(std::string("namei"), name), vtxPos);
 	}
 	bool ExistsName(const std::vector<unsigned char>& name) {
@@ -121,15 +121,15 @@ public:
     bool ScanNames(
             const std::vector<unsigned char>& vchName,
             int nMax,
-            std::vector<std::pair<std::vector<unsigned char>, CNameIndex> >& nameScan);
+            std::vector<std::pair<std::vector<unsigned char>, CAliasIndex> >& nameScan);
 
     bool ReconstructNameIndex(CBlockIndex *pindexRescan);
 };
 
 
 
-extern std::map<std::vector<unsigned char>, uint256> mapMyNames;
-extern std::map<std::vector<unsigned char>, std::set<uint256> > mapNamePending;
+extern std::map<std::vector<unsigned char>, uint256> mapMyAliases;
+extern std::map<std::vector<unsigned char>, std::set<uint256> > mapAliasesPending;
 extern std::vector<std::vector<unsigned char> > vecNameIndex;
 
 std::string stringFromVch(const std::vector<unsigned char> &vch);
@@ -149,7 +149,7 @@ bool IsAliasMine(const CTransaction& tx);
 bool IsAliasMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasnew = false);
 bool IsAliasOp(int op);
 
-int GetNameTxPosHeight(const CNameIndex& txPos);
+int GetNameTxPosHeight(const CAliasIndex& txPos);
 int GetNameTxPosHeight(const CDiskTxPos& txPos);
 int GetNameTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
 bool GetTxOfName(CNameDB& dbName, const std::vector<unsigned char> &vchName, CTransaction& tx);
@@ -157,18 +157,18 @@ int IndexOfNameOutput(const CTransaction& tx);
 bool GetValueOfNameTxHash(const uint256& txHash, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
 bool GetNameOfTx(const CTransaction& tx, std::vector<unsigned char>& name);
 bool GetValueOfNameTx(const CTransaction& tx, std::vector<unsigned char>& value);
-bool DecodeNameTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, int nHeight);
+bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, int nHeight);
 bool GetValueOfNameTx(const CCoins& tx, std::vector<unsigned char>& value);
-bool DecodeNameTx(const CCoins& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, int nHeight);
-bool DecodeNameScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
+bool DecodeAliasTx(const CCoins& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, int nHeight);
+bool DecodeAliasScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 bool GetNameAddress(const CTransaction& tx, std::string& strAddress);
 bool GetNameAddress(const CDiskTxPos& txPos, std::string& strAddress);
 std::string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, bool fAskFee, const std::string& txData = "");
 bool CreateTransactionWithInputTx(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxIn, int nTxOut, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, const std::string& txData = "");
 int64 GetAliasNetworkFee(int nHeight);
 uint64 GetAliasFeeSubsidy(const unsigned int nTime);
-std::string nameFromOp(int op);
-bool IsNameOp(int op);
+std::string aliasFromOp(int op);
+bool IsAliasOp(int op);
 int GetNameDisplayExpirationDepth(int nHeight);
 
 #endif // NAMEDB_H

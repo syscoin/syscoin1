@@ -144,6 +144,11 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, int nMax,
 	return true;
 }
 
+/**
+ * [COfferDB::ReconstructOfferIndex description]
+ * @param  pindexRescan [description]
+ * @return              [description]
+ */
 bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
     CBlockIndex* pindex = pindexRescan;
     
@@ -1891,9 +1896,9 @@ Value offerpay(const Array& params, bool fHelp) {
 	return res;
 }
 
-Value offershow(const Array& params, bool fHelp) {
+Value offerinfo(const Array& params, bool fHelp) {
 	if (fHelp || 1 != params.size())
-		throw runtime_error("offershow <rand>\n"
+		throw runtime_error("offerinfo <rand>\n"
 				"Show values of an offer.\n");
 
 	Object oLastOffer;
@@ -2298,7 +2303,7 @@ Value offerscan(const Array& params, bool fHelp) {
  {
  CWalletTx& wtx = item.second;
  vector<unsigned char> vchOffer;
- if (wtx.GetDepthInMainChain() < 1 && IsConflictedTx(pblocktree, wtx, vchOffer))
+ if (wtx.GetDepthInMainChain() < 1 && IsConflictedAliasTx(pblocktree, wtx, vchOffer))
  {
  uint256 hash = wtx.GetHash();
  mapRemove[hash] = wtx;

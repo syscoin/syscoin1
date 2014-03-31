@@ -709,7 +709,7 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
         }
         vector<vector<unsigned char> > vvch;
         int op;
-        if (DecodeNameScript(txout.scriptPubKey, op, vvch)) {
+        if (DecodeAliasScript(txout.scriptPubKey, op, vvch)) {
             nCarriedOverCoin -= txout.nValue;
             if (op != OP_ALIAS_NEW)
                 continue; // Ignore locked coin

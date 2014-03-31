@@ -59,7 +59,7 @@ extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
 		const CTransaction& txTo, unsigned int nIn, unsigned int flags,
 		int nHashType);
 
-extern map<vector<unsigned char>, set<uint256> > mapNamePending;
+extern map<vector<unsigned char>, set<uint256> > mapAliasesPending;
 
 //todo go back and address fees
 /** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
@@ -338,7 +338,7 @@ bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) {
 
 CCoinsViewCache *pcoinsTip = NULL;
 CBlockTreeDB *pblocktree = NULL;
-CNameDB *pnamedb = NULL;
+CNameDB *paliasdb = NULL;
 COfferDB *pofferdb = NULL;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -653,7 +653,7 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
     for (int iter = 0; iter < 2; iter++) {
         ret[iter] = true;
 
-        bool agood = DecodeNameTx(*this, aop, anOut, avvch, iter == 0 ? 0 : -1);
+        bool agood = DecodeAliasTx(*this, aop, anOut, avvch, iter == 0 ? 0 : -1);
         bool ogood = DecodeOfferTx(*this, oop, onOut, ovvch, iter == 0 ? 0 : -1);
 
         // alias
@@ -947,13 +947,13 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 	    vector<vector<unsigned char> > avvch, ovvch;
 	    int aop, oop, anOut, onOut;
 
-	    bool agood = DecodeNameTx(tx, aop, anOut, avvch, -1);
+	    bool agood = DecodeAliasTx(tx, aop, anOut, avvch, -1);
 	    bool ogood = DecodeOfferTx(tx, oop, onOut, ovvch, -1);
 
 	    if(agood && IsAliasOp(aop)) {
 			if (aop == OP_ALIAS_ACTIVATE) {
 		        LOCK(cs_main);
-				mapNamePending[avvch[0]].insert(tx.GetHash());
+				mapAliasesPending[avvch[0]].insert(tx.GetHash());
 		        printf("AcceptToMemoryPool() : Added alias transaction '%s' to memory pool.\n",
 		        	stringFromVch(avvch[0]).c_str());
 			}
@@ -1620,7 +1620,7 @@ bool CTransaction::CheckInputs(CBlockIndex *pindex, CValidationState &state, CCo
 		int op;
 		int nOut;
 
-		bool bDecoded = DecodeNameTx(*this, op, nOut, vvchArgs, pindex->nHeight);
+		bool bDecoded = DecodeAliasTx(*this, op, nOut, vvchArgs, pindex->nHeight);
 		if (bDecoded && IsAliasOp(op)) {
 			if (!CheckAliasInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
 				return false;
@@ -1747,12 +1747,12 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 		    int naOut, noOut;
 
 		    // alias, data
-		    bool agood = DecodeNameTx(tx, aop, naOut, vvchArgs, pindex->nHeight);
+		    bool agood = DecodeAliasTx(tx, aop, naOut, vvchArgs, pindex->nHeight);
 		    if (agood && IsAliasOp(aop) && aop != OP_ALIAS_NEW) {
-		        string opName = nameFromOp(aop);
+		        string opName = aliasFromOp(aop);
 
-		        vector<CNameIndex> vtxPos;
-		        if (!pnamedb->ReadName(vvchArgs[0], vtxPos))
+		        vector<CAliasIndex> vtxPos;
+		        if (!paliasdb->ReadName(vvchArgs[0], vtxPos))
 		            return error("DisconnectBlock() : failed to read from alias DB for %s %s\n",
 		            		opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
 
@@ -1770,7 +1770,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 		            // TODO validate that the first pos is the current tx pos
 		        }
 
-				if(!pnamedb->WriteName(vvchArgs[0], vtxPos))
+				if(!paliasdb->WriteName(vvchArgs[0], vtxPos))
 					return error("DisconnectBlock() : failed to write to alias DB");
 
                 // remove the alias from the alias index if vtxPos empty
@@ -1782,18 +1782,18 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
                             break;
                         }
                     }
-                    if (!pnamedb->WriteNameIndex(vecNameIndex))
+                    if (!paliasdb->WriteNameIndex(vecNameIndex))
                         return error("DisconnectBlock() : failed to write index to alias DB");
                 }
 
 		        printf("DISCONNECTED ALIAS TXN: alias=%s op=%s hash=%s  height=%d\n",
 		                stringFromVch(vvchArgs[0]).c_str(),
-		                nameFromOp(aop).c_str(),
+		                aliasFromOp(aop).c_str(),
 		                tx.GetHash().ToString().c_str(),
 		                pindex->nHeight);
             } 
             else if (IsAliasOp(aop) && aop == OP_ALIAS_NEW) {
-                pnamedb->EraseName(vvchArgs[0]);
+                paliasdb->EraseName(vvchArgs[0]);
                 for(unsigned int i=0; i< vecNameIndex.size();i++) {
                     if(vecNameIndex[i] == vvchArgs[0]) {
                         swap(vecNameIndex[i], vecNameIndex.back());
@@ -1801,7 +1801,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
                         break;
                     }
                 }
-                if (!pnamedb->WriteNameIndex(vecNameIndex))
+                if (!paliasdb->WriteNameIndex(vecNameIndex))
                     return error("DisconnectBlock() : failed to write index to alias DB");
             }
 
@@ -1853,26 +1853,28 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 					if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 						return error("DisconnectBlock() : failed to write to offer DB");
 
-	                // remove the offer from the offer index if vtxPos empty
-	                if(!vtxPos.size()) {
-	                    for(unsigned int i=0; i< vecOfferIndex.size();i++) {
-	                        if(vecOfferIndex[i] == vecOfferIndex[0]) {
-	                            swap(vecOfferIndex[i], vecOfferIndex.back());
-	                            vecOfferIndex.pop_back();
-	                            break;
-	                        }
-	                    }
-	                    if (!pofferdb->WriteOfferIndex(vecOfferIndex))
-	                        return error("DisconnectBlock() : failed to write index to alias DB");
-	                }
+                    // remove the offer from the offer index if vtxPos empty
+                    if(!vtxPos.size()) {
+                        for(unsigned int i=0; i< vecOfferIndex.size();i++) {
+                            if(vecOfferIndex[i] == vecOfferIndex[0]) {
+                                swap(vecOfferIndex[i], vecOfferIndex.back());
+                                vecOfferIndex.pop_back();
+                                break;
+                            }
+                        }
+                    }
+
+                    
+                    if (!pofferdb->WriteOfferIndex(vecOfferIndex))
+                        return error("CheckOfferInputs() : failed to write index to offer DB");
+
 				} 
 				else if (IsOfferOp(oop) && oop == OP_OFFER_NEW) {
 					pofferdb->EraseOffer(theOffer.vchRand);
 				}
 
-		        printf("DISCONNECTED OFFER TXN: title=%s op=%s hash=%s height=%d\n",
+		        printf("DISCONNECTED OFFER TXN: title=%s hash=%s height=%d\n",
 		                stringFromVch(vvchArgs[0]).c_str(),
-		                offerFromOp(oop).c_str(),
 		                tx.GetHash().ToString().c_str(),
 		                pindex->nHeight);
 		    }
@@ -2232,7 +2234,7 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew) {
 	int64 nStart = GetTimeMicros();
 	int nModified = view.GetCacheSize();
 	assert(view.Flush());
-	assert(pnamedb->Flush());
+	assert(paliasdb->Flush());
 	assert(pofferdb->Flush());
 	int64 nTime = GetTimeMicros() - nStart;
 	if (fBenchmark)

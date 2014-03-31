@@ -25,10 +25,10 @@
 using namespace std;
 using namespace boost;
 
-extern CNameDB *pnamedb;
+extern CNameDB *paliasdb;
 extern COfferDB *pofferdb;
 
-void rescanfornames(CBlockIndex *pindexRescan);
+void rescanforaliases(CBlockIndex *pindexRescan);
 void rescanforoffers(CBlockIndex *pindexRescan);
 
 CWallet* pwalletMain;
@@ -117,14 +117,14 @@ void Shutdown()
             pblocktree->Flush();
         if (pcoinsTip)
             pcoinsTip->Flush();
-        if (pnamedb)
-            pnamedb->Flush();        
+        if (paliasdb)
+            paliasdb->Flush();        
         if (pofferdb)
             pofferdb->Flush();   
         delete pcoinsTip; pcoinsTip = NULL;
         delete pcoinsdbview; pcoinsdbview = NULL;
         delete pblocktree; pblocktree = NULL;
-        delete pnamedb; pnamedb = NULL;
+        delete paliasdb; paliasdb = NULL;
         delete pofferdb; pofferdb = NULL;
     }
     if (pwalletMain)
@@ -890,12 +890,12 @@ bool AppInit2(boost::thread_group& threadGroup)
                 delete pcoinsTip;
                 delete pcoinsdbview;
                 delete pblocktree;
-                delete pnamedb;
+                delete paliasdb;
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex);
                 pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
-                pnamedb = new CNameDB(nNameDBCache, false, fReindex);
+                paliasdb = new CNameDB(nNameDBCache, false, fReindex);
                 pofferdb = new COfferDB(nNameDBCache*2, false, fReindex);
 
                 if (fReindex)
@@ -1082,7 +1082,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             pwalletMain->ScanForWalletTransactions(pindexRescan, true);
             printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
             pwalletMain->SetBestChain(CBlockLocator(pindexBest));
-    		rescanfornames(pindexRescan);
+    		rescanforaliases(pindexRescan);
     		rescanforoffers(pindexRescan);
             nWalletDBUpdated++;
         }
