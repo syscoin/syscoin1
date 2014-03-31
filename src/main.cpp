@@ -1624,11 +1624,12 @@ bool CTransaction::CheckInputs(CBlockIndex *pindex, CValidationState &state, CCo
 		if (bDecoded && IsAliasOp(op)) {
 			if (!CheckAliasInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
 				return false;
-		}
-		bDecoded = DecodeOfferTx(*this, op, nOut, vvchArgs, pindex->nHeight);
-		if (bDecoded && IsOfferOp(op)) {
-			if (!CheckOfferInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
-				return false;
+		} else {
+			bDecoded = DecodeOfferTx(*this, op, nOut, vvchArgs, pindex->nHeight);
+			if (bDecoded && IsOfferOp(op)) {
+				if (!CheckOfferInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
+					return false;
+			}
 		}
 
 		if (nValueIn < GetValueOut())
@@ -1852,25 +1853,26 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 					if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 						return error("DisconnectBlock() : failed to write to offer DB");
 
-					bool bFound = false;
-                    BOOST_FOREACH(vector<unsigned char> &vch, vecOfferIndex) {
-                        if(vch == vvchArgs[0]) {
-                            bFound = true;
-                            break;
-                        }
-                    }
-                    if(!bFound) vecOfferIndex.push_back(vvchArgs[0]);
-                    
-                    if (!pofferdb->WriteOfferIndex(vecOfferIndex))
-                        return error("CheckOfferInputs() : failed to write index to offer DB");
-
+	                // remove the offer from the offer index if vtxPos empty
+	                if(!vtxPos.size()) {
+	                    for(unsigned int i=0; i< vecOfferIndex.size();i++) {
+	                        if(vecOfferIndex[i] == vecOfferIndex[0]) {
+	                            swap(vecOfferIndex[i], vecOfferIndex.back());
+	                            vecOfferIndex.pop_back();
+	                            break;
+	                        }
+	                    }
+	                    if (!pofferdb->WriteOfferIndex(vecOfferIndex))
+	                        return error("DisconnectBlock() : failed to write index to alias DB");
+	                }
 				} 
 				else if (IsOfferOp(oop) && oop == OP_OFFER_NEW) {
 					pofferdb->EraseOffer(theOffer.vchRand);
 				}
 
-		        printf("DISCONNECTED OFFER TXN: title=%s  hash=%s  height=%d\n",
+		        printf("DISCONNECTED OFFER TXN: title=%s op=%s hash=%s height=%d\n",
 		                stringFromVch(vvchArgs[0]).c_str(),
+		                offerFromOp(oop).c_str(),
 		                tx.GetHash().ToString().c_str(),
 		                pindex->nHeight);
 		    }

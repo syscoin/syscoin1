@@ -144,16 +144,16 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, int nMax,
 	return true;
 }
 
-bool COfferDB::ReconstructOfferIndex() {
-    CBlockIndex* pindex = pindexGenesisBlock;
+bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
+    CBlockIndex* pindex = pindexRescan;
     
     {
 	LOCK(pwalletMain->cs_wallet);
     while (pindex) {  
+
         int nHeight = pindex->nHeight;
         CBlock block;
         block.ReadFromDisk(pindex);
-
         uint256 txblkhash;
         
         BOOST_FOREACH(CTransaction& tx, block.vtx) {
@@ -169,8 +169,6 @@ bool COfferDB::ReconstructOfferIndex() {
             if (!o || !IsOfferOp(op)) continue;
             
             if (op == OP_OFFER_NEW) continue;
-
-            printf("Processing offer txn=%s nHeight=%d\n", tx.GetHash().GetHex().c_str(), nHeight);
 
             vector<unsigned char> vchOffer = vvchArgs[0];
         
@@ -221,7 +219,6 @@ bool COfferDB::ReconstructOfferIndex() {
 
             if (!WriteOffer(vchOffer, vtxPos))
                 return error("ReconstructOfferIndex() : failed to write to offer DB");
-
             if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY)
 	            if (!WriteOfferAccept(vvchArgs[1], vvchArgs[0]))
 	                return error("ReconstructOfferIndex() : failed to write to offer DB");
@@ -457,13 +454,13 @@ bool IsOfferMine(const CTransaction& tx) {
 
 	vector<vector<unsigned char> > vvch;
 	int op, nOut;
-	if (!DecodeOfferTx(tx, op, nOut, vvch, -1)) {
-		error(
-				"IsOfferMine() : no output out script in offer tx %s\n",
+
+	bool good = DecodeOfferTx(tx, op, nOut, vvch, -1);
+	if (!good) {
+		error( "IsOfferMine() : no output out script in offer tx %s\n",
 				tx.ToString().c_str());
 		return false;
 	}
-
 	if(!IsOfferOp(op))
 		return false;
 
@@ -1279,16 +1276,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					if (!pofferdb->WriteOfferTxFees(vOfferFees))
 						return error( "CheckOfferInputs() : failed to write fees to offer DB");
 
-					// add offer to the proper map(s)
-		            if(IsOfferMine(tx)) {
-		                if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
-		                    mapMyOfferAccepts[vvchArgs[1]] = tx.GetHash();
-		                    if(mapMyOffers.count(vvchArgs[0]))
-		                        mapMyOffers[vvchArgs[0]] = tx.GetHash();
-		                }
-		                else mapMyOffers[vvchArgs[0]] = tx.GetHash();
-		            }
-
 					// debug
 					printf( "CONNECTED OFFER: op=%s offer=%s title=%s qty=%d hash=%s height=%d fees=%llu\n",
 							offerFromOp(op).c_str(),
@@ -1353,9 +1340,9 @@ bool ExtractOfferAddress(const CScript& script, string& address) {
 	return true;
 }
 
-void rescanforoffers() {
+void rescanforoffers(CBlockIndex *pindexRescan) {
     printf("Scanning blockchain for offers to create fast index...\n");
-    pofferdb->ReconstructOfferIndex();
+    pofferdb->ReconstructOfferIndex(pindexRescan);
 }
 
 int GetOfferTxPosHeight(const CDiskTxPos& txPos) {

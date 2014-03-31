@@ -1736,9 +1736,7 @@ Value aliasscan(const Array& params, bool fHelp)
     vector<unsigned char> vchName;
     int nMax = 500;
     if (params.size() > 0)
-    {
         vchName = vchFromValue(params[0]);
-    }
 
     if (params.size() > 1)
     {
@@ -1747,7 +1745,6 @@ Value aliasscan(const Array& params, bool fHelp)
         nMax = (int)vMax.get_real();
     }
 
-    //CNameDB dbName("r");
     Array oRes;
 
     vector<pair<vector<unsigned char>, CNameIndex> > nameScan;
@@ -1755,8 +1752,7 @@ Value aliasscan(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_ERROR, "scan failed");
 
     pair<vector<unsigned char>, CNameIndex> pairScan;
-    BOOST_FOREACH(pairScan, nameScan)
-    {
+    BOOST_FOREACH(pairScan, nameScan) {
         Object oName;
         string name = stringFromVch(pairScan.first);
         oName.push_back(Pair("name", name));
@@ -1764,23 +1760,15 @@ Value aliasscan(const Array& params, bool fHelp)
         CNameIndex txName = pairScan.second;
         uint256 blockHash;
 
-        //CDiskTxPos txPos = pairScan.second;
-        //int nHeight = GetTxPosHeight(txPos);
         int nHeight = txName.nHeight;
         vector<unsigned char> vchValue = txName.vValue;
         if ((nHeight + GetNameDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
-            || !GetTransaction(txName.txHash, tx, blockHash, true))
-        {
+            || !GetTransaction(txName.txHash, tx, blockHash, true)) {
             oName.push_back(Pair("expired", 1));
         }
-        else
-        {
+        else {
             string value = stringFromVch(vchValue);
-            //string strAddress = "";
-            //GetNameAddress(tx, strAddress);
             oName.push_back(Pair("value", value));
-            //oName.push_back(Pair("txid", tx.GetHash().GetHex()));
-            //oName.push_back(Pair("address", strAddress));
             oName.push_back(Pair("expires_in", nHeight + GetNameDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
         }
         oRes.push_back(oName);
@@ -1944,11 +1932,11 @@ Value datanew(const Array& params, bool fHelp)
 
 Value dataactivate(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 3 || params.size() > 4)
+    if (fHelp || params.size() < 4 || params.size() > 5)
         throw runtime_error(
-            "dataactivate <name> <rand> [<tx>] <data>\n"
-            "Perform a data firstupdate after a datanew reservation.\n"
-            "Note that the firstupdate will go into a block 12 blocks after the datanew, at the soonest."
+            "dataactivate <name> <rand> [<tx>] <filename> <data>\n"
+						"Perform a data activate after a datanew reservation.\n"
+            "Note that the activate will go into a block 120 blocks after the datanew, at the soonest."
             + HelpRequiringPassphrase());
 
     vector<unsigned char> vchName = vchFromValue(params[0]);
@@ -1958,36 +1946,40 @@ Value dataactivate(const Array& params, bool fHelp)
 
     // Transaction data
     std::string txdata;
-	if (params.size() == 4)
+	if (params.size() == 5) {
+		vchValue = vchFromValue(params[3]);
+		txdata = params[4].get_str();
+	}
+	else {
+		vchValue = vchFromValue(params[2]);
 		txdata = params[3].get_str();
-	else
-		txdata = params[2].get_str();
+	}
 	if (txdata.length() > MAX_TX_DATA_SIZE)
-		throw JSONRPCError(RPC_INVALID_PARAMETER, "Data chunk is too long.  Split the payload to several transactions.");
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "Data chunk is too long.");
 
-    // sign using the first key in wallet
-    BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& entry, pwalletMain->mapAddressBook) {
-        if (IsMine(*pwalletMain, entry.first)) {
-            // sign the data and store it as the alias value
-            CKeyID keyID;
-            CBitcoinAddress address;
-            address.Set(entry.first);
-            if (!address.GetKeyID(keyID))
-                throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
-            CKey key;
-            if (!pwalletMain->GetKey(keyID, key))
-                throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
-            CHashWriter ss(SER_GETHASH, 0);
-            ss << strMessageMagic;
-            ss << txdata;
-            vector<unsigned char> vchSig;
-            if (!key.SignCompact(ss.GetHash(), vchSig))
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
-            baSig = EncodeBase64(vchSig.data(), vchSig.size());
-            vchValue = vchFromString(baSig);
-            break;
-        }
-    }
+//    // sign using the first key in wallet
+//    BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& entry, pwalletMain->mapAddressBook) {
+//        if (IsMine(*pwalletMain, entry.first)) {
+//            // sign the data and store it as the alias value
+//            CKeyID keyID;
+//            CBitcoinAddress address;
+//            address.Set(entry.first);
+//            if (!address.GetKeyID(keyID))
+//                throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
+//            CKey key;
+//            if (!pwalletMain->GetKey(keyID, key))
+//                throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
+//            CHashWriter ss(SER_GETHASH, 0);
+//            ss << strMessageMagic;
+//            ss << txdata;
+//            vector<unsigned char> vchSig;
+//            if (!key.SignCompact(ss.GetHash(), vchSig))
+//                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
+//            baSig = EncodeBase64(vchSig.data(), vchSig.size());
+//            vchValue = vchFromString(baSig);
+//            break;
+//        }
+//    }
 
     // this is a syscoin transaction
     CWalletTx wtx;
@@ -2073,43 +2065,44 @@ Value dataactivate(const Array& params, bool fHelp)
 
 Value dataupdate(const Array& params, bool fHelp)
 {
-    if (fHelp || 2 > params.size())
+    if (fHelp || 3 > params.size())
         throw runtime_error(
-            "dataupdate <name> <data> [<toaddress>] [<encrypt=false>]\n"
+            "dataupdate <name> <filename> <data> [<toaddress>] [<encrypt=false>]\n"
             "Update and possibly transfer some data."
             + HelpRequiringPassphrase());
 
     vector<unsigned char> vchName = vchFromValue(params[0]);
-    vector<unsigned char> vchValue;
+    vector<unsigned char> vchValue = vchFromValue(params[1]);
     string baSig;
 
     // Transaction data
-    std::string txdata = params[1].get_str();
+    std::string txdata = params[2].get_str();
 	if (txdata.length() > MAX_TX_DATA_SIZE)
-		throw JSONRPCError(RPC_INVALID_PARAMETER, "Data chunk is too long.  Split the payload to several transactions.");
+		throw JSONRPCError(RPC_INVALID_PARAMETER,
+				"Data chunk is too long.  Split the payload to several transactions.");
 
-    // sign using the first key in wallet
-    BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& entry, pwalletMain->mapAddressBook) {
-        if (IsMine(*pwalletMain, entry.first)) {
-            // sign the data and store it as the alias value
-            CKeyID keyID;
-            CBitcoinAddress address;
-            address.Set(entry.first);
-            if (!address.GetKeyID(keyID))
-                throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
-            CKey key;
-            if (!pwalletMain->GetKey(keyID, key))
-                throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
-            CHashWriter ss(SER_GETHASH, 0);
-            ss << strMessageMagic;
-            ss << txdata;
-            vector<unsigned char> vchSig;
-            if (!key.SignCompact(ss.GetHash(), vchSig))
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
-            baSig = EncodeBase64(vchSig.data(), vchSig.size());
-            vchValue = vchFromString(baSig);
-        }
-    }
+//    // sign using the first key in wallet
+//    BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& entry, pwalletMain->mapAddressBook) {
+//        if (IsMine(*pwalletMain, entry.first)) {
+//            // sign the data and store it as the alias value
+//            CKeyID keyID;
+//            CBitcoinAddress address;
+//            address.Set(entry.first);
+//            if (!address.GetKeyID(keyID))
+//                throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
+//            CKey key;
+//            if (!pwalletMain->GetKey(keyID, key))
+//                throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
+//            CHashWriter ss(SER_GETHASH, 0);
+//            ss << strMessageMagic;
+//            ss << txdata;
+//            vector<unsigned char> vchSig;
+//            if (!key.SignCompact(ss.GetHash(), vchSig))
+//                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
+//            baSig = EncodeBase64(vchSig.data(), vchSig.size());
+//            vchValue = vchFromString(baSig);
+//        }
+//    }
 
     CWalletTx wtx;
     wtx.nVersion = SYSCOIN_TX_VERSION;

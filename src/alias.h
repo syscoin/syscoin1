@@ -123,7 +123,7 @@ public:
             int nMax,
             std::vector<std::pair<std::vector<unsigned char>, CNameIndex> >& nameScan);
 
-    bool ReconstructNameIndex();
+    bool ReconstructNameIndex(CBlockIndex *pindexRescan);
 };
 
 

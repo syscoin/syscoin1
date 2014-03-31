@@ -353,7 +353,7 @@ public:
             int nMax,
             std::vector<std::pair<std::vector<unsigned char>, COffer> >& offerScan);
 
-    bool ReconstructOfferIndex();
+    bool ReconstructOfferIndex(CBlockIndex *pindexRescan);
 };
 extern std::list<COfferFee> lstOfferFees;
 

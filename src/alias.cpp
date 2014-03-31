@@ -47,8 +47,8 @@ extern bool DecodeNameScript(const CScript& script, int& op, vector<vector<unsig
 extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash, int nHashType, CScript& scriptSigRet, txnouttype& whichTypeRet);
 extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 extern bool IsConflictedTx(CBlockTreeDB& txdb, const CTransaction& tx, vector<unsigned char>& name);
-extern void rescanfornames();
-extern void rescanforoffers();
+extern void rescanfornames(CBlockIndex *pindexRescan);
+extern void rescanforoffers(CBlockIndex *pindexRescan);
 //extern Value sendtoaddress(const Array& params, bool fHelp);
 
 CScript RemoveNameScriptPrefix(const CScript& scriptIn);
@@ -190,24 +190,18 @@ bool IsAliasMine(const CTransaction& tx) {
         return false;
 
     vector<vector<unsigned char> > vvch;
+    int op, nOut;
 
-    int op;
-    int nOut;
-
-    // We do the check under the correct rule set (post-hardfork)
-    bool good = DecodeNameTx(tx, op, nOut, vvch, -1);
-
-    if(!IsAliasOp(op))
-        return false;
-
-    if (!good) {
-        error("IsAliasMine() : no output out script in name tx %s\n", tx.ToString().c_str());
+    if (!DecodeNameTx(tx, op, nOut, vvch, -1) || !IsAliasOp(op)) {
+        error("IsAliasMine() : no output out script in name tx %s\n",
+        		tx.ToString().c_str());
         return false;
     }
 
     const CTxOut& txout = tx.vout[nOut];
     if (IsMyName(tx, txout)) {
-        printf("IsAliasMine() : found my transaction %s nout %d\n", tx.GetHash().GetHex().c_str(), nOut);
+        printf("IsAliasMine() : found my transaction %s nout %d\n",
+        		tx.GetHash().GetHex().c_str(), nOut);
         return true;
     }
     return false;
@@ -221,10 +215,7 @@ bool IsAliasMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasn
 
     int op;
 
-    if (!DecodeNameScript(txout.scriptPubKey, op, vvch))
-        return false;
-
-    if(!IsAliasOp(op))
+    if (!DecodeNameScript(txout.scriptPubKey, op, vvch) || !IsAliasOp(op))
         return false;
     
     if (ignore_aliasnew && op == OP_ALIAS_NEW)
@@ -291,7 +282,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     return error("aliasnew tx with incorrect hash length");
 
                 printf("CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
-                    stringFromVch(vvchArgs[0]).c_str(),
+                    HexStr(vvchArgs[0]).c_str(),
                     nameFromOp(op).c_str(),
                     tx.GetHash().ToString().c_str(),
                     pindexBlock->nHeight);
@@ -431,15 +422,12 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     if (!pnamedb->WriteNameIndex(vecNameIndex))
                         return error("CheckAliasInputs() : failed to write index to alias DB");
 
-                    // stash alias if ours into our map
-                    if(IsAliasMine(tx))
-                        mapMyNames[vvchArgs[0]] = tx.GetHash();
-
-                    printf("CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
+                    printf("CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d fees=%llu\n",
                         stringFromVch(vvchArgs[0]).c_str(),
                         nameFromOp(op).c_str(),
                         tx.GetHash().ToString().c_str(),
-                        nHeight);
+                        nHeight, 
+                        nTheFee / COIN);
                 }
             }
 
@@ -527,14 +515,14 @@ bool CNameDB::ScanNames(
     return true;
 }
 
-void rescanfornames() {
+void rescanfornames(CBlockIndex *pindexRescan) {
     printf("Scanning blockchain for names to create fast index...\n");
-    pnamedb->ReconstructNameIndex();
+    pnamedb->ReconstructNameIndex(pindexRescan);
 }
 
-bool CNameDB::ReconstructNameIndex() {
+bool CNameDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
     CDiskTxPos txindex;
-    CBlockIndex* pindex = pindexGenesisBlock;
+    CBlockIndex* pindex = pindexRescan;
 
     {
 	LOCK(pwalletMain->cs_wallet);

@@ -28,8 +28,8 @@ using namespace boost;
 extern CNameDB *pnamedb;
 extern COfferDB *pofferdb;
 
-void rescanfornames();
-void rescanforoffers();
+void rescanfornames(CBlockIndex *pindexRescan);
+void rescanforoffers(CBlockIndex *pindexRescan);
 
 CWallet* pwalletMain;
 CClientUIInterface uiInterface;
@@ -1044,29 +1044,10 @@ bool AppInit2(boost::thread_group& threadGroup)
             pwalletMain->SetMaxVersion(nMaxVersion);
         }
 
-        filesystem::path nameindexfile_old = filesystem::path(GetDataDir()) / "kvpindexfull.dat";
-        filesystem::path nameindexfile = filesystem::path(GetDataDir()) / "kvpindex.dat";
-
         if (fFirstRun)
         {
             // Create new keyUser and set as default key
             RandAddSeedPerfmon();
-
-            if (filesystem::exists(nameindexfile_old))
-            {
-                // If old file exists - delete it and recan
-                filesystem::remove(nameindexfile_old);
-                // Also delete new file if it exists together with the old one, as it could be the one from a much older version
-                if (filesystem::exists(nameindexfile))
-                    filesystem::remove(nameindexfile);
-                
-                rescanfornames();
-                rescanforoffers();
-            }
-            else if (!filesystem::exists(nameindexfile)) {
-                rescanfornames();
-                rescanforoffers();
-            }
 
             CPubKey newDefaultKey;
             if (pwalletMain->GetKeyFromPool(newDefaultKey, false)) {
@@ -1076,10 +1057,6 @@ bool AppInit2(boost::thread_group& threadGroup)
             }
 
             pwalletMain->SetBestChain(CBlockLocator(pindexBest));
-        }
-        if (!filesystem::exists(nameindexfile)) {
-            rescanfornames();
-            rescanforoffers();
         }
 
         printf("%s", strErrors.str().c_str());
@@ -1105,6 +1082,8 @@ bool AppInit2(boost::thread_group& threadGroup)
             pwalletMain->ScanForWalletTransactions(pindexRescan, true);
             printf(" rescan      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
             pwalletMain->SetBestChain(CBlockLocator(pindexBest));
+    		rescanfornames(pindexRescan);
+    		rescanforoffers(pindexRescan);
             nWalletDBUpdated++;
         }
     } // (!fDisableWallet)
