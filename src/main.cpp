@@ -654,7 +654,7 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
         ret[iter] = true;
 
         bool agood = DecodeNameTx(*this, aop, anOut, avvch, iter == 0 ? 0 : -1);
-        bool ogood = agood ? false : DecodeOfferTx(*this, oop, onOut, ovvch, iter == 0 ? 0 : -1);
+        bool ogood = DecodeOfferTx(*this, oop, onOut, ovvch, iter == 0 ? 0 : -1);
 
         // alias
         if(agood && IsAliasOp(aop)) {
@@ -948,36 +948,32 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 	    int aop, oop, anOut, onOut;
 
 	    bool agood = DecodeNameTx(tx, aop, anOut, avvch, -1);
-	    bool ogood = agood ? false : DecodeOfferTx(tx, oop, onOut, ovvch, -1);
+	    bool ogood = DecodeOfferTx(tx, oop, onOut, ovvch, -1);
 
 	    if(agood && IsAliasOp(aop)) {
-			if (aop != OP_ALIAS_NEW) {
+			if (aop == OP_ALIAS_ACTIVATE) {
 		        LOCK(cs_main);
 				mapNamePending[avvch[0]].insert(tx.GetHash());
-		        printf("AcceptToMemoryPool() : Added alias transaction '%s' to memory pool.\n", stringFromVch(avvch[0]).c_str());
+		        printf("AcceptToMemoryPool() : Added alias transaction '%s' to memory pool.\n",
+		        	stringFromVch(avvch[0]).c_str());
 			}
 	    }
+
 	    if(ogood && IsOfferOp(oop)) {
-			//if (oop != OP_OFFER_NEW) {
-		        LOCK(cs_main);
-				if(oop == OP_OFFER_ACCEPT || oop == OP_OFFER_PAY)
-					mapOfferAcceptPending[ovvch[1]].insert(tx.GetHash());
-				else
-					mapOfferPending[oop == OP_OFFER_NEW ? vchFromString(HexStr(ovvch[0])) : ovvch[0]].insert(tx.GetHash());
-
-				printf("AcceptToMemoryPool() : Added offer transaction '%s' to memory pool.\n", stringFromVch(ovvch[0]).c_str());
-			//}
-	    }
-
-	   	if (!agood && !ogood) {
-	        error("AcceptToMemoryPool() : invalid sysoin tx %s", tx.ToString().c_str());
+	        LOCK(cs_main);
+			if(oop == OP_OFFER_ACCEPT || oop == OP_OFFER_PAY)
+				mapOfferAcceptPending[ovvch[1]].insert(tx.GetHash());
+			else
+				mapOfferPending[oop == OP_OFFER_NEW ? vchFromString(HexStr(ovvch[0])) 
+					: ovvch[0]].insert(tx.GetHash());
+			printf("AcceptToMemoryPool() : Added offer transaction '%s' to memory pool.\n", 
+				stringFromVch(ovvch[0]).c_str());
 	    }
 	}
 
 	///// are we sure this is ok when loading transactions or restoring block txes
 	// If updated, erase old tx from wallet
-	if (ptxOld)
-		EraseFromWallets(ptxOld->GetHash());
+	if (ptxOld) EraseFromWallets(ptxOld->GetHash());
 	SyncWithWallets(hash, tx, NULL, true);
 
 	printf("CTxMemPool::accept() : accepted %s (poolsz %"PRIszu")\n",
@@ -1749,15 +1745,9 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 		    int aop, oop;
 		    int naOut, noOut;
 
-		    // printf("DisconnectBlock : height: %d tx hash: %s\n",
-		    // 		pindexBlock->nHeight, tx.GetHash().ToString().c_str());
-		    bool agood = DecodeNameTx(tx, aop, naOut, vvchArgs, pindex->nHeight);
-		    bool ogood = agood ? false : DecodeOfferTx(tx, oop, noOut, vvchArgs, pindex->nHeight);
-		    if (!agood && !ogood)
-		        return error("DisconnectBlock() : could not decode syscoin tx\n");
-
 		    // alias, data
-		    if (IsAliasOp(aop) && aop != OP_ALIAS_NEW) {
+		    bool agood = DecodeNameTx(tx, aop, naOut, vvchArgs, pindex->nHeight);
+		    if (agood && IsAliasOp(aop) && aop != OP_ALIAS_NEW) {
 		        string opName = nameFromOp(aop);
 
 		        vector<CNameIndex> vtxPos;
@@ -1795,11 +1785,13 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
                         return error("DisconnectBlock() : failed to write index to alias DB");
                 }
 
-		        printf("DISCONNECTED ALIAS TXN: alias=%s  hash=%s  height=%d\n",
+		        printf("DISCONNECTED ALIAS TXN: alias=%s op=%s hash=%s  height=%d\n",
 		                stringFromVch(vvchArgs[0]).c_str(),
+		                nameFromOp(aop).c_str(),
 		                tx.GetHash().ToString().c_str(),
 		                pindex->nHeight);
-            } else {
+            } 
+            else if (IsAliasOp(aop) && aop == OP_ALIAS_NEW) {
                 pnamedb->EraseName(vvchArgs[0]);
                 for(unsigned int i=0; i< vecNameIndex.size();i++) {
                     if(vecNameIndex[i] == vvchArgs[0]) {
@@ -1812,8 +1804,8 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
                     return error("DisconnectBlock() : failed to write index to alias DB");
             }
 
-		    // offer
-		    if (IsOfferOp(oop) && oop != OP_OFFER_NEW) {
+		    bool ogood = DecodeOfferTx(tx, oop, noOut, vvchArgs, pindex->nHeight);
+		    if (ogood && IsOfferOp(oop) && oop != OP_OFFER_NEW) {
 		        string opName = offerFromOp(oop);
 				
 				COffer theOffer;
@@ -1872,7 +1864,8 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
                     if (!pofferdb->WriteOfferIndex(vecOfferIndex))
                         return error("CheckOfferInputs() : failed to write index to offer DB");
 
-				} else {
+				} 
+				else if (IsOfferOp(oop) && oop == OP_OFFER_NEW) {
 					pofferdb->EraseOffer(theOffer.vchRand);
 				}
 

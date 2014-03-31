@@ -22,7 +22,7 @@ extern CNameDB *pnamedb;
 map<vector<unsigned char>, uint256> mapMyNames;
 map<vector<unsigned char>, set<uint256> > mapNamePending;
 vector<vector<unsigned char> > vecNameIndex;
-//list<CAliasFee> lstOfferFees;
+list<CAliasFee> lstAliasFees;
 
 #ifdef GUI
 extern std::map<uint160, std::vector<unsigned char> > mapMyNameHashes;
@@ -51,8 +51,6 @@ extern void rescanfornames();
 extern void rescanforoffers();
 //extern Value sendtoaddress(const Array& params, bool fHelp);
 
-list<CNameTxnValue> lstNameTxValues;
-
 CScript RemoveNameScriptPrefix(const CScript& scriptIn);
 int GetNameExpirationDepth(int nHeight);
 int64 GetNameNetFee(const CTransaction& tx);
@@ -60,28 +58,28 @@ bool CheckNameTxPos(const vector<CNameIndex> &vtxPos, const int txPos);
 
 
 bool IsNameOp(int op) {
-    return op == OP_ALIAS_NEW || op == OP_ALIAS_UPDATE;
+    return op == OP_ALIAS_NEW || op == OP_ALIAS_ACTIVATE || op == OP_ALIAS_UPDATE;
 }
 
 bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
     unsigned int h12 = 3600 * 12;
-    list<CNameTxnValue> txnDup;
-    CNameTxnValue txnVal(hash, pindex->nTime, pindex->nHeight, vValue);
+    list<CAliasFee> txnDup;
+    CAliasFee txnVal(hash, pindex->nTime, pindex->nHeight, vValue);
     bool bFound = false;
     unsigned int tHeight = pindex->nHeight - 2880 < 0 ? 0 : pindex->nHeight - 2880;
     while(true) {
-    	if(lstNameTxValues.size()>0 && (lstNameTxValues.back().nBlockTime + h12 < pindex->nTime
-    			|| lstNameTxValues.back().nHeight < tHeight))
-    		lstNameTxValues.pop_back();
+    	if(lstAliasFees.size()>0 && (lstAliasFees.back().nBlockTime + h12 < pindex->nTime
+    			|| lstAliasFees.back().nHeight < tHeight))
+    		lstAliasFees.pop_back();
     	else break;
     }
-	BOOST_FOREACH(CNameTxnValue &nmTxnValue, lstNameTxValues) {
+	BOOST_FOREACH(CAliasFee &nmTxnValue, lstAliasFees) {
 		if(txnVal.hash == nmTxnValue.hash && txnVal.nHeight == nmTxnValue.nHeight) {
 			bFound = true;
 			break;
 		}
 	}
-    if(!bFound) lstNameTxValues.push_front(txnVal);
+    if(!bFound) lstAliasFees.push_front(txnVal);
     return true;
 }
 
@@ -95,7 +93,7 @@ uint64 GetAliasFeeSubsidy(unsigned int nHeight) {
 	bool bFound = false;
 	uint64 hr1 = 1, hr12 = 1;
 
-	BOOST_FOREACH(CNameTxnValue &nmTxnValue, lstNameTxValues) {
+	BOOST_FOREACH(CAliasFee &nmTxnValue, lstAliasFees) {
 		if(nmTxnValue.nHeight <= nHeight)
 			bFound = true;
 		if(bFound) {
@@ -240,16 +238,14 @@ bool IsAliasMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasn
 }
 
 bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
-    CValidationState &state, CCoinsViewCache &inputs, map<uint256,uint256> &mapTestPool, bool fBlock, bool fMiner, bool fJustCheck) {
+    CValidationState &state, CCoinsViewCache &inputs, map<uint256,uint256> &mapTestPool,
+                      bool fBlock, bool fMiner, bool fJustCheck) {
 
     if(!tx.IsCoinBase()) {
-        printf( "*** %d %d %s %s %s %s\n", pindexBlock->nHeight, pindexBest->nHeight, tx.GetHash().ToString().c_str(), fBlock ? "BLOCK" : "",
-                fMiner ? "MINER" : "", fJustCheck ? "JUSTCHECK" : "");
 
         bool found = false;
         const COutPoint *prevOutput = NULL;
         const CCoins *prevCoins = NULL;
-        
         int prevOp;
         vector<vector<unsigned char> > vvchPrevArgs;
 
@@ -257,68 +253,68 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		for (int i = 0; i < (int) tx.vin.size(); i++) {
 			prevOutput = &tx.vin[i].prevout;
 			prevCoins = &inputs.GetCoins(prevOutput->hash);
-			vector<vector<unsigned char> > vvchPrevArgsRead;
-			if (DecodeNameScript(prevCoins->vout[prevOutput->n].scriptPubKey, prevOp, vvchPrevArgsRead)) {
+            vector<vector<unsigned char> > vvch;
+            if (DecodeNameScript(prevCoins->vout[prevOutput->n].scriptPubKey, prevOp, vvch)) {
 				found = true;
-				vvchPrevArgs = vvchPrevArgsRead;
+                vvchPrevArgs = vvch;
 				break;
 			}
 		}
 
-		if(found)
-			printf("CheckAliasInputs() : FOUND PREVOP '%s' at height %d position %d\n",
-				nameFromOp(prevOp).c_str(), prevCoins->nHeight, prevOutput->n);
-
-        // Make sure name-op outputs are not spent by a regular transaction, or the name would be lost
+        // Make sure alias outputs are not spent by a regular transaction, or the alias would be lost
         if (tx.nVersion != SYSCOIN_TX_VERSION) {
-            if (found)
-                return error("CheckAliasInputs() : a non-namecoin transaction with a namecoin input");
+            if (found) return error("CheckAliasInputs() : a non-syscoin transaction with a syscoin input");
             return true;
         }
 
+        // decode alias info from transaction
         vector<vector<unsigned char> > vvchArgs;
-        int op, nOut;
+        int op, nOut, nPrevHeight, nDepth;
         if (!DecodeNameTx(tx, op, nOut, vvchArgs, pindexBlock->nHeight))
-            return error("CheckAliasInputs() : could not decode a namecoin tx");
-
-        int nPrevHeight, nDepth;
+            return error("CheckAliasInputs() : could not decode syscoin alias info from tx %s",
+                         tx.GetHash().GetHex().c_str());
         int64 nNetFee;
 
-        // HACK: The following two checks are redundant after hard-fork at block 150000, because it is performed
-        // in CheckTransaction. However, before that, we do not know height during CheckTransaction
-        // and cannot apply the right set of rules
-        if (vvchArgs[0].size() > MAX_NAME_LENGTH)
-            return error("name transaction with name too long");
+        printf("%s : name=%s, tx=%s\n",
+                nameFromOp(op).c_str(),
+                stringFromVch(op==OP_ALIAS_NEW ? vchFromString(HexStr(vvchArgs[0])) : vvchArgs[0]).c_str(),
+                tx.GetHash().GetHex().c_str());
 
         switch (op) {
+
             case OP_ALIAS_NEW:
+
+                // validate inputs
                 if (found)
                     return error("CheckAliasInputs() : aliasnew tx pointing to previous syscoin tx");
-
                 if (vvchArgs[0].size() != 20)
                     return error("aliasnew tx with incorrect hash length");
+
+                printf("CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
+                    stringFromVch(vvchArgs[0]).c_str(),
+                    nameFromOp(op).c_str(),
+                    tx.GetHash().ToString().c_str(),
+                    pindexBlock->nHeight);
 
                 break;
 
             case OP_ALIAS_ACTIVATE:
 
+                // verify enough fees with this txn
                 nNetFee = GetNameNetFee(tx);
                 if (nNetFee < GetAliasNetworkFee(pindexBlock->nHeight))
                     return error("CheckAliasInputs() : got tx %s with fee too low %lu",
                         tx.GetHash().GetHex().c_str(), (long unsigned int) nNetFee);
 
+                // veryify that prev txn is aliasnew
                 if ((!found || prevOp != OP_ALIAS_NEW) && !fJustCheck)
                     return error("CheckAliasInputs() : aliasactivate tx without previous aliasnew tx");
 
+                // verify rand and value lengths
                 if (vvchArgs[1].size() > 20)
                     return error("aliasactivate tx with rand too big");
-
                 if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
                     return error("aliasactivate tx with value too long");
-
-                printf("RCVD:ALIASFIRSTUPDATE : name=%s, tx=%s, data:\n%s\n",
-                        stringFromVch(vvchArgs[0]).c_str(),
-                        tx.GetHash().GetHex().c_str(), tx.GetBase64Data().c_str());
 
                 if (fBlock && !fJustCheck) {
     				// Check hash
@@ -332,31 +328,33 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
     					return error("CheckAliasInputs() : aliasactivate hash mismatch");
 
     				nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins, MIN_FIRSTUPDATE_DEPTH);
-    				printf("ALIAS_FIRSTUPDATE : %s depth %d\n", stringFromVch(vvchArgs[0]).c_str(), nDepth);
     				if ((fBlock || fMiner) && nDepth >= 0 && (unsigned int) nDepth < MIN_FIRSTUPDATE_DEPTH)
     					return false;
-
-                    nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins, GetNameExpirationDepth(pindexBlock->nHeight));
+                    nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins,
+                                                             GetNameExpirationDepth(pindexBlock->nHeight));
                     if (nDepth == -1)
                         return error("CheckAliasInputs() : aliasactivate cannot be mined if aliasnew is not already in chain and unexpired");
 
                     nPrevHeight = GetNameHeight(vvchArgs[0]);
-    				if (!fBlock && nPrevHeight >= 0 && pindexBlock->nHeight - nPrevHeight < GetNameExpirationDepth(pindexBlock->nHeight))
+                    if (!fBlock && nPrevHeight >= 0 && pindexBlock->nHeight - nPrevHeight <
+                            GetNameExpirationDepth(pindexBlock->nHeight))
     					return error("CheckAliasInputs() : aliasactivate on an unexpired alias");
 
-   				set<uint256>& setPending = mapNamePending[vvchArgs[0]];
-                    BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
-                        if (setPending.count(s.second)) {
-                            printf("CheckAliasInputs() : will not mine %s because it clashes with %s",
-                                   tx.GetHash().GetHex().c_str(),
-                                   s.second.GetHex().c_str());
-                            return false;
-                        }
-                    }
+                    // set<uint256>& setPending = mapNamePending[vvchArgs[0]];
+                    // BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
+                    //     if (setPending.count(s.second)) {
+                    //         printf("CheckAliasInputs() : will not mine %s because it clashes with %s",
+                    //                tx.GetHash().GetHex().c_str(),
+                    //                s.second.GetHex().c_str());
+                    //         return false;
+                    //     }
+                    // }
                 }
 
-                 break;
+                break;
+
             case OP_ALIAS_UPDATE:
+
                 if(fBlock && fJustCheck && !found) return true;
 
                 if (!found || (prevOp != OP_ALIAS_ACTIVATE && prevOp != OP_ALIAS_UPDATE))
@@ -370,33 +368,29 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     return error("CheckAliasInputs() : aliasupdate alias mismatch");
 
                 // TODO CPU intensive
-                nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins, GetNameExpirationDepth(pindexBlock->nHeight));
+                nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins, 
+                    GetNameExpirationDepth(pindexBlock->nHeight));
                 if ((fBlock || fMiner) && nDepth < 0)
                     return error("CheckAliasInputs() : aliasupdate on an expired alias, or there is a pending transaction on the alias");
+                
                 break;
+
             default:
                 return error("CheckAliasInputs() : alias transaction has unknown op");
         }
 
-        if (!fBlock && fJustCheck && op == OP_ALIAS_UPDATE) {
-            vector<CNameIndex> vtxPos;
-            if (pnamedb->ExistsName(vvchArgs[0])) {
-                if (!pnamedb->ReadName(vvchArgs[0], vtxPos))
-                    return error("CheckAliasInputs() : failed to read from alias DB");
-            }
-            if (!CheckNameTxPos(vtxPos, prevCoins->nHeight))
-                return error("CheckAliasInputs() : tx %s rejected, since previous tx (%s) is not in the alias DB\n",
-                    tx.GetHash().ToString().c_str(), prevOutput->hash.ToString().c_str());
-        }
-
         if (fBlock || (!fBlock && !fMiner && !fJustCheck)) {
-            if (op == OP_ALIAS_ACTIVATE || op == OP_ALIAS_UPDATE) {
+            
+            if (op != OP_ALIAS_NEW) {
+
+                // get the alias from the DB
                 vector<CNameIndex> vtxPos;
 				if (pnamedb->ExistsName(vvchArgs[0])) {
 					if (!pnamedb->ReadName(vvchArgs[0], vtxPos) && op == OP_ALIAS_UPDATE && !fJustCheck)
 						return error("CheckAliasInputs() : failed to read from alias DB");
 				}
 
+                // if an update then check for a prevtx and error out if not found
 				if (fJustCheck && op == OP_ALIAS_UPDATE && !CheckNameTxPos(vtxPos, prevCoins->nHeight)) {
 					printf("CheckAliasInputs() : tx %s rejected, since previous tx (%s) is not in the alias DB\n",
 						tx.GetHash().ToString().c_str(), prevOutput->hash.ToString().c_str());
@@ -404,9 +398,8 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				}
 
                 if(!fMiner && !fJustCheck && pindexBlock->nHeight != pindexBest->nHeight) {
-                    vector<unsigned char> vchValue; // add
+                    
                     int nHeight = pindexBlock->nHeight;
-                    uint256 hash;
                     CNameIndex txPos2;
                     txPos2.nHeight = nHeight;
                     txPos2.vValue = OP_ALIAS_ACTIVATE ? vvchArgs[2] : vvchArgs[1];
@@ -420,29 +413,31 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     if (!pnamedb->WriteName(vvchArgs[0], vtxPos))
                         return error("CheckAliasInputs() : failed to write to alias DB");
 
+                    // write alias fees to db
                     int64 nTheFee = GetNameNetFee(tx);
                     InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
-                    if( nTheFee != 0) printf("ALIAS FEES: Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
+                    if( nTheFee != 0) printf("ALIAS FEES: Added %lf in fees to track for regeneration.\n", 
+                        (double) nTheFee / COIN);
+                    vector<CAliasFee> vAliasFees(lstAliasFees.begin(), lstAliasFees.end());
+                    if (!pnamedb->WriteNameTxFees(vAliasFees))
+                        return error( "CheckOfferInputs() : failed to write fees to alias DB");
 
-//                    // write alias fees
-//                    vector<COfferFee> vAliasFees(lstAliasFees.begin(), lstAliasFees.end());
-//                    if (!pnamedb->WriteNameTxFees(vAliasFees))
-//                        return error( "CheckOfferInputs() : failed to write fees to alias DB");
-
+                    // write alias to alias index
                     bool bFound = false;
                     BOOST_FOREACH(vector<unsigned char> &vch, vecNameIndex) {
-                        if(vch == vvchArgs[0]) {
-                            bFound = true;
-                            break;
-                        }
+                        if(vch == vvchArgs[0]) { bFound = true; break; }
                     }
                     if(!bFound) vecNameIndex.push_back(vvchArgs[0]);
-                    
                     if (!pnamedb->WriteNameIndex(vecNameIndex))
                         return error("CheckAliasInputs() : failed to write index to alias DB");
 
-                    printf("CONNECTED ALIAS: name=%s  hash=%s  height=%d\n",
+                    // stash alias if ours into our map
+                    if(IsAliasMine(tx))
+                        mapMyNames[vvchArgs[0]] = tx.GetHash();
+
+                    printf("CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
                         stringFromVch(vvchArgs[0]).c_str(),
+                        nameFromOp(op).c_str(),
                         tx.GetHash().ToString().c_str(),
                         nHeight);
                 }
@@ -529,44 +524,6 @@ bool CNameDB::ScanNames(
         const std::vector<unsigned char>& vchName,
         int nMax,
         std::vector<std::pair<std::vector<unsigned char>, CNameIndex> >& nameScan) {
-
-//    Dbc* pcursor = GetCursor();
-//    if (!pcursor)
-//        return false;
-
-//    unsigned int fFlags = DB_SET_RANGE;
-//    loop {
-//        // Read next record
-//        CDataStream ssKey;
-//        if (fFlags == DB_SET_RANGE)
-//            ssKey << make_pair(string("namei"), vchName);
-//        CDataStream ssValue;
-//        int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
-//        fFlags = DB_NEXT;
-//        if (ret == DB_NOTFOUND)
-//            break;
-//        else if (ret != 0)
-//            return false;
-
-//        // Unserialize
-//        string strType;
-//        ssKey >> strType;
-//        if (strType == "namei") {
-//            vector<unsigned char> vchName;
-//            ssKey >> vchName;
-//            string strName = stringFromVch(vchName);
-//            vector<CNameIndex> vtxPos;
-//            ssValue >> vtxPos;
-//            CNameIndex txPos;
-//            if (!vtxPos.empty())
-//                txPos = vtxPos.back();
-//            nameScan.push_back(make_pair(vchName, txPos));
-//        }
-
-//        if (nameScan.size() >= nMax)
-//            break;
-//    }
-//    pcursor->close();
     return true;
 }
 
@@ -592,11 +549,10 @@ bool CNameDB::ReconstructNameIndex() {
             if (tx.nVersion != SYSCOIN_TX_VERSION)
                 continue;
 
-            printf("Processing alias txn=%s nHeight=%d ...\n", tx.GetHash().GetHex().c_str(), nHeight);
-
             vector<vector<unsigned char> > vvchArgs;
             int op, nOut;
 
+            // decode the alias op
             bool o = DecodeNameTx(tx, op, nOut, vvchArgs, nHeight);
             if (!o || !IsNameOp(op)) continue;
             if (op == OP_ALIAS_NEW) continue;
@@ -607,27 +563,42 @@ bool CNameDB::ReconstructNameIndex() {
             if(!GetTransaction(tx.GetHash(), tx, txblkhash, true))
                 continue;
 
+            // if name exists in DB, read it to verify
             vector<CNameIndex> vtxPos;
             if (ExistsName(vchName)) {
                 if (!ReadName(vchName, vtxPos))
                     return error("ReconstructNameIndex() : failed to read from alias DB");
             }
 
+            // rebuild the alias object, store to DB
             CNameIndex txName;
             txName.nHeight = nHeight;
             txName.vValue = vchValue;
+            txName.txHash = tx.GetHash();
             vtxPos.push_back(txName);
             if (!WriteName(vchName, vtxPos))
                 return error("ReconstructNameIndex() : failed to write to alias DB");
 
+            // get fees for txn and add them to regenerate list
+            int64 nTheFee = GetNameNetFee(tx);
+            InsertAliasFee(pindex, tx.GetHash(), nTheFee);
+            if (!pnamedb->WriteNameIndex(vecNameIndex))
+                return error("ReconstructNameIndex() : failed to write index to alias DB");
+
+            printf( "RECONSTRUCT ALIAS: op=%s alias=%s value=%s hash=%s height=%d fees=%llu\n",
+                    nameFromOp(op).c_str(),
+                    stringFromVch(vchName).c_str(),
+                    stringFromVch(vchValue).c_str(),
+                    tx.GetHash().ToString().c_str(), 
+                    nHeight, nTheFee / COIN);
+
+            // add alias to master alias index, add it to my names map
+            // if it is owned by this client
             vecNameIndex.push_back(vvchArgs[0]);
             if(IsAliasMine(tx)) {
                 mapMyNames[vvchArgs[0]] = tx.GetHash();
             }
         }
-        if (!pnamedb->WriteNameIndex(vecNameIndex))
-            return error("ReconstructNameIndex() : failed to write index to alias DB");
-
         pindex = pindex->pnext;
         Flush();
     }
@@ -1103,7 +1074,7 @@ bool DecodeNameTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsi
 	}
 	if (!found) vvch.clear();
 
-    return found && IsNameOp(op);
+    return found;
 }
 
 bool GetValueOfNameTx(const CCoins& tx, vector<unsigned char>& value) {

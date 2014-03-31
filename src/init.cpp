@@ -924,7 +924,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 }
 
                 uiInterface.InitMessage(_("Verifying blocks..."));
-                if (!VerifyDB(GetArg("-checklevel", 3),
+                if (!VerifyDB(GetArg("-checklevel", 4),
                               GetArg( "-checkblocks", 288))) {
                     strLoadError = _("Corrupted block database detected");
                     break;
@@ -1077,8 +1077,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
             pwalletMain->SetBestChain(CBlockLocator(pindexBest));
         }
-
-        if (!fFirstRun) {
+        if (!filesystem::exists(nameindexfile)) {
             rescanfornames();
             rescanforoffers();
         }

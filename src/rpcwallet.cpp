@@ -1488,6 +1488,12 @@ Value aliaslist(const Array& params, bool fHelp) {
     return oRes;
 }
 
+/**
+ * [aliasshow description]
+ * @param  params [description]
+ * @param  fHelp  [description]
+ * @return        [description]
+ */
 Value aliasshow(const Array& params, bool fHelp)
 {
     if (fHelp || 1 != params.size())
@@ -1496,30 +1502,33 @@ Value aliasshow(const Array& params, bool fHelp)
             "Show values of an alias.\n"
             );
 
-    Object oLastName;
     vector<unsigned char> vchName = vchFromValue(params[0]);
-    string name = stringFromVch(vchName);
+    CTransaction tx;
+    Object oShowResult;
+    
     {
     LOCK(pwalletMain->cs_wallet);
+
+    // check for alias existence in DB
 	vector<CNameIndex> vtxPos;
 	if (!pnamedb->ReadName(vchName, vtxPos))
 		throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from alias DB");
-
 	if (vtxPos.size() < 1)
 		throw JSONRPCError(RPC_WALLET_ERROR, "no result returned");
 
+    // get transaction pointed to by alias
 	uint256 blockHash;
-	uint256 txHash = vtxPos[vtxPos.size() - 1].txHash;
-	CTransaction tx;
+	uint256 txHash = vtxPos.back().txHash;
 	if (!GetTransaction(txHash, tx, blockHash, true))
 		throw JSONRPCError(RPC_WALLET_ERROR, "failed to read transaction from disk");
 
 	Object oName;
 	vector<unsigned char> vchValue;
 	int nHeight;
-	uint256 hash;
-	if (GetValueOfOfferTxHash(txHash, vchValue, hash, nHeight)) {
-		oName.push_back(Pair("name", name));
+	
+    uint256 hash;
+	if (GetValueOfNameTxHash(txHash, vchValue, hash, nHeight)) {
+		oName.push_back(Pair("name", stringFromVch(vchName)));
 		string value = stringFromVch(vchValue);
 		oName.push_back(Pair("value", value));
 		oName.push_back(Pair("txid", tx.GetHash().GetHex()));
@@ -1530,12 +1539,18 @@ Value aliasshow(const Array& params, bool fHelp)
 		if(nHeight + GetNameDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0) {
 			oName.push_back(Pair("expired", 1));
 		}
-		oLastName = oName;
+		oShowResult = oName;
 	}
     }
-    return oLastName;
+    return oShowResult;
 }
 
+/**
+ * [aliashistory description]
+ * @param  params [description]
+ * @param  fHelp  [description]
+ * @return        [description]
+ */
 Value aliashistory(const Array& params, bool fHelp)
 {
     if (fHelp || 1 != params.size())
@@ -1569,7 +1584,7 @@ Value aliashistory(const Array& params, bool fHelp)
 		vector<unsigned char> vchValue;
 		int nHeight;
 		uint256 hash;
-		if (GetValueOfOfferTxHash(txHash, vchValue, hash, nHeight)) {
+		if (GetValueOfNameTxHash(txHash, vchValue, hash, nHeight)) {
 			oName.push_back(Pair("name", name));
 			string value = stringFromVch(vchValue);
 			oName.push_back(Pair("value", value));
@@ -1588,6 +1603,12 @@ Value aliashistory(const Array& params, bool fHelp)
     return oRes;
 }
 
+/**
+ * [aliasfilter description]
+ * @param  params [description]
+ * @param  fHelp  [description]
+ * @return        [description]
+ */
 Value aliasfilter(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 5)
@@ -1698,6 +1719,12 @@ Value aliasfilter(const Array& params, bool fHelp)
     return oRes;
 }
 
+/**
+ * [aliasscan description]
+ * @param  params [description]
+ * @param  fHelp  [description]
+ * @return        [description]
+ */
 Value aliasscan(const Array& params, bool fHelp)
 {
     if (fHelp || 2 > params.size())
@@ -1761,26 +1788,22 @@ Value aliasscan(const Array& params, bool fHelp)
 
     return oRes;
 }
+
 /*
-Value aliasclean(const Array& params, bool fHelp)
-{
+
+Value aliasclean(const Array& params, bool fHelp) {
     if (fHelp || params.size())
-        throw runtime_error("name_clean\nClean unsatisfiable transactions from the wallet - including name_update on an already taken name\n");
-
-
+        throw runtime_error("aliasclean\nClean unsatisfiable alias transactions from the wallet - including aliasactivate on an already taken alias\n");
     {
         LOCK2(cs_main,pwalletMain->cs_wallet);
         map<uint256, CWalletTx> mapRemove;
 
         printf("-----------------------------\n");
-
         {
-            BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-            {
+            BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
                 CWalletTx& wtx = item.second;
                 vector<unsigned char> vchName;
-                if (wtx.GetDepthInMainChain() < 1 && IsConflictedTx(pblocktree, wtx, vchName))
-                {
+                if (wtx.GetDepthInMainChain() < 1 && IsConflictedNameTx(pblocktree, wtx, vchName)) {
                     uint256 hash = wtx.GetHash();
                     mapRemove[hash] = wtx;
                 }
@@ -1788,19 +1811,15 @@ Value aliasclean(const Array& params, bool fHelp)
         }
 
         bool fRepeat = true;
-        while (fRepeat)
-        {
+        while (fRepeat) {
             fRepeat = false;
-            BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-            {
+            BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
                 CWalletTx& wtx = item.second;
-                BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-                {
+                BOOST_FOREACH(const CTxIn& txin, wtx.vin) {
                     uint256 hash = wtx.GetHash();
 
                     // If this tx depends on a tx to be removed, remove it too
-                    if (mapRemove.count(txin.prevout.hash) && !mapRemove.count(hash))
-                    {
+                    if (mapRemove.count(txin.prevout.hash) && !mapRemove.count(hash)) {
                         mapRemove[hash] = wtx;
                         fRepeat = true;
                     }
@@ -1808,16 +1827,14 @@ Value aliasclean(const Array& params, bool fHelp)
             }
         }
 
-        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapRemove)
-        {
+        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapRemove) {
             CWalletTx& wtx = item.second;
 
             UnspendInputs(wtx);
             wtx.RemoveFromMemoryPool();
             pwalletMain->EraseFromWallet(wtx.GetHash());
             vector<unsigned char> vchName;
-            if (GetNameOfTx(wtx, vchName) && mapNamePending.count(vchName))
-            {
+            if (GetNameOfTx(wtx, vchName) && mapNamePending.count(vchName)) {
                 string name = stringFromVch(vchName);
                 printf("name_clean() : erase %s from pending of name %s", 
                         wtx.GetHash().GetHex().c_str(), name.c_str());
@@ -1826,10 +1843,8 @@ Value aliasclean(const Array& params, bool fHelp)
             }
             wtx.print();
         }
-
         printf("-----------------------------\n");
     }
-
     return true;
 }
 
@@ -1840,18 +1855,16 @@ Value deletetransaction(const Array& params, bool fHelp)
                 "deletetransaction <txid>\nNormally used when a transaction cannot be confirmed due to a double spend.\nRestart the program after executing this call.\n"
                 );
 
-    if (params.size() != 1)
-      throw runtime_error("missing txid");
-
     {
       LOCK2(cs_main,pwalletMain->cs_mapWallet);
+      
+      // look for txn in wallet
       uint256 hash;
       hash.SetHex(params[0].get_str());
       if (!pwalletMain->mapWallet.count(hash))
         throw runtime_error("transaction not in wallet");
 
-      if (!mapTransactions.count(hash))
-      {
+      if (!mapTransactions.count(hash)) {
         //throw runtime_error("transaction not in memory - is already in blockchain?");
         CTransaction tx;
         uint256 hashBlock = 0;

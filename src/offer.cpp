@@ -160,8 +160,6 @@ bool COfferDB::ReconstructOfferIndex() {
 
             if (tx.nVersion != SYSCOIN_TX_VERSION)
                 continue;
-                
-            printf("Processing offer txn=%s nHeight=%d\n", tx.GetHash().GetHex().c_str(), nHeight);
 
             vector<vector<unsigned char> > vvchArgs;
             int op, nOut;
@@ -171,6 +169,8 @@ bool COfferDB::ReconstructOfferIndex() {
             if (!o || !IsOfferOp(op)) continue;
             
             if (op == OP_OFFER_NEW) continue;
+
+            printf("Processing offer txn=%s nHeight=%d\n", tx.GetHash().GetHex().c_str(), nHeight);
 
             vector<unsigned char> vchOffer = vvchArgs[0];
         
@@ -226,13 +226,14 @@ bool COfferDB::ReconstructOfferIndex() {
 	            if (!WriteOfferAccept(vvchArgs[1], vvchArgs[0]))
 	                return error("ReconstructOfferIndex() : failed to write to offer DB");
 			
-			if(op == OP_OFFER_ACCEPT || op == OP_OFFER_UPDATE || op == OP_OFFER_PAY) {
-				int64 nTheFee = GetOfferNetFee(tx);
-				InsertOfferFee(pindex, tx.GetHash(), nTheFee);
-				if(nTheFee > 0) printf("OFFER FEES: Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
-			}
+			// insert offers fees to regenerate list, write offer to
+			// master index
+			int64 nTheFee = GetOfferNetFee(tx);
+			InsertOfferFee(pindex, tx.GetHash(), nTheFee);
+			vecOfferIndex.push_back(vvchArgs[0]);
+	        if (!pofferdb->WriteOfferIndex(vecOfferIndex))
+	            return error("ReconstructOfferIndex() : failed to write index to offer DB");
 
-            vecOfferIndex.push_back(vvchArgs[0]);
             if(IsOfferMine(tx)) {
                 if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
                     mapMyOfferAccepts[vvchArgs[1]] = tx.GetHash();
@@ -242,17 +243,16 @@ bool COfferDB::ReconstructOfferIndex() {
                 else mapMyOffers[vchOffer] = tx.GetHash();
             }
 
-			printf( "RECONSTRUCT OFFER: op=%s offer=%s title=%s qty=%d hash=%s height=%d\n",
+			printf( "RECONSTRUCT OFFER: op=%s offer=%s title=%s qty=%d hash=%s height=%d fees=%llu\n",
 					offerFromOp(op).c_str(),
 					stringFromVch(vvchArgs[0]).c_str(),
 					stringFromVch(txOffer.sTitle).c_str(),
 					txOffer.GetRemQty(),
 					tx.GetHash().ToString().c_str(), 
-					nHeight);	            
+					nHeight,
+					nTheFee);	            
         }
         pindex = pindex->pnext;
-        if (!pofferdb->WriteOfferIndex(vecOfferIndex))
-            return error("ReconstructOfferIndex() : failed to write index to offer DB");
         Flush();
     }
     }
@@ -1271,23 +1271,32 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     if (!pofferdb->WriteOfferIndex(vecOfferIndex))
                         return error("CheckOfferInputs() : failed to write index to offer DB");
 
+                    // compute verify and write fee data to DB
                     int64 nTheFee = GetOfferNetFee(tx);
 					InsertOfferFee(pindexBlock, tx.GetHash(), nTheFee);
 					if(nTheFee > 0) printf("OFFER FEES: Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
-
-					// write offer fees
 					vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
 					if (!pofferdb->WriteOfferTxFees(vOfferFees))
 						return error( "CheckOfferInputs() : failed to write fees to offer DB");
 
+					// add offer to the proper map(s)
+		            if(IsOfferMine(tx)) {
+		                if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
+		                    mapMyOfferAccepts[vvchArgs[1]] = tx.GetHash();
+		                    if(mapMyOffers.count(vvchArgs[0]))
+		                        mapMyOffers[vvchArgs[0]] = tx.GetHash();
+		                }
+		                else mapMyOffers[vvchArgs[0]] = tx.GetHash();
+		            }
+
 					// debug
-					printf( "CONNECTED OFFER: op=%s offer=%s title=%s qty=%d hash=%s height=%d\n",
+					printf( "CONNECTED OFFER: op=%s offer=%s title=%s qty=%d hash=%s height=%d fees=%llu\n",
 							offerFromOp(op).c_str(),
 							stringFromVch(vvchArgs[0]).c_str(),
 							stringFromVch(theOffer.sTitle).c_str(),
 							theOffer.GetRemQty(),
 							tx.GetHash().ToString().c_str(), 
-							nHeight);
+							nHeight, nTheFee / COIN);
 				}
 			}
 

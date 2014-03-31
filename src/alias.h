@@ -41,14 +41,14 @@ public:
     bool IsNull() const { return (nHeight == -1 && txHash == 0); }
 };
 
-class CNameTxnValue {
+class CAliasFee {
 public:
 	unsigned int nBlockTime;
 	unsigned int nHeight;
 	uint256 hash;
 	uint64 nValue;
 
-	CNameTxnValue() {
+	CAliasFee() {
         SetNull();
     }
 
@@ -62,7 +62,7 @@ public:
     void SetNull() { hash = 0; nHeight = 0; nValue = 0; nBlockTime = 0; }
     bool IsNull() const { return (nHeight == 0 && hash == 0 && nValue == 0 && nBlockTime == 0); }
 
-	CNameTxnValue(uint256 s, unsigned int t, unsigned int h, uint64 v) {
+	CAliasFee(uint256 s, unsigned int t, unsigned int h, uint64 v) {
 		hash = s;
 		nBlockTime = t;
 		nHeight = h;
@@ -75,15 +75,15 @@ public:
 		nValue = v;
 		return true;
 	}
-    friend bool operator==(const CNameTxnValue &a, const CNameTxnValue &b) {
+    friend bool operator==(const CAliasFee &a, const CAliasFee &b) {
         return (a.hash == b.hash && a.nBlockTime == b.nBlockTime && a.nHeight == b.nHeight && a.nValue == b.nValue);
     }
 
-    friend bool operator!=(const CNameTxnValue &a, const CNameTxnValue &b) {
+    friend bool operator!=(const CAliasFee &a, const CAliasFee &b) {
         return !(a == b);
     }
 };
-extern std::list<CNameTxnValue> lstNameTxValues;
+extern std::list<CAliasFee> lstAliasFees;
 
 class CNameDB : public CLevelDB {
 public:
@@ -104,10 +104,10 @@ public:
 	    return Exists(make_pair(std::string("namei"), name));
 	}
 
-	bool WriteNameTxFees(std::vector<CNameTxnValue>& vtxPos) {
+	bool WriteNameTxFees(std::vector<CAliasFee>& vtxPos) {
 		return Write(std::string("nametxf"), vtxPos);
 	}
-	bool ReadNameTxFees(std::vector<CNameTxnValue>& vtxPos) {
+	bool ReadNameTxFees(std::vector<CAliasFee>& vtxPos) {
 		return Read(std::string("nametxf"), vtxPos);
 	}
 
