@@ -389,9 +389,12 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 if(!fMiner && !fJustCheck && pindexBlock->nHeight != pindexBest->nHeight) {
                     
                     int nHeight = pindexBlock->nHeight;
+                    vector<unsigned char> vchVal;
                     CAliasIndex txPos2;
+                    uint256 hash;
+                    GetValueOfNameTxHash(tx.GetHash(), vchVal, hash, nHeight);
                     txPos2.nHeight = nHeight;
-                    txPos2.vValue = OP_ALIAS_ACTIVATE ? vvchArgs[2] : vvchArgs[1];
+                    txPos2.vValue = vchVal;
                     txPos2.txHash = tx.GetHash();
                     txPos2.txPrevOut = *prevOutput;
 
