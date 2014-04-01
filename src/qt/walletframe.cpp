@@ -102,6 +102,27 @@ void WalletFrame::gotoAliasListPage()
         walletStack->gotoAliasListPage();
 }
 
+void WalletFrame::gotoDataAliasListPage()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletStack->gotoDataAliasListPage();
+}
+
+void WalletFrame::gotoOfferListPage()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletStack->gotoOfferListPage();
+}
+
+void WalletFrame::gotoOfferAcceptListPage()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletStack->gotoOfferAcceptListPage();
+}
+
 void WalletFrame::gotoReceiveCoinsPage()
 {
     walletStack->gotoReceiveCoinsPage();

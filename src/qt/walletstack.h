@@ -20,6 +20,7 @@ class TransactionView;
 class OverviewPage;
 class AddressBookPage;
 class AliasListPage;
+class OfferListPage;
 class SendCoinsDialog;
 class SignVerifyMessageDialog;
 class Notificator;
@@ -77,6 +78,12 @@ public slots:
     void gotoAddressBookPage();
     /** Switch to address book page */
     void gotoAliasListPage();
+    /** Switch to address book page */
+    void gotoDataAliasListPage();
+    /** Switch to address book page */
+    void gotoOfferListPage();
+    /** Switch to address book page */
+    void gotoOfferAcceptListPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */

@@ -67,6 +67,7 @@ bool EditAliasDialog::saveCurrentRow()
         alias = model->addRow(
                 mode == NewAlias ? AliasTableModel::Alias : AliasTableModel::DataAlias,
                 ui->labelEdit->text(),
+                ui->aliasEdit->text(),
                 ui->aliasEdit->text());
         break;
     case EditDataAlias:

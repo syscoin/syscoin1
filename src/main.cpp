@@ -1429,6 +1429,28 @@ bool ConnectBestBlock(CValidationState &state) {
 	do {
 		CBlockIndex *pindexNewBest;
 
+        // read alias and offer indexes
+        vecAliasIndex.clear();
+        if(!paliasdb->ReadAliasIndex(vecAliasIndex))
+            return false;
+        vecOfferIndex.clear();
+        if(!pofferdb->ReadOfferIndex(vecOfferIndex))
+            error( "ConnectBlock() : Failed to read offer index list");
+
+        // read alias network fees
+        lstAliasFees.clear();
+        vector<CAliasFee> va;
+        paliasdb->ReadAliasTxFees(va);
+        list<CAliasFee> lAF(va.begin(), va.end());
+        lstAliasFees = lAF;
+
+        // read offer network fees
+        lstOfferFees.clear();
+        vector<COfferFee> vo;
+        pofferdb->ReadOfferTxFees(vo);
+        list<COfferFee> lOF(vo.begin(), vo.end());
+        lstOfferFees = lOF;
+		
 		{
 			std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it =
 					setBlockIndexValid.rbegin();
@@ -1752,7 +1774,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 		        string opName = aliasFromOp(aop);
 
 		        vector<CAliasIndex> vtxPos;
-		        if (!paliasdb->ReadName(vvchArgs[0], vtxPos))
+		        if (!paliasdb->ReadAlias(vvchArgs[0], vtxPos))
 		            return error("DisconnectBlock() : failed to read from alias DB for %s %s\n",
 		            		opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
 
@@ -1770,19 +1792,19 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 		            // TODO validate that the first pos is the current tx pos
 		        }
 
-				if(!paliasdb->WriteName(vvchArgs[0], vtxPos))
+				if(!paliasdb->WriteAlias(vvchArgs[0], vtxPos))
 					return error("DisconnectBlock() : failed to write to alias DB");
 
                 // remove the alias from the alias index if vtxPos empty
                 if(!vtxPos.size()) {
-                    for(unsigned int i=0; i< vecNameIndex.size();i++) {
-                        if(vecNameIndex[i] == vvchArgs[0]) {
-                            swap(vecNameIndex[i], vecNameIndex.back());
-                            vecNameIndex.pop_back();
+                    for(unsigned int i=0; i< vecAliasIndex.size();i++) {
+                        if(vecAliasIndex[i] == vvchArgs[0]) {
+                            swap(vecAliasIndex[i], vecAliasIndex.back());
+                            vecAliasIndex.pop_back();
                             break;
                         }
                     }
-                    if (!paliasdb->WriteNameIndex(vecNameIndex))
+                    if (!paliasdb->WriteAliasIndex(vecAliasIndex))
                         return error("DisconnectBlock() : failed to write index to alias DB");
                 }
 
@@ -1793,15 +1815,15 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 		                pindex->nHeight);
             } 
             else if (IsAliasOp(aop) && aop == OP_ALIAS_NEW) {
-                paliasdb->EraseName(vvchArgs[0]);
-                for(unsigned int i=0; i< vecNameIndex.size();i++) {
-                    if(vecNameIndex[i] == vvchArgs[0]) {
-                        swap(vecNameIndex[i], vecNameIndex.back());
-                        vecNameIndex.pop_back();
+                paliasdb->EraseAlias(vvchArgs[0]);
+                for(unsigned int i=0; i< vecAliasIndex.size();i++) {
+                    if(vecAliasIndex[i] == vvchArgs[0]) {
+                        swap(vecAliasIndex[i], vecAliasIndex.back());
+                        vecAliasIndex.pop_back();
                         break;
                     }
                 }
-                if (!paliasdb->WriteNameIndex(vecNameIndex))
+                if (!paliasdb->WriteAliasIndex(vecAliasIndex))
                     return error("DisconnectBlock() : failed to write index to alias DB");
             }
 
@@ -2011,8 +2033,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 			uint256 hash = GetTxHash(i);
 			if (view.HaveCoins(hash) && !view.GetCoins(hash).IsPruned())
 				return state.DoS(100,
-						error(
-								"ConnectBlock() : tried to overwrite transaction"));
+						error( "ConnectBlock() : tried to overwrite transaction"));
 		}
 	}
 
@@ -2089,7 +2110,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 				nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs - 1));
 
 		if (vtx[0].GetValueOut()
-				> GetBlockValue(pindex->nHeight, nFees, 0) * 2 
+				> GetBlockValue(pindex->nHeight, nFees, 0) * 2 //todo another HACK to fix until fees recomputed OK on startup
 				&& !fEnforceBIP30)
 			return state.DoS(100,
 					error( "ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",

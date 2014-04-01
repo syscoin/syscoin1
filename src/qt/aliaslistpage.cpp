@@ -249,7 +249,7 @@ void AliasListPage::on_exportButton_clicked()
     writer.setModel(proxyModel);
     writer.addColumn("Alias", AliasTableModel::Name, Qt::EditRole);
     writer.addColumn("Value", AliasTableModel::Value, Qt::EditRole);
-    writer.addColumn("ExpirationDepth", AliasTableModel::ExpirationDepth, Qt::EditRole);
+    writer.addColumn("Expiration Depth", AliasTableModel::ExpirationDepth, Qt::EditRole);
     if(!writer.write())
     {
         QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
@@ -265,8 +265,7 @@ void AliasListPage::on_transferAlias_clicked()
 void AliasListPage::contextualMenu(const QPoint &point)
 {
     QModelIndex index = ui->tableView->indexAt(point);
-    if(index.isValid())
-    {
+    if(index.isValid()) {
         contextMenu->exec(QCursor::pos());
     }
 }

@@ -202,11 +202,32 @@ void BitcoinGUI::createActions()
     tabGroup->addAction(addressBookAction);
 
     aliasListAction = new QAction(QIcon(":/icons/address-book"), tr("A&liases"), this);
-    aliasListAction->setStatusTip(tr("Manage aliases and data aliases"));
+    aliasListAction->setStatusTip(tr("Manage aliases"));
     aliasListAction->setToolTip(aliasListAction->statusTip());
     aliasListAction->setCheckable(true);
     aliasListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
     tabGroup->addAction(aliasListAction);
+
+    dataAliasListAction = new QAction(QIcon(":/icons/address-book"), tr("&Data"), this);
+    dataAliasListAction->setStatusTip(tr("Manage data aliases"));
+    dataAliasListAction->setToolTip(dataAliasListAction->statusTip());
+    dataAliasListAction->setCheckable(true);
+    dataAliasListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_7));
+    tabGroup->addAction(dataAliasListAction);
+
+    offerListAction = new QAction(QIcon(":/icons/address-book"), tr("&Offers"), this);
+    offerListAction->setStatusTip(tr("Manage offers"));
+    offerListAction->setToolTip(offerListAction->statusTip());
+    offerListAction->setCheckable(true);
+    offerListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_8));
+    tabGroup->addAction(offerListAction);
+
+    offerAcceptListAction = new QAction(QIcon(":/icons/address-book"), tr("A&ccepts"), this);
+    offerAcceptListAction->setStatusTip(tr("Manage offer accepts"));
+    offerAcceptListAction->setToolTip(offerAcceptListAction->statusTip());
+    offerAcceptListAction->setCheckable(true);
+    offerAcceptListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_9));
+    tabGroup->addAction(offerAcceptListAction);
 
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
@@ -220,6 +241,12 @@ void BitcoinGUI::createActions()
     connect(addressBookAction, SIGNAL(triggered()), this, SLOT(gotoAddressBookPage()));
     connect(aliasListAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(aliasListAction, SIGNAL(triggered()), this, SLOT(gotoAliasListPage()));
+    connect(dataAliasListAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(dataAliasListAction, SIGNAL(triggered()), this, SLOT(gotoDataAliasListPage()));
+    connect(offerListAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(offerListAction, SIGNAL(triggered()), this, SLOT(gotoOfferListPage()));
+    connect(offerAcceptListAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(offerAcceptListAction, SIGNAL(triggered()), this, SLOT(gotoOfferAcceptListPage()));
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
     quitAction->setStatusTip(tr("Quit application"));
@@ -305,6 +332,9 @@ void BitcoinGUI::createToolBars()
     toolbar->addAction(historyAction);
     toolbar->addAction(addressBookAction);
     toolbar->addAction(aliasListAction);
+    toolbar->addAction(dataAliasListAction);
+    toolbar->addAction(offerListAction);
+    toolbar->addAction(offerAcceptListAction);
 }
 
 void BitcoinGUI::setClientModel(ClientModel *clientModel)
@@ -382,6 +412,9 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     verifyMessageAction->setEnabled(enabled);
     addressBookAction->setEnabled(enabled);
     aliasListAction->setEnabled(enabled);
+    dataAliasListAction->setEnabled(enabled);
+    offerListAction->setEnabled(enabled);
+    offerAcceptListAction->setEnabled(enabled);
 }
 
 void BitcoinGUI::createTrayIcon()
@@ -501,6 +534,21 @@ void BitcoinGUI::gotoAddressBookPage()
 void BitcoinGUI::gotoAliasListPage()
 {
     if (walletFrame) walletFrame->gotoAliasListPage();
+}
+
+void BitcoinGUI::gotoDataAliasListPage()
+{
+    if (walletFrame) walletFrame->gotoDataAliasListPage();
+}
+
+void BitcoinGUI::gotoOfferListPage()
+{
+    if (walletFrame) walletFrame->gotoOfferListPage();
+}
+
+void BitcoinGUI::gotoOfferAcceptListPage()
+{
+    if (walletFrame) walletFrame->gotoOfferAcceptListPage();
 }
 
 void BitcoinGUI::gotoReceiveCoinsPage()

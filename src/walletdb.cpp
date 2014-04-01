@@ -18,13 +18,13 @@ static uint64 nAccountingEntryNumber = 0;
 // CWalletDB
 //
 
-bool CWalletDB::WriteName(const string& strAddress, const string& strName)
+bool CWalletDB::WriteAlias(const string& strAddress, const string& strName)
 {
     nWalletDBUpdated++;
     return Write(make_pair(string("name"), strAddress), strName);
 }
 
-bool CWalletDB::EraseName(const string& strAddress)
+bool CWalletDB::EraseAlias(const string& strAddress)
 {
     // This should only be used for sending addresses, never for receiving addresses,
     // receiving addresses must always have an address book entry if they're not change return.
@@ -33,7 +33,7 @@ bool CWalletDB::EraseName(const string& strAddress)
 }
 
 #ifdef GUI
-bool CWalletDB::WriteNameFirstUpdate(const std::vector<unsigned char>& vchName,
+bool CWalletDB::WriteAliasFirstUpdate(const std::vector<unsigned char>& vchName,
                                      const uint256& hex,
                                      const uint64& rand,
                                      const std::vector<unsigned char>& vchData,
@@ -46,7 +46,7 @@ bool CWalletDB::WriteNameFirstUpdate(const std::vector<unsigned char>& vchName,
     return Write(make_pair(string("name_firstupdate"), vchName), ssValue, true);
 }
 
-bool CWalletDB::EraseNameFirstUpdate(const std::vector<unsigned char>& vchName)
+bool CWalletDB::EraseAliasFirstUpdate(const std::vector<unsigned char>& vchName)
 {
     nWalletDBUpdated++;
     return Erase(make_pair(string("name_firstupdate"), vchName));

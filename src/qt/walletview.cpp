@@ -9,11 +9,14 @@
 #include "transactiontablemodel.h"
 #include "addressbookpage.h"
 #include "aliaslistpage.h"
+#include "offerlistpage.h"
 #include "sendcoinsdialog.h"
 #include "signverifymessagedialog.h"
 #include "clientmodel.h"
 #include "walletmodel.h"
 #include "optionsmodel.h"
+#include "aliastablemodel.h"
+#include "offertablemodel.h"
 #include "transactionview.h"
 #include "overviewpage.h"
 #include "askpassphrasedialog.h"
@@ -58,6 +61,12 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
 
     aliasListPage = new AliasListPage(AliasListPage::ForEditing, AliasListPage::AliasTab);
 
+    dataAliasListPage = new AliasListPage(AliasListPage::ForEditing, AliasListPage::DataAliasTab);
+
+    offerListPage = new OfferListPage(OfferListPage::ForEditing, OfferListPage::OfferTab);
+
+    offerAcceptListPage = new OfferListPage(OfferListPage::ForEditing, OfferListPage::OfferAcceptTab);
+
     receiveCoinsPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::ReceivingTab);
 
     sendCoinsPage = new SendCoinsDialog(gui);
@@ -68,6 +77,9 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
     addWidget(transactionsPage);
     addWidget(addressBookPage);
     addWidget(aliasListPage);
+    addWidget(dataAliasListPage);
+    addWidget(offerListPage);
+    addWidget(offerAcceptListPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
 
@@ -107,6 +119,9 @@ void WalletView::setClientModel(ClientModel *clientModel)
         overviewPage->setClientModel(clientModel);
         addressBookPage->setOptionsModel(clientModel->getOptionsModel());
         aliasListPage->setOptionsModel(clientModel->getOptionsModel());
+        dataAliasListPage->setOptionsModel(clientModel->getOptionsModel());
+        offerListPage->setOptionsModel(clientModel->getOptionsModel());
+        offerAcceptListPage->setOptionsModel(clientModel->getOptionsModel());
         receiveCoinsPage->setOptionsModel(clientModel->getOptionsModel());
     }
 }
@@ -123,6 +138,9 @@ void WalletView::setWalletModel(WalletModel *walletModel)
         transactionView->setModel(walletModel);
         overviewPage->setWalletModel(walletModel);
         aliasListPage->setModel(walletModel->getAliasTableModel());
+        dataAliasListPage->setModel(walletModel->getAliasTableModel());
+        offerListPage->setModel(walletModel->getOfferTableModel());
+        offerAcceptListPage->setModel(walletModel->getOfferTableModel());
         addressBookPage->setModel(walletModel->getAddressTableModel());
         receiveCoinsPage->setModel(walletModel->getAddressTableModel());
         sendCoinsPage->setModel(walletModel);
@@ -172,6 +190,24 @@ void WalletView::gotoAliasListPage()
 {
     gui->getAliasListAction()->setChecked(true);
     setCurrentWidget(aliasListPage);
+}
+
+void WalletView::gotoDataAliasListPage()
+{
+    gui->getDataAliasListAction()->setChecked(true);
+    setCurrentWidget(dataAliasListPage);
+}
+
+void WalletView::gotoOfferListPage()
+{
+    gui->getOfferListAction()->setChecked(true);
+    setCurrentWidget(offerListPage);
+}
+
+void WalletView::gotoOfferAcceptListPage()
+{
+    gui->getOfferAcceptListAction()->setChecked(true);
+    setCurrentWidget(offerAcceptListPage);
 }
 
 void WalletView::gotoAddressBookPage()

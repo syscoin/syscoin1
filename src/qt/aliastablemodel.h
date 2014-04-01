@@ -56,7 +56,7 @@ public:
     /* Add an alias to the model.
        Returns the added alias on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &value, const QString &alias);
+    QString addRow(const QString &type, const QString &value, const QString &alias, const QString &exp);
 
     /* Look up label for alias in alias book, if not found return empty string.
      */
@@ -82,7 +82,7 @@ private:
 public slots:
     /* Update alias list from core.
      */
-    void updateEntry(const QString &alias, const QString &value, bool isData, int status);
+    void updateEntry(const QString &alias, const QString &value, const QString &exp, bool isData, int status);
 
     friend class AliasTablePriv;
 };

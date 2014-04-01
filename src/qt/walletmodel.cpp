@@ -3,6 +3,7 @@
 #include "optionsmodel.h"
 #include "addresstablemodel.h"
 #include "aliastablemodel.h"
+#include "offertablemodel.h"
 #include "transactiontablemodel.h"
 
 #include "ui_interface.h"
@@ -13,16 +14,27 @@
 #include <QSet>
 #include <QTimer>
 
+class COfferDB;
+extern COfferDB *pofferdb;
+int GetOfferExpirationDepth(int nHeight);
+
 WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
-    QObject(parent), wallet(wallet), optionsModel(optionsModel), addressTableModel(0),
-    transactionTableModel(0), aliasTableModel(0),
-    cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
+    QObject(parent),
+    wallet(wallet),
+    optionsModel(optionsModel),
+    addressTableModel(0),
+    transactionTableModel(0),
+    aliasTableModel(0),
+    cachedBalance(0),
+    cachedUnconfirmedBalance(0),
+    cachedImmatureBalance(0),
     cachedNumTransactions(0),
     cachedEncryptionStatus(Unencrypted),
     cachedNumBlocks(0)
 {
     addressTableModel = new AddressTableModel(wallet, this);
     aliasTableModel = new AliasTableModel(wallet, this);
+    offerTableModel = new OfferTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(wallet, this);
 
     // This timer will be fired repeatedly to update the balance
@@ -141,6 +153,20 @@ bool WalletModel::validateAlias(const QString &alias)
 {
     return true;
 }
+
+void WalletModel::updateAlias(const QString &alias, const QString &value, const QString &expDepth, int status)
+{
+    if(aliasTableModel)
+        aliasTableModel->updateEntry(alias, value, expDepth, false, status);
+}
+
+void WalletModel::updateOffer(const QString &offer, const QString &title, const QString &category, 
+    const QString &price, const QString &quantity, const QString &expDepth, int status)
+{
+    if(offerTableModel)
+        offerTableModel->updateEntry(offer, title, category, price, quantity, expDepth, false, status);
+}
+
 
 WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipient> &recipients, const CCoinControl *coinControl)
 {
@@ -262,6 +288,11 @@ AliasTableModel *WalletModel::getAliasTableModel()
     return aliasTableModel;
 }
 
+OfferTableModel *WalletModel::getOfferTableModel()
+{
+    return offerTableModel;
+}
+
 TransactionTableModel *WalletModel::getTransactionTableModel()
 {
     return transactionTableModel;
@@ -344,20 +375,103 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet, 
                               Q_ARG(int, status));
 }
 
-static void NotifyAliasListChanged(WalletModel *walletmodel, CWallet *wallet, const std::string &alias, const std::string &value, bool isMine, ChangeType status)
+static void NotifyAliasListChanged(WalletModel *walletmodel, CWallet *wallet, const uint256 &hash, ChangeType status)
 {
-    OutputDebugStringF("NotifyAliasListChanged %s %s isMine=%i status=%i\n", CBitcoinAddress(alias).ToString().c_str(), value.c_str(), isMine, status);
-    QMetaObject::invokeMethod(walletmodel, "updateAliasList", Qt::QueuedConnection,
-                              Q_ARG(QString, QString::fromStdString(CBitcoinAddress(alias).ToString())),
-                              Q_ARG(QString, QString::fromStdString(value)),
-                              Q_ARG(bool, isMine),
+     std::vector<COffer> vtxPos;
+    uint256 txblkhash;
+    CTransaction tx;
+
+    // get the transaction
+    if(!GetTransaction(hash, tx, txblkhash, true))
+        return;
+
+    std::vector<std::vector<unsigned char> > vvchArgs;
+    int op, nOut;
+    if (!DecodeOfferTx(tx, op, nOut, vvchArgs, -1)) {
+        return;
+    }
+    if(!IsOfferOp(op))
+        return;
+
+    std::vector<unsigned char> vchTitle = op == OP_ALIAS_NEW ? vchFromString(HexStr(vvchArgs[0])) : vvchArgs[0];
+    if(op == OP_ALIAS_NEW) {
+        return;
+    }
+
+    if (pofferdb->ExistsOffer(vchTitle)) {
+        if (!pofferdb->ReadOffer(vchTitle, vtxPos))
+            return;
+    } else return;
+
+    OutputDebugStringF("NotifyAliasListChanged %s %s status=%i\n", stringFromVch(vvchArgs[0]).c_str(), stringFromVch(vvchArgs[1]).c_str(), status);
+    QMetaObject::invokeMethod(walletmodel, "updateAlias", Qt::QueuedConnection,
+                              Q_ARG(QString, QString::fromStdString(stringFromVch(vvchArgs[0]))),
+                              Q_ARG(QString, QString::fromStdString(stringFromVch(vvchArgs[1]))),
+                              Q_ARG(QString, QString::fromStdString("0")),
+                              Q_ARG(int, status));
+}
+
+static void NotifyOfferListChanged(WalletModel *walletmodel, CWallet *wallet, const uint256 &hash, ChangeType status)
+{
+    std::vector<COffer> vtxPos;
+    uint256 txblkhash;
+    CTransaction tx;
+
+    // get the transaction
+    if(!GetTransaction(hash, tx, txblkhash, true))
+        return;
+
+    std::vector<std::vector<unsigned char> > vvchArgs;
+    int op, nOut;
+    if (!DecodeOfferTx(tx, op, nOut, vvchArgs, -1)) {
+        return;
+    }
+    if(!IsOfferOp(op))
+        return;
+
+    if (pofferdb->ExistsOffer(vvchArgs[0])) {
+        if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos))
+            return;
+    } else return;
+
+    // unserialize offer object from txn, check for valid
+    COffer theOffer;
+    theOffer.UnserializeFromTx(tx);
+    if (theOffer.IsNull()) {
+        OutputDebugStringF("refreshOfferTable() : null offer object");
+        return;
+    }
+
+    COfferAccept theOfferAccept;
+    double nPrice = theOffer.nPrice / COIN;
+    int nQty = theOffer.nQty;
+    unsigned long nExpDepth = GetOfferExpirationDepth(theOffer.nHeight);
+
+    if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
+        if(!theOffer.GetAcceptByHash(vvchArgs[1], theOfferAccept)) {
+            OutputDebugStringF("refreshOfferTable() : failed to read accept from offer\n");
+            return;
+        }
+        nPrice = theOfferAccept.nPrice / COIN;
+        nQty = theOfferAccept.nQty;
+    }
+
+    OutputDebugStringF("NotifyOfferListChanged %s %s status=%i\n", stringFromVch(theOffer.vchRand).c_str(),
+                       stringFromVch(theOffer.sTitle).c_str(), status);
+    QMetaObject::invokeMethod(walletmodel, "updateOffer", Qt::QueuedConnection,
+                              Q_ARG(QString, QString::fromStdString(stringFromVch(theOffer.vchRand))),
+                              Q_ARG(QString, QString::fromStdString(stringFromVch(theOffer.sTitle))),
+                              Q_ARG(QString, QString::fromStdString(stringFromVch(theOffer.sCategory))),
+                              Q_ARG(QString, QString::fromStdString(strprintf("%lf", nPrice))),
+                              Q_ARG(QString, QString::fromStdString(strprintf("%d", nQty))),
+                              Q_ARG(QString, QString::fromStdString(strprintf("%lu", nExpDepth))),
                               Q_ARG(int, status));
 }
 
 static void NotifyTransactionChanged(WalletModel *walletmodel, CWallet *wallet, const uint256 &hash, ChangeType status)
 {
     OutputDebugStringF("NotifyTransactionChanged %s status=%i\n", hash.GetHex().c_str(), status);
-    QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(walletmodel, "updateOffer", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(hash.GetHex())),
                               Q_ARG(int, status));
 }
@@ -367,7 +481,8 @@ void WalletModel::subscribeToCoreSignals()
     // Connect signals to wallet
     wallet->NotifyStatusChanged.connect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
     wallet->NotifyAddressBookChanged.connect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5));
-    wallet->NotifyAliasListChanged.connect(boost::bind(NotifyAliasListChanged, this, _1, _2, _3, _4, _5));
+    wallet->NotifyAliasListChanged.connect(boost::bind(NotifyAliasListChanged, this, _1, _2, _3));
+    wallet->NotifyOfferListChanged.connect(boost::bind(NotifyOfferListChanged, this, _1, _2, _3));
     wallet->NotifyTransactionChanged.connect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
 }
 
@@ -376,7 +491,8 @@ void WalletModel::unsubscribeFromCoreSignals()
     // Disconnect signals from wallet
     wallet->NotifyStatusChanged.disconnect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
     wallet->NotifyAddressBookChanged.disconnect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5));
-    wallet->NotifyAliasListChanged.disconnect(boost::bind(NotifyAliasListChanged, this, _1, _2, _3, _4, _5));
+    wallet->NotifyAliasListChanged.disconnect(boost::bind(NotifyAliasListChanged, this, _1, _2, _3));
+    wallet->NotifyOfferListChanged.disconnect(boost::bind(NotifyOfferListChanged, this, _1, _2, _3));
     wallet->NotifyTransactionChanged.disconnect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
 }
 

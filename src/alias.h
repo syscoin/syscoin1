@@ -90,31 +90,31 @@ public:
     CNameDB(size_t nCacheSize, bool fMemory, bool fWipe) : CLevelDB(GetDataDir() / "aliases", nCacheSize, fMemory, fWipe) {
     }
 
-	bool WriteName(const std::vector<unsigned char>& name, std::vector<CAliasIndex>& vtxPos) {
+	bool WriteAlias(const std::vector<unsigned char>& name, std::vector<CAliasIndex>& vtxPos) {
 		return Write(make_pair(std::string("namei"), name), vtxPos);
 	}
 
-	bool EraseName(const std::vector<unsigned char>& name) {
+	bool EraseAlias(const std::vector<unsigned char>& name) {
 	    return Erase(make_pair(std::string("namei"), name));
 	}
-	bool ReadName(const std::vector<unsigned char>& name, std::vector<CAliasIndex>& vtxPos) {
+	bool ReadAlias(const std::vector<unsigned char>& name, std::vector<CAliasIndex>& vtxPos) {
 		return Read(make_pair(std::string("namei"), name), vtxPos);
 	}
-	bool ExistsName(const std::vector<unsigned char>& name) {
+	bool ExistsAlias(const std::vector<unsigned char>& name) {
 	    return Exists(make_pair(std::string("namei"), name));
 	}
 
-	bool WriteNameTxFees(std::vector<CAliasFee>& vtxPos) {
+	bool WriteAliasTxFees(std::vector<CAliasFee>& vtxPos) {
 		return Write(std::string("nametxf"), vtxPos);
 	}
-	bool ReadNameTxFees(std::vector<CAliasFee>& vtxPos) {
+	bool ReadAliasTxFees(std::vector<CAliasFee>& vtxPos) {
 		return Read(std::string("nametxf"), vtxPos);
 	}
 
-    bool WriteNameIndex(std::vector<std::vector<unsigned char> >& vtxIndex) {
+    bool WriteAliasIndex(std::vector<std::vector<unsigned char> >& vtxIndex) {
         return Write(std::string("namendx"), vtxIndex);
     }
-    bool ReadNameIndex(std::vector<std::vector<unsigned char> >& vtxIndex) {
+    bool ReadAliasIndex(std::vector<std::vector<unsigned char> >& vtxIndex) {
         return Read(std::string("namendx"), vtxIndex);
     }
 
@@ -130,11 +130,12 @@ public:
 
 extern std::map<std::vector<unsigned char>, uint256> mapMyAliases;
 extern std::map<std::vector<unsigned char>, std::set<uint256> > mapAliasesPending;
-extern std::vector<std::vector<unsigned char> > vecNameIndex;
+extern std::vector<std::vector<unsigned char> > vecAliasIndex;
 
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const json_spirit::Value& value);
 std::vector<unsigned char> vchFromString(const std::string &str);
+std::string stringFromValue(const json_spirit::Value& value);
 
 static const int SYSCOIN_TX_VERSION = 0x7400;
 static const int64 MIN_AMOUNT = COIN;

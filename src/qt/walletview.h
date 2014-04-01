@@ -16,6 +16,7 @@ class TransactionView;
 class OverviewPage;
 class AddressBookPage;
 class AliasListPage;
+class OfferListPage;
 class SendCoinsDialog;
 class SignVerifyMessageDialog;
 class RPCConsole;
@@ -62,8 +63,11 @@ private:
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
     AliasListPage *aliasListPage;
+    AliasListPage *dataAliasListPage;
     AddressBookPage *addressBookPage;
     AddressBookPage *receiveCoinsPage;
+    OfferListPage *offerListPage;
+    OfferListPage *offerAcceptListPage;
     SendCoinsDialog *sendCoinsPage;
     SignVerifyMessageDialog *signVerifyMessageDialog;
 
@@ -76,8 +80,14 @@ public slots:
     void gotoHistoryPage();
     /** Switch to address book page */
     void gotoAddressBookPage();
-    /** Switch to address book page */
+    /** Switch to alias list page */
     void gotoAliasListPage();
+    /** Switch to alias list page */
+    void gotoDataAliasListPage();
+    /** Switch to offer page */
+    void gotoOfferListPage();
+    /** Switch to offer accept page */
+    void gotoOfferAcceptListPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */

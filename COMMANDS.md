@@ -115,22 +115,106 @@ returns:
 
 
 ##offer commands
-these commands with creating or purchasing offers.
+these commands deal with creating or purchasing offers.
 
 **offernew**
+Create a new offer
+<category>: offer category. max 255 chars.
+<title>: offer title. max 255 chars.
+<quantity>: item quantity available.
+<price>: Price for item, in Satoshis.
+<description>: offer description. max 16k chars.
+returns: 
+{ 
+    offertxid, 
+    offerkey
+}
 
 **offeractivate**
+Activate the offer. may be called directly after offernew.  Posted to network immediately after offernew.
+<offerkey>: offer key.
+returns: 
+{ 
+    aliastxid 
+}
 
 **offerupdate**
+Update an offer
+<offerkey>: offer key.
+<category>: offer category. max 255 chars.
+<title>: offer title. max 255 chars.
+<quantity>: item quantity available.
+<price>: Price for item, in Satoshis.
+<description>: offer description. max 16k chars.
+returns: 
+{ 
+    offertxid
+}
 
 **offeraccept**
+Accept an offer
+<offerkey>: offer key.
+[<quantity>]: quantity to accept. optional, default 1.
+returns: 
+{ 
+    offertxid,
+    acceptkey
+}
 
 **offerpay**
+Pay for an offer
+<acceptkey>: accept key.
+returns: 
+{ 
+    paytxid,
+    offertxid
+}
 
 **offerinfo**
+Show the values for the offer.
+returns:
+{
+    id,
+    title,
+    description,
+    price,
+    quantity,
+    fees_paid,
+    txn,
+    height,
+    accepts : [
+        {
+            
+        }
+    ]
+}
 
 **offerhistory**
 
 **offerfilter**
 
 **offerscan**
+
+
+##certificate commands
+these commands deal with issuing and transferring certificates.
+
+**certissuernew**
+
+**certissueractivate**
+
+**certissuerupdate**
+
+**certissue**
+
+**certtransfer**
+
+**certissuerinfo**
+
+**certinfo**
+
+**certissuerhistory**
+
+**certissuerfilter**
+
+**certissuerscan**

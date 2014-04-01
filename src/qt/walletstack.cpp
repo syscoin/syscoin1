@@ -103,6 +103,27 @@ void WalletStack::gotoAliasListPage()
         i.value()->gotoAliasListPage();
 }
 
+void WalletStack::gotoDataAliasListPage()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoDataAliasListPage();
+}
+
+void WalletStack::gotoOfferListPage()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoOfferListPage();
+}
+
+void WalletStack::gotoOfferAcceptListPage()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoOfferAcceptListPage();
+}
+
 void WalletStack::gotoReceiveCoinsPage()
 {
     QMap<QString, WalletView*>::const_iterator i;

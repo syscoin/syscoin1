@@ -15,6 +15,7 @@ class TransactionView;
 class OverviewPage;
 class AddressBookPage;
 class AliasListPage;
+class OfferListPage;
 class SendCoinsDialog;
 class SignVerifyMessageDialog;
 class Notificator;
@@ -67,6 +68,9 @@ public:
     QAction * getHistoryAction() { return historyAction; }
     QAction * getAddressBookAction() { return addressBookAction; }
     QAction * getAliasListAction() { return aliasListAction; }
+    QAction * getDataAliasListAction() { return dataAliasListAction; }
+    QAction * getOfferListAction() { return offerListAction; }
+    QAction * getOfferAcceptListAction() { return offerAcceptListAction; }
     QAction * getReceiveCoinsAction() { return receiveCoinsAction; }
     QAction * getSendCoinsAction() { return sendCoinsAction; }
 
@@ -94,6 +98,9 @@ private:
     QAction *sendCoinsAction;
     QAction *addressBookAction;
     QAction *aliasListAction;
+    QAction *dataAliasListAction;
+    QAction *offerListAction;
+    QAction *offerAcceptListAction;
     QAction *signMessageAction;
     QAction *verifyMessageAction;
     QAction *aboutAction;
@@ -174,6 +181,12 @@ private slots:
     void gotoAddressBookPage();
     /** Switch to alias list page */
     void gotoAliasListPage();
+    /** Switch to alias list page */
+    void gotoDataAliasListPage();
+    /** Switch to offers page */
+    void gotoOfferListPage();
+    /** Switch to offer accept page */
+    void gotoOfferAcceptListPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */

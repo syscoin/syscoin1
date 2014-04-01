@@ -319,7 +319,12 @@ public:
     /** Alias list entry changed.
      * @note called with lock cs_wallet held.
      */
-    boost::signals2::signal<void (CWallet *wallet, const std::string &alias, const std::string &value, bool isMine, ChangeType status)> NotifyAliasListChanged;
+    boost::signals2::signal<void (CWallet *wallet, const uint256 &hash, ChangeType status)> NotifyAliasListChanged;
+
+    /** Offer list entry changed.
+     * @note called with lock cs_wallet held.
+     */
+    boost::signals2::signal<void (CWallet *wallet, const uint256 &hash, ChangeType status)> NotifyOfferListChanged;
 
     /** Wallet transaction added, removed or updated.
      * @note called with lock cs_wallet held.

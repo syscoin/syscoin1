@@ -17,6 +17,8 @@ class CNameDB;
 
 extern CNameDB *paliasdb;
 
+int GetAliasExpirationDepth(int nHeight);
+
 struct AliasTableEntry
 {
     enum Type {
@@ -68,11 +70,11 @@ public:
         cachedAliasTable.clear();
         {
             LOCK(wallet->cs_wallet);
-            for(unsigned int i=0; i< vecNameIndex.size(); i++) {
-                vector<unsigned char> alias = vecNameIndex[i];
+            for(unsigned int i=0; i< vecAliasIndex.size(); i++) {
+                vector<unsigned char> alias = vecAliasIndex[i];
                 vector<CAliasIndex> vtxPos;
-                if (paliasdb->ExistsName(alias)) {
-                    if (!paliasdb->ReadName(alias, vtxPos))
+                if (paliasdb->ExistsAlias(alias)) {
+                    if (!paliasdb->ReadAlias(alias, vtxPos))
                         continue;
                 } else continue;
                 uint256 hash, txblkhash, txHash = vtxPos.back().txHash;
@@ -91,14 +93,14 @@ public:
                 cachedAliasTable.append(AliasTableEntry(fDataAlias ? AliasTableEntry::DataAlias : AliasTableEntry::Alias,
                                   QString::fromStdString(stringFromVch(vchValue)),
                                   QString::fromStdString(stringFromVch(alias)),
-                                  QString::fromStdString("0")));
+                                  QString::fromStdString(strprintf("%d", GetAliasExpirationDepth(nHeight)))));
             }
         }
         // qLowerBound() and qUpperBound() require our cachedAliasTable list to be sorted in asc order
         qSort(cachedAliasTable.begin(), cachedAliasTable.end(), AliasTableEntryLessThan());
     }
 
-    void updateEntry(const QString &alias, const QString &value, bool isData, int status)
+    void updateEntry(const QString &alias, const QString &value, const QString &exp, bool isData, int status)
     {
         // Find alias / value in model
         QList<AliasTableEntry>::iterator lower = qLowerBound(
@@ -119,7 +121,7 @@ public:
                 break;
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedAliasTable.insert(lowerIndex, AliasTableEntry(newEntryType, value, alias, QString("100")));
+            cachedAliasTable.insert(lowerIndex, AliasTableEntry(newEntryType, value, alias, exp));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
@@ -130,6 +132,7 @@ public:
             }
             lower->type = newEntryType;
             lower->value = value;
+            lower->expirationdepth = exp;
             parent->emitDataChanged(lowerIndex);
             break;
         case CT_DELETED:
@@ -166,7 +169,7 @@ public:
 AliasTableModel::AliasTableModel(CWallet *wallet, WalletModel *parent) :
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0)
 {
-    columns << tr("Alias") << tr("Value") << tr("ExpirationHeight");
+    columns << tr("Alias") << tr("Value") << tr("Expiration Height");
     priv = new AliasTablePriv(wallet, this);
     priv->refreshAliasTable();
 }
@@ -200,25 +203,20 @@ QVariant AliasTableModel::data(const QModelIndex &index, int role) const
         switch(index.column())
         {
         case Value:
-            if(rec->value.isEmpty() && role == Qt::DisplayRole)
-            {
-                return tr("(no value)");
-            }
-            else
-            {
-                return rec->value;
-            }
+            return rec->value;
         case Name:
             return rec->alias;
+        case ExpirationDepth:
+            return rec->expirationdepth;
         }
     }
     else if (role == Qt::FontRole)
     {
         QFont font;
-        if(index.column() == Name)
-        {
-            font = GUIUtil::bitcoinAddressFont();
-        }
+//        if(index.column() == Name)
+//        {
+//            font = GUIUtil::bitcoinAddressFont();
+//        }
         return font;
     }
     else if (role == TypeRole)
@@ -247,6 +245,15 @@ bool AliasTableModel::setData(const QModelIndex &index, const QVariant &value, i
     {
         switch(index.column())
         {
+        case ExpirationDepth:
+            // Do nothing, if old value == new value
+            if(rec->expirationdepth == value.toString())
+            {
+                editStatus = NO_CHANGES;
+                return false;
+            }
+            //wallet->SetAddressBookName(CBitcoinAlias(rec->alias.toStdString()).Get(), value.toString().toStdString());
+            break;
         case Value:
             // Do nothing, if old value == new value
             if(rec->value == value.toString())
@@ -314,7 +321,8 @@ Qt::ItemFlags AliasTableModel::flags(const QModelIndex &index) const
     {
         retval |= Qt::ItemIsEditable;
     }
-    return retval;
+    // return retval;
+    return 0;
 }
 
 QModelIndex AliasTableModel::index(int row, int column, const QModelIndex &parent) const
@@ -331,16 +339,17 @@ QModelIndex AliasTableModel::index(int row, int column, const QModelIndex &paren
     }
 }
 
-void AliasTableModel::updateEntry(const QString &alias, const QString &value, bool isMine, int status)
+void AliasTableModel::updateEntry(const QString &alias, const QString &value, const QString &exp, bool isMine, int status)
 {
     // Update alias book model from Bitcoin core
-    priv->updateEntry(alias, value, isMine, status);
+    priv->updateEntry(alias, value, exp, isMine, status);
 }
 
-QString AliasTableModel::addRow(const QString &type, const QString &value, const QString &alias)
+QString AliasTableModel::addRow(const QString &type, const QString &value, const QString &alias, const QString &exp)
 {
     std::string strValue = value.toStdString();
     std::string strAlias = alias.toStdString();
+    std::string strExp = exp.toStdString();
 
     editStatus = OK;
 
