@@ -1425,44 +1425,46 @@ void static InvalidBlockFound(CBlockIndex *pindex) {
 	}
 }
 
+bool PostConnectBest() {
+    // read alias and offer indexes
+    vecAliasIndex.clear();
+    paliasdb->ReadAliasIndex(vecAliasIndex);
+    vecOfferIndex.clear();
+    pofferdb->ReadOfferIndex(vecOfferIndex);
+
+    // read alias network fees
+    lstAliasFees.clear();
+    vector<CAliasFee> va;
+    paliasdb->ReadAliasTxFees(va);
+    list<CAliasFee> lAF(va.begin(), va.end());
+    lstAliasFees = lAF;
+
+    // read offer network fees
+    lstOfferFees.clear();
+    vector<COfferFee> vo;
+    pofferdb->ReadOfferTxFees(vo);
+    list<COfferFee> lOF(vo.begin(), vo.end());
+    lstOfferFees = lOF;
+
+    return true;
+}
+
 bool ConnectBestBlock(CValidationState &state) {
 	do {
 		CBlockIndex *pindexNewBest;
-
-        // read alias and offer indexes
-        vecAliasIndex.clear();
-        if(!paliasdb->ReadAliasIndex(vecAliasIndex))
-            return false;
-        vecOfferIndex.clear();
-        if(!pofferdb->ReadOfferIndex(vecOfferIndex))
-            error( "ConnectBlock() : Failed to read offer index list");
-
-        // read alias network fees
-        lstAliasFees.clear();
-        vector<CAliasFee> va;
-        paliasdb->ReadAliasTxFees(va);
-        list<CAliasFee> lAF(va.begin(), va.end());
-        lstAliasFees = lAF;
-
-        // read offer network fees
-        lstOfferFees.clear();
-        vector<COfferFee> vo;
-        pofferdb->ReadOfferTxFees(vo);
-        list<COfferFee> lOF(vo.begin(), vo.end());
-        lstOfferFees = lOF;
 		
 		{
 			std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it =
 					setBlockIndexValid.rbegin();
 			if (it == setBlockIndexValid.rend())
-				return true;
+				return PostConnectBest();
 			pindexNewBest = *it;
 		}
 
 		if (pindexNewBest == pindexBest
 				|| (pindexBest
 						&& pindexNewBest->nChainWork == pindexBest->nChainWork))
-			return true; // nothing to do
+			return PostConnectBest(); // nothing to do
 
 		// check ancestry
 		CBlockIndex *pindexTest = pindexNewBest;
@@ -1496,7 +1498,7 @@ bool ConnectBestBlock(CValidationState &state) {
 						return state.Abort(_("System error: ") + e.what());
 					}
 				}
-				return true;
+				return PostConnectBest();
 			}
 			pindexTest = pindexTest->pprev;
 		} while (true);
