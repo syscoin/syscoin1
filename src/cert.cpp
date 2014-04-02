@@ -1894,7 +1894,7 @@ Value certinfo(const Array& params, bool fHelp) {
 
     Object oLastCertIssuer;
     vector<unsigned char> vchCertItem = vchFromValue(params[0]);
-    vector<unsigned char> vchCertRand = ParseHex(params[0]);
+    vector<unsigned char> vchCertRand = ParseHex(params[0].get_str());
 
     // look for a transaction with this key, also returns
     // an certissuer object if it is found
