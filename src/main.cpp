@@ -340,6 +340,7 @@ CCoinsViewCache *pcoinsTip = NULL;
 CBlockTreeDB *pblocktree = NULL;
 CNameDB *paliasdb = NULL;
 COfferDB *pofferdb = NULL;
+CCertDB *pcertdb = NULL;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -645,36 +646,34 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
     if (nVersion != SYSCOIN_TX_VERSION)
         return true;
 
-    vector<vector<unsigned char> > avvch, ovvch;
-    int aop, oop;
-    int anOut, onOut;
+    vector<vector<unsigned char> > vvch;
+    int op;
+    int nOut;
 
     bool ret[2];
     for (int iter = 0; iter < 2; iter++) {
         ret[iter] = true;
 
-        bool agood = DecodeAliasTx(*this, aop, anOut, avvch, iter == 0 ? 0 : -1);
-        bool ogood = DecodeOfferTx(*this, oop, onOut, ovvch, iter == 0 ? 0 : -1);
-
+        bool good = DecodeSyscoinTx(*this, op, nOut, vvch, iter == 0 ? 0 : -1);
         // alias
-        if(agood && IsAliasOp(aop)) {
-	        if (avvch[0].size() > MAX_NAME_LENGTH) {
+        if(good && IsAliasOp(op)) {
+	        if (vvch[0].size() > MAX_NAME_LENGTH) {
 	            ret[iter] = error("alias transaction with alias too long");
 	            continue;
 	        }
-	        switch (aop) {
+	        switch (op) {
 	            case OP_ALIAS_NEW:
-	                if (avvch[0].size() != 20)
+	                if (vvch[0].size() != 20)
 	                    ret[iter] = error("aliasnew tx with incorrect hash length");
 	                break;
 	            case OP_ALIAS_ACTIVATE:
-	                if (avvch[1].size() > 20)
+	                if (vvch[1].size() > 20)
 	                    ret[iter] = error("aliasactivate tx with rand too big");
-	                if (avvch[2].size() > MAX_VALUE_LENGTH)
+	                if (vvch[2].size() > MAX_VALUE_LENGTH)
 	                    ret[iter] = error("aliasactivate tx with value too long");
 	                break;
 	            case OP_ALIAS_UPDATE:
-	                if (avvch[1].size() > MAX_VALUE_LENGTH)
+	                if (vvch[1].size() > MAX_VALUE_LENGTH)
 	                    ret[iter] = error("aliasupdate tx with value too long");
 	                break;
 	            default:
@@ -683,44 +682,84 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
         }
 
         // offer
-        if(ogood && IsOfferOp(oop)) {
-	        if (ovvch[0].size() > MAX_NAME_LENGTH) {
+        if(good && IsOfferOp(op)) {
+	        if (vvch[0].size() > MAX_NAME_LENGTH) {
 	            ret[iter] = error("offer transaction with offer title too long");
 	            continue;
 	        }
-	        switch (oop) {
+	        switch (op) {
 	            case OP_OFFER_NEW:
-	                if (ovvch[0].size() != 20)
+	                if (vvch[0].size() != 20)
 	                    ret[iter] = error("offernew tx with incorrect hash length");
 	                break;
 	            case OP_OFFER_ACTIVATE:
-	                if (ovvch[1].size() > 20)
+	                if (vvch[1].size() > 20)
 	                    ret[iter] = error("offeractivate tx with rand too big");
-	                if (ovvch[2].size() > MAX_VALUE_LENGTH)
+	                if (vvch[2].size() > MAX_VALUE_LENGTH)
 	                    ret[iter] = error("offeractivate tx with value too long");
 	                break;
 	            case OP_OFFER_UPDATE:
-	                if (ovvch[1].size() > MAX_VALUE_LENGTH)
+                    if (vvch[1].size() > MAX_VALUE_LENGTH)
 	                    ret[iter] = error("offerupdate tx with value too long");
 	                break;
 	            case OP_OFFER_ACCEPT: 
-	            	if (ovvch[0].size() > 20)
+	            	if (vvch[0].size() > 20)
 	                    ret[iter] = error("offeraccept tx with offer rand too big");
-	                if (ovvch[2].size() > 20)
+	                if (vvch[2].size() > 20)
 	                    ret[iter] = error("offeraccept tx with invalid hash length");
-	                if (ovvch[1].size() > 20)
+	                if (vvch[1].size() > 20)
 	                    ret[iter] = error("offeraccept tx with alias rand too big");
 	                break;
 	            case OP_OFFER_PAY:
-	            	if (ovvch[0].size() > 20)
+	            	if (vvch[0].size() > 20)
 	                    ret[iter] = error("offerpay tx with offer rand too big");
-	                if (ovvch[1].size() > 20)
+	                if (vvch[1].size() > 20)
 	                    ret[iter] = error("offeraccept tx with alias rand too big");
 	                break;
 	            default:
 	                ret[iter] = error("offer transaction has unknown op");
 	        }
         }
+
+        // cert
+        if(good && IsCertOp(op)) {
+	        if (vvch[0].size() > MAX_NAME_LENGTH) {
+	            ret[iter] = error("cert transaction with cert title too long");
+	            continue;
+	        }
+	        switch (op) {
+	            case OP_CERTISSUER_NEW:
+	                if (vvch[0].size() != 20)
+	                    ret[iter] = error("cert tx with incorrect hash length");
+	                break;
+	            case OP_CERTISSUER_ACTIVATE:
+	                if (vvch[1].size() > 20)
+	                    ret[iter] = error("cert tx with rand too big");
+	                if (vvch[2].size() > MAX_VALUE_LENGTH)
+	                    ret[iter] = error("cert tx with value too long");
+	                break;
+	            case OP_CERTISSUER_UPDATE:
+	                if (vvch[1].size() > MAX_VALUE_LENGTH)
+	                    ret[iter] = error("cert tx with value too long");
+	                break;
+	            case OP_CERT_NEW: 
+	            	if (vvch[0].size() > 20)
+	                    ret[iter] = error("cert tx with cert rand too big");
+	                if (vvch[2].size() > 20)
+	                    ret[iter] = error("cert tx with invalid hash length");
+	                if (vvch[1].size() > 20)
+	                    ret[iter] = error("cert tx with cert rand too big");
+	                break;
+	            case OP_CERT_TRANSFER:
+	            	if (vvch[0].size() > 20)
+	                    ret[iter] = error("cert tx with offer rand too big");
+	                if (vvch[1].size() > 20)
+	                    ret[iter] = error("cert tx with alias rand too big");
+	                break;
+	            default:
+	                ret[iter] = error("cert transaction has unknown op");
+	        }
+        }        
     }
     return ret[0] || ret[1];
 }
@@ -944,30 +983,38 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 	        error("AcceptToMemoryPool() : no output in syscoin tx %s\n", tx.ToString().c_str());
 	    }
 
-	    vector<vector<unsigned char> > avvch, ovvch;
-	    int aop, oop, anOut, onOut;
+        vector<vector<unsigned char> > vvch;
+	    int op, nOut;
 
-	    bool agood = DecodeAliasTx(tx, aop, anOut, avvch, -1);
-	    bool ogood = DecodeOfferTx(tx, oop, onOut, ovvch, -1);
+	    bool good = DecodeSyscoinTx(tx, op, nOut, vvch, -1);
 
-	    if(agood && IsAliasOp(aop)) {
-			if (aop == OP_ALIAS_ACTIVATE) {
-		        LOCK(cs_main);
-				mapAliasesPending[avvch[0]].insert(tx.GetHash());
-		        printf("AcceptToMemoryPool() : Added alias transaction '%s' to memory pool.\n",
-		        	stringFromVch(avvch[0]).c_str());
-			}
+	    if(good && IsAliasOp(op)) {
+	        LOCK(cs_main);
+            mapAliasesPending[vvch[0]].insert(tx.GetHash());
+	        printf("AcceptToMemoryPool() : Added alias transaction '%s' to memory pool.\n",
+                stringFromVch(vvch[0]).c_str());
 	    }
 
-	    if(ogood && IsOfferOp(oop)) {
+	    if(good && IsOfferOp(op)) {
 	        LOCK(cs_main);
-			if(oop == OP_OFFER_ACCEPT || oop == OP_OFFER_PAY)
-				mapOfferAcceptPending[ovvch[1]].insert(tx.GetHash());
+            if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY)
+				mapOfferAcceptPending[vvch[1]].insert(tx.GetHash());
 			else
-				mapOfferPending[oop == OP_OFFER_NEW ? vchFromString(HexStr(ovvch[0])) 
-					: ovvch[0]].insert(tx.GetHash());
+                mapOfferPending[op == OP_OFFER_NEW ? vchFromString(HexStr(vvch[0]))
+                    : vvch[0]].insert(tx.GetHash());
 			printf("AcceptToMemoryPool() : Added offer transaction '%s' to memory pool.\n", 
-				stringFromVch(ovvch[0]).c_str());
+                stringFromVch(vvch[0]).c_str());
+	    }
+
+		if(good && IsCertOp(op)) {
+	        LOCK(cs_main);
+			if(op == OP_CERT_TRANSFER)
+				mapCertItemPending[vvch[1]].insert(tx.GetHash());
+			else
+                mapCertIssuerPending[op == OP_CERTISSUER_NEW ? vchFromString(HexStr(vvch[0]))
+                    : vvch[0]].insert(tx.GetHash());
+			printf("AcceptToMemoryPool() : Added cert transaction '%s' to memory pool.\n", 
+                stringFromVch(vvch[0]).c_str());
 	    }
 	}
 
@@ -1431,7 +1478,9 @@ bool PostConnectBest() {
     paliasdb->ReadAliasIndex(vecAliasIndex);
     vecOfferIndex.clear();
     pofferdb->ReadOfferIndex(vecOfferIndex);
-
+    vecCertIssuerIndex.clear();
+    pcertdb->ReadCertIndex(vecCertIssuerIndex);
+    
     // read alias network fees
     lstAliasFees.clear();
     vector<CAliasFee> va;
@@ -1445,6 +1494,13 @@ bool PostConnectBest() {
     pofferdb->ReadOfferTxFees(vo);
     list<COfferFee> lOF(vo.begin(), vo.end());
     lstOfferFees = lOF;
+
+    // read cert issuer network fees
+    lstCertIssuerFees.clear();
+    vector<CCertFee> vc;
+    pcertdb->ReadCertFees(vc);
+    list<CCertFee> lCF(vc.begin(), vc.end());
+    lstCertIssuerFees = lCF;
 
     return true;
 }
@@ -1644,16 +1700,22 @@ bool CTransaction::CheckInputs(CBlockIndex *pindex, CValidationState &state, CCo
 		int op;
 		int nOut;
 
-		bool bDecoded = DecodeAliasTx(*this, op, nOut, vvchArgs, pindex->nHeight);
-		if (bDecoded && IsAliasOp(op)) {
+		bool bDecoded = DecodeSyscoinTx(*this, op, nOut, vvchArgs, pindex->nHeight);
+		if (bDecoded) {
+
+		}
+
+		if(IsAliasOp(op)) {
 			if (!CheckAliasInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
 				return false;
-		} else {
-			bDecoded = DecodeOfferTx(*this, op, nOut, vvchArgs, pindex->nHeight);
-			if (bDecoded && IsOfferOp(op)) {
-				if (!CheckOfferInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
-					return false;
-			}
+		}
+		else if (IsOfferOp(op)) {
+			if (!CheckOfferInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
+				return false;
+		} 
+		else if (IsCertOp(op)) {
+			if (!CheckCertInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
+				return false;
 		}
 
 		if (nValueIn < GetValueOut())
@@ -1767,13 +1829,14 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 
 	    if (tx.nVersion == SYSCOIN_TX_VERSION) {
 		    vector<vector<unsigned char> > vvchArgs;
-		    int aop, oop;
-		    int naOut, noOut;
+		    int op, nOut;
 
 		    // alias, data
-		    bool agood = DecodeAliasTx(tx, aop, naOut, vvchArgs, pindex->nHeight);
-		    if (agood && IsAliasOp(aop) && aop != OP_ALIAS_NEW) {
-		        string opName = aliasFromOp(aop);
+		    bool good = DecodeSyscoinTx(tx, op, nOut, vvchArgs, pindex->nHeight);
+
+            //*************************
+		    if (good && IsAliasOp(op) && op != OP_ALIAS_NEW) {
+                string opName = aliasFromOp(op);
 
 		        vector<CAliasIndex> vtxPos;
 		        if (!paliasdb->ReadAlias(vvchArgs[0], vtxPos))
@@ -1812,11 +1875,11 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 
 		        printf("DISCONNECTED ALIAS TXN: alias=%s op=%s hash=%s  height=%d\n",
 		                stringFromVch(vvchArgs[0]).c_str(),
-		                aliasFromOp(aop).c_str(),
+                        aliasFromOp(op).c_str(),
 		                tx.GetHash().ToString().c_str(),
 		                pindex->nHeight);
             } 
-            else if (IsAliasOp(aop) && aop == OP_ALIAS_NEW) {
+            else if (IsAliasOp(op) && op == OP_ALIAS_NEW) {
                 paliasdb->EraseAlias(vvchArgs[0]);
                 for(unsigned int i=0; i< vecAliasIndex.size();i++) {
                     if(vecAliasIndex[i] == vvchArgs[0]) {
@@ -1829,23 +1892,23 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
                     return error("DisconnectBlock() : failed to write index to alias DB");
             }
 
-		    bool ogood = DecodeOfferTx(tx, oop, noOut, vvchArgs, pindex->nHeight);
-		    if (ogood && IsOfferOp(oop) && oop != OP_OFFER_NEW) {
-		        string opName = offerFromOp(oop);
+            //*************************
+            if (good && IsOfferOp(op) && op != OP_OFFER_NEW) {
+                string opName = offerFromOp(op);
 				
 				COffer theOffer;
 				theOffer.UnserializeFromTx(tx);
 				if (theOffer.IsNull())
 					error("CheckOfferInputs() : null offer object");
 
-				if(oop != OP_OFFER_NEW) {
+                if(op != OP_OFFER_NEW) {
 			        // make sure a DB record exists for this offer
 			        vector<COffer> vtxPos;
 			        if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos))
 			            return error("DisconnectBlock() : failed to read from offer DB for %s %s\n",
 			            		opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
 
-			        if( oop == OP_OFFER_PAY || oop == OP_OFFER_ACCEPT ) {
+                    if( op == OP_OFFER_PAY || op == OP_OFFER_ACCEPT ) {
 			        	vector<unsigned char> vvchOfferAccept = vvchArgs[1];
 			        	COfferAccept theOfferAccept;
 
@@ -1887,15 +1950,78 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
                             }
                         }
                     }
-
-                    
                     if (!pofferdb->WriteOfferIndex(vecOfferIndex))
                         return error("CheckOfferInputs() : failed to write index to offer DB");
-
 				} 
-				else if (IsOfferOp(oop) && oop == OP_OFFER_NEW) {
+                else if (IsOfferOp(op) && op == OP_OFFER_NEW) {
 					pofferdb->EraseOffer(theOffer.vchRand);
 				}
+
+                if (good && IsCertOp(op) && op != OP_CERTISSUER_NEW) {
+                    string opName = certissuerFromOp(op);
+
+                    CCertIssuer theIssuer;
+                    theIssuer.UnserializeFromTx(tx);
+                    if (theIssuer.IsNull())
+                        error("CheckOfferInputs() : null issuer object");
+
+                    if(op != OP_CERTISSUER_NEW) {
+                        // make sure a DB record exists for this cert
+                        vector<CCertIssuer> vtxPos;
+                        if (!pcertdb->ReadCertIssuer(vvchArgs[0], vtxPos))
+                            return error("DisconnectBlock() : failed to read from certificate DB for %s %s\n",
+                                    opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
+
+                        if( op == OP_CERT_NEW || op == OP_CERT_TRANSFER ) {
+                            vector<unsigned char> vvchCert = vvchArgs[1];
+                            CCertItem theCert;
+
+                            // make sure the offeraccept is also in the serialized offer in the txn
+                            if(!theIssuer.GetCertItemByHash(vvchCert, theCert))
+                                return error("DisconnectBlock() : not found in offer for offer accept %s %s\n",
+                                        opName.c_str(), HexStr(vvchCert).c_str());
+
+                            // make sure offer accept db record already exists
+                            if (pcertdb->ExistsCertItem(vvchCert))
+                                pcertdb->EraseCertItem(vvchCert);
+                        }
+
+                        // vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
+                        // be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
+                        if (vtxPos.size()) {
+                            CDiskTxPos txindex;
+                            if (!pblocktree->ReadTxIndex(tx.GetHash(), txindex))
+                                return error("DisconnectBlock() : failed to read tx index for offer %s %s %s\n",
+                                        opName.c_str(), stringFromVch(vvchArgs[0]).c_str(), tx.GetHash().ToString().c_str());
+
+                            while(vtxPos.back().txHash == tx.GetHash())
+                                vtxPos.pop_back();
+
+                            // TODO validate that the first pos is the current tx pos
+                        }
+
+                        // write new offer state to db
+                        if(!pcertdb->WriteCertIssuer(vvchArgs[0], vtxPos))
+                            return error("DisconnectBlock() : failed to write to offer DB");
+
+                        // remove the offer from the offer index if vtxPos empty
+                        if(!vtxPos.size()) {
+                            for(unsigned int i=0; i< vecCertIssuerIndex.size();i++) {
+                                if(vecCertIssuerIndex[i] == vecCertIssuerIndex[0]) {
+                                    swap(vecCertIssuerIndex[i], vecCertIssuerIndex.back());
+                                    vecCertIssuerIndex.pop_back();
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!pcertdb->WriteCertIndex(vecOfferIndex))
+                            return error("CheckOfferInputs() : failed to write index to offer DB");
+                    }
+                    else if (IsCertOp(op) && op == OP_CERTISSUER_NEW) {
+                        pcertdb->EraseCertIssuer(theOffer.vchRand);
+                    }
+                }
 
 		        printf("DISCONNECTED OFFER TXN: title=%s hash=%s height=%d\n",
 		                stringFromVch(vvchArgs[0]).c_str(),
@@ -2259,6 +2385,7 @@ bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew) {
 	assert(view.Flush());
 	assert(paliasdb->Flush());
 	assert(pofferdb->Flush());
+	assert(pcertdb->Flush());
 	int64 nTime = GetTimeMicros() - nStart;
 	if (fBenchmark)
 		printf("- Flush %i transactions: %.2fms (%.4fms/tx)\n", nModified,

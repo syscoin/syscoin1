@@ -243,6 +243,18 @@ extern json_spirit::Value offerhistory(const json_spirit::Array& params, bool fH
 extern json_spirit::Value offerfilter(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerscan(const json_spirit::Array& params, bool fHelp);
 
+extern json_spirit::Value certissuernew(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value certissueractivate(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value certissuerupdate(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value certnew(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value certtransfer(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value certissuerinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value certinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value certissuerlist(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value certissuerhistory(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value certissuerfilter(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value certissuerscan(const json_spirit::Array& params, bool fHelp);
+
 extern json_spirit::Value phrpcfunc(const json_spirit::Array& params, bool fHelp);
 
 #endif

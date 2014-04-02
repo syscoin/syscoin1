@@ -148,7 +148,8 @@ OBJS= \
     obj/leveldb.o \
     obj/txdb.o \
     obj/alias.o \
-    obj/offer.o
+    obj/offer.o \
+    obj/cert.o
 
 
 ifdef USE_SSE2

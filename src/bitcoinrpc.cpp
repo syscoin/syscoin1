@@ -293,7 +293,7 @@ static const CRPCCommand vRPCCommands[] =
     { "datahistory",      &datahistory,     false,      false,      true },
     { "datafiler",        &datafilter,      false,      false,      true },
 
-    // use the blockchain as a distributed exchange
+    // use the blockchain as a distributed marketplace
     { "offernew",         &offernew,     false,      false,      true },
     { "offeractivate",    &offeractivate,false,      false,      true },
     { "offerupdate",      &offerupdate,  false,      false,      true },
@@ -304,6 +304,20 @@ static const CRPCCommand vRPCCommands[] =
     { "offerhistory",     &offerhistory, false,      false,      true },
     { "offerscan",        &offerscan,    false,      false,      true },
     { "offerfilter",      &offerfilter,  false,      false,      true },
+
+  // use the blockchain as a certificate issuance platform
+  { "certissuernew",         &certissuernew,     false,      false,      true },
+  { "certissueractivate",    &certissueractivate,false,      false,      true },
+  { "certissuerupdate",      &certissuerupdate,  false,      false,      true },
+  { "certnew",               &certnew,           false,      false,      true },
+  { "certtransfer",          &certtransfer,      false,      false,      true },
+  { "certissuerlist",        &certissuerlist,    false,      false,      true },
+  { "certissuerinfo",        &certissuerinfo,    false,      false,      true },
+  { "certinfo",              &certinfo,          false,      false,      true },
+  { "certissuerhistory",     &certissuerhistory, false,      false,      true },
+  { "certissuerscan",        &certissuerscan,    false,      false,      true },
+  { "certissuerfilter",      &certissuerfilter,  false,      false,      true },
+
 };
 
 CRPCTable::CRPCTable()

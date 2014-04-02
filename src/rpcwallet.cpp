@@ -12,6 +12,7 @@
 #include "base58.h"
 #include "alias.h"
 #include "offer.h"
+#include "cert.h"
 #include "txdb.h"
 #include "script.h"
 
@@ -1068,7 +1069,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             if (fNameTx) {
                 vector<vector<unsigned char> > vvchArgs;
                 int op,nOut, nTxOut;
-                bool good = DecodeAliasTx(wtx, op, nOut, vvchArgs, -1);
+                bool good = DecodeSyscoinTx(wtx, op, nOut, vvchArgs, -1);
                 if(IsAliasOp(op)) {
                     nTxOut = IndexOfNameOutput(wtx);
                     ExtractAliasAddress(wtx.vout[nTxOut].scriptPubKey, strAddress);

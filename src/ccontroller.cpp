@@ -6,6 +6,7 @@
 #include "init.h"
 #include "alias.h"
 #include "offer.h"
+#include "cert.h"
 #include "txdb.h"
 #include "util.h"
 #include "auxpow.h"

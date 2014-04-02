@@ -45,7 +45,7 @@ extern CCriticalSection cs_mapTransactions;
 extern map<uint256, CTransaction> mapTransactions;
 
 // forward decls
-extern bool DecodeAliasScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch, CScript::const_iterator& pc);
+extern bool DecodeSyscoinScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch, CScript::const_iterator& pc);
 extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash, int nHashType, CScript& scriptSigRet, txnouttype& whichTypeRet);
 extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 extern bool IsConflictedAliasTx(CBlockTreeDB& txdb, const CTransaction& tx, vector<unsigned char>& name);
@@ -192,7 +192,7 @@ bool IsAliasMine(const CTransaction& tx) {
     vector<vector<unsigned char> > vvch;
     int op, nOut;
 
-    if (!DecodeAliasTx(tx, op, nOut, vvch, -1) || !IsAliasOp(op)) {
+    if (!DecodeSyscoinTx(tx, op, nOut, vvch, -1) || !IsAliasOp(op)) {
         error("IsAliasMine() : no output out script in alias tx %s\n",
         		tx.ToString().c_str());
         return false;
@@ -215,7 +215,7 @@ bool IsAliasMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasn
 
     int op;
 
-    if (!DecodeAliasScript(txout.scriptPubKey, op, vvch) || !IsAliasOp(op))
+    if (!DecodeSyscoinScript(txout.scriptPubKey, op, vvch) || !IsAliasOp(op))
         return false;
     
     if (ignore_aliasnew && op == OP_ALIAS_NEW)
@@ -245,7 +245,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			prevOutput = &tx.vin[i].prevout;
 			prevCoins = &inputs.GetCoins(prevOutput->hash);
             vector<vector<unsigned char> > vvch;
-            if (DecodeAliasScript(prevCoins->vout[prevOutput->n].scriptPubKey, prevOp, vvch)) {
+            if (DecodeSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, prevOp, vvch)) {
 				found = true;
                 vvchPrevArgs = vvch;
 				break;
@@ -261,7 +261,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         // decode alias info from transaction
         vector<vector<unsigned char> > vvchArgs;
         int op, nOut, nPrevHeight, nDepth;
-        if (!DecodeAliasTx(tx, op, nOut, vvchArgs, pindexBlock->nHeight))
+        if (!DecodeSyscoinTx(tx, op, nOut, vvchArgs, pindexBlock->nHeight))
             return error("CheckAliasInputs() : could not decode syscoin alias info from tx %s",
                          tx.GetHash().GetHex().c_str());
         int64 nNetFee;
@@ -456,7 +456,7 @@ bool ExtractAliasAddress(const CScript& script, string& address) {
     }
     vector<vector<unsigned char> > vvch;
     int op;
-    if (!DecodeAliasScript(script, op, vvch))
+    if (!DecodeSyscoinScript(script, op, vvch))
         return false;
 
     string strOp = aliasFromOp(op);
@@ -548,7 +548,7 @@ bool CNameDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
             int op, nOut;
 
             // decode the alias op
-            bool o = DecodeAliasTx(tx, op, nOut, vvchArgs, nHeight);
+            bool o = DecodeSyscoinTx(tx, op, nOut, vvchArgs, nHeight);
             if (!o || !IsAliasOp(op)) continue;
             if (op == OP_ALIAS_NEW) continue;
 
@@ -655,7 +655,7 @@ CScript RemoveAliasScriptPrefix(const CScript& scriptIn) {
     vector<vector<unsigned char> > vvch;
     CScript::const_iterator pc = scriptIn.begin();
 
-    if (!DecodeAliasScript(scriptIn, op, vvch,  pc))
+    if (!DecodeSyscoinScript(scriptIn, op, vvch,  pc))
         throw runtime_error("RemoveAliasScriptPrefix() : could not decode name script");
     return CScript(pc, scriptIn.end());
 }
@@ -907,7 +907,7 @@ bool GetNameAddress(const CTransaction& tx, std::string& strAddress) {
     int op, nOut = 0;
     vector<vector<unsigned char> > vvch;
 
-    if(!DecodeAliasTx(tx, op, nOut, vvch, -1))
+    if(!DecodeSyscoinTx(tx, op, nOut, vvch, -1))
     	return error("GetNameAddress() : could not decode name tx.");
 
     const CTxOut& txout = tx.vout[nOut];
@@ -976,7 +976,7 @@ int IndexOfNameOutput(const CTransaction& tx) {
 
     int op;
     int nOut;
-    bool good = DecodeAliasTx(tx, op, nOut, vvch, -1);
+    bool good = DecodeSyscoinTx(tx, op, nOut, vvch, -1);
 
     if (!good)
         throw runtime_error("IndexOfNameOutput() : name output not found");
@@ -991,7 +991,7 @@ bool GetNameOfTx(const CTransaction& tx, vector<unsigned char>& name) {
     int op;
     int nOut;
 
-    bool good = DecodeAliasTx(tx, op, nOut, vvchArgs, -1);
+    bool good = DecodeSyscoinTx(tx, op, nOut, vvchArgs, -1);
     if (!good)
         return error("GetNameOfTx() : could not decode a syscoin tx");
 
@@ -1011,7 +1011,7 @@ bool IsConflictedAliasTx(CBlockTreeDB& txdb, const CTransaction& tx, vector<unsi
     int op;
     int nOut;
 
-    bool good = DecodeAliasTx(tx, op, nOut, vvchArgs, pindexBest->nHeight);
+    bool good = DecodeSyscoinTx(tx, op, nOut, vvchArgs, pindexBest->nHeight);
     if (!good)
         return error("IsConflictedAliasTx() : could not decode a syscoin tx");
     int nPrevHeight;
@@ -1033,7 +1033,7 @@ bool GetValueOfNameTx(const CTransaction& tx, vector<unsigned char>& value)
     int op;
     int nOut;
 
-    if (!DecodeAliasTx(tx, op, nOut, vvch, -1))
+    if (!DecodeSyscoinTx(tx, op, nOut, vvch, -1))
         return false;
 
     switch (op) {
@@ -1050,7 +1050,7 @@ bool GetValueOfNameTx(const CTransaction& tx, vector<unsigned char>& value)
     }
 }
 
-bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch, int nHeight) {
+bool DecodeSyscoinTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch, int nHeight) {
     bool found = false;
 
     if (nHeight < 0)
@@ -1060,7 +1060,7 @@ bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, vector<vector<uns
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
 		const CTxOut& out = tx.vout[i];
 		vector<vector<unsigned char> > vvchRead;
-		if (DecodeAliasScript(out.scriptPubKey, op, vvchRead)) {
+		if (DecodeSyscoinScript(out.scriptPubKey, op, vvchRead)) {
 			nOut = i;
 			found = true;
 			vvch = vvchRead;
@@ -1078,7 +1078,7 @@ bool GetValueOfNameTx(const CCoins& tx, vector<unsigned char>& value) {
     int op;
     int nOut;
 
-    if (!DecodeAliasTx(tx, op, nOut, vvch, -1))
+    if (!DecodeSyscoinTx(tx, op, nOut, vvch, -1))
         return false;
 
     switch (op) {
@@ -1095,7 +1095,7 @@ bool GetValueOfNameTx(const CCoins& tx, vector<unsigned char>& value) {
     }
 }
 
-bool DecodeAliasTx(const CCoins& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch, int nHeight) {
+bool DecodeSyscoinTx(const CCoins& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch, int nHeight) {
     bool found = false;
 
     if (nHeight < 0)
@@ -1105,7 +1105,7 @@ bool DecodeAliasTx(const CCoins& tx, int& op, int& nOut, vector<vector<unsigned 
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
         const CTxOut& out = tx.vout[i];
         vector<vector<unsigned char> > vvchRead;
-        if (DecodeAliasScript(out.scriptPubKey, op, vvchRead)) {
+        if (DecodeSyscoinScript(out.scriptPubKey, op, vvchRead)) {
             nOut = i;
             found = true;
             vvch = vvchRead;
@@ -1117,12 +1117,12 @@ bool DecodeAliasTx(const CCoins& tx, int& op, int& nOut, vector<vector<unsigned 
 }
 
 
-bool DecodeAliasScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch) {
+bool DecodeSyscoinScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch) {
     CScript::const_iterator pc = script.begin();
-    return DecodeAliasScript(script, op, vvch, pc);
+    return DecodeSyscoinScript(script, op, vvch, pc);
 }
 
-bool DecodeAliasScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch, CScript::const_iterator& pc) {
+bool DecodeSyscoinScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch, CScript::const_iterator& pc) {
     opcodetype opcode;
     if (!script.GetOp(pc, opcode))
         return false;
@@ -1265,7 +1265,7 @@ Value aliasactivate(const Array& params, bool fHelp) {
     BOOST_FOREACH(CTxOut& out, wtxIn.vout) {
         vector<vector<unsigned char> > vvch;
         int op;
-        if (DecodeAliasScript(out.scriptPubKey, op, vvch)) {
+        if (DecodeSyscoinScript(out.scriptPubKey, op, vvch)) {
             if (op != OP_ALIAS_NEW)
                 throw runtime_error("previous transaction wasn't a aliasnew");
             vchHash = vvch[0];
@@ -1981,7 +1981,7 @@ Value dataactivate(const Array& params, bool fHelp)
     BOOST_FOREACH(CTxOut& out, wtxIn.vout) {
         vector<vector<unsigned char> > vvch;
         int op;
-        if (DecodeAliasScript(out.scriptPubKey, op, vvch)) {
+        if (DecodeSyscoinScript(out.scriptPubKey, op, vvch)) {
             if (op != OP_ALIAS_NEW)
                 throw runtime_error("previous transaction wasn't a datanew");
             vchHash = vvch[0];

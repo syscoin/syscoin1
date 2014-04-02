@@ -46,10 +46,10 @@ extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
 
 bool IsOfferOp(int op) {
 	return op == OP_OFFER_NEW
-			|| op == OP_OFFER_ACTIVATE
-			|| op == OP_OFFER_UPDATE
-			|| op == OP_OFFER_ACCEPT
-			|| op == OP_OFFER_PAY;
+        || op == OP_OFFER_ACTIVATE
+        || op == OP_OFFER_UPDATE
+        || op == OP_OFFER_ACCEPT
+        || op == OP_OFFER_PAY;
 }
 
 // 10080 blocks = 1 week
@@ -109,7 +109,7 @@ string offerFromOp(int op) {
 	case OP_OFFER_ACCEPT:
 		return "offeraccept";
 	case OP_OFFER_PAY:
-		return "offerpay";
+        return "offerpay";
 	default:
 		return "<unknown offer op>";
 	}
@@ -1935,23 +1935,17 @@ Value offerinfo(const Array& params, bool fHelp) {
 		if (!pofferdb->ReadOffer(vchOffer, vtxPos))
 			throw JSONRPCError(RPC_WALLET_ERROR,
 					"failed to read from offer DB");
-
 		if (vtxPos.size() < 1)
 			throw JSONRPCError(RPC_WALLET_ERROR, "no result returned");
 
-		uint256 blockHash;
-		uint256 txHash = vtxPos[vtxPos.size() - 1].txHash;
-		CTransaction tx;
-		if (!GetTransaction(txHash, tx, blockHash, true))
-			throw JSONRPCError(RPC_WALLET_ERROR,
-					"failed to read transaction from disk");
+        // get transaction pointed to by offer
+        CTransaction tx;
+        uint256 blockHash;
+        uint256 txHash = vtxPos.back().txHash;
+        if (!GetTransaction(txHash, tx, blockHash, true))
+            throw JSONRPCError(RPC_WALLET_ERROR, "failed to read transaction from disk");
 
-		COffer theOffer;
-		if(!theOffer.UnserializeFromTx(tx))
-			throw JSONRPCError(RPC_WALLET_ERROR,
-					"failed to unserialize offer from transaction");
-
-		theOffer = vtxPos.back();
+        COffer theOffer = vtxPos.back();
 
 		Object oOffer;
 		vector<unsigned char> vchValue;
@@ -1975,7 +1969,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 		}
 		int nHeight;
 		uint256 offerHash;
-		if (GetValueOfOfferTxHash(txHash, vchValue, offerHash, nHeight)) {
+        if (GetValueOfOfferTxHash(txHash, vchValue, offerHash, nHeight)) {
 			oOffer.push_back(Pair("id", offer));
 			oOffer.push_back(Pair("txid", tx.GetHash().GetHex()));
 			string strAddress = "";

@@ -201,28 +201,28 @@ void BitcoinGUI::createActions()
     addressBookAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
     tabGroup->addAction(addressBookAction);
 
-    aliasListAction = new QAction(QIcon(":/icons/address-book"), tr("A&liases"), this);
+    aliasListAction = new QAction(QIcon(":/icons/domain"), tr("A&liases"), this);
     aliasListAction->setStatusTip(tr("Manage aliases"));
     aliasListAction->setToolTip(aliasListAction->statusTip());
     aliasListAction->setCheckable(true);
     aliasListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
     tabGroup->addAction(aliasListAction);
 
-    dataAliasListAction = new QAction(QIcon(":/icons/address-book"), tr("&Data"), this);
+    dataAliasListAction = new QAction(QIcon(":/icons/domain"), tr("&Data"), this);
     dataAliasListAction->setStatusTip(tr("Manage data aliases"));
     dataAliasListAction->setToolTip(dataAliasListAction->statusTip());
     dataAliasListAction->setCheckable(true);
     dataAliasListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_7));
     tabGroup->addAction(dataAliasListAction);
 
-    offerListAction = new QAction(QIcon(":/icons/address-book"), tr("&Offers"), this);
+    offerListAction = new QAction(QIcon(":/icons/cart"), tr("&Offers"), this);
     offerListAction->setStatusTip(tr("Manage offers"));
     offerListAction->setToolTip(offerListAction->statusTip());
     offerListAction->setCheckable(true);
     offerListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_8));
     tabGroup->addAction(offerListAction);
 
-    offerAcceptListAction = new QAction(QIcon(":/icons/address-book"), tr("A&ccepts"), this);
+    offerAcceptListAction = new QAction(QIcon(":/icons/cart"), tr("A&ccepts"), this);
     offerAcceptListAction->setStatusTip(tr("Manage offer accepts"));
     offerAcceptListAction->setToolTip(offerAcceptListAction->statusTip());
     offerAcceptListAction->setCheckable(true);

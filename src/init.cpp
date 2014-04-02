@@ -27,6 +27,7 @@ using namespace boost;
 
 extern CNameDB *paliasdb;
 extern COfferDB *pofferdb;
+extern CCertDB *pcertdb;
 
 void rescanforaliases(CBlockIndex *pindexRescan);
 void rescanforoffers(CBlockIndex *pindexRescan);
@@ -120,12 +121,15 @@ void Shutdown()
         if (paliasdb)
             paliasdb->Flush();        
         if (pofferdb)
-            pofferdb->Flush();   
+            pofferdb->Flush(); 
+        if (pcertdb)
+            pcertdb->Flush();   
         delete pcoinsTip; pcoinsTip = NULL;
         delete pcoinsdbview; pcoinsdbview = NULL;
         delete pblocktree; pblocktree = NULL;
         delete paliasdb; paliasdb = NULL;
         delete pofferdb; pofferdb = NULL;
+        delete pcertdb; pcertdb = NULL;
     }
     if (pwalletMain)
         bitdb.Flush(true);
@@ -891,12 +895,14 @@ bool AppInit2(boost::thread_group& threadGroup)
                 delete pcoinsdbview;
                 delete pblocktree;
                 delete paliasdb;
+                delete pcertdb;
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex);
                 pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
                 paliasdb = new CNameDB(nNameDBCache, false, fReindex);
                 pofferdb = new COfferDB(nNameDBCache*2, false, fReindex);
+                pcertdb = new CCertDB(nNameDBCache*2, false, fReindex);
 
                 if (fReindex)
                     pblocktree->WriteReindexing(true);

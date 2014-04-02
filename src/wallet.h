@@ -19,6 +19,7 @@
 #include "walletdb.h"
 #include "alias.h"
 #include "offer.h"
+#include "cert.h"
 
 class CAccountingEntry;
 class CWalletTx;
