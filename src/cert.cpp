@@ -1852,10 +1852,13 @@ Value certissuerinfo(const Array& params, bool fHelp) {
         for(unsigned int i=0;i<theCertIssuer.certs.size();i++) {
             CCertItem ca = theCertIssuer.certs[i];
             Object oCertItem;
+            string sTime = strprintf("%d", ca.nTime);
+            string sHeight = strprintf("%d", ca.nHeight);
+
             oCertItem.push_back(Pair("id", HexStr(ca.vchRand)));
             oCertItem.push_back(Pair("txid", ca.txHash.GetHex()));
-            oCertItem.push_back(Pair("height", (double)ca.nHeight));
-            oCertItem.push_back(Pair("time", ca.nTime));
+            oCertItem.push_back(Pair("height", sHeight));
+            oCertItem.push_back(Pair("time", sTime));
             oCertItem.push_back(Pair("fee", (double)ca.nFee / COIN));
             oCertItem.push_back(Pair("title", stringFromVch(ca.vchTitle)));
             oCertItem.push_back(Pair("data", stringFromVch(ca.vchData)));
@@ -1924,10 +1927,12 @@ Value certinfo(const Array& params, bool fHelp) {
 
         CCertItem ca = theCertItem;
         Object oCertItem;
+        string sTime = strprintf("%d", ca.nTime);
+        string sHeight = strprintf("%d", ca.nHeight);
         oCertItem.push_back(Pair("id", HexStr(ca.vchRand)));
         oCertItem.push_back(Pair("txid", ca.txHash.GetHex()));
-        oCertItem.push_back(Pair("height", (double)ca.nHeight));
-        oCertItem.push_back(Pair("time", ca.nTime));
+        oCertItem.push_back(Pair("height", sHeight));
+        oCertItem.push_back(Pair("time", sTime));
         oCertItem.push_back(Pair("fee", (double)ca.nFee / COIN));
         oCertItem.push_back(Pair("title", stringFromVch(ca.vchTitle)));
         oCertItem.push_back(Pair("data", stringFromVch(ca.vchData)));
