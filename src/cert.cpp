@@ -1894,13 +1894,14 @@ Value certinfo(const Array& params, bool fHelp) {
 
     Object oLastCertIssuer;
     vector<unsigned char> vchCertItem = vchFromValue(params[0]);
+    vector<unsigned char> vchCertRand = ParseHex(params[0]);
 
     // look for a transaction with this key, also returns
     // an certissuer object if it is found
     CTransaction tx;
     CCertIssuer theCertIssuer;
     CCertItem theCertItem;
-    if (!GetTxOfCertItem(*pcertdb, vchCertItem, theCertIssuer, tx))
+    if (!GetTxOfCertItem(*pcertdb, vchCertRand, theCertIssuer, tx))
         throw runtime_error("could not find a certificate with this key");
     uint256 txHash = tx.GetHash();
 
@@ -1915,7 +1916,7 @@ Value certinfo(const Array& params, bool fHelp) {
         if (vtxPos.size() < 1)
             throw JSONRPCError(RPC_WALLET_ERROR, "no result returned");
         theCertIssuer = vtxPos.back();
-        if(!theCertIssuer.GetCertItemByHash(vchCertItem, theCertItem))
+        if(!theCertIssuer.GetCertItemByHash(vchCertRand, theCertItem))
             throw runtime_error("could not find a certificate with this hash in DB");
 
         Object oCertIssuer;
