@@ -21,6 +21,7 @@ class OverviewPage;
 class AddressBookPage;
 class AliasListPage;
 class OfferListPage;
+class CertIssuerListPage;
 class SendCoinsDialog;
 class SignVerifyMessageDialog;
 class Notificator;
@@ -84,6 +85,10 @@ public slots:
     void gotoOfferListPage();
     /** Switch to address book page */
     void gotoOfferAcceptListPage();
+    /** Switch to certificate issuer page */
+    void gotoCertIssuerListPage();
+    /** Switch to certificate issuer page */
+    void gotoCertListPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */

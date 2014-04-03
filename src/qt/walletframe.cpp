@@ -123,6 +123,20 @@ void WalletFrame::gotoOfferAcceptListPage()
         walletStack->gotoOfferAcceptListPage();
 }
 
+void WalletFrame::gotoCertIssuerListPage()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletStack->gotoCertIssuerListPage();
+}
+
+void WalletFrame::gotoCertListPage()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletStack->gotoCertListPage();
+}
+
 void WalletFrame::gotoReceiveCoinsPage()
 {
     walletStack->gotoReceiveCoinsPage();

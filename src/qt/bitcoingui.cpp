@@ -229,6 +229,20 @@ void BitcoinGUI::createActions()
     offerAcceptListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_9));
     tabGroup->addAction(offerAcceptListAction);
 
+    certIssuerListAction = new QAction(QIcon(":/icons/cart"), tr("Certificate &Issuers"), this);
+    certIssuerListAction->setStatusTip(tr("Manage certificate issuers"));
+    certIssuerListAction->setToolTip(certIssuerListAction->statusTip());
+    certIssuerListAction->setCheckable(true);
+    certIssuerListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_0));
+    tabGroup->addAction(certIssuerListAction);
+
+    certListAction = new QAction(QIcon(":/icons/cart"), tr("Cert&ificates"), this);
+    certListAction->setStatusTip(tr("Manage certificates"));
+    certListAction->setToolTip(certListAction->statusTip());
+    certListAction->setCheckable(true);
+    certListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_A));
+    tabGroup->addAction(certListAction);
+
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
     connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
@@ -247,6 +261,10 @@ void BitcoinGUI::createActions()
     connect(offerListAction, SIGNAL(triggered()), this, SLOT(gotoOfferListPage()));
     connect(offerAcceptListAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(offerAcceptListAction, SIGNAL(triggered()), this, SLOT(gotoOfferAcceptListPage()));
+    connect(certIssuerListAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(certIssuerListAction, SIGNAL(triggered()), this, SLOT(gotoCertIssuerListPage()));
+    connect(certListAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(certListAction, SIGNAL(triggered()), this, SLOT(gotoCertListPage()));
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
     quitAction->setStatusTip(tr("Quit application"));
@@ -335,6 +353,8 @@ void BitcoinGUI::createToolBars()
     toolbar->addAction(dataAliasListAction);
     toolbar->addAction(offerListAction);
     toolbar->addAction(offerAcceptListAction);
+    toolbar->addAction(certIssuerListAction);
+    toolbar->addAction(certListAction);
 }
 
 void BitcoinGUI::setClientModel(ClientModel *clientModel)
@@ -415,6 +435,8 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     dataAliasListAction->setEnabled(enabled);
     offerListAction->setEnabled(enabled);
     offerAcceptListAction->setEnabled(enabled);
+    certIssuerListAction->setEnabled(enabled);
+    certListAction->setEnabled(enabled);
 }
 
 void BitcoinGUI::createTrayIcon()
@@ -549,6 +571,16 @@ void BitcoinGUI::gotoOfferListPage()
 void BitcoinGUI::gotoOfferAcceptListPage()
 {
     if (walletFrame) walletFrame->gotoOfferAcceptListPage();
+}
+
+void BitcoinGUI::gotoCertIssuerListPage()
+{
+    if (walletFrame) walletFrame->gotoCertIssuerListPage();
+}
+
+void BitcoinGUI::gotoCertListPage()
+{
+    if (walletFrame) walletFrame->gotoCertListPage();
 }
 
 void BitcoinGUI::gotoReceiveCoinsPage()

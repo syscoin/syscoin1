@@ -4,6 +4,7 @@
 #include "addresstablemodel.h"
 #include "aliastablemodel.h"
 #include "offertablemodel.h"
+#include "certtablemodel.h"
 #include "transactiontablemodel.h"
 
 #include "ui_interface.h"
@@ -35,6 +36,7 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     addressTableModel = new AddressTableModel(wallet, this);
     aliasTableModel = new AliasTableModel(wallet, this);
     offerTableModel = new OfferTableModel(wallet, this);
+    certIssuerTableModel = new CertIssuerTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(wallet, this);
 
     // This timer will be fired repeatedly to update the balance
@@ -167,6 +169,11 @@ void WalletModel::updateOffer(const QString &offer, const QString &title, const 
         offerTableModel->updateEntry(offer, title, category, price, quantity, expDepth, false, status);
 }
 
+void WalletModel::updateCert(const QString &offer, const QString &title, const QString data)
+{
+
+}
+
 
 WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipient> &recipients, const CCoinControl *coinControl)
 {
@@ -291,6 +298,11 @@ AliasTableModel *WalletModel::getAliasTableModel()
 OfferTableModel *WalletModel::getOfferTableModel()
 {
     return offerTableModel;
+}
+
+CertIssuerTableModel *WalletModel::getCertIssuerTableModel()
+{
+    return certIssuerTableModel;
 }
 
 TransactionTableModel *WalletModel::getTransactionTableModel()
@@ -483,6 +495,7 @@ void WalletModel::subscribeToCoreSignals()
     wallet->NotifyAddressBookChanged.connect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5));
     wallet->NotifyAliasListChanged.connect(boost::bind(NotifyAliasListChanged, this, _1, _2, _3));
     wallet->NotifyOfferListChanged.connect(boost::bind(NotifyOfferListChanged, this, _1, _2, _3));
+    wallet->NotifyCertIssuerListChanged.connect(boost::bind(NotifyCertIssuerListChanged, this, _1, _2, _3));
     wallet->NotifyTransactionChanged.connect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
 }
 
@@ -493,6 +506,7 @@ void WalletModel::unsubscribeFromCoreSignals()
     wallet->NotifyAddressBookChanged.disconnect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5));
     wallet->NotifyAliasListChanged.disconnect(boost::bind(NotifyAliasListChanged, this, _1, _2, _3));
     wallet->NotifyOfferListChanged.disconnect(boost::bind(NotifyOfferListChanged, this, _1, _2, _3));
+    wallet->NotifyCertIssuerListChanged.disconnect(boost::bind(NotifyCertIssuerListChanged, this, _1, _2, _3));
     wallet->NotifyTransactionChanged.disconnect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
 }
 

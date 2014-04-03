@@ -56,6 +56,10 @@ public slots:
     void gotoOfferListPage();
     /** Switch to offer list page */
     void gotoOfferAcceptListPage();
+        /** Switch to cert issuer list page */
+    void gotoCertIssuerListPage();
+        /** Switch to cert list page */
+    void gotoCertListPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */

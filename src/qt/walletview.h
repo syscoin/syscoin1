@@ -17,6 +17,7 @@ class OverviewPage;
 class AddressBookPage;
 class AliasListPage;
 class OfferListPage;
+class CertIssuerListPage;
 class SendCoinsDialog;
 class SignVerifyMessageDialog;
 class RPCConsole;
@@ -68,6 +69,8 @@ private:
     AddressBookPage *receiveCoinsPage;
     OfferListPage *offerListPage;
     OfferListPage *offerAcceptListPage;
+    CertIssuerListPage *certIssuerListPage;
+    CertIssuerListPage *certListPage;
     SendCoinsDialog *sendCoinsPage;
     SignVerifyMessageDialog *signVerifyMessageDialog;
 
@@ -88,8 +91,10 @@ public slots:
     void gotoOfferListPage();
     /** Switch to offer accept page */
     void gotoOfferAcceptListPage();
-    /** Switch to receive coins page */
-    void gotoReceiveCoinsPage();
+    /** Switch to cert issuer page */
+    void gotoCertIssuerListPage();
+    /** Switch to cert page */
+    void gotoCertListPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
 

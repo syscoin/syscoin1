@@ -11,6 +11,7 @@ class OptionsModel;
 class AddressTableModel;
 class AliasTableModel;
 class OfferTableModel;
+class CertIssuerTableModel;
 class TransactionTableModel;
 class CWallet;
 class CKeyID;
@@ -65,6 +66,7 @@ public:
     AddressTableModel *getAddressTableModel();
     AliasTableModel *getAliasTableModel();
     OfferTableModel *getOfferTableModel();
+    CertIssuerTableModel *getCertIssuerTableModel();
     TransactionTableModel *getTransactionTableModel();
     
     qint64 getBalance(const CCoinControl *coinControl=NULL) const;
@@ -144,6 +146,7 @@ private:
     TransactionTableModel *transactionTableModel;
     AliasTableModel *aliasTableModel;
     OfferTableModel *offerTableModel;
+    CertIssuerTableModel *certIssuerTableModel;
 
     // Cache some values to be able to detect changes
     qint64 cachedBalance;
@@ -189,6 +192,8 @@ public slots:
    /* New, updated or removed offer */
     void updateOffer(const QString &offer, const QString &title, const QString &category, 
         const QString &price, const QString &quantity, const QString &expDepth,int status);
+    /* New, updated or removed cert issuer / cert */
+    void updateCert(const QString &offer, const QString &title, const QString data);
 
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();

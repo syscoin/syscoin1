@@ -10,6 +10,7 @@
 #include "addressbookpage.h"
 #include "aliaslistpage.h"
 #include "offerlistpage.h"
+#include "certlistpage.h"
 #include "sendcoinsdialog.h"
 #include "signverifymessagedialog.h"
 #include "clientmodel.h"
@@ -67,6 +68,10 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
 
     offerAcceptListPage = new OfferListPage(OfferListPage::ForEditing, OfferListPage::OfferAcceptTab);
 
+    certIssuerListPage = new CertIssuerListPage(CertIssuerListPage::ForEditing, CertIssuerListPage::CertIssuerTab);
+
+    certListPage = new CertIssuerListPage(CertIssuerListPage::ForEditing, CertIssuerListPage::CertItemTab);
+
     receiveCoinsPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::ReceivingTab);
 
     sendCoinsPage = new SendCoinsDialog(gui);
@@ -80,6 +85,8 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
     addWidget(dataAliasListPage);
     addWidget(offerListPage);
     addWidget(offerAcceptListPage);
+    addWidget(certIssuerListPage);
+    addWidget(certListPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
 
@@ -122,6 +129,8 @@ void WalletView::setClientModel(ClientModel *clientModel)
         dataAliasListPage->setOptionsModel(clientModel->getOptionsModel());
         offerListPage->setOptionsModel(clientModel->getOptionsModel());
         offerAcceptListPage->setOptionsModel(clientModel->getOptionsModel());
+        certIssuerListPage->setOptionsModel(clientModel->getOptionsModel());
+        certListPage->setOptionsModel(clientModel->getOptionsModel());
         receiveCoinsPage->setOptionsModel(clientModel->getOptionsModel());
     }
 }
@@ -141,6 +150,8 @@ void WalletView::setWalletModel(WalletModel *walletModel)
         dataAliasListPage->setModel(walletModel->getAliasTableModel());
         offerListPage->setModel(walletModel->getOfferTableModel());
         offerAcceptListPage->setModel(walletModel->getOfferTableModel());
+        certIssuerListPage->setModel(walletModel->getCertIssuerTableModel());
+        certListPage->setModel(walletModel->getCertIssuerTableModel());
         addressBookPage->setModel(walletModel->getAddressTableModel());
         receiveCoinsPage->setModel(walletModel->getAddressTableModel());
         sendCoinsPage->setModel(walletModel);
@@ -208,6 +219,18 @@ void WalletView::gotoOfferAcceptListPage()
 {
     gui->getOfferAcceptListAction()->setChecked(true);
     setCurrentWidget(offerAcceptListPage);
+}
+
+void WalletView::gotoCertIssuerListPage()
+{
+    gui->getCertIssuerListAction()->setChecked(true);
+    setCurrentWidget(certIssuerListPage);
+}
+
+void WalletView::gotoCertListPage()
+{
+    gui->getCertListAction()->setChecked(true);
+    setCurrentWidget(certListPage);
 }
 
 void WalletView::gotoAddressBookPage()
