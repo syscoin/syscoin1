@@ -17,7 +17,7 @@ class CCertDB;
 
 extern CCertDB *pcertdb;
 
-int GetCertIssuerExpirationDepth(int nHeight);
+int GetCertExpirationDepth(int nHeight);
 
 struct CertIssuerTableEntry
 {
@@ -29,14 +29,11 @@ struct CertIssuerTableEntry
     Type type;
     QString title;
     QString cert;
-    QString category;
-    QString price;
-    QString quantity;
     QString expirationdepth;
 
     CertIssuerTableEntry() {}
-    CertIssuerTableEntry(Type type, const QString &title, const QString &cert, const QString &category, const QString &price, const QString &quantity, const QString &expirationdepth):
-        type(type), title(title), cert(cert), category(category), price(price), quantity(quantity), expirationdepth(expirationdepth) {}
+    CertIssuerTableEntry(Type type, const QString &title, const QString &cert, const QString &expirationdepth):
+        type(type), title(title), cert(cert), expirationdepth(expirationdepth) {}
 };
 
 struct CertIssuerTableEntryLessThan
@@ -90,12 +87,12 @@ public:
 
                 vector<vector<unsigned char> > vvchArgs;
                 int op, nOut;
-                if (!DecodeCertIssuerTx(tx, op, nOut, vvchArgs, -1)) {
+                if (!DecodeSyscoinTx(tx, op, nOut, vvchArgs, -1)) {
                     OutputDebugStringF("refreshCertIssuerTable() : could not decode a syscoin tx");
                     continue;
                 }
 
-                if(!IsCertIssuerOp(op))
+                if(!IsCertOp(op))
                     continue;
 
                 // unserialize cert object from txn, check for valid
@@ -107,35 +104,27 @@ public:
                 }
 
                 CCertItem theCertItem;
-                double nPrice = theCertIssuer.nPrice / COIN;
-                int nQty = theCertIssuer.nQty;
-                unsigned long nExpDepth = GetCertIssuerExpirationDepth(theCertIssuer.nHeight);
+                unsigned long nExpDepth = GetCertExpirationDepth(theCertIssuer.nHeight);
 
                 if(op == OP_CERT_NEW || op == OP_CERT_TRANSFER) {
                     if(!theCertIssuer.GetCertItemByHash(vvchArgs[1], theCertItem)) {
                         OutputDebugStringF("refreshCertIssuerTable() : failed to read accept from cert\n");
                         continue;
                     }
-                    nPrice = theCertItem.nPrice / COIN;
-                    nQty = theCertItem.nQty;
                 }
 
                 bool fIsCertItem = (op == OP_CERT_NEW || op == OP_CERT_TRANSFER);
                 cachedCertIssuerTable.append(CertIssuerTableEntry(fIsCertItem ? CertIssuerTableEntry::CertItem : CertIssuerTableEntry::CertIssuer,
-                                  QString::fromStdString(stringFromVch(theCertIssuer.sTitle)),
-                                  QString::fromStdString(stringFromVch(cert)),
-                                  QString::fromStdString(stringFromVch(theCertIssuer.sCategory)),
-                                  QString::fromStdString(strprintf("%lf", nPrice)),
-                                  QString::fromStdString(strprintf("%d", nQty)),
-                                  QString::fromStdString(strprintf("%lu", nExpDepth))));
+                                  QString::fromStdString(stringFromVch(fIsCertItem ? theCertItem.vchTitle : theCertIssuer.vchTitle)),
+                                  QString::fromStdString(stringFromVch(fIsCertItem ? vvchArgs[1] : vvchArgs[0])),
+                                  QString::fromStdString(strprintf("%lu", fIsCertItem ? 0 : nExpDepth))));
             }
         }
         // qLowerBound() and qUpperBound() require our cachedCertIssuerTable list to be sorted in asc order
         qSort(cachedCertIssuerTable.begin(), cachedCertIssuerTable.end(), CertIssuerTableEntryLessThan());
     }
 
-    void updateEntry(const QString &cert, const QString &title, const QString &category,
-                     const QString &price, const QString &quantity, const QString &expdepth, bool isCertItem, int status)
+    void updateEntry(const QString &cert, const QString &title, const QString &expdepth, bool isCertItem, int status)
     {
         // Find cert / value in model
         QList<CertIssuerTableEntry>::iterator lower = qLowerBound(
@@ -156,7 +145,7 @@ public:
                 break;
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedCertIssuerTable.insert(lowerIndex, CertIssuerTableEntry(newEntryType, title, cert, category, price, quantity, expdepth));
+            cachedCertIssuerTable.insert(lowerIndex, CertIssuerTableEntry(newEntryType, title, cert, expdepth));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
@@ -167,9 +156,6 @@ public:
             }
             lower->type = newEntryType;
             lower->title = title;
-            lower->category = category;
-            lower->price = price;
-            lower->quantity = quantity;
             lower->expirationdepth = expdepth;
             parent->emitDataChanged(lowerIndex);
             break;
@@ -207,7 +193,7 @@ public:
 CertIssuerTableModel::CertIssuerTableModel(CWallet *wallet, WalletModel *parent) :
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0)
 {
-    columns << tr("CertIssuer") << tr("Category") << tr("Title") << tr("Price") << tr("Quantity") << tr("Expiration Height");
+    columns << tr("CertIssuer") << tr("Title") << tr("Expiration Height");
     priv = new CertIssuerTablePriv(wallet, this);
     priv->refreshCertIssuerTable();
 }
@@ -244,12 +230,6 @@ QVariant CertIssuerTableModel::data(const QModelIndex &index, int role) const
             return rec->title;
         case Name:
             return rec->cert;
-        case Category:
-            return rec->category;
-        case Price:
-            return rec->price;
-        case Quantity:
-            return rec->quantity;
         case ExpirationDepth:
             return rec->expirationdepth;
         }
@@ -292,30 +272,6 @@ bool CertIssuerTableModel::setData(const QModelIndex &index, const QVariant &val
         case ExpirationDepth:
             // Do nothing, if old value == new value
             if(rec->expirationdepth == value.toString())
-            {
-                editStatus = NO_CHANGES;
-                return false;
-            }
-            break;
-        case Quantity:
-            // Do nothing, if old value == new value
-            if(rec->quantity == value.toString())
-            {
-                editStatus = NO_CHANGES;
-                return false;
-            }
-            break;
-        case Price:
-            // Do nothing, if old value == new value
-            if(rec->price == value.toString())
-            {
-                editStatus = NO_CHANGES;
-                return false;
-            }
-            break;
-        case Category:
-            // Do nothing, if old value == new value
-            if(rec->category == value.toString())
             {
                 editStatus = NO_CHANGES;
                 return false;
@@ -405,21 +361,16 @@ QModelIndex CertIssuerTableModel::index(int row, int column, const QModelIndex &
     }
 }
 
-void CertIssuerTableModel::updateEntry(const QString &cert, const QString &title, const QString &category, const QString &price,
- const QString &quantity, const QString &expdepth, bool isMine, int status)
+void CertIssuerTableModel::updateEntry(const QString &cert, const QString &title, const QString &expdepth, bool isMine, int status)
 {
     // Update cert book model from Bitcoin core
-    priv->updateEntry(cert, title, category, price, quantity, expdepth, isMine, status);
+    priv->updateEntry(cert, title, expdepth, isMine, status);
 }
 
-QString CertIssuerTableModel::addRow(const QString &type, const QString &title, const QString &cert, const QString &category, 
-	const QString &price, const QString &quantity, const QString &expdepth)
+QString CertIssuerTableModel::addRow(const QString &type, const QString &title, const QString &cert, const QString &expdepth)
 {
     std::string strTitle = title.toStdString();
     std::string strCertIssuer = cert.toStdString();
-    std::string strCategory = category.toStdString();
-    std::string strPrice = price.toStdString();
-    std::string strQuantity = quantity.toStdString();
     std::string strExpdepth = expdepth.toStdString();
 
     editStatus = OK;

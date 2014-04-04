@@ -111,17 +111,11 @@ void CertIssuerListPage::setModel(CertIssuerTableModel *model)
     // Set column widths
 #if QT_VERSION < 0x050000
     ui->tableView->horizontalHeader()->setResizeMode(CertIssuerTableModel::Name, QHeaderView::ResizeToContents);
-    ui->tableView->horizontalHeader()->setResizeMode(CertIssuerTableModel::Category, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(CertIssuerTableModel::Title, QHeaderView::Stretch);
-    ui->tableView->horizontalHeader()->setResizeMode(CertIssuerTableModel::Price, QHeaderView::ResizeToContents);
-    ui->tableView->horizontalHeader()->setResizeMode(CertIssuerTableModel::Quantity, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(CertIssuerTableModel::ExpirationDepth, QHeaderView::ResizeToContents);
 #else
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertIssuerTableModel::Name, QHeaderView::ResizeToContents);
-    ui->tableView->horizontalHeader()->setSectionResizeMode(CertIssuerTableModel::Category, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertIssuerTableModel::Title, QHeaderView::Stretch);
-    ui->tableView->horizontalHeader()->setSectionResizeMode(CertIssuerTableModel::Price, QHeaderView::ResizeToContents);
-    ui->tableView->horizontalHeader()->setSectionResizeMode(CertIssuerTableModel::Quantity, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertIssuerTableModel::ExpirationDepth, QHeaderView::ResizeToContents);
 #endif
 
@@ -254,10 +248,7 @@ void CertIssuerListPage::on_exportButton_clicked()
     // name, column, role
     writer.setModel(proxyModel);
     writer.addColumn("CertIssuer", CertIssuerTableModel::Name, Qt::EditRole);
-    writer.addColumn("Category", CertIssuerTableModel::Category, Qt::EditRole);
     writer.addColumn("Title", CertIssuerTableModel::Title, Qt::EditRole);
-    writer.addColumn("Price", CertIssuerTableModel::Price, Qt::EditRole);
-    writer.addColumn("Quantity", CertIssuerTableModel::Price, Qt::EditRole);
     writer.addColumn("Expiration Depth", CertIssuerTableModel::ExpirationDepth, Qt::EditRole);
     if(!writer.write())
     {

@@ -1953,8 +1953,8 @@ Value offerinfo(const Array& params, bool fHelp) {
 		for(unsigned int i=0;i<theOffer.accepts.size();i++) {
 			COfferAccept ca = theOffer.accepts[i];
 			Object oOfferAccept;
-			string sTime = strprintf("%d", ca.nTime);
-        	string sHeight = strprintf("%d", ca.nHeight);
+			string sTime = strprintf("%lu", ca.nTime);
+            string sHeight = strprintf("%u", ca.nHeight);
 			oOfferAccept.push_back(Pair("id", HexStr(ca.vchRand)));
 			oOfferAccept.push_back(Pair("txid", ca.txHash.GetHex()));
 			oOfferAccept.push_back(Pair("height", sHeight));

@@ -193,7 +193,9 @@ public slots:
     void updateOffer(const QString &offer, const QString &title, const QString &category, 
         const QString &price, const QString &quantity, const QString &expDepth,int status);
     /* New, updated or removed cert issuer / cert */
-    void updateCert(const QString &offer, const QString &title, const QString data);
+    void updateCertIssuer(const QString &offer, const QString &title, const QString &category, 
+        const QString &price, const QString &quantity, const QString &expDepth,int status);
+    /* New, updated or removed cert issuer / cert */
 
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();

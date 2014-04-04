@@ -229,7 +229,10 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/editaliasdialog.h \
     src/qt/offerlistpage.h \
     src/qt/offertablemodel.h \
-    src/qt/editofferdialog.h
+    src/qt/editofferdialog.h \
+    src/qt/editcertdialog.h \
+    src/qt/certlistpage.h \
+    src/qt/certtablemodel.h
 
 SOURCES += src/qt/bitcoin.cpp \
     src/qt/bitcoingui.cpp \
@@ -310,7 +313,10 @@ SOURCES += src/qt/bitcoin.cpp \
     src/qt/editaliasdialog.cpp \
     src/qt/offerlistpage.cpp \
     src/qt/offertablemodel.cpp \
-    src/qt/editofferdialog.cpp
+    src/qt/editofferdialog.cpp \
+    src/qt/certtablemodel.cpp \
+    src/qt/editcertdialog.cpp \
+    src/qt/certlistpage.cpp
 
 RESOURCES += src/qt/bitcoin.qrc
 
@@ -329,7 +335,9 @@ FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/aliaslistpage.ui \
     src/qt/forms/editaliasdialog.ui \
     src/qt/forms/offerlistpage.ui \
-    src/qt/forms/editofferdialog.ui
+    src/qt/forms/editofferdialog.ui \
+    src/qt/forms/editcertdialog.ui \
+    src/qt/forms/certlistpage.ui
 
 contains(USE_QRCODE, 1) {
 HEADERS += src/qt/qrcodedialog.h

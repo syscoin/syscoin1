@@ -95,6 +95,8 @@ public slots:
     void gotoCertIssuerListPage();
     /** Switch to cert page */
     void gotoCertListPage();
+    /** Switch to cert page */
+    void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
 

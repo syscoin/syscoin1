@@ -320,17 +320,17 @@ public:
     /** Alias list entry changed.
      * @note called with lock cs_wallet held.
      */
-    boost::signals2::signal<void (CWallet *wallet, const uint256 &hash, ChangeType status)> NotifyAliasListChanged;
+    boost::signals2::signal<void (CWallet *wallet, const CTransaction *txn,  CAliasIndex &alias, ChangeType status)> NotifyAliasListChanged;
 
     /** Offer list entry changed.
      * @note called with lock cs_wallet held.
      */
-    boost::signals2::signal<void (CWallet *wallet, const uint256 &hash, ChangeType status)> NotifyOfferListChanged;
+    boost::signals2::signal<void (CWallet *wallet, const CTransaction *txn,  COffer &offer, ChangeType status)> NotifyOfferListChanged;
 
     /** Cert list entry changed.
      * @note called with lock cs_wallet held.
      */
-    boost::signals2::signal<void (CWallet *wallet, const uint256 &hash, ChangeType status)> NotifyCertListChanged;
+    boost::signals2::signal<void (CWallet *wallet, const CTransaction *txn,  CCertIssuer &certi, ChangeType status)> NotifyCertIssuerListChanged;
 
     /** Wallet transaction added, removed or updated.
      * @note called with lock cs_wallet held.

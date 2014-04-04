@@ -1896,7 +1896,6 @@ Value certinfo(const Array& params, bool fHelp) {
                 "Show stored values of a single certificate and its issuer.\n");
 
     Object oLastCertIssuer;
-    vector<unsigned char> vchCertItem = vchFromValue(params[0]);
     vector<unsigned char> vchCertRand = ParseHex(params[0].get_str());
 
     // look for a transaction with this key, also returns
@@ -1911,14 +1910,6 @@ Value certinfo(const Array& params, bool fHelp) {
     {
         LOCK(pwalletMain->cs_wallet);
 
-        // load certificate issuer and certificate from DB
-        vector<CCertIssuer> vtxPos;
-        if (!pcertdb->ReadCertIssuer(theCertIssuer.vchRand, vtxPos))
-            throw JSONRPCError(RPC_WALLET_ERROR,
-                    "failed to read from certissuer DB");
-        if (vtxPos.size() < 1)
-            throw JSONRPCError(RPC_WALLET_ERROR, "no result returned");
-        theCertIssuer = vtxPos.back();
         if(!theCertIssuer.GetCertItemByHash(vchCertRand, theCertItem))
             throw runtime_error("could not find a certificate with this hash in DB");
 
@@ -1940,7 +1931,7 @@ Value certinfo(const Array& params, bool fHelp) {
         int nHeight;
         uint256 certissuerHash;
         if (GetValueOfCertIssuerTxHash(txHash, vchValue, certissuerHash, nHeight)) {
-            oCertIssuer.push_back(Pair("id", stringFromVch(theCertIssuer.vchRand) ));
+            oCertIssuer.push_back(Pair("id", HexStr(theCertIssuer.vchRand) ));
             oCertIssuer.push_back(Pair("txid", tx.GetHash().GetHex()));
             string strAddress = "";
             GetCertAddress(tx, strAddress);

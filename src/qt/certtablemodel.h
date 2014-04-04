@@ -8,9 +8,7 @@ class CertIssuerTablePriv;
 class CWallet;
 class WalletModel;
 
-/**
-   Qt model of the cert                                                                                                                                                        book in the core. This allows views to access and modify the cert book.
- */
+
 class CertIssuerTableModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -21,11 +19,8 @@ public:
 
     enum ColumnIndex {
         Name = 0,   /**< cert name */
-        Category = 1,
-        Title = 2,  /**< CertIssuer value */
-        Price = 3,
-        Quantity = 4,
-        ExpirationDepth = 5
+        Title = 1,  /**< CertIssuer value */
+        ExpirationDepth = 2
     };
 
     enum RoleIndex {
@@ -59,8 +54,7 @@ public:
     /* Add an cert to the model.
        Returns the added cert on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &title, const QString &cert, const QString &category, const QString &price,
-                   const QString &quantity, const QString &expdepth);
+    QString addRow(const QString &type, const QString &title, const QString &cert, const QString &expdepth);
 
     /* Look up label for cert in cert book, if not found return empty string.
      */
@@ -86,8 +80,7 @@ private:
 public slots:
     /* Update cert list from core.
      */
-    void updateEntry(const QString &cert, const QString &title, const QString &category, const QString &price,
-                     const QString &quantity, const QString &expdepth, bool isCertItem, int status);
+    void updateEntry(const QString &cert, const QString &title, const QString &expdepth, bool isCertItem, int status);
 
     friend class CertIssuerTablePriv;
 };

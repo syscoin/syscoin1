@@ -68,9 +68,6 @@ bool EditCertIssuerDialog::saveCurrentRow()
                 mode == NewCertIssuer ? CertIssuerTableModel::CertIssuer : CertIssuerTableModel::CertItem,
                 ui->labelEdit->text(),
                 ui->certEdit->text(),
-                ui->certEdit->text(),
-                ui->certEdit->text(),
-                ui->certEdit->text(),
                 ui->certEdit->text());
         break;
     case EditCertItem:
