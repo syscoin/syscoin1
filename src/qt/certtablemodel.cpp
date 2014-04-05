@@ -74,50 +74,39 @@ public:
                 vector<unsigned char> cert = vecCertIssuerIndex[i];
 
                 vector<CCertIssuer> vtxPos;
+                CCertIssuer theCertIssuer;
                 if (pcertdb->ExistsCertIssuer(cert)) {
                     if (!pcertdb->ReadCertIssuer(cert, vtxPos))
                         continue;
+                    theCertIssuer = vtxPos.back();
                 } else continue;
-                uint256 txblkhash, txHash = vtxPos.back().txHash;
+
+                uint256 txblkhash, txHash = theCertIssuer.txHash;
                 CTransaction tx;
 
-                // get the transaction
                 if(!GetTransaction(txHash, tx, txblkhash, true))
                     continue;
 
-                vector<vector<unsigned char> > vvchArgs;
-                int op, nOut;
-                if (!DecodeSyscoinTx(tx, op, nOut, vvchArgs, -1)) {
-                    OutputDebugStringF("refreshCertIssuerTable() : could not decode a syscoin tx");
-                    continue;
-                }
-
-                if(!IsCertOp(op))
-                    continue;
-
-                // unserialize cert object from txn, check for valid
-                CCertIssuer theCertIssuer;
                 theCertIssuer.UnserializeFromTx(tx);
-                if (theCertIssuer.IsNull()) {
-                    OutputDebugStringF("refreshCertIssuerTable() : null cert object");
-                    continue;
-                }
 
                 CCertItem theCertItem;
+                vector<unsigned char> vchTitle = theCertIssuer.vchTitle;
+                vector<unsigned char> vchRand = theCertIssuer.vchRand;
                 unsigned long nExpDepth = GetCertExpirationDepth(theCertIssuer.nHeight);
 
-                if(op == OP_CERT_NEW || op == OP_CERT_TRANSFER) {
-                    if(!theCertIssuer.GetCertItemByHash(vvchArgs[1], theCertItem)) {
-                        OutputDebugStringF("refreshCertIssuerTable() : failed to read accept from cert\n");
-                        continue;
-                    }
+                bool fIsCertItem = vtxPos.back().certs.size() != 0;
+                if(fIsCertItem) {
+                    theCertItem = theCertIssuer.certs.back();
+                    vchTitle = theCertItem.vchTitle;
+                    vchRand = theCertItem.vchRand;
+                    nExpDepth = 0;
+
                 }
 
-                bool fIsCertItem = (op == OP_CERT_NEW || op == OP_CERT_TRANSFER);
                 cachedCertIssuerTable.append(CertIssuerTableEntry(fIsCertItem ? CertIssuerTableEntry::CertItem : CertIssuerTableEntry::CertIssuer,
-                                  QString::fromStdString(stringFromVch(fIsCertItem ? theCertItem.vchTitle : theCertIssuer.vchTitle)),
-                                  QString::fromStdString(stringFromVch(fIsCertItem ? vvchArgs[1] : vvchArgs[0])),
-                                  QString::fromStdString(strprintf("%lu", fIsCertItem ? 0 : nExpDepth))));
+                                  QString::fromStdString(stringFromVch(vchTitle)),
+                                  QString::fromStdString(stringFromVch(vchRand)),
+                                  QString::fromStdString(strprintf("%lu", nExpDepth))));
             }
         }
         // qLowerBound() and qUpperBound() require our cachedCertIssuerTable list to be sorted in asc order
