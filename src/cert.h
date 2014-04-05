@@ -37,6 +37,7 @@ int GetCertDisplayExpirationDepth(int nHeight);
 int64 GetCertNetworkFee(int seed, int nHeight);
 int64 GetCertNetFee(const CTransaction& tx);
 bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue);
+bool ExtractCertIssuerAddress(const CScript& script, std::string& address);
 
 std::string certissuerFromOp(int op);
 

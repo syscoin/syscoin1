@@ -682,6 +682,7 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
         }
 
         // offer
+        good = DecodeOfferTx(*this, op, nOut, vvch, iter == 0 ? 0 : -1);
         if(good && IsOfferOp(op)) {
 	        if (vvch[0].size() > MAX_NAME_LENGTH) {
 	            ret[iter] = error("offer transaction with offer title too long");
@@ -722,6 +723,7 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
         }
 
         // cert
+        good = DecodeCertTx(*this, op, nOut, vvch, iter == 0 ? 0 : -1);
         if(good && IsCertOp(op)) {
 	        if (vvch[0].size() > MAX_NAME_LENGTH) {
 	            ret[iter] = error("cert transaction with cert title too long");
@@ -987,7 +989,6 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 	    int op, nOut;
 
 	    bool good = DecodeSyscoinTx(tx, op, nOut, vvch, -1);
-
 	    if(good && IsAliasOp(op)) {
 	        LOCK(cs_main);
             mapAliasesPending[vvch[0]].insert(tx.GetHash());
@@ -995,6 +996,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
                 stringFromVch(vvch[0]).c_str());
 	    }
 
+		good = DecodeOfferTx(tx, op, nOut, vvch, -1);
 	    if(good && IsOfferOp(op)) {
 	        LOCK(cs_main);
             if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY)
@@ -1006,6 +1008,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
                 stringFromVch(vvch[0]).c_str());
 	    }
 
+	    good = DecodeCertTx(tx, op, nOut, vvch, -1);
 		if(good && IsCertOp(op)) {
 	        LOCK(cs_main);
 			if(op == OP_CERT_TRANSFER)
@@ -1700,20 +1703,20 @@ bool CTransaction::CheckInputs(CBlockIndex *pindex, CValidationState &state, CCo
 		int op;
 		int nOut;
 
-		bool bDecoded = DecodeSyscoinTx(*this, op, nOut, vvchArgs, pindex->nHeight);
-		if (bDecoded) {
-
-		}
-
-		if(IsAliasOp(op)) {
+		bool bGood = DecodeSyscoinTx(*this, op, nOut, vvchArgs, pindex->nHeight);
+		if(bGood && IsAliasOp(op)) {
 			if (!CheckAliasInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
 				return false;
 		}
-		else if (IsOfferOp(op)) {
+		
+		bGood = DecodeOfferTx(*this, op, nOut, vvchArgs, pindex->nHeight);
+		if (bGood && IsOfferOp(op)) {
 			if (!CheckOfferInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
 				return false;
 		} 
-		else if (IsCertOp(op)) {
+		
+		bGood = DecodeCertTx(*this, op, nOut, vvchArgs, pindex->nHeight);
+		if (bGood && IsCertOp(op)) {
 			if (!CheckCertInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
 				return false;
 		}
@@ -1893,6 +1896,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
             }
 
             //*************************
+            good = DecodeOfferTx(tx, op, nOut, vvchArgs, pindex->nHeight);
             if (good && IsOfferOp(op) && op != OP_OFFER_NEW) {
                 string opName = offerFromOp(op);
 				
@@ -1957,6 +1961,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 					pofferdb->EraseOffer(theOffer.vchRand);
 				}
 
+				good = DecodeCertTx(tx, op, nOut, vvchArgs, pindex->nHeight);
                 if (good && IsCertOp(op) && op != OP_CERTISSUER_NEW) {
                     string opName = certissuerFromOp(op);
 

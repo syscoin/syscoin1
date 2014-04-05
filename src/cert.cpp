@@ -172,7 +172,6 @@ bool CCertDB::ReconstructCertIndex(CBlockIndex *pindexRescan) {
             // decode the certissuer op, params, height
             bool o = DecodeCertTx(tx, op, nOut, vvchArgs, nHeight);
             if (!o || !IsCertOp(op)) continue;
-
             if (op == OP_CERTISSUER_NEW) continue;
 
             vector<unsigned char> vchCertIssuer = vvchArgs[0];
@@ -243,17 +242,11 @@ bool CCertDB::ReconstructCertIndex(CBlockIndex *pindexRescan) {
             // master index
             int64 nTheFee = GetCertNetFee(tx);
             InsertCertFee(pindex, tx.GetHash(), nTheFee);
-            vecCertIssuerIndex.push_back(vvchArgs[0]);
-            if (!pcertdb->WriteCertIndex(vecCertIssuerIndex))
-                return error("ReconstructCertIndex() : failed to write index to certissuer DB");
 
-            if(IsCertMine(tx)) {
-                if(op == OP_CERT_NEW || op == OP_CERT_TRANSFER) {
-                    mapMyCertItems[vvchArgs[1]] = tx.GetHash();
-                    if(mapMyCertIssuers.count(vchCertIssuer))
-                        mapMyCertIssuers[vchCertIssuer] = tx.GetHash();
-                }
-                else mapMyCertIssuers[vchCertIssuer] = tx.GetHash();
+            if(op == OP_CERTISSUER_ACTIVATE) {
+                vecCertIssuerIndex.push_back(vvchArgs[0]);
+                if (!pcertdb->WriteCertIndex(vecCertIssuerIndex))
+                    return error("ReconstructCertIndex() : failed to write index to certissuer DB");
             }
 
             printf( "RECONSTRUCT CERT: op=%s certissuer=%s title=%s qty=%d hash=%s height=%d fees=%llu\n",
@@ -491,11 +484,14 @@ bool IsCertMine(const CTransaction& tx, const CTxOut& txout,
         return false;
 
     vector<vector<unsigned char> > vvch;
-    int op;
+    int op, nOut;
 
-    if (!DecodeCertScript(txout.scriptPubKey, op, vvch))
+    bool good = DecodeCertTx(tx, op, nOut, vvch, -1);
+    if (!good) {
+        error( "IsCertMine() : no output out script in cert tx %s\n",
+                tx.ToString().c_str());
         return false;
-
+    }
     if(!IsCertOp(op))
         return false;
 
@@ -1266,17 +1262,11 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     if (!pcertdb->WriteCertIssuer(vvchArgs[0], vtxPos))
                         return error( "CheckCertInputs() : failed to write to certissuer DB");
 
-                    // write certissuer to certissuer index if it isn't there already
-                    bool bFound = false;
-                    BOOST_FOREACH(vector<unsigned char> &vch, vecCertIssuerIndex) {
-                        if(vch == vvchArgs[0]) {
-                            bFound = true;
-                            break;
-                        }
+                    if(op == OP_CERTISSUER_ACTIVATE) {
+                        vecCertIssuerIndex.push_back(vvchArgs[0]);
+                        if (!pcertdb->WriteCertIndex(vecCertIssuerIndex))
+                            return error("CheckCertInputs() : failed to write index to certissuer DB");
                     }
-                    if(!bFound) vecCertIssuerIndex.push_back(vvchArgs[0]);
-                    if (!pcertdb->WriteCertIndex(vecCertIssuerIndex))
-                        return error("CheckCertInputs() : failed to write index to certissuer DB");
 
                     // compute verify and write fee data to DB
                     int64 nTheFee = GetCertNetFee(tx);
@@ -1314,10 +1304,6 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                             tx.GetHash().ToString().c_str(),
                             nHeight, nTheFee / COIN);
                 }
-            }
-
-            if (pindexBlock->nHeight != pindexBest->nHeight) {
-
             }
         }
     }

@@ -247,15 +247,6 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 	        if (!pofferdb->WriteOfferIndex(vecOfferIndex))
 	            return error("ReconstructOfferIndex() : failed to write index to offer DB");
 
-            if(IsOfferMine(tx)) {
-                if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
-                    mapMyOfferAccepts[vvchArgs[1]] = tx.GetHash();
-                    if(mapMyOffers.count(vchOffer))
-                        mapMyOffers[vchOffer] = tx.GetHash();
-                }
-                else mapMyOffers[vchOffer] = tx.GetHash();
-            }
-
 			printf( "RECONSTRUCT OFFER: op=%s offer=%s title=%s qty=%d hash=%s height=%d fees=%llu\n",
 					offerFromOp(op).c_str(),
 					stringFromVch(vvchArgs[0]).c_str(),

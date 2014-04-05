@@ -71,10 +71,9 @@ public:
         {
             LOCK(wallet->cs_wallet);
             for(unsigned int i=0; i< vecCertIssuerIndex.size(); i++) {
-                vector<unsigned char> cert = vecCertIssuerIndex[i];
-
-                vector<CCertIssuer> vtxPos;
                 CCertIssuer theCertIssuer;
+                vector<unsigned char> cert = vecCertIssuerIndex[i];
+                vector<CCertIssuer> vtxPos;
                 if (pcertdb->ExistsCertIssuer(cert)) {
                     if (!pcertdb->ReadCertIssuer(cert, vtxPos))
                         continue;
@@ -83,24 +82,27 @@ public:
 
                 uint256 txblkhash, txHash = theCertIssuer.txHash;
                 CTransaction tx;
-
                 if(!GetTransaction(txHash, tx, txblkhash, true))
                     continue;
 
-                theCertIssuer.UnserializeFromTx(tx);
+                vector<vector<unsigned char> > vvchArgs;
+                int op, nOut;
+                if (!DecodeCertTx(tx, op, nOut, vvchArgs, -1)) {
+                    continue;
+                }
 
-                CCertItem theCertItem;
+                bool fIsCertItem = op == OP_CERT_NEW || OP_CERT_TRANSFER;
+
                 vector<unsigned char> vchTitle = theCertIssuer.vchTitle;
                 vector<unsigned char> vchRand = theCertIssuer.vchRand;
                 unsigned long nExpDepth = GetCertExpirationDepth(theCertIssuer.nHeight);
 
-                bool fIsCertItem = vtxPos.back().certs.size() != 0;
+                CCertItem theCertItem;
                 if(fIsCertItem) {
                     theCertItem = theCertIssuer.certs.back();
                     vchTitle = theCertItem.vchTitle;
-                    vchRand = theCertItem.vchRand;
+                    vchRand = vchFromString(HexStr(theCertItem.vchRand));
                     nExpDepth = 0;
-
                 }
 
                 cachedCertIssuerTable.append(CertIssuerTableEntry(fIsCertItem ? CertIssuerTableEntry::CertItem : CertIssuerTableEntry::CertIssuer,

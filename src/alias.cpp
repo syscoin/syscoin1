@@ -586,17 +586,10 @@ bool CNameDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
                     stringFromVch(vchValue).c_str(),
                     tx.GetHash().ToString().c_str(), 
                     nHeight, nTheFee / COIN);
-
-            // add alias to master alias index, add it to my names map
-            // if it is owned by this client
-            vecAliasIndex.push_back(vvchArgs[0]);
-            if(IsAliasMine(tx)) {
-                mapMyAliases[vvchArgs[0]] = tx.GetHash();
             }
         }
         pindex = pindex->pnext;
         Flush();
-    }
     }
     return true;
 }

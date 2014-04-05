@@ -366,25 +366,28 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx)
                     NotifyTransactionChanged(this, txin.prevout.hash, CT_UPDATED);
 
                     vector<vector<unsigned char> > vvchArgs;
-                    int op;
-                    int nOut;
+                    int op, nOut;
                     bool good = DecodeSyscoinTx(tx, op, nOut, vvchArgs, -1);
-                    if (good){
-                        if(IsAliasOp(op)) {
-                            const vector<unsigned char> &vchName = vvchArgs[0];
-                            vector<CAliasIndex> vtxPos;
-                            if (paliasdb->ReadAlias(vchName, vtxPos)) {
-                                NotifyAliasListChanged(this, &tx, vtxPos.back(), CT_UPDATED);
-                            }
-                        } else if (IsOfferOp(op)) {
-                            COffer theOffer;
-                            theOffer.UnserializeFromTx(tx);
-                            NotifyOfferListChanged(this, &tx, theOffer, CT_UPDATED);
-                        } else if(IsCertOp(op)) {
-                            CCertIssuer theCI;
-                            theCI.UnserializeFromTx(tx);
-                            NotifyCertIssuerListChanged(this, &tx, theCI, CT_UPDATED);
+                    if(good && IsAliasOp(op)) {
+                        const vector<unsigned char> &vchName = vvchArgs[0];
+                        vector<CAliasIndex> vtxPos;
+                        if (paliasdb->ReadAlias(vchName, vtxPos)) {
+                            NotifyAliasListChanged(this, &tx, vtxPos.back(), CT_UPDATED);
                         }
+                    } 
+                    good = DecodeOfferTx(tx, op, nOut, vvchArgs, -1);
+                    if (good && IsOfferOp(op)) {
+                        COffer theOffer;
+                        theOffer.UnserializeFromTx(tx);
+                        if(!theOffer.IsNull())
+                            NotifyOfferListChanged(this, &tx, theOffer, CT_UPDATED);
+                    }
+                    good = DecodeCertTx(tx, op, nOut, vvchArgs, -1);
+                    if(good && IsCertOp(op)) {
+                        CCertIssuer theCI;
+                        theCI.UnserializeFromTx(tx);
+                        if(!theCI.IsNull())
+                            NotifyCertIssuerListChanged(this, &tx, theCI, CT_UPDATED);
                     }
                 }
             }
