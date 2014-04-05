@@ -179,11 +179,10 @@ void WalletModel::updateOffer(const QString &offer, const QString &title, const 
         offerTableModel->updateEntry(offer, title, category, price, quantity, expDepth, false, status);
 }
 
-void WalletModel::updateCertIssuer(const QString &offer, const QString &title, const QString &category, 
-    const QString &price, const QString &quantity, const QString &expDepth, int status)
+void WalletModel::updateCertIssuer(const QString &cert, const QString &title, const QString &expDepth, int status)
 {
-    if(offerTableModel)
-        offerTableModel->updateEntry(offer, title, category, price, quantity, expDepth, false, status);
+    if(certIssuerTableModel)
+        certIssuerTableModel->updateEntry(cert, title, expDepth, false, status);
 }
 
 

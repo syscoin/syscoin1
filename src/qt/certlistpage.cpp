@@ -247,7 +247,7 @@ void CertIssuerListPage::on_exportButton_clicked()
 
     // name, column, role
     writer.setModel(proxyModel);
-    writer.addColumn("CertIssuer", CertIssuerTableModel::Name, Qt::EditRole);
+    writer.addColumn("Key", CertIssuerTableModel::Name, Qt::EditRole);
     writer.addColumn("Title", CertIssuerTableModel::Title, Qt::EditRole);
     writer.addColumn("Expiration Depth", CertIssuerTableModel::ExpirationDepth, Qt::EditRole);
     if(!writer.write())
