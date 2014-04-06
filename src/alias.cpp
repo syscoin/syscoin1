@@ -23,7 +23,6 @@ extern CNameDB *paliasdb;
 
 map<vector<unsigned char>, uint256> mapMyAliases;
 map<vector<unsigned char>, set<uint256> > mapAliasesPending;
-vector<vector<unsigned char> > vecAliasIndex;
 list<CAliasFee> lstAliasFees;
 
 #ifdef GUI
@@ -416,15 +415,6 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     if (!paliasdb->WriteAliasTxFees(vAliasFees))
                         return error( "CheckOfferInputs() : failed to write fees to alias DB");
 
-                    // write alias to alias index
-                    bool bFound = false;
-                    BOOST_FOREACH(vector<unsigned char> &vch, vecAliasIndex) {
-                        if(vch == vvchArgs[0]) { bFound = true; break; }
-                    }
-                    if(!bFound) vecAliasIndex.push_back(vvchArgs[0]);
-                    if (!paliasdb->WriteAliasIndex(vecAliasIndex))
-                        return error("CheckAliasInputs() : failed to write index to alias DB");
-
                     {
                         LOCK(cs_main);
                         std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapAliasesPending.find(vvchArgs[0]);
@@ -577,8 +567,6 @@ bool CNameDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
             // get fees for txn and add them to regenerate list
             int64 nTheFee = GetAliasNetFee(tx);
             InsertAliasFee(pindex, tx.GetHash(), nTheFee);
-            if (!paliasdb->WriteAliasIndex(vecAliasIndex))
-                return error("ReconstructNameIndex() : failed to write index to alias DB");
 
             printf( "RECONSTRUCT ALIAS: op=%s alias=%s value=%s hash=%s height=%d fees=%llu\n",
                     aliasFromOp(op).c_str(),
@@ -1493,6 +1481,9 @@ Value aliasinfo(const Array& params, bool fHelp)
         if(nHeight + GetNameDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0) {
             oName.push_back(Pair("expired", 1));
         }
+        if(tx.data.size())
+            oName.push_back(Pair("data", tx.GetBase64Data()));
+
         oShowResult = oName;
     }
     }
@@ -1884,17 +1875,17 @@ Value dataactivate(const Array& params, bool fHelp)
 
     vector<unsigned char> vchName = vchFromValue(params[0]);
     vector<unsigned char> vchRand = ParseHex(params[1].get_str());
-    vector<unsigned char> vchValue;
+    vector<unsigned char> vchFilename;
     string baSig;
 
     // Transaction data
     std::string txdata;
     if (params.size() == 5) {
-        vchValue = vchFromValue(params[3]);
+        vchFilename = vchFromValue(params[3]);
         txdata = params[4].get_str();
     }
     else {
-        vchValue = vchFromValue(params[2]);
+        vchFilename = vchFromValue(params[2]);
         txdata = params[3].get_str();
     }
     if (txdata.length() > MAX_TX_DATA_SIZE)
@@ -1949,7 +1940,7 @@ Value dataactivate(const Array& params, bool fHelp)
 
     // Make sure there is a previous aliasnew tx on this name and that the random value matches
     uint256 wtxInHash;
-    if (params.size() == 3) {
+    if (params.size() == 4) {
         if (!mapMyAliases.count(vchName)) 
             throw runtime_error("could not find any data with this name, try specifying the datanew transaction id");
         wtxInHash = mapMyAliases[vchName];
@@ -1965,7 +1956,7 @@ Value dataactivate(const Array& params, bool fHelp)
     scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
     // create a syscoin DATA_FIRSTUPDATE transaction
     CScript scriptPubKey;
-    scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchName << vchRand << vchValue << OP_2DROP << OP_2DROP;
+    scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_ACTIVATE) << vchName << vchRand << vchFilename << OP_2DROP << OP_2DROP;
     scriptPubKey += scriptPubKeyOrig;
 
     CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];

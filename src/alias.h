@@ -130,7 +130,6 @@ public:
 
 extern std::map<std::vector<unsigned char>, uint256> mapMyAliases;
 extern std::map<std::vector<unsigned char>, std::set<uint256> > mapAliasesPending;
-extern std::vector<std::vector<unsigned char> > vecAliasIndex;
 
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const json_spirit::Value& value);

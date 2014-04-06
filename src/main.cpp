@@ -1477,12 +1477,6 @@ void static InvalidBlockFound(CBlockIndex *pindex) {
 
 bool PostConnectBest() {
     // read alias and offer indexes
-    vecAliasIndex.clear();
-    paliasdb->ReadAliasIndex(vecAliasIndex);
-    vecOfferIndex.clear();
-    pofferdb->ReadOfferIndex(vecOfferIndex);
-    vecCertIssuerIndex.clear();
-    pcertdb->ReadCertIndex(vecCertIssuerIndex);
     
     // read alias network fees
     lstAliasFees.clear();
@@ -1863,19 +1857,6 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 				if(!paliasdb->WriteAlias(vvchArgs[0], vtxPos))
 					return error("DisconnectBlock() : failed to write to alias DB");
 
-                // remove the alias from the alias index if vtxPos empty
-                if(!vtxPos.size()) {
-                    for(unsigned int i=0; i< vecAliasIndex.size();i++) {
-                        if(vecAliasIndex[i] == vvchArgs[0]) {
-                            swap(vecAliasIndex[i], vecAliasIndex.back());
-                            vecAliasIndex.pop_back();
-                            break;
-                        }
-                    }
-                    if (!paliasdb->WriteAliasIndex(vecAliasIndex))
-                        return error("DisconnectBlock() : failed to write index to alias DB");
-                }
-
 		        printf("DISCONNECTED ALIAS TXN: alias=%s op=%s hash=%s  height=%d\n",
 		                stringFromVch(vvchArgs[0]).c_str(),
                         aliasFromOp(op).c_str(),
@@ -1884,15 +1865,6 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
             } 
             else if (IsAliasOp(op) && op == OP_ALIAS_NEW) {
                 paliasdb->EraseAlias(vvchArgs[0]);
-                for(unsigned int i=0; i< vecAliasIndex.size();i++) {
-                    if(vecAliasIndex[i] == vvchArgs[0]) {
-                        swap(vecAliasIndex[i], vecAliasIndex.back());
-                        vecAliasIndex.pop_back();
-                        break;
-                    }
-                }
-                if (!paliasdb->WriteAliasIndex(vecAliasIndex))
-                    return error("DisconnectBlock() : failed to write index to alias DB");
             }
 
             //*************************
@@ -1943,19 +1915,6 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 			        // write new offer state to db
 					if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 						return error("DisconnectBlock() : failed to write to offer DB");
-
-                    // remove the offer from the offer index if vtxPos empty
-                    if(!vtxPos.size()) {
-                        for(unsigned int i=0; i< vecOfferIndex.size();i++) {
-                            if(vecOfferIndex[i] == vecOfferIndex[0]) {
-                                swap(vecOfferIndex[i], vecOfferIndex.back());
-                                vecOfferIndex.pop_back();
-                                break;
-                            }
-                        }
-                    }
-                    if (!pofferdb->WriteOfferIndex(vecOfferIndex))
-                        return error("CheckOfferInputs() : failed to write index to offer DB");
 				} 
                 else if (IsOfferOp(op) && op == OP_OFFER_NEW) {
 					pofferdb->EraseOffer(theOffer.vchRand);
@@ -2008,20 +1967,6 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
                         // write new offer state to db
                         if(!pcertdb->WriteCertIssuer(vvchArgs[0], vtxPos))
                             return error("DisconnectBlock() : failed to write to offer DB");
-
-                        // remove the offer from the offer index if vtxPos empty
-                        if(!vtxPos.size()) {
-                            for(unsigned int i=0; i< vecCertIssuerIndex.size();i++) {
-                                if(vecCertIssuerIndex[i] == vecCertIssuerIndex[0]) {
-                                    swap(vecCertIssuerIndex[i], vecCertIssuerIndex.back());
-                                    vecCertIssuerIndex.pop_back();
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (!pcertdb->WriteCertIndex(vecOfferIndex))
-                            return error("CheckOfferInputs() : failed to write index to offer DB");
                     }
                     else if (IsCertOp(op) && op == OP_CERTISSUER_NEW) {
                         pcertdb->EraseCertIssuer(theOffer.vchRand);
@@ -2029,7 +1974,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
                 }
 
 		        printf("DISCONNECTED OFFER TXN: title=%s hash=%s height=%d\n",
-		                stringFromVch(vvchArgs[0]).c_str(),
+                       op == OP_CERTISSUER_NEW ? HexStr(vvchArgs[0]).c_str() : stringFromVch(vvchArgs[0]).c_str(),
 		                tx.GetHash().ToString().c_str(),
 		                pindex->nHeight);
 		    }

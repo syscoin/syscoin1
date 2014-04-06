@@ -45,7 +45,6 @@ extern std::map<std::vector<unsigned char>, uint256> mapMyCertIssuers;
 extern std::map<std::vector<unsigned char>, uint256> mapMyCertItems;
 extern std::map<std::vector<unsigned char>, std::set<uint256> > mapCertIssuerPending;
 extern std::map<std::vector<unsigned char>, std::set<uint256> > mapCertItemPending;
-extern std::vector<std::vector<unsigned char> > vecCertIssuerIndex;
 
 class CBitcoinAddress;
 
@@ -310,14 +309,6 @@ public:
 
     bool ReadCertFees(std::vector<CCertFee>& vtxPos) {
         return Read(make_pair(std::string("certissuera"), std::string("certissuertxf")), vtxPos);
-    }
-
-    bool WriteCertIndex(std::vector<std::vector<unsigned char> >& vtxPos) {
-        return Write(make_pair(std::string("certissuera"), std::string("certissuerndx")), vtxPos);
-    }
-
-    bool ReadCertIndex(std::vector<std::vector<unsigned char> >& vtxPos) {
-        return Read(make_pair(std::string("certissuera"), std::string("certissuerndx")), vtxPos);
     }
 
     bool ScanCertIssuers(

@@ -72,65 +72,59 @@ public:
     {
         cachedOfferTable.clear();
         {
+            CBlockIndex* pindex = pindexGenesisBlock;
             LOCK(wallet->cs_wallet);
-            for(unsigned int i=0; i< vecOfferIndex.size(); i++) {
-                vector<unsigned char> offer = vecOfferIndex[i];
+            while (pindex) {
+                int nHeight = pindex->nHeight;
+                CBlock block;
+                block.ReadFromDisk(pindex);
+                uint256 txblkhash;
 
-                vector<COffer> vtxPos;
-                if (pofferdb->ExistsOffer(offer)) {
-                    if (!pofferdb->ReadOffer(offer, vtxPos))
+                BOOST_FOREACH(CTransaction& tx, block.vtx) {
+
+                    if (tx.nVersion != SYSCOIN_TX_VERSION)
                         continue;
-                } else continue;
-                uint256 txblkhash, txHash = vtxPos.back().txHash;
-                CTransaction tx;
 
-                // get the transaction
-                if(!GetTransaction(txHash, tx, txblkhash, true))
-                    continue;
+                    int op, nOut;
+                    vector<vector<unsigned char> > vvchArgs;
+                    bool o = DecodeOfferTx(tx, op, nOut, vvchArgs, nHeight);
+                    if (!o || !IsOfferOp(op) || !IsOfferMine(tx)) continue;
 
-                vector<vector<unsigned char> > vvchArgs;
-                int op, nOut;
-                if (!DecodeOfferTx(tx, op, nOut, vvchArgs, -1)) {
-                    OutputDebugStringF("refreshOfferTable() : could not decode a syscoin tx");
-                    continue;
-                }
-
-                if(!IsOfferOp(op))
-                    continue;
-
-                // unserialize offer object from txn, check for valid
-                COffer theOffer;
-                theOffer.UnserializeFromTx(tx);
-                if (theOffer.IsNull()) {
-                    OutputDebugStringF("refreshOfferTable() : null offer object");
-                    continue;
-                }
-
-                COfferAccept theOfferAccept;
-                double nPrice = theOffer.nPrice / COIN;
-                int nQty = theOffer.nQty;
-                unsigned long nExpDepth = GetOfferExpirationDepth(theOffer.nHeight);
-
-                if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
-                    if(!theOffer.GetAcceptByHash(vvchArgs[1], theOfferAccept)) {
-                        OutputDebugStringF("refreshOfferTable() : failed to read accept from offer\n");
+                    // get the transaction
+                    if(!GetTransaction(tx.GetHash(), tx, txblkhash, true))
                         continue;
+
+                    // attempt to read certissuer from txn
+                    COffer theOffer;
+                    COfferAccept theOfferAccept;
+                    if(!theOffer.UnserializeFromTx(tx))
+                        continue;
+
+                    double nPrice = theOffer.nPrice / COIN;
+                    int nQty = theOffer.nQty;
+                    unsigned long nExpDepth = GetOfferExpirationDepth(theOffer.nHeight);
+
+                    if(theOffer.accepts.size()) {
+                        theOfferAccept = theOffer.accepts.back();
+                        nPrice = theOfferAccept.nPrice / COIN;
+                        nQty = theOfferAccept.nQty;
+                        nExpDepth = 0;
                     }
-                    nPrice = theOfferAccept.nPrice / COIN;
-                    nQty = theOfferAccept.nQty;
-                }
 
-                bool fIsOfferAccept = (op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY);
-                cachedOfferTable.append(OfferTableEntry(fIsOfferAccept ? OfferTableEntry::OfferAccept : OfferTableEntry::Offer,
-                                  QString::fromStdString(stringFromVch(theOffer.sTitle)),
-                                  QString::fromStdString(stringFromVch(offer)),
-                                  QString::fromStdString(stringFromVch(theOffer.sCategory)),
-                                  QString::fromStdString(strprintf("%lf", nPrice)),
-                                  QString::fromStdString(strprintf("%d", nQty)),
-                                  QString::fromStdString(strprintf("%lu", nExpDepth))));
+                    if(op == OP_OFFER_ACTIVATE)
+                        cachedOfferTable.append(OfferTableEntry(theOffer.accepts.size() ? OfferTableEntry::OfferAccept : OfferTableEntry::Offer,
+                                          QString::fromStdString(stringFromVch(theOffer.sTitle)),
+                                          QString::fromStdString(stringFromVch(theOffer.vchRand)),
+                                          QString::fromStdString(stringFromVch(theOffer.sCategory)),
+                                          QString::fromStdString(strprintf("%lf", nPrice)),
+                                          QString::fromStdString(strprintf("%d", nQty)),
+                                          QString::fromStdString(strprintf("%lu", nExpDepth))));
+                }
+                pindex = pindex->pnext;
             }
         }
-        // qLowerBound() and qUpperBound() require our cachedOfferTable list to be sorted in asc order
+        
+        // qLowerBound() and qUpperBound() require our cachedCertIssuerTable list to be sorted in asc order
         qSort(cachedOfferTable.begin(), cachedOfferTable.end(), OfferTableEntryLessThan());
     }
 

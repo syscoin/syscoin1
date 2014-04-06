@@ -69,48 +69,52 @@ public:
     {
         cachedCertIssuerTable.clear();
         {
+            CBlockIndex* pindex = pindexGenesisBlock;
             LOCK(wallet->cs_wallet);
-            for(unsigned int i=0; i< vecCertIssuerIndex.size(); i++) {
-                CCertIssuer theCertIssuer;
-                vector<unsigned char> cert = vecCertIssuerIndex[i];
-                vector<CCertIssuer> vtxPos;
-                if (pcertdb->ExistsCertIssuer(cert)) {
-                    if (!pcertdb->ReadCertIssuer(cert, vtxPos))
+            while (pindex) {
+                int nHeight = pindex->nHeight;
+                CBlock block;
+                block.ReadFromDisk(pindex);
+                uint256 txblkhash;
+
+                BOOST_FOREACH(CTransaction& tx, block.vtx) {
+
+                    if (tx.nVersion != SYSCOIN_TX_VERSION)
                         continue;
-                    theCertIssuer = vtxPos.back();
-                } else continue;
 
-                uint256 txblkhash, txHash = theCertIssuer.txHash;
-                CTransaction tx;
-                if(!GetTransaction(txHash, tx, txblkhash, true))
-                    continue;
+                    int op, nOut;
+                    vector<vector<unsigned char> > vvchArgs;
+                    bool o = DecodeCertTx(tx, op, nOut, vvchArgs, nHeight);
+                    if (!o || !IsCertOp(op) || !IsCertMine(tx)) continue;
 
-                vector<vector<unsigned char> > vvchArgs;
-                int op, nOut;
-                if (!DecodeCertTx(tx, op, nOut, vvchArgs, -1)) {
-                    continue;
+                    // get the transaction
+                    if(!GetTransaction(tx.GetHash(), tx, txblkhash, true))
+                        continue;
+
+                    // attempt to read certissuer from txn
+                    CCertItem theCert;
+                    CCertIssuer theCertIssuer;
+                    if(!theCertIssuer.UnserializeFromTx(tx))
+                        continue;
+
+                    if(theCertIssuer.certs.size()) {
+                        theCert = theCertIssuer.certs.back();
+                        cachedCertIssuerTable.append(CertIssuerTableEntry(CertIssuerTableEntry::CertItem,
+                                          QString::fromStdString(stringFromVch(theCert.vchTitle)),
+                                          QString::fromStdString(HexStr(theCert.vchRand)),
+                                          QString::fromStdString("0")));
+                    } else {
+                        if(op == OP_CERTISSUER_ACTIVATE)
+                            cachedCertIssuerTable.append(CertIssuerTableEntry(CertIssuerTableEntry::CertIssuer,
+                                              QString::fromStdString(stringFromVch(theCertIssuer.vchTitle)),
+                                              QString::fromStdString(stringFromVch(theCertIssuer.vchRand)),
+                                              QString::fromStdString(strprintf("%d", GetCertExpirationDepth(theCertIssuer.nHeight)))));
+                    }
                 }
-
-                bool fIsCertItem = op == OP_CERT_NEW || OP_CERT_TRANSFER;
-
-                vector<unsigned char> vchTitle = theCertIssuer.vchTitle;
-                vector<unsigned char> vchRand = theCertIssuer.vchRand;
-                unsigned long nExpDepth = GetCertExpirationDepth(theCertIssuer.nHeight);
-
-                CCertItem theCertItem;
-                if(fIsCertItem) {
-                    theCertItem = theCertIssuer.certs.back();
-                    vchTitle = theCertItem.vchTitle;
-                    vchRand = vchFromString(HexStr(theCertItem.vchRand));
-                    nExpDepth = 0;
-                }
-
-                cachedCertIssuerTable.append(CertIssuerTableEntry(fIsCertItem ? CertIssuerTableEntry::CertItem : CertIssuerTableEntry::CertIssuer,
-                                  QString::fromStdString(stringFromVch(vchTitle)),
-                                  QString::fromStdString(stringFromVch(vchRand)),
-                                  QString::fromStdString(strprintf("%lu", nExpDepth))));
+                pindex = pindex->pnext;
             }
         }
+        
         // qLowerBound() and qUpperBound() require our cachedCertIssuerTable list to be sorted in asc order
         qSort(cachedCertIssuerTable.begin(), cachedCertIssuerTable.end(), CertIssuerTableEntryLessThan());
     }

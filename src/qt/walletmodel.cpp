@@ -408,7 +408,7 @@ static void NotifyAliasListChanged(WalletModel *walletmodel, CWallet *wallet, co
     if(!IsAliasOp(op))  return;
     unsigned long nExpDepth = GetOfferExpirationDepth(alias.nHeight);
 
-    OutputDebugStringF("NotifyAliasListChanged %s %s status=%i\n", stringFromVch(vvchArgs[0]).c_str(), stringFromVch(vvchArgs[1]).c_str(), status);
+    OutputDebugStringF("NotifyAliasListChanged %s %s status=%i\n", stringFromVch(vvchArgs[0]).c_str(), stringFromVch(alias.vValue).c_str(), status);
     QMetaObject::invokeMethod(walletmodel, "updateAlias", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(stringFromVch(vvchArgs[0]))),
                               Q_ARG(QString, QString::fromStdString(stringFromVch(alias.vValue))),

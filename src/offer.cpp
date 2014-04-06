@@ -21,7 +21,6 @@ std::map<std::vector<unsigned char>, uint256> mapMyOfferAccepts;
 std::map<std::vector<unsigned char>, std::set<uint256> > mapOfferPending;
 std::map<std::vector<unsigned char>, std::set<uint256> > mapOfferAcceptPending;
 std::list<COfferFee> lstOfferFees;
-vector<vector<unsigned char> > vecOfferIndex;
 
 #ifdef GUI
 extern std::map<uint160, std::vector<unsigned char> > mapMyOfferHashes;
@@ -214,6 +213,7 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 					printf("ReconstructOfferIndex() : failed to read offer accept from offer\n");
 
 				// add txn-specific values to offer accept object
+                txCA.vchRand = vvchArgs[1];
 		        txCA.nTime = pindex->nTime;
 		        txCA.txHash = tx.GetHash();
 		        txCA.nHeight = nHeight;
@@ -228,6 +228,7 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 			}
 
 			// txn-specific values to offer object
+            txOffer.vchRand = vvchArgs[0];
 			txOffer.txHash = tx.GetHash();
             txOffer.nHeight = nHeight;
             txOffer.nTime = pindex->nTime;
@@ -243,9 +244,6 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 			// master index
 			int64 nTheFee = GetOfferNetFee(tx);
 			InsertOfferFee(pindex, tx.GetHash(), nTheFee);
-			vecOfferIndex.push_back(vvchArgs[0]);
-	        if (!pofferdb->WriteOfferIndex(vecOfferIndex))
-	            return error("ReconstructOfferIndex() : failed to write index to offer DB");
 
 			printf( "RECONSTRUCT OFFER: op=%s offer=%s title=%s qty=%d hash=%s height=%d fees=%llu\n",
 					offerFromOp(op).c_str(),
@@ -1264,6 +1262,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						theOffer.nHeight = pindexBlock->nHeight;
 
 					// set the offer's txn-dependent values
+                    theOffer.vchRand = vvchArgs[0];
 					theOffer.txHash = tx.GetHash();
 					theOffer.nTime = pindexBlock->nTime;
 					theOffer.PutToOfferList(vtxPos);
@@ -1271,19 +1270,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					// write offer
 					if (!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 						return error( "CheckOfferInputs() : failed to write to offer DB");
-
-					// write offer to offer index if it isn't there already
-					bool bFound = false;
-                    BOOST_FOREACH(vector<unsigned char> &vch, vecOfferIndex) {
-                        if(vch == vvchArgs[0]) {
-                            bFound = true;
-                            break;
-                        }
-                    }
-                    if(!bFound) vecOfferIndex.push_back(vvchArgs[0]);
-                    if (!pofferdb->WriteOfferIndex(vecOfferIndex))
-                        return error("CheckOfferInputs() : failed to write index to offer DB");
-
+					
                     // compute verify and write fee data to DB
                     int64 nTheFee = GetOfferNetFee(tx);
 					InsertOfferFee(pindexBlock, tx.GetHash(), nTheFee);
@@ -1295,14 +1282,13 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					// remove offer from pendings
 					
 					// activate or update - seller txn
-					if (op == OP_OFFER_NEW || op == OP_OFFER_ACTIVATE || op == OP_OFFER_UPDATE) {
+                    if (op == OP_OFFER_ACTIVATE || op == OP_OFFER_UPDATE) {
 						vector<unsigned char> vchOffer = op == OP_OFFER_NEW ? vchFromString(HexStr(vvchArgs[0])) : vvchArgs[0];
 						LOCK(cs_main);
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferPending.find(vchOffer);
 						if (mi != mapOfferPending.end())
 							mi->second.erase(tx.GetHash());
 					}
-
 					// accept or pay - buyer txn
 					else {
 						LOCK(cs_main);
@@ -1554,6 +1540,7 @@ Value offeractivate(const Array& params, bool fHelp) {
 			throw runtime_error(
 					"could not unserialize offer from txn");
 
+        newOffer.vchRand = vchOffer;
 		newOffer.nFee = nNetFee;
 
 		string bdata = newOffer.SerializeToString();

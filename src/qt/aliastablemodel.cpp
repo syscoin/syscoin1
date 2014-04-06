@@ -69,33 +69,49 @@ public:
     {
         cachedAliasTable.clear();
         {
+            CBlockIndex* pindex = pindexGenesisBlock;
             LOCK(wallet->cs_wallet);
-            for(unsigned int i=0; i< vecAliasIndex.size(); i++) {
-                vector<unsigned char> alias = vecAliasIndex[i];
-                vector<CAliasIndex> vtxPos;
-                if (paliasdb->ExistsAlias(alias)) {
-                    if (!paliasdb->ReadAlias(alias, vtxPos))
+            while (pindex) {
+                int nHeight = pindex->nHeight;
+                CBlock block;
+                block.ReadFromDisk(pindex);
+                uint256 txblkhash;
+
+                BOOST_FOREACH(CTransaction& tx, block.vtx) {
+
+                    if (tx.nVersion != SYSCOIN_TX_VERSION)
                         continue;
-                } else continue;
-                uint256 hash, txblkhash, txHash = vtxPos.back().txHash;
-                CTransaction tx;
-                vector<unsigned char> vchValue;
-                int nHeight;
 
-                // get the transaction
-                if(!GetTransaction(txHash, tx, txblkhash, true))
-                    continue;
+                    int op, nOut;
+                    vector<vector<unsigned char> > vvchArgs;
+                    bool o = DecodeSyscoinTx(tx, op, nOut, vvchArgs, nHeight);
+                    if (!o || !IsAliasOp(op) || !IsAliasMine(tx)) continue;
 
-                if(!GetValueOfNameTxHash(txHash, vchValue, hash, nHeight))
-                    continue;
+                    // get the transaction
+                    if(!GetTransaction(tx.GetHash(), tx, txblkhash, true))
+                        continue;
+                    if (op == OP_ALIAS_NEW) continue;
 
-                bool fDataAlias = tx.data.size() > 0;
-                cachedAliasTable.append(AliasTableEntry(fDataAlias ? AliasTableEntry::DataAlias : AliasTableEntry::Alias,
-                                  QString::fromStdString(stringFromVch(vchValue)),
-                                  QString::fromStdString(stringFromVch(alias)),
-                                  QString::fromStdString(strprintf("%d", GetAliasExpirationDepth(nHeight)))));
+                    const vector<unsigned char> &vchName = vvchArgs[0];
+                    const vector<unsigned char> &vchValue = vvchArgs[op == OP_ALIAS_ACTIVATE ? 2 : 1];
+
+                    if(!GetTransaction(tx.GetHash(), tx, txblkhash, true))
+                        continue;
+
+                    vector<CAliasIndex> vtxPos;
+                    if (!paliasdb->ReadAlias(vchName, vtxPos))
+                        continue;
+                    CAliasIndex txName = vtxPos.back();
+                    unsigned long nExpDepth = GetAliasExpirationDepth(txName.nHeight);
+
+                    cachedAliasTable.append(AliasTableEntry(tx.data.size() ? AliasTableEntry::DataAlias : AliasTableEntry::Alias,
+                                      QString::fromStdString(stringFromVch(vchValue)),
+                                      QString::fromStdString(stringFromVch(vchName)),
+                                      QString::fromStdString(strprintf("%lu", nExpDepth))));
+                }
+                pindex = pindex->pnext;
             }
-        }
+         }
         // qLowerBound() and qUpperBound() require our cachedAliasTable list to be sorted in asc order
         qSort(cachedAliasTable.begin(), cachedAliasTable.end(), AliasTableEntryLessThan());
     }
