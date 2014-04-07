@@ -247,11 +247,10 @@ bool CCertDB::ReconstructCertIndex(CBlockIndex *pindexRescan) {
             int64 nTheFee = GetCertNetFee(tx);
             InsertCertFee(pindex, tx.GetHash(), nTheFee);
 
-            printf( "RECONSTRUCT CERT: op=%s certissuer=%s title=%s qty=%d hash=%s height=%d fees=%llu\n",
+            printf( "RECONSTRUCT CERT: op=%s certissuer=%s title=%s hash=%s height=%d fees=%llu\n",
                     certissuerFromOp(op).c_str(),
                     stringFromVch(vvchArgs[0]).c_str(),
                     stringFromVch(txCertIssuer.vchTitle).c_str(),
-                    txCertIssuer.GetRemQty(),
                     tx.GetHash().ToString().c_str(),
                     nHeight,
                     nTheFee);
@@ -1068,7 +1067,8 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
             if (fBlock && fJustCheck && !found)
                 return true;
 
-            if ( !found || ( prevOp != OP_CERTISSUER_ACTIVATE && prevOp != OP_CERTISSUER_UPDATE ) )
+            if ( !found || ( prevOp != OP_CERTISSUER_ACTIVATE && prevOp != OP_CERTISSUER_UPDATE 
+                && prevOp != OP_CERT_NEW  && prevOp != OP_CERT_TRANSFER ) )
                 return error("certissuerupdate previous op %s is invalid", certissuerFromOp(prevOp).c_str());
 
             if (vvchArgs[1].size() > MAX_VALUE_LENGTH)
@@ -1245,7 +1245,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                         theCertIssuer.PutCertItem(theCertItem);
 
                         if (!pcertdb->WriteCertItem(vvchArgs[1], vvchArgs[0]))
-                            return error( "CheckCertInputs() : failed to write to certissuer DB");
+                            return error( "CheckCertInputs() : failed to write to cert DB");
                     }
 
                     if(op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE)
@@ -1256,6 +1256,11 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     theCertIssuer.txHash = tx.GetHash();
                     theCertIssuer.nTime = pindexBlock->nTime;
                     theCertIssuer.PutToCertIssuerList(vtxPos);
+
+                    // write cert issuer 
+                    if (!pcertdb->WriteCertIssuer(vvchArgs[0], vtxPos))
+                        return error( "CheckCertInputs() : failed to write to cert DB");
+                    
 
                     // compute verify and write fee data to DB
                     int64 nTheFee = GetCertNetFee(tx);
@@ -1287,11 +1292,10 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     }
 
                     // debug
-                    printf( "CONNECTED CERT: op=%s certissuer=%s title=%s qty=%d hash=%s height=%d fees=%llu\n",
+                    printf( "CONNECTED CERT: op=%s certissuer=%s title=%s hash=%s height=%d fees=%llu\n",
                             certissuerFromOp(op).c_str(),
                             stringFromVch(vvchArgs[0]).c_str(),
                             stringFromVch(theCertIssuer.vchTitle).c_str(),
-                            theCertIssuer.GetRemQty(),
                             tx.GetHash().ToString().c_str(),
                             nHeight, nTheFee / COIN);
                 }

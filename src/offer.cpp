@@ -1068,7 +1068,8 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if (fBlock && fJustCheck && !found)
 				return true;
 
-			if ( !found || ( prevOp != OP_OFFER_ACTIVATE && prevOp != OP_OFFER_UPDATE ) )
+			if ( !found || ( prevOp != OP_OFFER_ACTIVATE && prevOp != OP_OFFER_UPDATE 
+				&& prevOp != OP_OFFER_ACCEPT && prevOp != OP_OFFER_PAY ) )
 				return error("offerupdate previous op %s is invalid", offerFromOp(prevOp).c_str());
 			
 			if (vvchArgs[1].size() > MAX_VALUE_LENGTH)
@@ -1430,7 +1431,7 @@ Value offernew(const Array& params, bool fHelp) {
 	newOffer.sTitle = vchTitle;
 	newOffer.sDescription = vchDesc;
 	newOffer.nQty = nQty;
-	newOffer.nPrice = nPrice;
+	newOffer.nPrice = nPrice * COIN;
 
 	string bdata = newOffer.SerializeToString();
 
@@ -1595,7 +1596,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 	if (params.size() == 6) vchDesc = vchFromValue(params[5]);
 	try {
 		qty = atoi(params[3].get_str().c_str());
-		price = atoi(params[4].get_str().c_str());
+		price = atoi64(params[4].get_str().c_str());
 	} catch (std::exception &e) {
 		throw runtime_error("invalid price and/or quantity values.");
 	}
@@ -1651,7 +1652,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 
 		// calculate network fees
 		int64 nNetFee = GetOfferNetworkFee(4, pindexBest->nHeight);
-		if(qty > 0) nNetFee += (price * qty) / 200;
+		if(qty > 0) nNetFee += ((price * COIN) * qty) / 200;
 
 		// update offer values
 		theOffer.sCategory = vchCat;
@@ -1659,7 +1660,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 		theOffer.sDescription = vchDesc;
 		if(theOffer.GetRemQty() + qty >= 0)
 			theOffer.nQty += qty;
-		theOffer.nPrice = price;
+		theOffer.nPrice = price * COIN;
 		theOffer.nFee += nNetFee;
 
 		// serialize offer object
@@ -1772,14 +1773,14 @@ Value offeraccept(const Array& params, bool fHelp) {
 }
 
 Value offerpay(const Array& params, bool fHelp) {
-	if (fHelp || 2 != params.size())
-		throw runtime_error("offerpay <rand> <message>\n"
+	if (fHelp || 2 > params.size() || params.size() > 3)
+		throw runtime_error("offerpay <rand> [<accepttxid>] <message>\n"
 				"Pay for a confirmed accepted offer.\n"
 				+ HelpRequiringPassphrase());
 
 	// gather & validate inputs
 	vector<unsigned char> vchRand = ParseHex(params[0].get_str());
-	vector<unsigned char> vchMessage = vchFromValue(params[1]);
+	vector<unsigned char> vchMessage = vchFromValue(params.size()==3?params[2]:params[1]);
 
 	// this is a syscoin txn
 	CWalletTx wtx, wtxPay;
@@ -1789,47 +1790,31 @@ Value offerpay(const Array& params, bool fHelp) {
 	{
 	LOCK2(cs_main, pwalletMain->cs_wallet);
 
+	// exit if pending offers
 	if (mapOfferAcceptPending.count(vchRand)
 			&& mapOfferAcceptPending[vchRand].size()) 
 		throw runtime_error( "offerpay() : there are pending operations on that offer" );
 
 	EnsureWalletIsUnlocked();
 
-	// look for a transaction with this key, also returns
-	// an offer object if it is found
+	uint256 wtxInHash;
+	if (params.size() == 2) {
+		if (!mapMyOfferAccepts.count(vchRand))
+			throw runtime_error(
+					"could not find a coin associated with this offer key, "
+					"try specifying the offernew transaction id");
+		wtxInHash = mapMyOfferAccepts[vchRand];
+	} else
+		wtxInHash.SetHex(params[1].get_str());
+	if (!pwalletMain->mapWallet.count(wtxInHash))
+		throw runtime_error("previous transaction is not in the wallet");
+
+	// look for a transaction with this key.
 	CTransaction tx;
 	COffer theOffer;
 	COfferAccept theOfferAccept;
 	if (!GetTxOfOfferAccept(*pofferdb, vchRand, theOffer, tx))
 		throw runtime_error("could not find an offer with this name");
-
-	// check to see if offer accept in wallet
-	uint256 wtxInHash = tx.GetHash();
-	if (!pwalletMain->mapWallet.count(wtxInHash)) 
-		throw runtime_error("offerpay() : offer accept is not in your wallet" );
-
-	// check that prev txn contains offer
-	if(!theOffer.UnserializeFromTx(tx))
-		throw runtime_error("could not unserialize offer from txn");
-
-	// get the offer accept from offer
-	if(!theOffer.GetAcceptByHash(vchRand, theOfferAccept))
-		throw runtime_error("could not find an offer accept with this name");
-
-	// get the offer id from DB
-	vector<unsigned char> vchOffer;
-	vector<COffer> vtxPos;
-	if (!pofferdb->ReadOfferAccept(vchRand, vchOffer))
-		throw runtime_error("could not read offer of accept from DB");
-	if (!pofferdb->ReadOffer(vchOffer, vtxPos))
-		throw runtime_error("could not read offer with this name from DB");
-
-	// hashes should match
-	if(vtxPos.back().vchRand != theOffer.vchRand)
-		throw runtime_error("offer hash mismatch.");
-
-	// use the offer and accept from the DB as basis
-    theOffer = vtxPos.back();
     if(!theOffer.GetAcceptByHash(vchRand, theOfferAccept))
 		throw runtime_error("could not find an offer accept with this hash in DB");
 
@@ -1844,7 +1829,7 @@ Value offerpay(const Array& params, bool fHelp) {
 
 	// create OFFERPAY txn keys
 	CScript scriptPubKey;
-	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_PAY) << vchOffer << vchRand << OP_2DROP << OP_DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_PAY) << theOffer.vchRand << vchRand << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
     // make sure wallet is unlocked
@@ -1865,7 +1850,6 @@ Value offerpay(const Array& params, bool fHelp) {
     theOfferAccept.nFee = nNetFee;
     theOffer.accepts.clear();
     theOffer.PutOfferAccept(theOfferAccept);
-    printf("offeraccept msg %s\n", stringFromVch(theOfferAccept.vchMessage).c_str());
 
     // add a copy of the offer object with just
     // the one accept object to payment txn to identify
@@ -1957,9 +1941,9 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOffer.push_back(Pair("address", strAddress));
 			oOffer.push_back(
 					Pair("expires_in",
-							nHeight + GetOfferDisplayExpirationDepth(nHeight)
+							nHeight + GetOfferExpirationDepth(nHeight)
 									- pindexBest->nHeight));
-			if (nHeight + GetOfferDisplayExpirationDepth(nHeight)
+			if (nHeight + GetOfferExpirationDepth(nHeight)
 					- pindexBest->nHeight <= 0) {
 				oOffer.push_back(Pair("expired", 1));
 			}

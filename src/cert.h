@@ -182,10 +182,6 @@ public:
         return false;
     }
 
-    int GetRemQty() {
-        return 0;
-    }
-
     friend bool operator==(const CCertIssuer &a, const CCertIssuer &b) {
         return (
            a.vchRand == b.vchRand
