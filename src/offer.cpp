@@ -927,7 +927,7 @@ CScript RemoveOfferScriptPrefix(const CScript& scriptIn) {
 
 bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		CValidationState &state, CCoinsViewCache &inputs,
-		map<uint256, uint256> &mapTestPool, bool fBlock, bool fMiner,
+		map<vector<unsigned char>, uint256> &mapTestPool, bool fBlock, bool fMiner,
 		bool fJustCheck) {
 
 	if (!tx.IsCoinBase()) {
@@ -1050,16 +1050,15 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					return error(
 							"CheckOfferInputs() : offeractivate on an unexpired offer.");
 
-   				set<uint256>& setPending = mapOfferPending[vchOffer];
-                BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
-                	if(s.second==tx.GetHash()) continue;
-                    if (setPending.count(s.second)) {
-                        printf("CheckInputs() : will not mine offeractivate %s because it clashes with %s",
-                               tx.GetHash().GetHex().c_str(),
-                               s.second.GetHex().c_str());
-                        return false;
-                    }
-                }
+				if(pindexBlock->nHeight == pindexBest->nHeight) {
+					BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
+	                    if (vvchArgs[0] == s.first) {
+	                       return error("CheckInputs() : will not mine offeractivate %s because it clashes with %s",
+	                               tx.GetHash().GetHex().c_str(),
+	                               s.second.GetHex().c_str());
+	                    }
+	                }
+	            }
 			}
 
 			break;
@@ -1085,17 +1084,14 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				return error(
 						"CheckOfferInputs() : offerupdate on an expired offer, or there is a pending transaction on the offer");
 			
-			if (fBlock && !fJustCheck) {
-				set<uint256>& setPending = mapOfferPending[vvchArgs[0]];
-	            BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
-	            	if(s.second==tx.GetHash()) continue;
-	                if (setPending.count(s.second)) {
-	                    printf("CheckInputs() : will not mine offerupdate %s because it clashes with %s",
-	                           tx.GetHash().GetHex().c_str(),
-	                           s.second.GetHex().c_str());
-	                    return false;
-	                }
-	            }
+			if (fBlock && !fJustCheck && pindexBlock->nHeight == pindexBest->nHeight) {
+				BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
+                    if (vvchArgs[0] == s.first) {
+                       return error("CheckInputs() : will not mine offerupdate %s because it clashes with %s",
+                               tx.GetHash().GetHex().c_str(),
+                               s.second.GetHex().c_str());
+                    }
+                }
         	}
 
 			break;
@@ -1176,16 +1172,15 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				if(theOfferAccept.vchRand != vchOfferAccept)
 					return error("accept txn contains invalid txnaccept hash");
 
-   				set<uint256>& setPending = mapOfferAcceptPending[vchOfferAccept];
-                BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
-                	if(s.second==tx.GetHash()) continue;
-                    if (setPending.count(s.second)) {
-                       printf("CheckInputs() : will not mine offerpay %s because it clashes with %s",
-                               tx.GetHash().GetHex().c_str(),
-                               s.second.GetHex().c_str());
-                       return false;
-                    }
-                }
+				if(pindexBlock->nHeight == pindexBest->nHeight) {
+	                BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
+	                    if (vvchArgs[1] == s.first) {
+	                       return error("CheckInputs() : will not mine offerpay %s because it clashes with %s",
+	                               tx.GetHash().GetHex().c_str(),
+	                               s.second.GetHex().c_str());
+	                    }
+	                }
+	            }
 			}
 
 			break;
@@ -1206,7 +1201,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							"CheckOfferInputs() : failed to read from offer DB");
 			}
 
-//todo fucking suspect
+		//todo fucking suspect
 		// // for offerupdate or offerpay check to make sure the previous txn exists and is valid
 		// if (!fBlock && fJustCheck && (op == OP_OFFER_UPDATE || op == OP_OFFER_PAY)) {
 		// 	if (!CheckOfferTxPos(vtxPos, prevCoins->nHeight))
@@ -1254,6 +1249,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						theOfferAccept.nTime = pindexBlock->nTime;
 						theOfferAccept.nHeight = nHeight;
 						theOffer.PutOfferAccept(theOfferAccept);
+						mapTestPool[vvchArgs[1]] = tx.GetHash();
 
 						if (!pofferdb->WriteOfferAccept(vvchArgs[1], vvchArgs[0]))
 							return error( "CheckOfferInputs() : failed to write to offer DB");
@@ -1271,7 +1267,8 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					// write offer
 					if (!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 						return error( "CheckOfferInputs() : failed to write to offer DB");
-					
+					mapTestPool[vvchArgs[0]] = tx.GetHash();
+
                     // compute verify and write fee data to DB
                     int64 nTheFee = GetOfferNetFee(tx);
 					InsertOfferFee(pindexBlock, tx.GetHash(), nTheFee);

@@ -228,7 +228,7 @@ bool IsAliasMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasn
 }
 
 bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
-    CValidationState &state, CCoinsViewCache &inputs, map<uint256,uint256> &mapTestPool,
+    CValidationState &state, CCoinsViewCache &inputs, map<vector<unsigned char>,uint256> &mapTestPool,
                       bool fBlock, bool fMiner, bool fJustCheck) {
 
     if(!tx.IsCoinBase()) {
@@ -317,8 +317,8 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
     				if (uint160(vchHash) != hash)
     					return error("CheckAliasInputs() : aliasactivate hash mismatch");
 
-    				nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins, MIN_FIRSTUPDATE_DEPTH);
-    				if ((fBlock || fMiner) && nDepth >= 0 && (unsigned int) nDepth < MIN_FIRSTUPDATE_DEPTH)
+    				nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins, MIN_ACTIVATE_DEPTH);
+    				if ((fBlock || fMiner) && nDepth >= 0 && (unsigned int) nDepth < MIN_ACTIVATE_DEPTH)
     					return false;
                     nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins,
                                                              GetAliasExpirationDepth(pindexBlock->nHeight));
@@ -330,15 +330,13 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                             GetAliasExpirationDepth(pindexBlock->nHeight))
     					return error("CheckAliasInputs() : aliasactivate on an unexpired alias");
 
-                    // set<uint256>& setPending = mapAliasesPending[vvchArgs[0]];
-                    // BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
-                    //     if (setPending.count(s.second)) {
-                    //         printf("CheckAliasInputs() : will not mine %s because it clashes with %s",
-                    //                tx.GetHash().GetHex().c_str(),
-                    //                s.second.GetHex().c_str());
-                    //         return false;
-                    //     }
-                    // }
+                    BOOST_FOREACH(const MAPTESTPOOLTYPE &s, mapTestPool) {
+                        if (s.first == vvchArgs[0]) {
+                            return error("CheckAliasInputs() : will not mine %s because it clashes with %s",
+                                   tx.GetHash().GetHex().c_str(),
+                                   s.second.GetHex().c_str());
+                        }
+                    }
                 }
 
                 break;
@@ -363,6 +361,14 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 if ((fBlock || fMiner) && nDepth < 0)
                     return error("CheckAliasInputs() : aliasupdate on an expired alias, or there is a pending transaction on the alias");
                 
+                BOOST_FOREACH(const MAPTESTPOOLTYPE &s, mapTestPool) {
+                    if (s.first == vvchArgs[0]) {
+                        return error("CheckAliasInputs() : will not mine %s because it clashes with %s",
+                               tx.GetHash().GetHex().c_str(),
+                               s.second.GetHex().c_str());
+                    }
+                }
+
                 break;
 
             default:
@@ -380,7 +386,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						return error("CheckAliasInputs() : failed to read from alias DB");
 				}
 
-    //             // if an update then check for a prevtx and error out if not found
+                //// if an update then check for a prevtx and error out if not found
 				// if (fJustCheck && op == OP_ALIAS_UPDATE && !CheckAliasTxPos(vtxPos, prevCoins->nHeight)) {
 				// 	printf("CheckAliasInputs() : tx %s rejected, since previous tx (%s) is not in the alias DB\n",
 				// 		tx.GetHash().ToString().c_str(), prevOutput->hash.ToString().c_str());
@@ -404,7 +410,8 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     vtxPos.push_back(txPos2); // fin add
 
                     if (!paliasdb->WriteAlias(vvchArgs[0], vtxPos))
-                        return error("CheckAliasInputs() : failed to write to alias DB");
+                        return error("CheckAliasInputs() :  failed to write to alias DB");
+                    mapTestPool[vvchArgs[0]] = tx.GetHash();
 
                     // write alias fees to db
                     int64 nTheFee = GetAliasNetFee(tx);
@@ -915,7 +922,6 @@ Value sendtoname(const Array& params, bool fHelp)
             + HelpRequiringPassphrase());
 
     vector<unsigned char> vchName = vchFromValue(params[0]);
-    //CNameDB dbName("r");
     if (!paliasdb->ExistsAlias(vchName))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Name not found");
 

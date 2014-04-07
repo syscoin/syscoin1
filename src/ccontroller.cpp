@@ -21,7 +21,8 @@ public:
     virtual bool IsStandard(const CScript& scriptPubKey) { return false; }
     virtual void AddToWallet(CWalletTx& tx) {}
     virtual bool CheckTransaction(const CTransaction& tx) { return true; }
-    virtual bool CheckInputs(CBlockIndex *pindex, const CTransaction &tx, CValidationState &state, CCoinsViewCache &inputs, map<uint256,uint256> &mapTestPool, bool fBlock, bool fMiner, bool fJustCheck) { return true; }
+    virtual bool CheckInputs(CBlockIndex *pindex, const CTransaction &tx, CValidationState &state, CCoinsViewCache &inputs, 
+        map<vector<unsigned char>,uint256> &mapTestPool, bool fBlock, bool fMiner, bool fJustCheck) { return true; }
     virtual bool DisconnectInputs(CBlockTreeDB& txdb, const CTransaction& tx, CBlockIndex* pindexBlock) { return true; }
     virtual bool DisconnectBlock(CBlock& block, CBlockTreeDB& txdb, CBlockIndex* pindex) { return true; }
     virtual bool ExtractAddress(const CScript& script, string& address) { return false; }

@@ -926,7 +926,7 @@ CScript RemoveCertIssuerScriptPrefix(const CScript& scriptIn) {
 
 bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         CValidationState &state, CCoinsViewCache &inputs,
-        map<uint256, uint256> &mapTestPool, bool fBlock, bool fMiner,
+        map<vector<unsigned char>, uint256> &mapTestPool, bool fBlock, bool fMiner,
         bool fJustCheck) {
 
     if (!tx.IsCoinBase()) {
@@ -1049,14 +1049,13 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     return error(
                             "CheckCertInputs() : certissueractivate on an unexpired certissuer.");
 
-                set<uint256>& setPending = mapCertIssuerPending[vchCertIssuer];
-                BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
-                    if(s.second==tx.GetHash()) continue;
-                    if (setPending.count(s.second)) {
-                        printf("CheckInputs() : will not mine certissueractivate %s because it clashes with %s",
-                               tx.GetHash().GetHex().c_str(),
-                               s.second.GetHex().c_str());
-                        return false;
+                if(pindexBlock->nHeight == pindexBest->nHeight) {
+                    BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
+                        if (vvchArgs[0] == s.first) {
+                           return error("CheckInputs() : will not mine certissueractivate %s because it clashes with %s",
+                                   tx.GetHash().GetHex().c_str(),
+                                   s.second.GetHex().c_str());
+                        }
                     }
                 }
             }
@@ -1084,15 +1083,12 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 return error(
                         "CheckCertInputs() : certissuerupdate on an expired certissuer, or there is a pending transaction on the certissuer");
 
-            if (fBlock && !fJustCheck) {
-                set<uint256>& setPending = mapCertIssuerPending[vvchArgs[0]];
-                BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
-                    if(s.second==tx.GetHash()) continue;
-                    if (setPending.count(s.second)) {
-                        printf("CheckInputs() : will not mine certissuerupdate %s because it clashes with %s",
+            if (fBlock && !fJustCheck && pindexBlock->nHeight == pindexBest->nHeight) {
+                BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
+                    if (vvchArgs[0] == s.first) {
+                       return error("CheckInputs() : will not mine certissuerupdate %s because it clashes with %s",
                                tx.GetHash().GetHex().c_str(),
                                s.second.GetHex().c_str());
-                        return false;
                     }
                 }
             }
@@ -1174,14 +1170,13 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 if(theCertItem.vchRand != vchCertItem)
                     return error("certitem txn contains invalid txncertitem hash");
 
-                set<uint256>& setPending = mapCertItemPending[vchCertItem];
-                BOOST_FOREACH(const PAIRTYPE(uint256, uint256)& s, mapTestPool) {
-                    if(s.second==tx.GetHash()) continue;
-                    if (setPending.count(s.second)) {
-                       printf("CheckInputs() : will not mine certtransfer %s because it clashes with %s",
-                               tx.GetHash().GetHex().c_str(),
-                               s.second.GetHex().c_str());
-                       return false;
+                if(pindexBlock->nHeight == pindexBest->nHeight) {
+                    BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
+                        if (vvchArgs[1] == s.first) {
+                           return error("CheckInputs() : will not mine certtransfer %s because it clashes with %s",
+                                   tx.GetHash().GetHex().c_str(),
+                                   s.second.GetHex().c_str());
+                        }
                     }
                 }
             }
@@ -1246,6 +1241,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
                         if (!pcertdb->WriteCertItem(vvchArgs[1], vvchArgs[0]))
                             return error( "CheckCertInputs() : failed to write to cert DB");
+                        mapTestPool[vvchArgs[1]] = tx.GetHash();
                     }
 
                     if(op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE)
@@ -1260,6 +1256,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     // write cert issuer 
                     if (!pcertdb->WriteCertIssuer(vvchArgs[0], vtxPos))
                         return error( "CheckCertInputs() : failed to write to cert DB");
+                    mapTestPool[vvchArgs[0]] = tx.GetHash();
                     
 
                     // compute verify and write fee data to DB

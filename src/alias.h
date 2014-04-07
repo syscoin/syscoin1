@@ -140,10 +140,10 @@ static const int SYSCOIN_TX_VERSION = 0x7400;
 static const int64 MIN_AMOUNT = COIN;
 static const unsigned int MAX_NAME_LENGTH = 255;
 static const unsigned int MAX_VALUE_LENGTH = 1023;
-static const unsigned int MIN_FIRSTUPDATE_DEPTH = 3;
+static const unsigned int MIN_ACTIVATE_DEPTH = 3;
 
 bool CheckAliasInputs(CBlockIndex *pindex, const CTransaction &tx, CValidationState &state,
-		CCoinsViewCache &inputs, std::map<uint256,uint256> &mapTestPool, bool fBlock, bool fMiner, bool fJustCheck);
+		CCoinsViewCache &inputs, std::map<std::vector<unsigned char>,uint256> &mapTestPool, bool fBlock, bool fMiner, bool fJustCheck);
 bool ExtractAliasAddress(const CScript& script, std::string& address);
 bool IsAliasMine(const CTransaction& tx);
 bool IsAliasMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasnew = false);

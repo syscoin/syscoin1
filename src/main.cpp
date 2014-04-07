@@ -50,7 +50,7 @@ bool fBenchmark = false;
 bool fTxIndex = false;
 unsigned int nCoinCacheSize = 5000;
 
-std::map<uint256, uint256> dummyTestPool;
+std::map<std::vector<unsigned char>, uint256> dummyTestPool;
 
 extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey,
 		uint256 hash, int nHashType, CScript& scriptSigRet,
@@ -1654,8 +1654,9 @@ bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo,
 }
 
 bool CTransaction::CheckInputs(CBlockIndex *pindex, CValidationState &state, CCoinsViewCache &inputs,
-		bool fScriptChecks, unsigned int flags, std::map<uint256,uint256> &mapTestPool,
+		bool fScriptChecks, unsigned int flags, std::map<std::vector<unsigned char>,uint256> &mapTestPool,
 		std::vector<CScriptCheck> *pvChecks, bool bJustCheck, bool fBlock, bool fMiner) const {
+	
 	if (!IsCoinBase()) {
 		if (pvChecks)
 			pvChecks->reserve(vin.size());
@@ -4819,7 +4820,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn) {
 		}
 
 		// Collect transactions into block
-		map<uint256,uint256> mapTestPool;
+		map<vector<unsigned char>,uint256> mapTestPool;
 		uint64 nBlockSize = 1000;
 		uint64 nBlockTx = 0;
 		int nBlockSigOps = 100;
@@ -4873,9 +4874,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn) {
 			if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
 				continue;
 
-	        for (unsigned int i = 0; i < tx.vin.size(); i++) {
-	        	mapTestPool[tx.vin[i].prevout.hash] = tx.GetHash();
-	        }
+	        // for (unsigned int i = 0; i < tx.vin.size(); i++) {
+	        // 	mapTestPool[tx.vin[i].prevout.hash] = tx.GetHash();
+	        // }
 
 	        CValidationState state;
 			if (!tx.CheckInputs(pindexPrev, state, view, true, SCRIPT_VERIFY_P2SH,

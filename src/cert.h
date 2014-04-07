@@ -15,7 +15,7 @@ class CWalletTx;
 class CDiskTxPos;
 
 bool CheckCertInputs(CBlockIndex *pindex, const CTransaction &tx, CValidationState &state, CCoinsViewCache &inputs,
-                     std::map<uint256,uint256> &mapTestPool, bool fBlock, bool fMiner, bool fJustCheck);
+                     std::map<std::vector<unsigned char>,uint256> &mapTestPool, bool fBlock, bool fMiner, bool fJustCheck);
 bool ExtractCertAddress(const CScript& script, std::string& address);
 bool IsCertMine(const CTransaction& tx);
 bool IsCertMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasnew = false);

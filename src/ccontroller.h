@@ -13,7 +13,8 @@ public:
     virtual bool IsStandard(const CScript& scriptPubKey) = 0;
     virtual void AddToWallet(CWalletTx& tx) = 0;
     virtual bool CheckTransaction(const CTransaction& tx) = 0;
-    virtual bool CheckInputs(CBlockIndex *pindex, const CTransaction &tx, CValidationState &state, CCoinsViewCache &inputs, std::map<uint256,uint256> &mapTestPool, bool fBlock, bool fMiner, bool fJustCheck) = 0;
+    virtual bool CheckInputs(CBlockIndex *pindex, const CTransaction &tx, CValidationState &state, CCoinsViewCache &inputs, 
+        std::map<std::vector<unsigned char>,uint256> &mapTestPool, bool fBlock, bool fMiner, bool fJustCheck) = 0;
     virtual bool DisconnectInputs(CBlockTreeDB& txdb, const CTransaction& tx, CBlockIndex* pindexBlock) = 0;
     virtual bool DisconnectBlock(CBlock& block, CBlockTreeDB& txdb, CBlockIndex* pindex) = 0;
     virtual bool ExtractAddress(const CScript& script, std::string& address) = 0;
