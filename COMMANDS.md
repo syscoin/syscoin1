@@ -1,5 +1,8 @@
 #SYSCOIN COMMANDS
 
+Syscoin commands can be called just like any other standard commands like gettransaction - you may call them either on the command-line using the daemon (as shown in the examples underneath) or you may call them from the QT client console window, in which case omit the 'syscoind' portion of the commands as shown in the examples underneath.
+
+All commands use a 'register-activate' pattern, whereby an object is first laid claim to using a 'new' command, and then permanently registered using an 'activate' command, called at least one block after the according 'new' transaction has been recorded on the blockchain. In the case of aliases, a minimum period of 120 blocks must be added to the blockchain before an activate command can be called. This is to minimize alias squatting and frivolous registrations. For testing purposes however, this period has been set to 3 blocks. However, the activate command in all cases may be called immediately after the new command; the transactions will simply pend in the memory queue until the target block height has been reached.
 
 ##alias commands - these commands deal with standard aliases.
 
