@@ -36,6 +36,8 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     addressTableModel(0),
     transactionTableModel(0),
     aliasTableModel(0),
+    offerTableModel(0),
+	certIssuerTableModel(0),
     cachedBalance(0),
     cachedUnconfirmedBalance(0),
     cachedImmatureBalance(0),
@@ -475,7 +477,7 @@ static void NotifyCertIssuerListChanged(WalletModel *walletmodel, CWallet *walle
 static void NotifyTransactionChanged(WalletModel *walletmodel, CWallet *wallet, const uint256 &hash, ChangeType status)
 {
     OutputDebugStringF("NotifyTransactionChanged %s status=%i\n", hash.GetHex().c_str(), status);
-    QMetaObject::invokeMethod(walletmodel, "updateOffer", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(hash.GetHex())),
                               Q_ARG(int, status));
 }
