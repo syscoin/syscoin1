@@ -52,17 +52,16 @@ bool IsCertOp(int op) {
 }
 
 // 10080 blocks = 1 week
-// certissuer expiration time is ~ 2 weeks
-// expiration blocks is 20160 (final)
-// expiration starts at 6720, increases by 1 per block starting at
-// block 13440 until block 349440
+// certificate issuer expiration time is ~ 6 months or 26 weeks
+// expiration blocks is 262080 (final)
+// expiration starts at 87360, increases by 1 per block starting at
+// block 174721 until block 349440
 
 int nCStartHeight = 161280;
-
 int64 GetCertNetworkFee(int seed, int nHeight) {
     int nComputedHeight = nHeight - nCStartHeight < 0 ? 1 : ( nHeight - nCStartHeight ) + 1;
     if (nComputedHeight >= 13440) nComputedHeight += (nComputedHeight - 13440) * 3;
-    if ((nComputedHeight >> 13) >= 60) return 0;
+    //if ((nComputedHeight >> 13) >= 60) return 0;
     int64 nStart = seed * COIN;
     if (fTestNet) nStart = 10 * CENT;
     int64 nRes = nStart >> (nComputedHeight >> 13);
@@ -75,17 +74,14 @@ int64 GetCertNetworkFee(int seed, int nHeight) {
 // Increase expiration to 36000 gradually starting at block 24000.
 // Use for validation purposes and pass the chain height.
 int GetCertExpirationDepth(int nHeight) {
-    int nComputedHeight = ( nHeight - nCStartHeight < 0 ) ? 1 : ( nHeight - nCStartHeight ) + 1;
-    if (nComputedHeight < 13440) return 6720;
-    if (nComputedHeight < 26880) return nComputedHeight - 6720;
-    return 20160;
+    if (nHeight < 174720) return 87360;
+    if (nHeight < 349440) return nHeight - 87360;
+    return 262080;
 }
 
 // For display purposes, pass the name height.
 int GetCertDisplayExpirationDepth(int nHeight) {
-    int nComputedHeight = nHeight - nCStartHeight < 0 ? 1 : ( nHeight - nCStartHeight ) + 1;
-    if (nComputedHeight < 6720) return 6720;
-    return 20160;
+    return GetCertExpirationDepth(nHeight);
 }
 
 bool IsMyCert(const CTransaction& tx, const CTxOut& txout) {

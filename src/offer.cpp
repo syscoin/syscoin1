@@ -62,7 +62,7 @@ int nStartHeight = 161280;
 int64 GetOfferNetworkFee(int seed, int nHeight) {
 	int nComputedHeight = nHeight - nStartHeight < 0 ? 1 : ( nHeight - nStartHeight ) + 1;
     if (nComputedHeight >= 13440) nComputedHeight += (nComputedHeight - 13440) * 3;
-    if ((nComputedHeight >> 13) >= 60) return 0;
+    //if ((nComputedHeight >> 13) >= 60) return 0;
     int64 nStart = seed * COIN;
     if (fTestNet) nStart = 10 * CENT;
     int64 nRes = nStart >> (nComputedHeight >> 13);
@@ -83,9 +83,7 @@ int GetOfferExpirationDepth(int nHeight) {
 
 // For display purposes, pass the name height.
 int GetOfferDisplayExpirationDepth(int nHeight) {
-	int nComputedHeight = nHeight - nStartHeight < 0 ? 1 : ( nHeight - nStartHeight ) + 1;
-    if (nComputedHeight < 6720) return 6720;
-    return 20160;
+    return GetOfferExpirationDepth(nHeight);
 }
 
 bool IsMyOffer(const CTransaction& tx, const CTxOut& txout) {

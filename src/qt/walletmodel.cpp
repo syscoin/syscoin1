@@ -404,11 +404,11 @@ static void NotifyAliasListChanged(WalletModel *walletmodel, CWallet *wallet, co
 {
     std::vector<std::vector<unsigned char> > vvchArgs;
     int op, nOut;
-    if (!DecodeSyscoinTx(*tx, op, nOut, vvchArgs, -1)) {
+    if (!DecodeAliasTx(*tx, op, nOut, vvchArgs, -1)) {
         return;
     }
     if(!IsAliasOp(op))  return;
-    unsigned long nExpDepth = GetOfferExpirationDepth(alias.nHeight);
+    unsigned long nExpDepth = alias.nHeight + GetOfferExpirationDepth(alias.nHeight);
 
     OutputDebugStringF("NotifyAliasListChanged %s %s status=%i\n", stringFromVch(vvchArgs[0]).c_str(), stringFromVch(alias.vValue).c_str(), status);
     QMetaObject::invokeMethod(walletmodel, "updateAlias", Qt::QueuedConnection,
@@ -420,7 +420,7 @@ static void NotifyAliasListChanged(WalletModel *walletmodel, CWallet *wallet, co
 
 static void NotifyOfferListChanged(WalletModel *walletmodel, CWallet *wallet, const CTransaction *tx, COffer offer, ChangeType status)
 {
-    unsigned long nExpDepth = GetOfferExpirationDepth(offer.nHeight);
+    unsigned long nExpDepth = offer.nHeight + GetOfferExpirationDepth(offer.nHeight);
     COfferAccept theAccept;
     std::vector<unsigned char> vchRand, vchTitle;
     int64 nPrice;
@@ -453,7 +453,7 @@ static void NotifyOfferListChanged(WalletModel *walletmodel, CWallet *wallet, co
 static void NotifyCertIssuerListChanged(WalletModel *walletmodel, CWallet *wallet, const CTransaction *tx, CCertIssuer issuer, ChangeType status)
 {
     CCertItem theCert;
-    unsigned long nExpDepth = GetCertExpirationDepth(issuer.nHeight);
+    unsigned long nExpDepth = issuer.nHeight + GetCertExpirationDepth(issuer.nHeight);
     std::vector<unsigned char> vchRand, vchTitle;
     vchRand = issuer.vchRand;
     vchTitle = issuer.vchTitle;

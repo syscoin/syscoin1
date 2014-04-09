@@ -1069,7 +1069,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             if (fNameTx) {
                 vector<vector<unsigned char> > vvchArgs;
                 int op,nOut, nTxOut;
-                bool good = DecodeSyscoinTx(wtx, op, nOut, vvchArgs, -1);
+                bool good = DecodeAliasTx(wtx, op, nOut, vvchArgs, -1);
                 if(good && IsAliasOp(op)) {
                     nTxOut = IndexOfNameOutput(wtx);
                     ExtractAliasAddress(wtx.vout[nTxOut].scriptPubKey, strAddress);

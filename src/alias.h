@@ -157,9 +157,9 @@ int IndexOfNameOutput(const CTransaction& tx);
 bool GetValueOfNameTxHash(const uint256& txHash, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
 bool GetNameOfTx(const CTransaction& tx, std::vector<unsigned char>& name);
 bool GetValueOfNameTx(const CTransaction& tx, std::vector<unsigned char>& value);
-bool DecodeSyscoinTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, int nHeight);
+bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, int nHeight);
 bool GetValueOfNameTx(const CCoins& tx, std::vector<unsigned char>& value);
-bool DecodeSyscoinTx(const CCoins& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, int nHeight);
+bool DecodeAliasTx(const CCoins& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, int nHeight);
 bool DecodeSyscoinScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 bool GetNameAddress(const CTransaction& tx, std::string& strAddress);
 bool GetNameAddress(const CDiskTxPos& txPos, std::string& strAddress);
@@ -169,6 +169,6 @@ int64 GetAliasNetworkFee(int nHeight);
 uint64 GetAliasFeeSubsidy(const unsigned int nTime);
 std::string aliasFromOp(int op);
 bool IsAliasOp(int op);
-int GetNameDisplayExpirationDepth(int nHeight);
+int GetAliasDisplayExpirationDepth(int nHeight);
 
 #endif // NAMEDB_H

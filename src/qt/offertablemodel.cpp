@@ -94,21 +94,26 @@ public:
                     if(!GetTransaction(tx.GetHash(), tx, txblkhash, true))
                         continue;
 
-                    // attempt to read certissuer from txn
+                    // attempt to read offer from txn
                     COffer theOffer;
                     COfferAccept theOfferAccept;
                     if(!theOffer.UnserializeFromTx(tx))
                         continue;
 
+                    vector<COffer> vtxPos;
+                    if(!pofferdb->ReadOffer(theOffer.vchRand, vtxPos))
+                        continue;
+
+                    int nExpHeight = vtxPos.back().nHeight + GetOfferExpirationDepth(vtxPos.back().nHeight);
+
                     double nPrice = theOffer.nPrice / COIN;
                     int nQty = theOffer.nQty;
-                    unsigned long nExpDepth = GetOfferExpirationDepth(theOffer.nHeight);
 
                     if(theOffer.accepts.size()) {
                         theOfferAccept = theOffer.accepts.back();
                         nPrice = theOfferAccept.nPrice / COIN;
                         nQty = theOfferAccept.nQty;
-                        nExpDepth = 0;
+                        nExpHeight = 0;
                     }
 
                     if(op == OP_OFFER_ACTIVATE)
@@ -118,7 +123,7 @@ public:
                                           QString::fromStdString(stringFromVch(theOffer.sCategory)),
                                           QString::fromStdString(strprintf("%lf", nPrice)),
                                           QString::fromStdString(strprintf("%d", nQty)),
-                                          QString::fromStdString(strprintf("%lu", nExpDepth))));
+                                          QString::fromStdString(strprintf("%d", nExpHeight))));
                 }
                 pindex = pindex->pnext;
             }

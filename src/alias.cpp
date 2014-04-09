@@ -191,7 +191,7 @@ bool IsAliasMine(const CTransaction& tx) {
     vector<vector<unsigned char> > vvch;
     int op, nOut;
 
-    if (!DecodeSyscoinTx(tx, op, nOut, vvch, -1) || !IsAliasOp(op)) {
+    if (!DecodeAliasTx(tx, op, nOut, vvch, -1) || !IsAliasOp(op)) {
         error("IsAliasMine() : no output out script in alias tx %s\n",
         		tx.ToString().c_str());
         return false;
@@ -260,7 +260,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         // decode alias info from transaction
         vector<vector<unsigned char> > vvchArgs;
         int op, nOut, nPrevHeight, nDepth;
-        if (!DecodeSyscoinTx(tx, op, nOut, vvchArgs, pindexBlock->nHeight))
+        if (!DecodeAliasTx(tx, op, nOut, vvchArgs, pindexBlock->nHeight))
             return error("CheckAliasInputs() : could not decode syscoin alias info from tx %s",
                          tx.GetHash().GetHex().c_str());
         int64 nNetFee;
@@ -545,7 +545,7 @@ bool CNameDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
             int op, nOut;
 
             // decode the alias op
-            bool o = DecodeSyscoinTx(tx, op, nOut, vvchArgs, nHeight);
+            bool o = DecodeAliasTx(tx, op, nOut, vvchArgs, nHeight);
             if (!o || !IsAliasOp(op)) continue;
             if (op == OP_ALIAS_NEW) continue;
 
@@ -589,6 +589,17 @@ bool CNameDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
     return true;
 }
 
+int64 GetAliasNetworkFee(int nHeight) {
+    // Speed up network fee decrease 4x starting at 174720
+    if (nHeight >= 174720) nHeight += (nHeight - 174720) * 3;
+    //if ((nHeight >> 13) >= 60) return 0;
+    int64 nStart = 50 * COIN;
+    if (fTestNet) nStart = 10 * CENT;
+    int64 nRes = nStart >> (nHeight >> 13);
+    nRes -= (nRes >> 14) * (nHeight % 8192);
+    return nRes;
+}
+
 // 10080 blocks = 1 week
 // alias expiration time is ~ 6 months or 26 weeks
 // expiration blocks is 262080 (final)
@@ -605,20 +616,8 @@ int GetAliasExpirationDepth(int nHeight) {
 }
 
 // For display purposes, pass the name height.
-int GetNameDisplayExpirationDepth(int nHeight) {
-    if (nHeight < 87360) return 87360;
-    return 262080;
-}
-
-int64 GetAliasNetworkFee(int nHeight) {
-    // Speed up network fee decrease 4x starting at 174720
-    if (nHeight >= 174720) nHeight += (nHeight - 174720) * 3;
-    if ((nHeight >> 13) >= 60) return 0;
-    int64 nStart = 50 * COIN;
-    if (fTestNet) nStart = 10 * CENT;
-    int64 nRes = nStart >> (nHeight >> 13);
-    nRes -= (nRes >> 14) * (nHeight % 8192);
-    return nRes;
+int GetAliasDisplayExpirationDepth(int nHeight) {
+    return GetAliasExpirationDepth(nHeight);
 }
 
 int GetNameTxPosHeight(const CDiskTxPos& txPos) {
@@ -895,7 +894,7 @@ bool GetNameAddress(const CTransaction& tx, std::string& strAddress) {
     int op, nOut = 0;
     vector<vector<unsigned char> > vvch;
 
-    if(!DecodeSyscoinTx(tx, op, nOut, vvch, -1))
+    if(!DecodeAliasTx(tx, op, nOut, vvch, -1))
     	return error("GetNameAddress() : could not decode name tx.");
 
     const CTxOut& txout = tx.vout[nOut];
@@ -963,7 +962,7 @@ int IndexOfNameOutput(const CTransaction& tx) {
 
     int op;
     int nOut;
-    bool good = DecodeSyscoinTx(tx, op, nOut, vvch, -1);
+    bool good = DecodeAliasTx(tx, op, nOut, vvch, -1);
 
     if (!good)
         throw runtime_error("IndexOfNameOutput() : name output not found");
@@ -978,7 +977,7 @@ bool GetNameOfTx(const CTransaction& tx, vector<unsigned char>& name) {
     int op;
     int nOut;
 
-    bool good = DecodeSyscoinTx(tx, op, nOut, vvchArgs, -1);
+    bool good = DecodeAliasTx(tx, op, nOut, vvchArgs, -1);
     if (!good)
         return error("GetNameOfTx() : could not decode a syscoin tx");
 
@@ -998,7 +997,7 @@ bool IsConflictedAliasTx(CBlockTreeDB& txdb, const CTransaction& tx, vector<unsi
     int op;
     int nOut;
 
-    bool good = DecodeSyscoinTx(tx, op, nOut, vvchArgs, pindexBest->nHeight);
+    bool good = DecodeAliasTx(tx, op, nOut, vvchArgs, pindexBest->nHeight);
     if (!good)
         return error("IsConflictedAliasTx() : could not decode a syscoin tx");
     int nPrevHeight;
@@ -1020,7 +1019,7 @@ bool GetValueOfNameTx(const CTransaction& tx, vector<unsigned char>& value)
     int op;
     int nOut;
 
-    if (!DecodeSyscoinTx(tx, op, nOut, vvch, -1))
+    if (!DecodeAliasTx(tx, op, nOut, vvch, -1))
         return false;
 
     switch (op) {
@@ -1037,7 +1036,7 @@ bool GetValueOfNameTx(const CTransaction& tx, vector<unsigned char>& value)
     }
 }
 
-bool DecodeSyscoinTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch, int nHeight) {
+bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch, int nHeight) {
     bool found = false;
 
     if (nHeight < 0)
@@ -1065,7 +1064,7 @@ bool GetValueOfNameTx(const CCoins& tx, vector<unsigned char>& value) {
     int op;
     int nOut;
 
-    if (!DecodeSyscoinTx(tx, op, nOut, vvch, -1))
+    if (!DecodeAliasTx(tx, op, nOut, vvch, -1))
         return false;
 
     switch (op) {
@@ -1082,7 +1081,7 @@ bool GetValueOfNameTx(const CCoins& tx, vector<unsigned char>& value) {
     }
 }
 
-bool DecodeSyscoinTx(const CCoins& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch, int nHeight) {
+bool DecodeAliasTx(const CCoins& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch, int nHeight) {
     bool found = false;
 
     if (nHeight < 0)
@@ -1417,8 +1416,8 @@ Value aliaslist(const Array& params, bool fHelp) {
             string strAddress = "";
             GetNameAddress(tx, strAddress);
             oName.push_back(Pair("address", strAddress));
-            oName.push_back(Pair("expires_in", nHeight + GetNameDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
-            if(nHeight + GetNameDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+            oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
+            if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
             {
                 oName.push_back(Pair("expired", 1));
             }
@@ -1486,8 +1485,8 @@ Value aliasinfo(const Array& params, bool fHelp)
         string strAddress = "";
         GetNameAddress(tx, strAddress);
         oName.push_back(Pair("address", strAddress));
-        oName.push_back(Pair("expires_in", nHeight + GetNameDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
-        if(nHeight + GetNameDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0) {
+        oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
+        if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0) {
             oName.push_back(Pair("expired", 1));
         }
         if(tx.data.size())
@@ -1546,8 +1545,8 @@ Value aliashistory(const Array& params, bool fHelp)
             string strAddress = "";
             GetNameAddress(tx, strAddress);
             oName.push_back(Pair("address", strAddress));
-            oName.push_back(Pair("expires_in", nHeight + GetNameDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
-            if(nHeight + GetNameDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0) {
+            oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
+            if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0) {
                 oName.push_back(Pair("expired", 1));
             }
             oRes.push_back(oName);
@@ -1641,7 +1640,7 @@ Value aliasfilter(const Array& params, bool fHelp)
         CTransaction tx;
         uint256 blockHash;
         uint256 txHash = txName.txHash;
-        if ((nHeight + GetNameDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+        if ((nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
             || !GetTransaction(txHash, tx, blockHash, true))
         {
             oName.push_back(Pair("expired", 1));
@@ -1651,7 +1650,7 @@ Value aliasfilter(const Array& params, bool fHelp)
             vector<unsigned char> vchValue = txName.vValue;
             string value = stringFromVch(vchValue);
             oName.push_back(Pair("value", value));
-            oName.push_back(Pair("expires_in", nHeight + GetNameDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
+            oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
         }
         oRes.push_back(oName);
 
@@ -1716,14 +1715,14 @@ Value aliasscan(const Array& params, bool fHelp)
 
         int nHeight = txName.nHeight;
         vector<unsigned char> vchValue = txName.vValue;
-        if ((nHeight + GetNameDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+        if ((nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
             || !GetTransaction(txName.txHash, tx, blockHash, true)) {
             oName.push_back(Pair("expired", 1));
         }
         else {
             string value = stringFromVch(vchValue);
             oName.push_back(Pair("value", value));
-            oName.push_back(Pair("expires_in", nHeight + GetNameDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
+            oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
         }
         oRes.push_back(oName);
     }

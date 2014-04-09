@@ -367,7 +367,7 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx)
 
                     vector<vector<unsigned char> > vvchArgs;
                     int op, nOut;
-                    bool good = DecodeSyscoinTx(tx, op, nOut, vvchArgs, -1);
+                    bool good = DecodeAliasTx(tx, op, nOut, vvchArgs, -1);
                     if(good && IsAliasOp(op)) {
                         const vector<unsigned char> &vchName = vvchArgs[0];
                         vector<CAliasIndex> vtxPos;
@@ -524,7 +524,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
         vector<vector<unsigned char> > vvchArgs;
         int op;
         int nOut;
-        bool good = DecodeSyscoinTx(wtx, op, nOut, vvchArgs, -1);
+        bool good = DecodeAliasTx(wtx, op, nOut, vvchArgs, -1);
         if (good){
             if(IsAliasOp(op)) {
                 const vector<unsigned char> &vchName = vvchArgs[0];
@@ -1503,7 +1503,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
                 vector<vector<unsigned char> > vvchArgs;
                 int op;
                 int nOut;
-                bool good = DecodeSyscoinTx(wtxNew, op, nOut, vvchArgs, -1);
+                bool good = DecodeAliasTx(wtxNew, op, nOut, vvchArgs, -1);
                 if (good){
                     if(IsAliasOp(op)) {
                         const vector<unsigned char> &vchName = vvchArgs[0];
@@ -2079,7 +2079,7 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx)
             vector<vector<unsigned char> > vvchArgs;
             int op;
             int nOut;
-            bool good = DecodeSyscoinTx(wtx, op, nOut, vvchArgs, -1);
+            bool good = DecodeAliasTx(wtx, op, nOut, vvchArgs, -1);
             if (good){
                 if(IsAliasOp(op)) {
                     const vector<unsigned char> &vchName = vvchArgs[0];

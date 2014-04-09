@@ -97,6 +97,12 @@ public:
                     if(!theCertIssuer.UnserializeFromTx(tx))
                         continue;
 
+                    vector<CCertIssuer> vtxPos;
+                    if(!pcertdb->ReadCertIssuer(theCertIssuer.vchRand, vtxPos))
+                        continue;
+
+                    int nExpHeight = vtxPos.back().nHeight + GetCertExpirationDepth(vtxPos.back().nHeight);
+
                     if(theCertIssuer.certs.size()) {
                         theCert = theCertIssuer.certs.back();
                         cachedCertIssuerTable.append(CertIssuerTableEntry(CertIssuerTableEntry::CertItem,
@@ -108,7 +114,7 @@ public:
                             cachedCertIssuerTable.append(CertIssuerTableEntry(CertIssuerTableEntry::CertIssuer,
                                               QString::fromStdString(stringFromVch(theCertIssuer.vchTitle)),
                                               QString::fromStdString(stringFromVch(theCertIssuer.vchRand)),
-                                              QString::fromStdString(strprintf("%d", GetCertExpirationDepth(theCertIssuer.nHeight)))));
+                                              QString::fromStdString(strprintf("%d", nExpHeight ))));
                     }
                 }
                 pindex = pindex->pnext;

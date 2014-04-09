@@ -654,7 +654,7 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
     for (int iter = 0; iter < 2; iter++) {
         ret[iter] = true;
 
-        bool good = DecodeSyscoinTx(*this, op, nOut, vvch, iter == 0 ? 0 : -1);
+        bool good = DecodeAliasTx(*this, op, nOut, vvch, iter == 0 ? 0 : -1);
         // alias
         if(good && IsAliasOp(op)) {
 	        if (vvch[0].size() > MAX_NAME_LENGTH) {
@@ -988,7 +988,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
         vector<vector<unsigned char> > vvch;
 	    int op, nOut;
 
-	    bool good = DecodeSyscoinTx(tx, op, nOut, vvch, -1);
+	    bool good = DecodeAliasTx(tx, op, nOut, vvch, -1);
 	    if(good && IsAliasOp(op)) {
 	        LOCK(cs_main);
             mapAliasesPending[vvch[0]].insert(tx.GetHash());
@@ -1698,7 +1698,7 @@ bool CTransaction::CheckInputs(CBlockIndex *pindex, CValidationState &state, CCo
 		int op;
 		int nOut;
 
-		bool bGood = DecodeSyscoinTx(*this, op, nOut, vvchArgs, pindex->nHeight);
+		bool bGood = DecodeAliasTx(*this, op, nOut, vvchArgs, pindex->nHeight);
 		if(bGood && IsAliasOp(op)) {
 			if (!CheckAliasInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
 				return false;
@@ -1830,7 +1830,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 		    int op, nOut;
 
 		    // alias, data
-		    bool good = DecodeSyscoinTx(tx, op, nOut, vvchArgs, pindex->nHeight);
+		    bool good = DecodeAliasTx(tx, op, nOut, vvchArgs, pindex->nHeight);
 
             //*************************
 		    if (good && IsAliasOp(op) && op != OP_ALIAS_NEW) {

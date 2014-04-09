@@ -84,7 +84,7 @@ public:
 
                     int op, nOut;
                     vector<vector<unsigned char> > vvchArgs;
-                    bool o = DecodeSyscoinTx(tx, op, nOut, vvchArgs, nHeight);
+                    bool o = DecodeAliasTx(tx, op, nOut, vvchArgs, nHeight);
                     if (!o || !IsAliasOp(op) || !IsAliasMine(tx)) continue;
 
                     // get the transaction
@@ -102,7 +102,7 @@ public:
                     if (!paliasdb->ReadAlias(vchName, vtxPos))
                         continue;
                     CAliasIndex txName = vtxPos.back();
-                    unsigned long nExpDepth = GetAliasExpirationDepth(txName.nHeight);
+                    unsigned long nExpDepth = txName.nHeight + GetAliasExpirationDepth(txName.nHeight);
 
                     cachedAliasTable.append(AliasTableEntry(tx.data.size() ? AliasTableEntry::DataAlias : AliasTableEntry::Alias,
                                       QString::fromStdString(stringFromVch(vchValue)),
