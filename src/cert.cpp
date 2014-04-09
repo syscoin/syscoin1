@@ -134,8 +134,42 @@ string CCertIssuer::SerializeToString() {
 }
 
 //TODO implement
-bool CCertDB::ScanCertIssuers(const std::vector<unsigned char>& vchCertIssuer, int nMax,
+bool CCertDB::ScanCertIssuers(const std::vector<unsigned char>& vchCertIssuer, unsigned int nMax,
         std::vector<std::pair<std::vector<unsigned char>, CCertIssuer> >& certissuerScan) {
+
+    leveldb::Iterator *pcursor = pcertdb->NewIterator();
+
+    CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+    ssKeySet << make_pair(string("certissueri"), vchCertIssuer);
+    string sType;
+    pcursor->Seek(ssKeySet.str());
+
+    while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
+        try {
+            leveldb::Slice slKey = pcursor->key();
+            CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+
+            ssKey >> sType;
+            if(sType == "certissueri") {
+                leveldb::Slice slValue = pcursor->value();
+                CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+                vector<CCertIssuer> vtxPos;
+                ssValue >> vtxPos;
+                CCertIssuer txPos;
+                if (!vtxPos.empty())
+                    txPos = vtxPos.back();
+                certissuerScan.push_back(make_pair(vchCertIssuer, txPos));
+            }
+            if (certissuerScan.size() >= nMax)
+                break;
+
+            pcursor->Next();
+        } catch (std::exception &e) {
+            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+        }
+    }
+    delete pcursor;
     return true;
 }
 
@@ -1927,89 +1961,95 @@ Value certinfo(const Array& params, bool fHelp) {
 }
 
 Value certissuerlist(const Array& params, bool fHelp) {
-    if (fHelp || 1 != params.size())
+    if (fHelp || 1 < params.size())
         throw runtime_error("certissuerlist [<certissuer>]\n"
-                "list my own certissuers");
+                "list my own certificate issuers");
 
-    vector<unsigned char> vchCertIssuer;
-    vector<unsigned char> vchLastCertIssuer;
+    vector<unsigned char> vchName;
 
     if (params.size() == 1)
-        vchCertIssuer = vchFromValue(params[0]);
+        vchName = vchFromValue(params[0]);
 
-    vector<unsigned char> vchCertIssuerUniq;
+    vector<unsigned char> vchNameUniq;
     if (params.size() == 1)
-        vchCertIssuerUniq = vchFromValue(params[0]);
+        vchNameUniq = vchFromValue(params[0]);
 
     Array oRes;
-    map<vector<unsigned char>, int> vCertIssuersI;
-    map<vector<unsigned char>, Object> vCertIssuersO;
+    map< vector<unsigned char>, int > vNamesI;
+    map< vector<unsigned char>, Object > vNamesO;
 
     {
         LOCK(pwalletMain->cs_wallet);
 
-        CDiskTxPos txindex;
+        uint256 blockHash;
         uint256 hash;
         CTransaction tx;
 
         vector<unsigned char> vchValue;
         int nHeight;
 
-        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
+        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+        {
+            // get txn hash, read txn index
             hash = item.second.GetHash();
-            if (!pblocktree->ReadTxIndex(hash, txindex))
+
+            if (!GetTransaction(hash, tx, blockHash, true))
                 continue;
 
+            // skip non-syscoin txns
             if (tx.nVersion != SYSCOIN_TX_VERSION)
                 continue;
 
-            // certissuer
-            if (!GetNameOfCertIssuerTx(tx, vchCertIssuer))
-                continue;
-            if (vchCertIssuerUniq.size() > 0 && vchCertIssuerUniq != vchCertIssuer)
-                continue;
-
-            // value
-            if (!GetValueOfCertIssuerTx(tx, vchValue))
+            // decode txn, skip non-alias txns
+            vector<vector<unsigned char> > vvch;
+            int op, nOut;
+            if (!DecodeCertTx(tx, op, nOut, vvch, -1) || !IsCertOp(op)) 
                 continue;
 
-            // height
-            nHeight = GetCertTxPosHeight(txindex);
+            if(op == OP_CERT_NEW || op == OP_CERT_TRANSFER)
+                continue;
 
-            Object oCertIssuer;
-            oCertIssuer.push_back(Pair("certissuer", stringFromVch(vchCertIssuer)));
-            oCertIssuer.push_back(Pair("value", stringFromVch(vchValue)));
-            if (!IsCertMine(pwalletMain->mapWallet[tx.GetHash()]))
-                oCertIssuer.push_back(Pair("transferred", 1));
+            // get the txn height
+            nHeight = GetCertTxHashHeight(hash);
+
+            // get the txn alias name
+            if(!GetNameOfCertIssuerTx(tx, vchName))
+                continue;
+
+            // skip this alias if it doesn't match the given filter value
+            if(vchNameUniq.size() > 0 && vchNameUniq != vchName)
+                continue;
+
+            // get the value of the alias txn
+            if(!GetValueOfCertIssuerTx(tx, vchValue))
+                continue;
+
+            // build the output object
+            Object oName;
+            oName.push_back(Pair("name", stringFromVch(vchName)));
+            oName.push_back(Pair("value", stringFromVch(vchValue)));
+            
             string strAddress = "";
             GetCertAddress(tx, strAddress);
-            oCertIssuer.push_back(Pair("address", strAddress));
-            oCertIssuer.push_back(
-                    Pair("expires_in",
-                            nHeight + GetCertDisplayExpirationDepth(nHeight)
-                                    - pindexBest->nHeight));
-            if (nHeight + GetCertDisplayExpirationDepth(nHeight)
-                    - pindexBest->nHeight <= 0) {
-                oCertIssuer.push_back(Pair("expired", 1));
-            }
+            oName.push_back(Pair("address", strAddress));
+            oName.push_back(Pair("expires_in", nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
+            
+            if(nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+                oName.push_back(Pair("expired", 1));
 
-            // get last active certissuer only
-            if (vCertIssuersI.find(vchCertIssuer) != vCertIssuersI.end()
-                    && vCertIssuersI[vchCertIssuer] > nHeight)
+            // get last active name only
+            if(vNamesI.find(vchName) != vNamesI.end() && vNamesI[vchName] > nHeight)
                 continue;
 
-            vCertIssuersI[vchCertIssuer] = nHeight;
-            vCertIssuersO[vchCertIssuer] = oCertIssuer;
+            vNamesI[vchName] = nHeight;
+            vNamesO[vchName] = oName;
         }
-
     }
 
-    BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, Object)& item, vCertIssuersO)
+    BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, Object)& item, vNamesO)
         oRes.push_back(item.second);
 
     return oRes;
-
-    return (double) 0;
 }
 
 Value certissuerhistory(const Array& params, bool fHelp) {
@@ -2024,9 +2064,7 @@ Value certissuerhistory(const Array& params, bool fHelp) {
     {
         LOCK(pwalletMain->cs_wallet);
 
-        //vector<CDiskTxPos> vtxPos;
         vector<CCertIssuer> vtxPos;
-        //CCertDB dbCert("r");
         if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos))
             throw JSONRPCError(RPC_WALLET_ERROR,
                     "failed to read from certissuer DB");

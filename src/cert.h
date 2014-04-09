@@ -309,7 +309,7 @@ public:
 
     bool ScanCertIssuers(
             const std::vector<unsigned char>& vchName,
-            int nMax,
+            unsigned int nMax,
             std::vector<std::pair<std::vector<unsigned char>, CCertIssuer> >& certIssuerScan);
 
     bool ReconstructCertIndex(CBlockIndex *pindexRescan);

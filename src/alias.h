@@ -120,7 +120,7 @@ public:
 
     bool ScanNames(
             const std::vector<unsigned char>& vchName,
-            int nMax,
+            unsigned int nMax,
             std::vector<std::pair<std::vector<unsigned char>, CAliasIndex> >& nameScan);
 
     bool ReconstructNameIndex(CBlockIndex *pindexRescan);
@@ -155,14 +155,14 @@ int GetNameTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
 bool GetTxOfName(CNameDB& dbName, const std::vector<unsigned char> &vchName, CTransaction& tx);
 int IndexOfNameOutput(const CTransaction& tx);
 bool GetValueOfNameTxHash(const uint256& txHash, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
-bool GetNameOfTx(const CTransaction& tx, std::vector<unsigned char>& name);
-bool GetValueOfNameTx(const CTransaction& tx, std::vector<unsigned char>& value);
+bool GetAliasOfTx(const CTransaction& tx, std::vector<unsigned char>& name);
+bool GetValueOfAliasTx(const CTransaction& tx, std::vector<unsigned char>& value);
 bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, int nHeight);
-bool GetValueOfNameTx(const CCoins& tx, std::vector<unsigned char>& value);
+bool GetValueOfAliasTx(const CCoins& tx, std::vector<unsigned char>& value);
 bool DecodeAliasTx(const CCoins& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, int nHeight);
-bool DecodeSyscoinScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
-bool GetNameAddress(const CTransaction& tx, std::string& strAddress);
-bool GetNameAddress(const CDiskTxPos& txPos, std::string& strAddress);
+bool DecodeAliasScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
+bool GetAliasAddress(const CTransaction& tx, std::string& strAddress);
+bool GetAliasAddress(const CDiskTxPos& txPos, std::string& strAddress);
 std::string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, bool fAskFee, const std::string& txData = "");
 bool CreateTransactionWithInputTx(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxIn, int nTxOut, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, const std::string& txData = "");
 int64 GetAliasNetworkFee(int nHeight);

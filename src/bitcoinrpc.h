@@ -221,6 +221,7 @@ extern json_spirit::Value aliasinfo(const json_spirit::Array& params, bool fHelp
 extern json_spirit::Value aliashistory(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value aliasfilter(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value aliasscan(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendtoalias(const json_spirit::Array& params, bool fHelp);
 
 // store key-value pairs using the blockchain
 extern json_spirit::Value datanew(const json_spirit::Array& params, bool fHelp);

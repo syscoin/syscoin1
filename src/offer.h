@@ -352,7 +352,7 @@ public:
 
     bool ScanOffers(
             const std::vector<unsigned char>& vchName,
-            int nMax,
+            unsigned int nMax,
             std::vector<std::pair<std::vector<unsigned char>, COffer> >& offerScan);
 
     bool ReconstructOfferIndex(CBlockIndex *pindexRescan);

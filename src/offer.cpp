@@ -136,9 +136,42 @@ string COffer::SerializeToString() {
 }
 
 //TODO implement
-bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, int nMax,
+bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, unsigned int nMax,
 		std::vector<std::pair<std::vector<unsigned char>, COffer> >& offerScan) {
-	return true;
+    leveldb::Iterator *pcursor = pofferdb->NewIterator();
+
+    CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+    ssKeySet << make_pair(string("offeri"), vchOffer);
+    string sType;
+    pcursor->Seek(ssKeySet.str());
+
+    while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
+        try {
+            leveldb::Slice slKey = pcursor->key();
+            CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+
+            ssKey >> sType;
+            if(sType == "offeri") {
+                leveldb::Slice slValue = pcursor->value();
+                CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+                vector<COffer> vtxPos;
+                ssValue >> vtxPos;
+                COffer txPos;
+                if (!vtxPos.empty())
+                    txPos = vtxPos.back();
+                offerScan.push_back(make_pair(vchOffer, txPos));
+            }
+            if (offerScan.size() >= nMax)
+                break;
+
+            pcursor->Next();
+        } catch (std::exception &e) {
+            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+        }
+    }
+    delete pcursor;
+    return true;
 }
 
 /**
@@ -1958,89 +1991,93 @@ Value offerinfo(const Array& params, bool fHelp) {
 }
 
 Value offerlist(const Array& params, bool fHelp) {
-	if (fHelp || 1 != params.size())
+    if (fHelp || 1 < params.size())
 		throw runtime_error("offerlist [<offer>]\n"
 				"list my own offers");
 
-	vector<unsigned char> vchOffer;
-	vector<unsigned char> vchLastOffer;
+    vector<unsigned char> vchName;
 
-	if (params.size() == 1)
-		vchOffer = vchFromValue(params[0]);
+    if (params.size() == 1)
+        vchName = vchFromValue(params[0]);
 
-	vector<unsigned char> vchOfferUniq;
-	if (params.size() == 1)
-		vchOfferUniq = vchFromValue(params[0]);
+    vector<unsigned char> vchNameUniq;
+    if (params.size() == 1)
+        vchNameUniq = vchFromValue(params[0]);
 
-	Array oRes;
-	map<vector<unsigned char>, int> vOffersI;
-	map<vector<unsigned char>, Object> vOffersO;
+    Array oRes;
+    map< vector<unsigned char>, int > vNamesI;
+    map< vector<unsigned char>, Object > vNamesO;
 
-	{
-		LOCK(pwalletMain->cs_wallet);
+    {
+        LOCK(pwalletMain->cs_wallet);
 
-		CDiskTxPos txindex;
-		uint256 hash;
-		CTransaction tx;
+        uint256 blockHash;
+        uint256 hash;
+        CTransaction tx;
 
-		vector<unsigned char> vchValue;
-		int nHeight;
+        vector<unsigned char> vchValue;
+        int nHeight;
 
-		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
-			hash = item.second.GetHash();
-			if (!pblocktree->ReadTxIndex(hash, txindex))
-				continue;
+        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+        {
+            // get txn hash, read txn index
+            hash = item.second.GetHash();
 
-			if (tx.nVersion != SYSCOIN_TX_VERSION)
-				continue;
+            if (!GetTransaction(hash, tx, blockHash, true))
+                continue;
 
-			// offer
-			if (!GetNameOfOfferTx(tx, vchOffer))
-				continue;
-			if (vchOfferUniq.size() > 0 && vchOfferUniq != vchOffer)
-				continue;
+            // skip non-syscoin txns
+            if (tx.nVersion != SYSCOIN_TX_VERSION)
+                continue;
 
-			// value
-			if (!GetValueOfOfferTx(tx, vchValue))
-				continue;
+            // decode txn, skip non-alias txns
+            vector<vector<unsigned char> > vvch;
+            int op, nOut;
+            if (!DecodeOfferTx(tx, op, nOut, vvch, -1) || !IsOfferOp(op))
+                continue;
 
-			// height
-			nHeight = GetOfferTxPosHeight(txindex);
+            // get the txn height
+            nHeight = GetOfferTxHashHeight(hash);
 
-			Object oOffer;
-			oOffer.push_back(Pair("offer", stringFromVch(vchOffer)));
-			oOffer.push_back(Pair("value", stringFromVch(vchValue)));
-			if (!IsOfferMine(pwalletMain->mapWallet[tx.GetHash()]))
-				oOffer.push_back(Pair("transferred", 1));
-			string strAddress = "";
-			GetOfferAddress(tx, strAddress);
-			oOffer.push_back(Pair("address", strAddress));
-			oOffer.push_back(
-					Pair("expires_in",
-							nHeight + GetOfferDisplayExpirationDepth(nHeight)
-									- pindexBest->nHeight));
-			if (nHeight + GetOfferDisplayExpirationDepth(nHeight)
-					- pindexBest->nHeight <= 0) {
-				oOffer.push_back(Pair("expired", 1));
-			}
+            // get the txn alias name
+            if(!GetNameOfOfferTx(tx, vchName))
+                continue;
 
-			// get last active offer only
-			if (vOffersI.find(vchOffer) != vOffersI.end()
-					&& vOffersI[vchOffer] > nHeight)
-				continue;
+            // skip this alias if it doesn't match the given filter value
+            if(vchNameUniq.size() > 0 && vchNameUniq != vchName)
+                continue;
 
-			vOffersI[vchOffer] = nHeight;
-			vOffersO[vchOffer] = oOffer;
-		}
+            // get the value of the alias txn
+            if(!GetValueOfOfferTx(tx, vchValue))
+                continue;
 
-	}
+            // build the output object
+            Object oName;
+            oName.push_back(Pair("name", stringFromVch(vchName)));
+            oName.push_back(Pair("value", stringFromVch(vchValue)));
 
-	BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, Object)& item, vOffersO)
-		oRes.push_back(item.second);
+            string strAddress = "";
+            GetOfferAddress(tx, strAddress);
+            oName.push_back(Pair("address", strAddress));
 
-	return oRes;
+            oName.push_back(Pair("expires_in", nHeight
+                                 + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
+            if(nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+                oName.push_back(Pair("expired", 1));
 
-	return (double) 0;
+            // get last active name only
+            if(vNamesI.find(vchName) != vNamesI.end() && vNamesI[vchName] > nHeight)
+                continue;
+
+            vNamesI[vchName] = nHeight;
+            vNamesO[vchName] = oName;
+        }
+    }
+
+    BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, Object)& item, vNamesO)
+        oRes.push_back(item.second);
+
+    return oRes;
 }
 
 Value offerhistory(const Array& params, bool fHelp) {

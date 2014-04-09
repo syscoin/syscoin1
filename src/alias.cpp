@@ -33,6 +33,8 @@ template<typename T>void ConvertTo(Value& value, bool fAllowNull=false);
 
 extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 
+bool GetValueOfAliasTxHash(const uint256 &txHash, vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
+
 //static const bool NAME_DEBUG = false;
 //extern int64 AmountFromValue(const Value& value);
 extern Object JSONRPCError(int code, const string& message);
@@ -44,7 +46,7 @@ extern CCriticalSection cs_mapTransactions;
 extern map<uint256, CTransaction> mapTransactions;
 
 // forward decls
-extern bool DecodeSyscoinScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch, CScript::const_iterator& pc);
+extern bool DecodeAliasScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch, CScript::const_iterator& pc);
 extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash, int nHashType, CScript& scriptSigRet, txnouttype& whichTypeRet);
 extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 extern bool IsConflictedAliasTx(CBlockTreeDB& txdb, const CTransaction& tx, vector<unsigned char>& name);
@@ -206,7 +208,7 @@ bool IsAliasMine(const CTransaction& tx) {
     return false;
 }
 
-bool IsAliasMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasnew /* = false*/) {
+bool IsAliasMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasnew) {
     if (tx.nVersion != SYSCOIN_TX_VERSION)
         return false;
 
@@ -214,7 +216,7 @@ bool IsAliasMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasn
 
     int op;
 
-    if (!DecodeSyscoinScript(txout.scriptPubKey, op, vvch) || !IsAliasOp(op))
+    if (!DecodeAliasScript(txout.scriptPubKey, op, vvch) || !IsAliasOp(op))
         return false;
     
     if (ignore_aliasnew && op == OP_ALIAS_NEW)
@@ -244,7 +246,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			prevOutput = &tx.vin[i].prevout;
 			prevCoins = &inputs.GetCoins(prevOutput->hash);
             vector<vector<unsigned char> > vvch;
-            if (DecodeSyscoinScript(prevCoins->vout[prevOutput->n].scriptPubKey, prevOp, vvch)) {
+            if (DecodeAliasScript(prevCoins->vout[prevOutput->n].scriptPubKey, prevOp, vvch)) {
 				found = true;
                 vvchPrevArgs = vvch;
 				break;
@@ -399,7 +401,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     vector<unsigned char> vchVal;
                     CAliasIndex txPos2;
                     uint256 hash;
-                    GetValueOfNameTxHash(tx.GetHash(), vchVal, hash, nHeight);
+                    GetValueOfAliasTxHash(tx.GetHash(), vchVal, hash, nHeight);
                     txPos2.nHeight = nHeight;
                     txPos2.vValue = vchVal;
                     txPos2.txHash = tx.GetHash();
@@ -453,7 +455,7 @@ bool ExtractAliasAddress(const CScript& script, string& address) {
     }
     vector<vector<unsigned char> > vvch;
     int op;
-    if (!DecodeSyscoinScript(script, op, vvch))
+    if (!DecodeAliasScript(script, op, vvch))
         return false;
 
     string strOp = aliasFromOp(op);
@@ -514,8 +516,42 @@ string stringFromVch(const vector<unsigned char> &vch) {
 
 bool CNameDB::ScanNames(
         const std::vector<unsigned char>& vchName,
-        int nMax,
+        unsigned int nMax,
         std::vector<std::pair<std::vector<unsigned char>, CAliasIndex> >& nameScan) {
+
+    leveldb::Iterator *pcursor = paliasdb->NewIterator();
+
+    CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+    ssKeySet << make_pair(string("namei"), vchName);
+    string sType;
+    pcursor->Seek(ssKeySet.str());
+
+    while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
+        try {
+            leveldb::Slice slKey = pcursor->key();
+            CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+
+            ssKey >> sType;
+            if(sType == "namei") {
+                leveldb::Slice slValue = pcursor->value();
+                CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+                vector<CAliasIndex> vtxPos;
+                ssValue >> vtxPos;                
+                CAliasIndex txPos;
+                if (!vtxPos.empty()) 
+                    txPos = vtxPos.back();
+                nameScan.push_back(make_pair(vchName, txPos));
+            }
+            if (nameScan.size() >= nMax)
+                break;
+        
+            pcursor->Next();
+        } catch (std::exception &e) {
+            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+        }
+    }
+    delete pcursor;
     return true;
 }
 
@@ -642,7 +678,7 @@ CScript RemoveAliasScriptPrefix(const CScript& scriptIn) {
     vector<vector<unsigned char> > vvch;
     CScript::const_iterator pc = scriptIn.begin();
 
-    if (!DecodeSyscoinScript(scriptIn, op, vvch,  pc))
+    if (!DecodeAliasScript(scriptIn, op, vvch,  pc))
         throw runtime_error("RemoveAliasScriptPrefix() : could not decode name script");
     return CScript(pc, scriptIn.end());
 }
@@ -672,7 +708,8 @@ bool SignNameSignature(const CTransaction& txFrom, CTransaction& txTo, unsigned 
     return true;
 }
 
-bool CreateTransactionWithInputTx(const vector<pair<CScript, int64> >& vecSend, CWalletTx& wtxIn, int nTxOut, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, const string& txData) {
+bool CreateTransactionWithInputTx(const vector<pair<CScript, int64> >& vecSend, CWalletTx& wtxIn, int nTxOut, CWalletTx& wtxNew,
+                                  CReserveKey& reservekey, int64& nFeeRet, const string& txData) {
     int64 nValue = 0;
     BOOST_FOREACH(const PAIRTYPE(CScript, int64)& s, vecSend) {
         if (nValue < 0) return false;
@@ -707,13 +744,18 @@ bool CreateTransactionWithInputTx(const vector<pair<CScript, int64> >& vecSend, 
 		// Choose coins to use
 		set<pair<const CWalletTx*, unsigned int> > setCoins;
 		int64 nValueIn = 0;
-		printf("CreateTransactionWithInputTx: SelectCoins(%s), nTotalValue = %s, nWtxinCredit = %s\n", FormatMoney(nTotalValue - nWtxinCredit).c_str(), FormatMoney(nTotalValue).c_str(), FormatMoney(nWtxinCredit).c_str());
+        printf("CreateTransactionWithInputTx: SelectCoins(%s), nTotalValue = %s, nWtxinCredit = %s\n",
+               FormatMoney(nTotalValue - nWtxinCredit).c_str(),
+               FormatMoney(nTotalValue).c_str(),
+               FormatMoney(nWtxinCredit).c_str());
 		if (nTotalValue - nWtxinCredit > 0) {
 			if (!pwalletMain->SelectCoins(nTotalValue - nWtxinCredit, setCoins, nValueIn))
 				return false;
 		}
 
-		printf("CreateTransactionWithInputTx: selected %d tx outs, nValueIn = %s\n", (int)setCoins.size(), FormatMoney(nValueIn).c_str() );
+        printf("CreateTransactionWithInputTx: selected %d tx outs, nValueIn = %s\n",
+               (int)setCoins.size(),
+               FormatMoney(nValueIn).c_str() );
 
 		vector<pair<const CWalletTx*, unsigned int> >
 			vecCoins(setCoins.begin(), setCoins.end());
@@ -842,20 +884,20 @@ string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, C
     return "";
 }
 
-int GetNameTxHashHeight(const uint256 txHash) {
+int GetAliasTxHashHeight(const uint256 txHash) {
 	CDiskTxPos postx;
 	pblocktree->ReadTxIndex(txHash, postx);
     return postx.nPos;
 }
 
-bool GetValueOfNameTxHash(const uint256 &txHash, vector<unsigned char>& vchValue, uint256& hash, int& nHeight) {
-    nHeight = GetNameTxHashHeight(txHash);
+bool GetValueOfAliasTxHash(const uint256 &txHash, vector<unsigned char>& vchValue, uint256& hash, int& nHeight) {
+    nHeight = GetAliasTxHashHeight(txHash);
     CTransaction tx;
     uint256 blockHash;
     if (!GetTransaction(txHash,tx, blockHash, true))
-        return error("GetValueOfNameTxHash() : could not read tx from disk");
-    if (!GetValueOfNameTx(tx, vchValue))
-        return error("GetValueOfNameTxHash() : could not decode value from tx");
+        return error("GetValueOfAliasTxHash() : could not read tx from disk");
+    if (!GetValueOfAliasTx(tx, vchValue))
+        return error("GetValueOfAliasTxHash() : could not decode value from tx");
     hash = tx.GetHash();
     return true;
 }
@@ -890,12 +932,12 @@ bool GetTxOfName(CNameDB& dbName, const vector<unsigned char> &vchName, CTransac
     return true;
 }
 
-bool GetNameAddress(const CTransaction& tx, std::string& strAddress) {
+bool GetAliasAddress(const CTransaction& tx, std::string& strAddress) {
     int op, nOut = 0;
     vector<vector<unsigned char> > vvch;
 
     if(!DecodeAliasTx(tx, op, nOut, vvch, -1))
-    	return error("GetNameAddress() : could not decode name tx.");
+    	return error("GetAliasAddress() : could not decode name tx.");
 
     const CTxOut& txout = tx.vout[nOut];
 
@@ -904,19 +946,18 @@ bool GetNameAddress(const CTransaction& tx, std::string& strAddress) {
     return true;
 }
 
-bool GetNameAddress(const CDiskTxPos& txPos, std::string& strAddress) {
+bool GetAliasAddress(const CDiskTxPos& txPos, std::string& strAddress) {
     CTransaction tx;
     if (!tx.ReadFromDisk(txPos))
-        return error("GetNameAddress() : could not read tx from disk");
-    return GetNameAddress(tx, strAddress);
+        return error("GetAliasAddress() : could not read tx from disk");
+    return GetAliasAddress(tx, strAddress);
 }
 
-/*
-Value sendtoname(const Array& params, bool fHelp)
+Value sendtoalias(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
-            "sendtoname <syscoinname> <amount> [comment] [comment-to]\n"
+            "sendtoalias <syscoinname> <amount> [comment] [comment-to]\n"
             "<amount> is a real and is rounded to the nearest 0.01"
             + HelpRequiringPassphrase());
 
@@ -926,8 +967,8 @@ Value sendtoname(const Array& params, bool fHelp)
 
     string strAddress;
     CTransaction tx;
-    GetTxOfName(dbName, vchName, tx);
-    GetNameAddress(tx, strAddress);
+    GetTxOfName(*paliasdb, vchName, tx);
+    GetAliasAddress(tx, strAddress);
 
     uint160 hash160;
     if (!AddressToHash160(strAddress.c_str(), hash160))
@@ -944,19 +985,18 @@ Value sendtoname(const Array& params, bool fHelp)
         wtx.mapValue["to"]      = params[3] .get_str();
 
 	{
-    LOCK(cs_main);
+        LOCK(cs_main);
 
         EnsureWalletIsUnlocked();
 
-	string strError = pwalletMain->SendMoneyToDestination(strAddress, nAmount, wtx);
-	if (strError != "")
-		throw JSONRPCError(RPC_WALLET_ERROR, strError);
-
+        string strError = pwalletMain->SendMoneyToDestination(CBitcoinAddress(strAddress).Get(), nAmount, wtx);
+        if (strError != "")
+            throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
 
     return wtx.GetHash().GetHex();
 }
-*/
+
 int IndexOfNameOutput(const CTransaction& tx) {
     vector<vector<unsigned char> > vvch;
 
@@ -970,7 +1010,7 @@ int IndexOfNameOutput(const CTransaction& tx) {
 }
 
 
-bool GetNameOfTx(const CTransaction& tx, vector<unsigned char>& name) {
+bool GetAliasOfTx(const CTransaction& tx, vector<unsigned char>& name) {
     if (tx.nVersion != SYSCOIN_TX_VERSION)
         return false;
     vector<vector<unsigned char> > vvchArgs;
@@ -979,7 +1019,7 @@ bool GetNameOfTx(const CTransaction& tx, vector<unsigned char>& name) {
 
     bool good = DecodeAliasTx(tx, op, nOut, vvchArgs, -1);
     if (!good)
-        return error("GetNameOfTx() : could not decode a syscoin tx");
+        return error("GetAliasOfTx() : could not decode a syscoin tx");
 
     switch (op) {
         case OP_ALIAS_ACTIVATE:
@@ -1012,7 +1052,7 @@ bool IsConflictedAliasTx(CBlockTreeDB& txdb, const CTransaction& tx, vector<unsi
     return false;
 }
 
-bool GetValueOfNameTx(const CTransaction& tx, vector<unsigned char>& value)
+bool GetValueOfAliasTx(const CTransaction& tx, vector<unsigned char>& value)
 {
     vector<vector<unsigned char> > vvch;
 
@@ -1046,7 +1086,7 @@ bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, vector<vector<uns
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
 		const CTxOut& out = tx.vout[i];
 		vector<vector<unsigned char> > vvchRead;
-		if (DecodeSyscoinScript(out.scriptPubKey, op, vvchRead)) {
+		if (DecodeAliasScript(out.scriptPubKey, op, vvchRead)) {
 			nOut = i;
 			found = true;
 			vvch = vvchRead;
@@ -1058,7 +1098,7 @@ bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, vector<vector<uns
     return found;
 }
 
-bool GetValueOfNameTx(const CCoins& tx, vector<unsigned char>& value) {
+bool GetValueOfAliasTx(const CCoins& tx, vector<unsigned char>& value) {
     vector<vector<unsigned char> > vvch;
 
     int op;
@@ -1091,7 +1131,7 @@ bool DecodeAliasTx(const CCoins& tx, int& op, int& nOut, vector<vector<unsigned 
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
         const CTxOut& out = tx.vout[i];
         vector<vector<unsigned char> > vvchRead;
-        if (DecodeSyscoinScript(out.scriptPubKey, op, vvchRead)) {
+        if (DecodeAliasScript(out.scriptPubKey, op, vvchRead)) {
             nOut = i;
             found = true;
             vvch = vvchRead;
@@ -1103,12 +1143,12 @@ bool DecodeAliasTx(const CCoins& tx, int& op, int& nOut, vector<vector<unsigned 
 }
 
 
-bool DecodeSyscoinScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch) {
+bool DecodeAliasScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch) {
     CScript::const_iterator pc = script.begin();
-    return DecodeSyscoinScript(script, op, vvch, pc);
+    return DecodeAliasScript(script, op, vvch, pc);
 }
 
-bool DecodeSyscoinScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch, CScript::const_iterator& pc) {
+bool DecodeAliasScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch, CScript::const_iterator& pc) {
     opcodetype opcode;
     if (!script.GetOp(pc, opcode))
         return false;
@@ -1251,7 +1291,7 @@ Value aliasactivate(const Array& params, bool fHelp) {
     BOOST_FOREACH(CTxOut& out, wtxIn.vout) {
         vector<vector<unsigned char> > vvch;
         int op;
-        if (DecodeSyscoinScript(out.scriptPubKey, op, vvch)) {
+        if (DecodeAliasScript(out.scriptPubKey, op, vvch)) {
             if (op != OP_ALIAS_NEW)
                 throw runtime_error("previous transaction wasn't a aliasnew");
             vchHash = vvch[0];
@@ -1356,14 +1396,13 @@ Value aliasupdate(const Array& params, bool fHelp) {
 }
 
 Value aliaslist(const Array& params, bool fHelp) {
-    if (fHelp || 1 != params.size())
+    if (fHelp || 1 < params.size())
         throw runtime_error(
                 "aliaslist [<name>]\n"
                 "list my own aliases"
                 );
 
     vector<unsigned char> vchName;
-    vector<unsigned char> vchLastName;
 
     if (params.size() == 1)
         vchName = vchFromValue(params[0]);
@@ -1379,7 +1418,7 @@ Value aliaslist(const Array& params, bool fHelp) {
     {
         LOCK(pwalletMain->cs_wallet);
 
-        CDiskTxPos txindex;
+        uint256 blockHash;
         uint256 hash;
         CTransaction tx;
 
@@ -1388,39 +1427,52 @@ Value aliaslist(const Array& params, bool fHelp) {
 
         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
         {
+            // get txn hash, read txn index
             hash = item.second.GetHash();
-            if(!pblocktree->ReadTxIndex(hash, txindex))
+
+            if (!GetTransaction(hash, tx, blockHash, true))
                 continue;
 
+            // skip non-syscoin txns
             if (tx.nVersion != SYSCOIN_TX_VERSION)
                 continue;
 
-            // name
-            if(!GetNameOfTx(tx, vchName))
+            // decode txn, skip non-alias txns
+            vector<vector<unsigned char> > vvch;
+            int op, nOut;
+            if (!DecodeAliasTx(tx, op, nOut, vvch, -1) || !IsAliasOp(op)) 
                 continue;
+
+            // get the txn height
+            nHeight = GetAliasTxHashHeight(hash);
+
+            // get the txn alias name
+            if(!GetAliasOfTx(tx, vchName))
+                continue;
+
+            // skip this alias if it doesn't match the given filter value
             if(vchNameUniq.size() > 0 && vchNameUniq != vchName)
                 continue;
 
-            // value
-            if(!GetValueOfNameTx(tx, vchValue))
+            // get the value of the alias txn
+            if(!GetValueOfAliasTx(tx, vchValue))
                 continue;
 
-            // height
-            nHeight = GetOfferTxPosHeight(txindex);
-
+            // build the output object
             Object oName;
             oName.push_back(Pair("name", stringFromVch(vchName)));
             oName.push_back(Pair("value", stringFromVch(vchValue)));
+            
             if (!IsAliasMine(pwalletMain->mapWallet[tx.GetHash()]))
                 oName.push_back(Pair("transferred", 1));
+            
             string strAddress = "";
-            GetNameAddress(tx, strAddress);
+            GetAliasAddress(tx, strAddress);
             oName.push_back(Pair("address", strAddress));
             oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
+            
             if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
-            {
                 oName.push_back(Pair("expired", 1));
-            }
 
             // get last active name only
             if(vNamesI.find(vchName) != vNamesI.end() && vNamesI[vchName] > nHeight)
@@ -1477,13 +1529,13 @@ Value aliasinfo(const Array& params, bool fHelp)
 
     
     uint256 hash;
-    if (GetValueOfNameTxHash(txHash, vchValue, hash, nHeight)) {
+    if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
         oName.push_back(Pair("name", stringFromVch(vchName)));
         string value = stringFromVch(vchValue);
         oName.push_back(Pair(tx.data.size()?"filename":"value", value));
         oName.push_back(Pair("txid", tx.GetHash().GetHex()));
         string strAddress = "";
-        GetNameAddress(tx, strAddress);
+        GetAliasAddress(tx, strAddress);
         oName.push_back(Pair("address", strAddress));
         oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
         if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0) {
@@ -1537,13 +1589,13 @@ Value aliashistory(const Array& params, bool fHelp)
         vector<unsigned char> vchValue;
         int nHeight;
         uint256 hash;
-        if (GetValueOfNameTxHash(txHash, vchValue, hash, nHeight)) {
+        if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
             oName.push_back(Pair("name", name));
             string value = stringFromVch(vchValue);
             oName.push_back(Pair("value", value));
             oName.push_back(Pair("txid", tx.GetHash().GetHex()));
             string strAddress = "";
-            GetNameAddress(tx, strAddress);
+            GetAliasAddress(tx, strAddress);
             oName.push_back(Pair("address", strAddress));
             oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
             if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0) {
@@ -1562,8 +1614,7 @@ Value aliashistory(const Array& params, bool fHelp)
  * @param  fHelp  [description]
  * @return        [description]
  */
-Value aliasfilter(const Array& params, bool fHelp)
-{
+Value aliasfilter(const Array& params, bool fHelp) {
     if (fHelp || params.size() > 5)
         throw runtime_error(
                 "aliasfilter [[[[[regexp] maxage=36000] from=0] nb=0] stat]\n"
@@ -1586,7 +1637,6 @@ Value aliasfilter(const Array& params, bool fHelp)
     int nCountFrom = 0;
     int nCountNb = 0;
 
-
     if (params.size() > 0)
         strRegexp = params[0].get_str();
 
@@ -1602,8 +1652,6 @@ Value aliasfilter(const Array& params, bool fHelp)
     if (params.size() > 4)
         fStat = (params[4].get_str() == "stat" ? true : false);
 
-
-    //CNameDB dbName("r");
     Array oRes;
 
     vector<unsigned char> vchName;
@@ -1641,12 +1689,10 @@ Value aliasfilter(const Array& params, bool fHelp)
         uint256 blockHash;
         uint256 txHash = txName.txHash;
         if ((nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
-            || !GetTransaction(txHash, tx, blockHash, true))
-        {
+            || !GetTransaction(txHash, tx, blockHash, true)) {
             oName.push_back(Pair("expired", 1));
         }
-        else
-        {
+        else {
             vector<unsigned char> vchValue = txName.vValue;
             string value = stringFromVch(vchValue);
             oName.push_back(Pair("value", value));
@@ -1660,12 +1706,10 @@ Value aliasfilter(const Array& params, bool fHelp)
             break;
     }
 
-    if(fStat)
-    {
+    if(fStat) {
         Object oStat;
         oStat.push_back(Pair("blocks",    (int)nBestHeight));
         oStat.push_back(Pair("count",     (int)oRes.size()));
-        //oStat.push_back(Pair("sha256sum", SHA256(oRes), true));
         return oStat;
     }
 
@@ -1775,7 +1819,7 @@ Value aliasclean(const Array& params, bool fHelp) {
             wtx.RemoveFromMemoryPool();
             pwalletMain->EraseFromWallet(wtx.GetHash());
             vector<unsigned char> vchName;
-            if (GetNameOfTx(wtx, vchName) && mapAliasesPending.count(vchName)) {
+            if (GetAliasOfTx(wtx, vchName) && mapAliasesPending.count(vchName)) {
                 string name = stringFromVch(vchName);
                 printf("name_clean() : erase %s from pending of name %s", 
                         wtx.GetHash().GetHex().c_str(), name.c_str());
@@ -1820,7 +1864,7 @@ Value deletetransaction(const Array& params, bool fHelp)
       wtx.RemoveFromMemoryPool();
       pwalletMain->EraseFromWallet(wtx.GetHash());
       vector<unsigned char> vchName;
-      if (GetNameOfTx(wtx, vchName) && mapAliasesPending.count(vchName)) {
+      if (GetAliasOfTx(wtx, vchName) && mapAliasesPending.count(vchName)) {
         printf("deletetransaction() : remove from pending");
         mapAliasesPending[vchName].erase(wtx.GetHash());
       }
@@ -1973,7 +2017,7 @@ Value dataactivate(const Array& params, bool fHelp)
     BOOST_FOREACH(CTxOut& out, wtxIn.vout) {
         vector<vector<unsigned char> > vvch;
         int op;
-        if (DecodeSyscoinScript(out.scriptPubKey, op, vvch)) {
+        if (DecodeAliasScript(out.scriptPubKey, op, vvch)) {
             if (op != OP_ALIAS_NEW)
                 throw runtime_error("previous transaction wasn't a datanew");
             vchHash = vvch[0];

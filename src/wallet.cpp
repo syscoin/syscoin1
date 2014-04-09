@@ -637,7 +637,8 @@ int64 CWallet::GetDebitInclName(const CTxIn &txin) const
             if (txin.prevout.n < prev.vout.size())
                 if (IsMine(prev.vout[txin.prevout.n]) 
                     || IsAliasMine(prev, prev.vout[txin.prevout.n]) 
-                    || IsOfferMine(prev, prev.vout[txin.prevout.n]))
+                    || IsOfferMine(prev, prev.vout[txin.prevout.n])
+                    || IsCertMine(prev, prev.vout[txin.prevout.n]))
                     return prev.vout[txin.prevout.n].nValue;
         }
     }
@@ -758,19 +759,24 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
                 }
             }
         }
+
         vector<vector<unsigned char> > vvch;
         int op;
-        if (DecodeSyscoinScript(txout.scriptPubKey, op, vvch)) {
+        if (DecodeAliasScript(txout.scriptPubKey, op, vvch) && IsAliasOp(op)) {
             nCarriedOverCoin -= txout.nValue;
             if (op != OP_ALIAS_NEW)
                 continue; // Ignore locked coin
         }
-        if (DecodeOfferScript(txout.scriptPubKey, op, vvch)) {
+        else if (DecodeOfferScript(txout.scriptPubKey, op, vvch) && IsOfferOp(op)) {
             nCarriedOverCoin -= txout.nValue;
             if (op != OP_OFFER_NEW)
                 continue;
         }
-
+        else if (DecodeCertScript(txout.scriptPubKey, op, vvch) && IsCertOp(op)) {
+            nCarriedOverCoin -= txout.nValue;
+            if (op != OP_CERTISSUER_NEW)
+                continue;
+        }
 
         // Don't report 'change' txouts
         if (nDebit > 0 && pwallet->IsChange(txout))
@@ -781,7 +787,8 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
 
         if (pwallet->IsMine(txout) 
             || IsAliasMine(*this, txout, true) 
-            || IsOfferMine(*this, txout, true))
+            || IsOfferMine(*this, txout, true)
+            || IsCertMine(*this, txout, true))
             listReceived.push_back(make_pair(address, txout.nValue));
     }
 
