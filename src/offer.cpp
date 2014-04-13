@@ -276,7 +276,7 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 			int64 nTheFee = GetOfferNetFee(tx);
 			InsertOfferFee(pindex, tx.GetHash(), nTheFee);
 
-			printf( "RECONSTRUCT OFFER: op=%s offer=%s title=%s qty=%d hash=%s height=%d fees=%llu\n",
+			printf( "RECONSTRUCT OFFER: op=%s offer=%s title=%s qty=%llu hash=%s height=%d fees=%llu\n",
 					offerFromOp(op).c_str(),
 					stringFromVch(vvchArgs[0]).c_str(),
 					stringFromVch(txOffer.sTitle).c_str(),
@@ -1325,7 +1325,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					}
 
 					// debug
-					printf( "CONNECTED OFFER: op=%s offer=%s title=%s qty=%d hash=%s height=%d fees=%llu\n",
+					printf( "CONNECTED OFFER: op=%s offer=%s title=%s qty=%llu hash=%s height=%d fees=%llu\n",
 							offerFromOp(op).c_str(),
 							stringFromVch(vvchArgs[0]).c_str(),
 							stringFromVch(theOffer.sTitle).c_str(),
