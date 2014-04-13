@@ -1028,7 +1028,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			// check for enough fees
 			nNetFee = GetOfferNetFee(tx);
-			if (nNetFee < GetOfferNetworkFee(8, pindexBlock->nHeight)-COIN)
+			if (nNetFee < GetOfferNetworkFee(4, pindexBlock->nHeight)-COIN)
 				return error(
 						"CheckOfferInputs() : got tx %s with fee too low %lu",
 						tx.GetHash().GetHex().c_str(),
