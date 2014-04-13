@@ -1947,12 +1947,12 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("txid", ca.txHash.GetHex()));
 			oOfferAccept.push_back(Pair("height", sHeight));
 			oOfferAccept.push_back(Pair("time", sTime));
-			oOfferAccept.push_back(Pair("quantity", ca.nQty));
+			oOfferAccept.push_back(Pair("quantity", strprint("%llu", ca.nQty)));
 			oOfferAccept.push_back(Pair("price", (double)ca.nPrice / COIN));
-			oOfferAccept.push_back(Pair("paid", ca.bPaid?"true":"false"));
+			oOfferAccept.push_back(Pair("paid", ca.bPaid ? "true" : "false"));
 			if(ca.bPaid) {
 				oOfferAccept.push_back(Pair("fee", (double)ca.nFee / COIN));
-				oOfferAccept.push_back(Pair("paytxid", ca.txPayId.GetHex()));
+				oOfferAccept.push_back(Pair("paytxid", ca.txPayId.GetHex() ));
 				oOfferAccept.push_back(Pair("message", stringFromVch(ca.vchMessage)));
 			}
 			aoOfferAccepts.push_back(oOfferAccept);
