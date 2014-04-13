@@ -23,8 +23,8 @@ class CCertDB;
 extern CCertDB *pcertdb;
 int GetCertExpirationDepth(int nHeight);
 
-class CNameDB;
-extern CNameDB *paliasdb;
+class CAliasDB;
+extern CAliasDB *paliasdb;
 int GetAliasExpirationDepth(int nHeight);
 
 class COfferAccept;

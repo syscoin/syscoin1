@@ -25,7 +25,7 @@
 using namespace std;
 using namespace boost;
 
-extern CNameDB *paliasdb;
+extern CAliasDB *paliasdb;
 extern COfferDB *pofferdb;
 extern CCertDB *pcertdb;
 
@@ -900,7 +900,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex);
                 pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
-                paliasdb = new CNameDB(nNameDBCache, false, fReindex);
+                paliasdb = new CAliasDB(nNameDBCache, false, fReindex);
                 pofferdb = new COfferDB(nNameDBCache*2, false, fReindex);
                 pcertdb = new CCertDB(nNameDBCache*2, false, fReindex);
 

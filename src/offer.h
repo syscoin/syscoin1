@@ -54,9 +54,9 @@ public:
     std::vector<unsigned char> vchMessage;
     std::vector<unsigned char> vchAddress;
 	uint256 txHash;
-	unsigned int nHeight;
-	unsigned long nTime;
-	int nQty;
+	uint64 nHeight;
+	uint64 nTime;
+	int64 nQty;
 	uint64 nPrice;
 	uint64 nFee;
 	bool bPaid;
@@ -70,13 +70,13 @@ public:
         READWRITE(vchMessage);
         READWRITE(vchAddress);
 		READWRITE(txHash);
+        READWRITE(txPayId);
 		READWRITE(nHeight);
     	READWRITE(nTime);
         READWRITE(nQty);
     	READWRITE(nPrice);
         READWRITE(nFee);
     	READWRITE(bPaid);
-        READWRITE(txPayId);
     )
 
     friend bool operator==(const COfferAccept &a, const COfferAccept &b) {
@@ -124,16 +124,16 @@ public:
 	std::vector<unsigned char> vchRand;
     std::vector<unsigned char> vchPaymentAddress;
     uint256 txHash;
-    unsigned int nHeight;
-    unsigned long nTime;
+    uint64 nHeight;
+    uint64 nTime;
     uint256 hash;
-    unsigned int n;
+    uint64 n;
 	std::vector<unsigned char> sCategory;
 	std::vector<unsigned char> sTitle;
 	std::vector<unsigned char> sDescription;
 	uint64 nPrice;
-	int nQty;
-	int64 nFee;
+	int64 nQty;
+	uint64 nFee;
 	std::vector<COfferAccept>accepts;
 
 	COffer() { 
@@ -143,14 +143,14 @@ public:
     IMPLEMENT_SERIALIZE (
         READWRITE(vchRand);
         READWRITE(vchPaymentAddress);
-		READWRITE(txHash);
-		READWRITE(nHeight);
-		READWRITE(nTime);
-    	READWRITE(hash);
-    	READWRITE(n);
         READWRITE(sCategory);
         READWRITE(sTitle);
         READWRITE(sDescription);
+		READWRITE(txHash);
+        READWRITE(hash);
+		READWRITE(nHeight);
+		READWRITE(nTime);
+    	READWRITE(n);
     	READWRITE(nPrice);
     	READWRITE(nQty);
     	READWRITE(nFee);
@@ -202,8 +202,8 @@ public:
         return false;
     }
 
-    int GetRemQty() {
-        int nRet = nQty;
+    int64 GetRemQty() {
+        int64 nRet = nQty;
         for(unsigned int i=0;i<accepts.size();i++) 
             nRet -= accepts[i].nQty;
         return nRet;
@@ -261,9 +261,9 @@ public:
 class COfferFee {
 public:
 	uint256 hash;
-	unsigned int nHeight;
-	unsigned long nTime;
-	int64 nFee;
+	uint64 nHeight;
+	uint64 nTime;
+	uint64 nFee;
 
 	COfferFee() {
 		nTime = 0; nHeight = 0; hash = 0; nFee = 0;

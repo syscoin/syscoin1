@@ -54,9 +54,9 @@ public:
     std::vector<unsigned char> vchTitle;
     std::vector<unsigned char> vchData;
     uint256 txHash;
-    unsigned int nHeight;
-    unsigned long nTime;
-    int64 nFee;
+    uint64 nHeight;
+    uint64 nTime;
+    uint64 nFee;
     uint256 txPayId;
 
     CCertItem() {
@@ -67,10 +67,10 @@ public:
         READWRITE(vchTitle);
         READWRITE(vchData);
         READWRITE(txHash);
+        READWRITE(txPayId);
         READWRITE(nHeight);
         READWRITE(nTime);
         READWRITE(nFee);
-        READWRITE(txPayId);
     )
 
     friend bool operator==(const CCertItem &a, const CCertItem &b) {
@@ -113,11 +113,11 @@ public:
     std::vector<unsigned char> vchTitle;
     std::vector<unsigned char> vchData;
     uint256 txHash;
-    unsigned int nHeight;
-    unsigned long nTime;
+    uint64 nHeight;
+    uint64 nTime;
     uint256 hash;
-    unsigned int n;
-    int64 nFee;
+    uint64 n;
+    uint64 nFee;
     std::vector<CCertItem>certs;
 
     CCertIssuer() {
@@ -215,7 +215,7 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { nHeight = n = 0; txHash = hash = 0; certs.clear(); vchRand.clear(); vchTitle.clear(); vchData.clear();}
+    void SetNull() { nHeight = n = 0; txHash = hash = 0; certs.clear(); vchRand.clear(); vchTitle.clear(); vchData.clear(); }
     bool IsNull() const { return (n == 0 && txHash == 0 && hash == 0 && nHeight == 0 && vchRand.size() == 0); }
 
     bool UnserializeFromTx(const CTransaction &tx);
@@ -226,9 +226,9 @@ public:
 class CCertFee {
 public:
     uint256 hash;
-    unsigned int nHeight;
-    unsigned long nTime;
-    int64 nFee;
+    uint64 nHeight;
+    uint64 nTime;
+    uint64 nFee;
 
     CCertFee() {
         nTime = 0; nHeight = 0; hash = 0; nFee = 0;

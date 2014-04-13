@@ -488,11 +488,9 @@ bool IsOfferMine(const CTransaction& tx) {
 	int op, nOut;
 
 	bool good = DecodeOfferTx(tx, op, nOut, vvch, -1);
-	if (!good) {
-		error( "IsOfferMine() : no output out script in offer tx %s\n",
-				tx.ToString().c_str());
+	if (!good) 
 		return false;
-	}
+	
 	if(!IsOfferOp(op))
 		return false;
 
@@ -1943,8 +1941,8 @@ Value offerinfo(const Array& params, bool fHelp) {
 		for(unsigned int i=0;i<theOffer.accepts.size();i++) {
 			COfferAccept ca = theOffer.accepts[i];
 			Object oOfferAccept;
-			string sTime = strprintf("%lu", ca.nTime);
-            string sHeight = strprintf("%u", ca.nHeight);
+			string sTime = strprintf("%llu", ca.nTime);
+            string sHeight = strprintf("%llu", ca.nHeight);
 			oOfferAccept.push_back(Pair("id", HexStr(ca.vchRand)));
 			oOfferAccept.push_back(Pair("txid", ca.txHash.GetHex()));
 			oOfferAccept.push_back(Pair("height", sHeight));
@@ -1978,7 +1976,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOffer.push_back(Pair("payment_address", stringFromVch(theOffer.vchPaymentAddress)));
 			oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
 			oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
-			oOffer.push_back(Pair("quantity", theOffer.GetRemQty()));
+			oOffer.push_back(Pair("quantity", strprintf("%llu", theOffer.GetRemQty())));
 			oOffer.push_back(Pair("price", (double)theOffer.nPrice / COIN));
 			oOffer.push_back(Pair("fee", (double)theOffer.nFee / COIN));
 			oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));

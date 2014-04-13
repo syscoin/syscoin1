@@ -26,7 +26,7 @@ using namespace json_spirit;
 int64 nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
 
-extern CNameDB *paliasdb;
+extern CAliasDB *paliasdb;
 
 template<typename T> void ConvertTo(Value& value, bool fAllowNull=false);
 

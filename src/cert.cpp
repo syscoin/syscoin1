@@ -488,11 +488,9 @@ bool IsCertMine(const CTransaction& tx) {
     int op, nOut;
 
     bool good = DecodeCertTx(tx, op, nOut, vvch, -1);
-    if (!good) {
-        error( "IsCertMine() : no output out script in certissuer tx %s\n",
-                tx.ToString().c_str());
+    if (!good) 
         return false;
-    }
+    
     if(!IsCertOp(op))
         return false;
 
@@ -1861,8 +1859,8 @@ Value certissuerinfo(const Array& params, bool fHelp) {
         for(unsigned int i=0;i<theCertIssuer.certs.size();i++) {
             CCertItem ca = theCertIssuer.certs[i];
             Object oCertItem;
-            string sTime = strprintf("%lu", ca.nTime);
-            string sHeight = strprintf("%d", ca.nHeight);
+            string sTime = strprintf("%llu", ca.nTime);
+            string sHeight = strprintf("%llu", ca.nHeight);
 
             oCertItem.push_back(Pair("id", HexStr(ca.vchRand)));
             oCertItem.push_back(Pair("txid", ca.txHash.GetHex()));
@@ -1926,8 +1924,8 @@ Value certinfo(const Array& params, bool fHelp) {
         vector<unsigned char> vchValue;
 
         CCertItem ca = theCertItem;
-        string sTime = strprintf("%lu", ca.nTime);
-        string sHeight = strprintf("%d", ca.nHeight);
+        string sTime = strprintf("%llu", ca.nTime);
+        string sHeight = strprintf("%llu", ca.nHeight);
         oCertItem.push_back(Pair("id", HexStr(ca.vchRand)));
         oCertItem.push_back(Pair("txid", ca.txHash.GetHex()));
         oCertItem.push_back(Pair("height", sHeight));

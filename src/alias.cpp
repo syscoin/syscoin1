@@ -19,7 +19,7 @@
 using namespace std;
 using namespace json_spirit;
 
-extern CNameDB *paliasdb;
+extern CAliasDB *paliasdb;
 
 map<vector<unsigned char>, uint256> mapMyAliases;
 map<vector<unsigned char>, set<uint256> > mapAliasesPending;
@@ -193,18 +193,18 @@ bool IsAliasMine(const CTransaction& tx) {
     vector<vector<unsigned char> > vvch;
     int op, nOut;
 
-    if (!DecodeAliasTx(tx, op, nOut, vvch, -1) || !IsAliasOp(op)) {
-        error("IsAliasMine() : no output out script in alias tx %s\n",
-        		tx.ToString().c_str());
+    if (!DecodeAliasTx(tx, op, nOut, vvch, -1)) 
         return false;
-    }
+
+    if(!IsAliasOp(op))
+        return false;
 
     const CTxOut& txout = tx.vout[nOut];
     if (IsMyAlias(tx, txout)) {
-        printf("IsAliasMine() : found my transaction %s nout %d\n",
-        		tx.GetHash().GetHex().c_str(), nOut);
+        printf("IsAliasMine()  : found my transaction %s value %d\n", tx.GetHash().GetHex().c_str(), (int)txout.nValue);
         return true;
     }
+    
     return false;
 }
 
@@ -514,7 +514,7 @@ string stringFromVch(const vector<unsigned char> &vch) {
     return res;
 }
 
-bool CNameDB::ScanNames(
+bool CAliasDB::ScanNames(
         const std::vector<unsigned char>& vchName,
         unsigned int nMax,
         std::vector<std::pair<std::vector<unsigned char>, CAliasIndex> >& nameScan) {
@@ -560,7 +560,7 @@ void rescanforaliases(CBlockIndex *pindexRescan) {
     paliasdb->ReconstructNameIndex(pindexRescan);
 }
 
-bool CNameDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
+bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
     CDiskTxPos txindex;
     CBlockIndex* pindex = pindexRescan;
 
@@ -902,7 +902,7 @@ bool GetValueOfAliasTxHash(const uint256 &txHash, vector<unsigned char>& vchValu
     return true;
 }
 
-bool GetValueOfName(CNameDB& dbName, const vector<unsigned char> &vchName, vector<unsigned char>& vchValue, int& nHeight) {
+bool GetValueOfName(CAliasDB& dbName, const vector<unsigned char> &vchName, vector<unsigned char>& vchValue, int& nHeight) {
     vector<CAliasIndex> vtxPos;
     if (!paliasdb->ReadAlias(vchName, vtxPos) || vtxPos.empty())
         return false;
@@ -913,7 +913,7 @@ bool GetValueOfName(CNameDB& dbName, const vector<unsigned char> &vchName, vecto
     return true;
 }
 
-bool GetTxOfName(CNameDB& dbName, const vector<unsigned char> &vchName, CTransaction& tx) {
+bool GetTxOfName(CAliasDB& dbName, const vector<unsigned char> &vchName, CTransaction& tx) {
     vector<CAliasIndex> vtxPos;
     if (!paliasdb->ReadAlias(vchName, vtxPos) || vtxPos.empty())
         return false;

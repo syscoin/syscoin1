@@ -338,7 +338,7 @@ bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) {
 
 CCoinsViewCache *pcoinsTip = NULL;
 CBlockTreeDB *pblocktree = NULL;
-CNameDB *paliasdb = NULL;
+CAliasDB *paliasdb = NULL;
 COfferDB *pofferdb = NULL;
 CCertDB *pcertdb = NULL;
 

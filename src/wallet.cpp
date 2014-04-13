@@ -17,7 +17,7 @@
 
 using namespace std;
 
-extern CNameDB *paliasdb;
+extern CAliasDB *paliasdb;
 
 inline std::string PubKeyToAddress(const std::vector<unsigned char>& vchPubKey);
 inline std::string Hash160ToAddress(uint160 hash160);

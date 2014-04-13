@@ -13,9 +13,9 @@ using namespace std;
 const QString AliasTableModel::Alias = "A";
 const QString AliasTableModel::DataAlias = "D";
 
-class CNameDB;
+class CAliasDB;
 
-extern CNameDB *paliasdb;
+extern CAliasDB *paliasdb;
 
 int GetAliasExpirationDepth(int nHeight);
 
