@@ -1947,7 +1947,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("txid", ca.txHash.GetHex()));
 			oOfferAccept.push_back(Pair("height", sHeight));
 			oOfferAccept.push_back(Pair("time", sTime));
-			oOfferAccept.push_back(Pair("quantity", strprint("%llu", ca.nQty)));
+			oOfferAccept.push_back(Pair("quantity", strprintf("%llu", ca.nQty)));
 			oOfferAccept.push_back(Pair("price", (double)ca.nPrice / COIN));
 			oOfferAccept.push_back(Pair("paid", ca.bPaid ? "true" : "false"));
 			if(ca.bPaid) {
