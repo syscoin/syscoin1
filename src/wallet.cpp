@@ -754,8 +754,10 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
         if(!ExtractDestination(txout.scriptPubKey, address)) {
             if (!ExtractAliasAddress(txout.scriptPubKey, saddress)) {
                 if (!ExtractOfferAddress(txout.scriptPubKey, saddress)) {
-                    printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
+                    if (!ExtractCertAddress(txout.scriptPubKey, saddress)) {
+                        printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
                        this->GetHash().ToString().c_str());
+                    }
                 }
             }
         }
