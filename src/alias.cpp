@@ -1191,6 +1191,8 @@ Value aliasnew(const Array& params, bool fHelp) {
             + HelpRequiringPassphrase());
 
     vector<unsigned char> vchName = vchFromValue(params[0]);
+    if(vchName.size() > 255)
+        throw runtime_error("alias name > 255 bytes!\n");
 
     CWalletTx wtx;
     wtx.nVersion = SYSCOIN_TX_VERSION;
@@ -1242,6 +1244,8 @@ Value aliasactivate(const Array& params, bool fHelp) {
         vchValue = vchFromValue(params[2]);
     else
         vchValue = vchFromValue(params[3]);
+    if(vchValue.size() > 1023)
+        throw runtime_error("alias value > 1023 bytes!\n");
 
     CWalletTx wtx;
     wtx.nVersion = SYSCOIN_TX_VERSION;

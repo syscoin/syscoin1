@@ -1428,7 +1428,7 @@ Value offernew(const Array& params, bool fHelp) {
 	string baSig;
 	unsigned int nParamIdx = 0;
 	int64 nQty, nPrice;
-	
+
 	vector<unsigned char> vchPaymentAddress = vchFromValue(params[nParamIdx]);
 	CBitcoinAddress payAddr(stringFromVch(vchPaymentAddress));
 	if(payAddr.IsValid()) nParamIdx++;
@@ -1456,6 +1456,10 @@ Value offernew(const Array& params, bool fHelp) {
 	if(nParamIdx < params.size()) vchDesc = vchFromValue(params[nParamIdx++]);
     else vchDesc = vchFromString("");
 
+	if(vchCat.size() > 255)
+        throw runtime_error("offer category > 255 bytes!\n");
+	if(vchTitle.size() > 255)
+        throw runtime_error("offer title > 255 bytes!\n");
     // 64Kbyte offer desc. maxlen
 	if (vchDesc.size() > 1024 * 64)
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "Offer description is too long.");
@@ -1830,6 +1834,9 @@ Value offerpay(const Array& params, bool fHelp) {
 	// gather & validate inputs
 	vector<unsigned char> vchRand = ParseHex(params[0].get_str());
 	vector<unsigned char> vchMessage = vchFromValue(params.size()==3?params[2]:params[1]);
+
+    if (vchMessage.size() > 16 * 1024)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "offerpay message data > 16384 bytes!\n");
 
 	// this is a syscoin txn
 	CWalletTx wtx, wtxPay;

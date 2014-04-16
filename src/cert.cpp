@@ -1393,9 +1393,11 @@ Value certissuernew(const Array& params, bool fHelp) {
     vector<unsigned char> vchTitle = vchFromValue(params[0]);
     vector<unsigned char> vchData = vchFromValue(params[1]);
 
-    // 64Kbyte certissuer desc. maxlen
-    if (vchData.size() > 1024 * 64)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "CertIssuer description is too long.");
+    if(vchTitle.size() > 255)
+        throw runtime_error("certificate issuer title > 255 bytes!\n");
+
+    if (vchData.size() > 64 * 1024)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate issuer data > 65536 bytes!\n");
 
     // set wallet tx ver
     CWalletTx wtx;
@@ -1572,8 +1574,11 @@ Value certissuerupdate(const Array& params, bool fHelp) {
     vector<unsigned char> vchTitle = vchFromValue(params[1]);
     vector<unsigned char> vchData = vchFromValue(params[2]);
 
-    if (vchData.size() > 1024 * 1024)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Data is too long.");
+    if(vchTitle.size() > 255)
+        throw runtime_error("certificate issuer title > 255 bytes!\n");
+
+    if (vchData.size() > 64 * 1024)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate issuer data > 65536 bytes!\n");
 
     // this is a syscoind txn
     CWalletTx wtx;
@@ -1654,6 +1659,12 @@ Value certnew(const Array& params, bool fHelp) {
     CBitcoinAddress sendAddr(stringFromVch(vchAddress));
     if(!sendAddr.IsValid())
         throw runtime_error("Invalid Syscoin address.");
+
+    if(vchTitle.size() > 255)
+        throw runtime_error("certificate title > 255 bytes!\n");
+
+    if (vchData.size() > 64 * 1024)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data > 65536 bytes!\n");
 
     // this is a syscoin txn
     CWalletTx wtx;
