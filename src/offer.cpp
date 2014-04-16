@@ -1140,11 +1140,9 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 				nPrevHeight = GetOfferHeight(vchOffer);
 
+				// check for existence of offeraccept in txn offer obj
 				if(!theOffer.GetAcceptByHash(vchAcceptRand, theOfferAccept))
 					return error("could not read accept from offer txn");
-
-				if(theOfferAccept.vchRand != vchAcceptRand)
-					return error("accept txn contains invalid txnaccept hash");
 	   		}
 			break;
 
@@ -1185,10 +1183,11 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 				nPrevHeight = GetOfferHeight(vchOffer);
 
+				// check for existence of offeraccept in txn offer obj
 				if(!theOffer.GetAcceptByHash(vchOfferAccept, theOfferAccept))
 					return error("could not read accept from offer txn");
 
-				// check for enough fees
+				// check for enough offer fees with this txn
 				int64 expectedFee = GetOfferNetworkFee(4, pindexBlock->nHeight) 
 				+ ((theOfferAccept.nPrice * theOfferAccept.nQty) / 200) - COIN;
 				nNetFee = GetOfferNetFee(tx);
@@ -1198,9 +1197,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							tx.GetHash().GetHex().c_str(),
 							(long unsigned int) nNetFee);
 
-				if(theOfferAccept.vchRand != vchOfferAccept)
-					return error("accept txn contains invalid txnaccept hash");
-
+				// make sure we don't attempt to mine an accept & pay in the same block
 				if(pindexBlock->nHeight == pindexBest->nHeight) {
 	                BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
 	                    if (vvchArgs[1] == s.first) {
@@ -1264,11 +1261,36 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							return error("could not read accept from offer txn");
 
 						if(op == OP_OFFER_ACCEPT) {
-							// get the offer accept qty, validate
-							if(theOfferAccept.nQty < 1 || theOfferAccept.nQty > theOffer.GetRemQty())
-								return error("invalid quantity value (nQty < 1 or nQty > remaining qty).");
+							// get the offer accept qty, validate acceptance. txn is still valid
+							// if qty cannot be fulfilled, first-to-mine makes it
+							if(theOfferAccept.nQty < 1 || theOfferAccept.nQty > theOffer.GetRemQty()) {
+								printf("txn %s accepted but offer not fulfilled because desired"
+									" qty %llu is more than available qty %llu for offer accept %s\n", 
+									tx.GetHash().GetHex().c_str(), 
+									theOfferAccept.nQty, 
+									theOffer.GetRemQty(), 
+									stringFromVch(theOfferAccept.vchRand).c_str());
+								{
+									LOCK(cs_main);
+									std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = 
+										mapOfferAcceptPending.find(vvchArgs[1]);
+									if (mi != mapOfferAcceptPending.end())
+										mi->second.erase(tx.GetHash());
+								}
+								return true;
+							}
 						} 
+
 						if(op == OP_OFFER_PAY) {
+							// validate the offer accept is in the database,
+							// this is one of the ways we validate that the accept
+							// can be fulfilled
+							COfferAccept ca;
+							if(!theOffer.GetAcceptByHash(vvchArgs[1], ca))
+								return error("could not read accept from DB offer");
+							// if the accept exists in the database, great. 
+							// we don't need to use it, however, the serialized
+							// version is just fine
 							theOfferAccept.bPaid = true;
 						}
 
@@ -1280,10 +1302,12 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						theOffer.PutOfferAccept(theOfferAccept);
 						mapTestPool[vvchArgs[1]] = tx.GetHash();
 
+						// write the offer / offer accept mapping to the database
 						if (!pofferdb->WriteOfferAccept(vvchArgs[1], vvchArgs[0]))
 							return error( "CheckOfferInputs() : failed to write to offer DB");
 					}
 					
+					// only modify the offer's height on an activate or update
 					if(op == OP_OFFER_ACTIVATE || op == OP_OFFER_UPDATE)
 						theOffer.nHeight = pindexBlock->nHeight;
 
@@ -1307,7 +1331,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						return error( "CheckOfferInputs() : failed to write fees to offer DB");
 
 					// remove offer from pendings
-					
 					// activate or update - seller txn
                     if (op == OP_OFFER_ACTIVATE || op == OP_OFFER_UPDATE) {
 						vector<unsigned char> vchOffer = op == OP_OFFER_NEW ? vchFromString(HexStr(vvchArgs[0])) : vvchArgs[0];

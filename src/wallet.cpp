@@ -22,6 +22,7 @@ extern CAliasDB *paliasdb;
 inline std::string PubKeyToAddress(const std::vector<unsigned char>& vchPubKey);
 inline std::string Hash160ToAddress(uint160 hash160);
 
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // mapWallet
@@ -754,7 +755,7 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
         if(!ExtractDestination(txout.scriptPubKey, address)) {
             if (!ExtractAliasAddress(txout.scriptPubKey, saddress)) {
                 if (!ExtractOfferAddress(txout.scriptPubKey, saddress)) {
-                    if (!ExtractCertAddress(txout.scriptPubKey, saddress)) {
+                    if (!ExtractCertIssuerAddress(txout.scriptPubKey, saddress)) {
                         printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
                        this->GetHash().ToString().c_str());
                     }
