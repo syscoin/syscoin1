@@ -1422,7 +1422,12 @@ Value offernew(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 5 || params.size() > 6)
 		throw runtime_error(
 				"offernew [<address>] <category> <title> <quantity> <price> [<description>]\n"
-						"<category> category, 255 chars max."
+						"<address> offerpay receive address, wallet default address if not specified.\n"
+						"<category> category, 255 chars max.\n"
+						"<title> title, 255 chars max.\n"
+						"<quantity> quantity, > 0\n"
+						"<price> price in syscoin, > 0\n"
+						"<description> description, 64 KB max.\n"
 						+ HelpRequiringPassphrase());
 	// gather inputs
 	string baSig;
@@ -1462,7 +1467,7 @@ Value offernew(const Array& params, bool fHelp) {
         throw runtime_error("offer title > 255 bytes!\n");
     // 64Kbyte offer desc. maxlen
 	if (vchDesc.size() > 1024 * 64)
-		throw JSONRPCError(RPC_INVALID_PARAMETER, "Offer description is too long.");
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description > 65536 bytes!\n");
 
 	// set wallet tx ver
 	CWalletTx wtx;
@@ -1653,8 +1658,13 @@ Value offerupdate(const Array& params, bool fHelp) {
 	} catch (std::exception &e) {
 		throw runtime_error("invalid price and/or quantity values.");
 	}
-	if (vchDesc.size() > 1024 * 1024)
-		throw JSONRPCError(RPC_INVALID_PARAMETER, "Description is too long.");
+	if(vchCat.size() > 255)
+        throw runtime_error("offer category > 255 bytes!\n");
+	if(vchTitle.size() > 255)
+        throw runtime_error("offer title > 255 bytes!\n");
+    // 64Kbyte offer desc. maxlen
+	if (vchDesc.size() > 1024 * 64)
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description > 65536 bytes!\n");
 
 	// this is a syscoind txn
 	CWalletTx wtx;
@@ -1829,6 +1839,9 @@ Value offerpay(const Array& params, bool fHelp) {
 	if (fHelp || 2 > params.size() || params.size() > 3)
 		throw runtime_error("offerpay <rand> [<accepttxid>] <message>\n"
 				"Pay for a confirmed accepted offer.\n"
+				"<rand> randkey from offeraccept txn.\n"
+				"<accepttxid> offeraccept txn id, if daemon restarted.\n"
+				"<message> payment message to seller, 16 KB max.\n"
 				+ HelpRequiringPassphrase());
 
 	// gather & validate inputs

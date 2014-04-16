@@ -1386,8 +1386,8 @@ Value certissuernew(const Array& params, bool fHelp) {
     if (fHelp || params.size() != 2)
         throw runtime_error(
                 "certissuernew <title> <data>\n"
-                        "<title> title, 255 chars max."
-                        "<data> data, 64kB max."
+                        "<title> title, 255 bytes max."
+                        "<data> data, 64KB max."
                         + HelpRequiringPassphrase());
     // gather inputs
     vector<unsigned char> vchTitle = vchFromValue(params[0]);
@@ -1455,6 +1455,7 @@ Value certissueractivate(const Array& params, bool fHelp) {
         throw runtime_error(
                 "certissueractivate <rand> [<tx>]\n"
                         "Activate a certificate issuer after creating one with certissuernew.\n"
+                        "<rand> certificate issuer randkey.\n"
                         + HelpRequiringPassphrase());
 
     // gather inputs
@@ -1567,6 +1568,9 @@ Value certissuerupdate(const Array& params, bool fHelp) {
         throw runtime_error(
                 "certissuerupdate <rand> <title> <data>\n"
                         "Perform an update on an certificate issuer you control.\n"
+                        "<rand> certificate issuer randkey.\n"
+                        "<title> certificate issuer title, 255 bytes max.\n"
+                        "<data> certificate issuer data, 64 KB max.\n"
                         + HelpRequiringPassphrase());
 
     // gather & validate inputs
@@ -1650,7 +1654,11 @@ Value certissuerupdate(const Array& params, bool fHelp) {
 Value certnew(const Array& params, bool fHelp) {
     if (fHelp || params.size() != 4)
         throw runtime_error("certnew <issuerkey> <address> <title> <data>\n"
-                "Issue a new certificate.\n" + HelpRequiringPassphrase());
+                "Issue a new certificate.\n" 
+                "<issuerkey> certificate issuer randkey.\n"
+                "<title> certificate title, 255 bytes max.\n"
+                "<data> certificate data, 64 KB max.\n"
+                + HelpRequiringPassphrase());
 
     vector<unsigned char> vchCertIssuer = vchFromValue(params[0]);
     vector<unsigned char> vchAddress = vchFromValue(params[1]);
@@ -1741,6 +1749,8 @@ Value certtransfer(const Array& params, bool fHelp) {
     if (fHelp || 2 != params.size())
         throw runtime_error("certtransfer <certkey> <address>\n"
                 "Transfer a certificate to a syscoin address.\n"
+                "<certkey> certificate randkey.\n"
+                "<address> receiver syscoin address.\n"
                 + HelpRequiringPassphrase());
 
     // gather & validate inputs

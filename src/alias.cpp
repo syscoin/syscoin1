@@ -1232,6 +1232,10 @@ Value aliasactivate(const Array& params, bool fHelp) {
     if (fHelp || params.size() < 3 || params.size() > 4)
         throw runtime_error(
             "aliasactivate <alias> <rand> [<tx>] <value>\n"
+            "<alias> alias name.\n"
+            "<rand> alias rand key.\n"
+            "<tx> txid of aliasnew for this alias, required if daemon restarted.\n"
+            "<value> alias value, 1023 chars max.\n"
             "Perform a first update after an aliasnew reservation.\n"
             "Note that the first update will go into a block 12 blocks after the aliasnew, at the soonest."
             + HelpRequiringPassphrase());
@@ -1327,14 +1331,19 @@ Value aliasactivate(const Array& params, bool fHelp) {
 }
 
 Value aliasupdate(const Array& params, bool fHelp) {
-    if (fHelp || 2 > params.size())
+    if (fHelp || 2 > params.size() || 3 < params.size() )
         throw runtime_error(
             "aliasupdate <alias> <value> [<toaddress>]\n"
-            "Update and possibly transfer an alias."
+            "Update and possibly transfer an alias.\n"
+            "<alias> alias name.\n"
+            "<value> alias value, 1023 chars max.\n"
+            "<toaddress> receiver syscoin address, if transferring alias.\n"
             + HelpRequiringPassphrase());
 
     vector<unsigned char> vchName = vchFromValue(params[0]);
     vector<unsigned char> vchValue = vchFromValue(params[1]);
+    if(vchValue.size() > 1023)
+        throw runtime_error("alias value > 1023 bytes!\n");
 
     CWalletTx wtx;
     wtx.nVersion = SYSCOIN_TX_VERSION;
@@ -1403,7 +1412,8 @@ Value aliaslist(const Array& params, bool fHelp) {
     if (fHelp || 1 < params.size())
         throw runtime_error(
                 "aliaslist [<name>]\n"
-                "list my own aliases"
+                "list my own aliases.\n"
+                "<name> alias name to use as filter.\n"
                 );
 
     vector<unsigned char> vchName;
