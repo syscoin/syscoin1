@@ -1461,6 +1461,10 @@ Value offernew(const Array& params, bool fHelp) {
 	if(nParamIdx < params.size()) vchDesc = vchFromValue(params[nParamIdx++]);
     else vchDesc = vchFromString("");
 
+	if(vchCat.size() < 1)
+        throw runtime_error("offer category < 1 bytes!\n");
+	if(vchTitle.size() < 1)
+        throw runtime_error("offer title < 1 bytes!\n");
 	if(vchCat.size() > 255)
         throw runtime_error("offer category > 255 bytes!\n");
 	if(vchTitle.size() > 255)
@@ -1658,6 +1662,10 @@ Value offerupdate(const Array& params, bool fHelp) {
 	} catch (std::exception &e) {
 		throw runtime_error("invalid price and/or quantity values.");
 	}
+	if(vchCat.size() < 1)
+        throw runtime_error("offer category < 1 bytes!\n");
+	if(vchTitle.size() < 1)
+        throw runtime_error("offer title < 1 bytes!\n");
 	if(vchCat.size() > 255)
         throw runtime_error("offer category > 255 bytes!\n");
 	if(vchTitle.size() > 255)
@@ -1848,6 +1856,8 @@ Value offerpay(const Array& params, bool fHelp) {
 	vector<unsigned char> vchRand = ParseHex(params[0].get_str());
 	vector<unsigned char> vchMessage = vchFromValue(params.size()==3?params[2]:params[1]);
 
+    if (vchMessage.size() < 1)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "offerpay message data < 1 bytes!\n");
     if (vchMessage.size() > 16 * 1024)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "offerpay message data > 16384 bytes!\n");
 

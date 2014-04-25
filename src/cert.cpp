@@ -1393,11 +1393,17 @@ Value certissuernew(const Array& params, bool fHelp) {
     vector<unsigned char> vchTitle = vchFromValue(params[0]);
     vector<unsigned char> vchData = vchFromValue(params[1]);
 
+    if(vchTitle.size() < 1)
+        throw runtime_error("certificate title < 1 bytes!\n");
+
     if(vchTitle.size() > 255)
-        throw runtime_error("certificate issuer title > 255 bytes!\n");
+        throw runtime_error("certificate title > 255 bytes!\n");
+
+    if (vchData.size() < 1)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data < 1 bytes!\n");
 
     if (vchData.size() > 64 * 1024)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate issuer data > 65536 bytes!\n");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data > 65536 bytes!\n");
 
     // set wallet tx ver
     CWalletTx wtx;
@@ -1578,8 +1584,14 @@ Value certissuerupdate(const Array& params, bool fHelp) {
     vector<unsigned char> vchTitle = vchFromValue(params[1]);
     vector<unsigned char> vchData = vchFromValue(params[2]);
 
+    if(vchTitle.size() < 1)
+        throw runtime_error("certificate issuer title < 1 bytes!\n");
+
     if(vchTitle.size() > 255)
         throw runtime_error("certificate issuer title > 255 bytes!\n");
+
+    if (vchData.size() < 1)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate issuer data < 1 bytes!\n");
 
     if (vchData.size() > 64 * 1024)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate issuer data > 65536 bytes!\n");
@@ -1668,8 +1680,14 @@ Value certnew(const Array& params, bool fHelp) {
     if(!sendAddr.IsValid())
         throw runtime_error("Invalid Syscoin address.");
 
+    if(vchTitle.size() < 1)
+        throw runtime_error("certificate title < 1 bytes!\n");
+
     if(vchTitle.size() > 255)
         throw runtime_error("certificate title > 255 bytes!\n");
+
+    if (vchData.size() < 1)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data < 1 bytes!\n");
 
     if (vchData.size() > 64 * 1024)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data > 65536 bytes!\n");
