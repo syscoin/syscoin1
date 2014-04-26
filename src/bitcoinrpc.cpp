@@ -1167,7 +1167,7 @@ Object CallRPC(const string& strMethod, const Array& params)
 
 
 template<typename T>
-void ConvertTo(Value& value, bool fAllowNull=false)
+void ConvertTo(Value& value, bool fAllowNull)
 {
     if (fAllowNull && value.type() == null_type)
         return;
