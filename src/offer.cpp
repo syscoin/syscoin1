@@ -153,6 +153,8 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, unsigned i
 
             ssKey >> sType;
             if(sType == "offeri") {
+            	vector<unsigned char> vchOffer;
+                ssKey >> vchOffer;
                 leveldb::Slice slValue = pcursor->value();
                 CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
                 vector<COffer> vtxPos;

@@ -534,6 +534,8 @@ bool CAliasDB::ScanNames(
 
             ssKey >> sType;
             if(sType == "namei") {
+                vector<unsigned char> vchName;
+                ssKey >> vchName;
                 leveldb::Slice slValue = pcursor->value();
                 CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
                 vector<CAliasIndex> vtxPos;

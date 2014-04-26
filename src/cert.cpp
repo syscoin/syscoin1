@@ -152,6 +152,8 @@ bool CCertDB::ScanCertIssuers(const std::vector<unsigned char>& vchCertIssuer, u
 
             ssKey >> sType;
             if(sType == "certissueri") {
+                vector<unsigned char> vchCertIssuer;
+                ssKey >> vchCertIssuer;
                 leveldb::Slice slValue = pcursor->value();
                 CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
                 vector<CCertIssuer> vtxPos;
