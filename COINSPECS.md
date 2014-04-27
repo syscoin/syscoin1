@@ -18,43 +18,37 @@ well as service fees.
 
 SERVICE FEES: All services provided by this coin (see below) incur fees;  these fees
 are redistributed to miners by being regenerated (instead of being destroyed
-forever like in namecoin) like this. This reward is equal to the average of the average of sums 
-for  service fees incurred on the network during time periods (bT - 12 hours), and (bT - 1 hours).
-
-
-are examined and all service fees incurred
+forever like with namecoin). Service fee rewards are equal to the average of the average 
+of sums for service fees incurred on the network during time periods (bT - 12 hours), 
+and (bT - 1 hours).
 
 COIN FEATURES:
 
-1. Alias Reservation and Ownership. 
+1. Alias reservation, ownership and transfer. 
 Use cases: DNS, online identities,  key storage
 
 2. Data storage and retrieval, provable ownership and transfer of digital content.
-Use cases: Digital licencing, ownership documents, software licensing, DRM,
-data storage & backup, Ownership / storage / transfer of provably-unique signed 
-digital documents
+Use cases: Ownership / storage / transfer of provably-unique signed digital documents
+such as deeds, wills, trusts, titles, contracts, etc.
 
-3. Distributed commerce platform.
+3. Distributed marketplace platform.
 Use cases: Distributed, anonymous auction / physical and digital goods marketplace /
-exchange system. Buy and sell anything untraceably and anonymously online using
-blockchain as the platform.
+exchange system. Create marketplaces and buy and sell anything anonymously online using 
+the blockchain as the platform.
+
+4. Distributed digital certificate issuance. Register as a certificate issuer and issue
+any kind of certificate to anyone on the Syscoin network.
+Use cases: software licences, certificates, receipts, tickets
 
 (coming soon)
 
-4. Highly structured data storage and retrieval. Store archives in the blockchain
+5. Highly structured data storage and retrieval. Store archives in the blockchain
 (tar / zip / bz2) and request files stored therein using URL-like syntax. Test use
-case: storage and serving of structured data via HTTP (serve web content stored in
-the blockchain via HTTP server built into syscoind client)
+case: decentralized websites.
 
-5. Election / voting platform: conduct provably fair, transparent real-time elections
+6. Election / voting platform: conduct provably fair, transparent real-time elections
 and polls using blockchain technology.
 
-6. Automated, ditributed marketplace for signed, digital licenses. Use Case: Sales and
-delivery of digital software licences.
-
-7. Encrypted data storage and transfer via the blockchain. Leverage the asymetric keys in your
-wallet to go beyond signing transactions to communicating securely, anonymously, and
-untraceably using the blockchain. Encrypt and deliver messages to others by using their public
-keys to encrypt messates / data, and syscoin carrying encrypted message as a data payload.
-Received messages are automatically decrypted via corresponding private key.
-
+7. Encrypted data storage and transfer via the blockchain. Leverage the asymetric keypairs in your
+wallet to go beyond just signing transactions to communicating securely using the blockchain. Encrypt 
+and communicate to anyone on the blockchain.
