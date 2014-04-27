@@ -1,8 +1,8 @@
-Syscoin - A Scrypt-based, Merge-minable Coin with Alias store, Data store, Certificate Issuace, and Distributed Market Services
+Syscoin - A Scrypt-based, Merge-minable Coin with Certificate Issuance, Distributed Marketplace, Document Exchange, and Data Storage Services
 
 Syscoin is a scrypt-based, merge-minable, cryptofinance services-focused altcoin which implements several services vital to the implementation of a decentralized cryptoeconomy and is merge-minable with any Scrypt coin - or minable standalone.
 
-Syscoin provides a variety of useful distributed services using bitcoin blockchain technology:
+Syscoin provides a variety of useful decentralized, cryptographically-secured services based on bitcoin blockchain technology:
 
 1. Syscoin enables the creation of decentralized markets of many kinds, ranging from fully decentralized marketplaces to centralized markets with more complex value-added features - all operating on a decentralized foundation of trust and authenticity.  Syscoin lets you buy and sell anything to anyone in markets which are decentralized, unregulateable, uncensorable, and cryptographically authenticated.  Syscoin doesn't just promise trust and uncorruptability in our marketplaces - it provides cryptographic, mathematically verifiable proof of it.
 
