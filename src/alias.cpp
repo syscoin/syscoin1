@@ -363,13 +363,13 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 if ((fBlock || fMiner) && nDepth < 0)
                     return error("CheckAliasInputs() : aliasupdate on an expired alias, or there is a pending transaction on the alias");
                 
-                BOOST_FOREACH(const MAPTESTPOOLTYPE &s, mapTestPool) {
-                    if (s.first == vvchArgs[0]) {
-                        return error("CheckAliasInputs() : will not mine %s because it clashes with %s",
-                               tx.GetHash().GetHex().c_str(),
-                               s.second.GetHex().c_str());
-                    }
-                }
+                // BOOST_FOREACH(const MAPTESTPOOLTYPE &s, mapTestPool) {
+                //     if (s.first == vvchArgs[0]) {
+                //         return error("CheckAliasInputs() : will not mine %s because it clashes with %s",
+                //                tx.GetHash().GetHex().c_str(),
+                //                s.second.GetHex().c_str());
+                //     }
+                // }
 
                 break;
 
