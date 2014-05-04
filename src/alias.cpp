@@ -332,13 +332,13 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                             GetAliasExpirationDepth(pindexBlock->nHeight))
     					return error("CheckAliasInputs() : aliasactivate on an unexpired alias");
 
-                    BOOST_FOREACH(const MAPTESTPOOLTYPE &s, mapTestPool) {
-                        if (s.first == vvchArgs[0]) {
-                            return error("CheckAliasInputs() : will not mine %s because it clashes with %s",
-                                   tx.GetHash().GetHex().c_str(),
-                                   s.second.GetHex().c_str());
-                        }
-                    }
+                    // BOOST_FOREACH(const MAPTESTPOOLTYPE &s, mapTestPool) {
+                    //     if (s.first == vvchArgs[0]) {
+                    //         return error("CheckAliasInputs() : will not mine %s because it clashes with %s",
+                    //                tx.GetHash().GetHex().c_str(),
+                    //                s.second.GetHex().c_str());
+                    //     }
+                    // }
                 }
 
                 break;
@@ -1899,6 +1899,8 @@ Value datanew(const Array& params, bool fHelp)
             + HelpRequiringPassphrase());
 
     vector<unsigned char> vchName = vchFromValue(params[0]);
+    if(vchName.size() > 255)
+        throw runtime_error("data name > 255 bytes!\n");
 
     CWalletTx wtx;
     wtx.nVersion = SYSCOIN_TX_VERSION;
