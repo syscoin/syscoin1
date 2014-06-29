@@ -45,6 +45,7 @@ contains(RELEASE, 1) {
     macx:QMAKE_CXXFLAGS += -stdlib=libc++ -mmacosx-version-min=10.7 -isysroot /Developer/SDKs/MacOSX10.7.sdk
     macx:QMAKE_CFLAGS += -stdlib=libc++ -mmacosx-version-min=10.7 -isysroot /Developer/SDKs/MacOSX10.7.sdk
     macx:QMAKE_LFLAGS += -stdlib=libc++ -mmacosx-version-min=10.7 -isysroot /Developer/SDKs/MacOSX10.7.sdk
+    macx:QMAKE_OBJECTIVE_CFLAGS += -stdlib=libc++ -mmacosx-version-min=10.7 -isysroot /Developer/SDKs/MacOSX10.7.sdk
 
     !win32:!macx {
         # Linux: static link and extra security (see: https://wiki.debian.org/Hardening)
@@ -414,7 +415,7 @@ OTHER_FILES += README.md \
 
 # platform specific defaults, if not overridden on command line
 isEmpty(BOOST_LIB_SUFFIX) {
-    macx:BOOST_LIB_SUFFIX = -mt
+    #macx:BOOST_LIB_SUFFIX =
     win32:BOOST_LIB_SUFFIX = -mgw44-mt-s-1_50
 }
 
@@ -439,7 +440,7 @@ isEmpty(BOOST_LIB_PATH) {
 }
 
 isEmpty(BOOST_INCLUDE_PATH) {
-    macx:BOOST_INCLUDE_PATH = /opt/local/include
+    macx:BOOST_INCLUDE_PATH = /opt/local/include/boost
 }
 
 win32:DEFINES += WIN32
