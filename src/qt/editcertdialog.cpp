@@ -97,7 +97,7 @@ void EditCertIssuerDialog::accept()
             break;
         case CertIssuerTableModel::INVALID_CERT:
             QMessageBox::warning(this, windowTitle(),
-                tr("The entered cert \"%1\" is not a valid SysCoin cert.").arg(ui->certEdit->text()),
+                tr("The entered cert \"%1\" is not a valid Syscoin cert.").arg(ui->certEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
         case CertIssuerTableModel::DUPLICATE_CERT:

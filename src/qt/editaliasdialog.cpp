@@ -97,7 +97,7 @@ void EditAliasDialog::accept()
             break;
         case AliasTableModel::INVALID_ALIAS:
             QMessageBox::warning(this, windowTitle(),
-                tr("The entered alias \"%1\" is not a valid SysCoin alias.").arg(ui->aliasEdit->text()),
+                tr("The entered alias \"%1\" is not a valid Syscoin alias.").arg(ui->aliasEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
         case AliasTableModel::DUPLICATE_ALIAS:

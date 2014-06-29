@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     BOOST_CHECK(t.IsStandard());
 
     t.vout[0].nValue = 5011; // dust
-    // SysCoin does not enforce isDust().  Per dust fees are considered sufficient as deterrant.
+    // Syscoin does not enforce isDust().  Per dust fees are considered sufficient as deterrant.
     // BOOST_CHECK(!t.IsStandard());
 
     t.vout[0].nValue = 6011; // not dust

@@ -4,13 +4,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
-        <source>About SysCoin</source>
-        <translation>Om SysCoin</translation>
+        <source>About Syscoin</source>
+        <translation>Om Syscoin</translation>
     </message>
     <message>
         <location line="+39"/>
-        <source>&lt;b&gt;SysCoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;SysCoin&lt;/b&gt;-version</translation>
+        <source>&lt;b&gt;Syscoin&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;Syscoin&lt;/b&gt;-version</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -35,8 +35,8 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     </message>
     <message>
         <location line="+0"/>
-        <source>The SysCoin developers</source>
-        <translation>SysCoin-utvecklarna</translation>
+        <source>The Syscoin developers</source>
+        <translation>Syscoin-utvecklarna</translation>
     </message>
 </context>
 <context>
@@ -68,8 +68,8 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="+63"/>
-        <source>These are your SysCoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation>Detta är dina SysCoin-adresser för att ta emot betalningar.  Du kan ge varje avsändare en egen adress så att du kan hålla reda på vem som betalar dig.</translation>
+        <source>These are your Syscoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
+        <translation>Detta är dina Syscoin-adresser för att ta emot betalningar.  Du kan ge varje avsändare en egen adress så att du kan hålla reda på vem som betalar dig.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="+14"/>
@@ -83,7 +83,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     </message>
     <message>
         <location line="+11"/>
-        <source>Sign a message to prove you own a SysCoin address</source>
+        <source>Sign a message to prove you own a Syscoin address</source>
         <translation>Signera ett meddelande för att bevisa att du äger denna adress</translation>
     </message>
     <message>
@@ -108,8 +108,8 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     </message>
     <message>
         <location line="-44"/>
-        <source>Verify a message to ensure it was signed with a specified SysCoin address</source>
-        <translation>Verifiera meddelandet för att vara säker på att den var signerad med den specificerade SysCoin-adressen</translation>
+        <source>Verify a message to ensure it was signed with a specified Syscoin address</source>
+        <translation>Verifiera meddelandet för att vara säker på att den var signerad med den specificerade Syscoin-adressen</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -123,8 +123,8 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="-5"/>
-        <source>These are your SysCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Detta är dina SysCoin adresser för att skicka betalningar. Kolla alltid summan och den mottagande adressen innan du skickar SysCoins.</translation>
+        <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Detta är dina Syscoin adresser för att skicka betalningar. Kolla alltid summan och den mottagande adressen innan du skickar Syscoins.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -139,7 +139,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location line="+1"/>
         <source>Send &amp;Coins</source>
-        <translation>Skicka &amp;SysCoins</translation>
+        <translation>Skicka &amp;Syscoins</translation>
     </message>
     <message>
         <location line="+260"/>
@@ -276,7 +276,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     </message>
     <message>
         <location line="-56"/>
-        <source>SysCoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
+        <source>Syscoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
         <translation>Programmet kommer nu att stänga ner för att färdigställa krypteringen. Tänk på att en krypterad plånbok inte skyddar mot stöld om din dator är infekterad med en keylogger.</translation>
     </message>
     <message>
@@ -375,8 +375,8 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     </message>
     <message>
         <location line="+4"/>
-        <source>Show information about SysCoin</source>
-        <translation>Visa information om SysCoin</translation>
+        <source>Show information about Syscoin</source>
+        <translation>Visa information om Syscoin</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -420,13 +420,13 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     </message>
     <message>
         <location line="-347"/>
-        <source>Send coins to a SysCoin address</source>
-        <translation>Skicka mynt till en SysCoin-adress</translation>
+        <source>Send coins to a Syscoin address</source>
+        <translation>Skicka mynt till en Syscoin-adress</translation>
     </message>
     <message>
         <location line="+49"/>
-        <source>Modify configuration options for SysCoin</source>
-        <translation>Ändra konfigurationsalternativ för SysCoin</translation>
+        <source>Modify configuration options for Syscoin</source>
+        <translation>Ändra konfigurationsalternativ för Syscoin</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -456,8 +456,8 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location line="-165"/>
         <location line="+530"/>
-        <source>SysCoin</source>
-        <translation>SysCoin</translation>
+        <source>Syscoin</source>
+        <translation>Syscoin</translation>
     </message>
     <message>
         <location line="-530"/>
@@ -481,8 +481,8 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     </message>
     <message>
         <location line="+22"/>
-        <source>&amp;About SysCoin</source>
-        <translation>&amp;Om SysCoin</translation>
+        <source>&amp;About Syscoin</source>
+        <translation>&amp;Om Syscoin</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -501,13 +501,13 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     </message>
     <message>
         <location line="+7"/>
-        <source>Sign messages with your SysCoin addresses to prove you own them</source>
-        <translation>Signera meddelanden med din SysCoinadress för att bevisa att du äger dem</translation>
+        <source>Sign messages with your Syscoin addresses to prove you own them</source>
+        <translation>Signera meddelanden med din Syscoinadress för att bevisa att du äger dem</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Verify messages to ensure they were signed with specified SysCoin addresses</source>
-        <translation>Verifiera meddelanden för att vara säker på att de var signerade med den specificerade SysCoin-adressen</translation>
+        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
+        <translation>Verifiera meddelanden för att vara säker på att de var signerade med den specificerade Syscoin-adressen</translation>
     </message>
     <message>
         <location line="+28"/>
@@ -537,13 +537,13 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     </message>
     <message>
         <location line="+47"/>
-        <source>SysCoin client</source>
-        <translation>SysCoin-klient</translation>
+        <source>Syscoin client</source>
+        <translation>Syscoin-klient</translation>
     </message>
     <message numerus="yes">
         <location line="+141"/>
-        <source>%n active connection(s) to SysCoin network</source>
-        <translation><numerusform>%n aktiv anslutning till SysCoin-nätverket</numerusform><numerusform>%n aktiva anslutningar till SysCoin-nätverket</numerusform></translation>
+        <source>%n active connection(s) to Syscoin network</source>
+        <translation><numerusform>%n aktiv anslutning till Syscoin-nätverket</numerusform><numerusform>%n aktiva anslutningar till Syscoin-nätverket</numerusform></translation>
     </message>
     <message>
         <location line="+22"/>
@@ -657,8 +657,8 @@ Adress: %4
     <message>
         <location line="-23"/>
         <location line="+23"/>
-        <source>URI can not be parsed! This can be caused by an invalid SysCoin address or malformed URI parameters.</source>
-        <translation>URI går inte att tolkas! Detta kan orsakas av en ogiltig SysCoin-adress eller felaktiga URI parametrar.</translation>
+        <source>URI can not be parsed! This can be caused by an invalid Syscoin address or malformed URI parameters.</source>
+        <translation>URI går inte att tolkas! Detta kan orsakas av en ogiltig Syscoin-adress eller felaktiga URI parametrar.</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -672,8 +672,8 @@ Adress: %4
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="+111"/>
-        <source>A fatal error occurred. SysCoin can no longer continue safely and will quit.</source>
-        <translation>Ett allvarligt fel har uppstått. SysCoin kan inte längre köras säkert och kommer att avslutas.</translation>
+        <source>A fatal error occurred. Syscoin can no longer continue safely and will quit.</source>
+        <translation>Ett allvarligt fel har uppstått. Syscoin kan inte längre köras säkert och kommer att avslutas.</translation>
     </message>
 </context>
 <context>
@@ -738,8 +738,8 @@ Adress: %4
     </message>
     <message>
         <location line="-5"/>
-        <source>The entered address &quot;%1&quot; is not a valid SysCoin address.</source>
-        <translation>Den angivna adressen &quot;%1&quot; är inte en giltig SysCoin-adress.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid Syscoin address.</source>
+        <translation>Den angivna adressen &quot;%1&quot; är inte en giltig Syscoin-adress.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -757,8 +757,8 @@ Adress: %4
     <message>
         <location filename="../guiutil.cpp" line="+424"/>
         <location line="+12"/>
-        <source>SysCoin-Qt</source>
-        <translation>SysCoin-Qt</translation>
+        <source>Syscoin-Qt</source>
+        <translation>Syscoin-Qt</translation>
     </message>
     <message>
         <location line="-12"/>
@@ -820,13 +820,13 @@ Adress: %4
     </message>
     <message>
         <location line="+31"/>
-        <source>Automatically start SysCoin after logging in to the system.</source>
-        <translation>Starta SysCoin automatiskt efter inloggning.</translation>
+        <source>Automatically start Syscoin after logging in to the system.</source>
+        <translation>Starta Syscoin automatiskt efter inloggning.</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>&amp;Start SysCoin on system login</source>
-        <translation>&amp;Starta SysCoin vid systemstart</translation>
+        <source>&amp;Start Syscoin on system login</source>
+        <translation>&amp;Starta Syscoin vid systemstart</translation>
     </message>
     <message>
         <location line="+35"/>
@@ -845,8 +845,8 @@ Adress: %4
     </message>
     <message>
         <location line="+6"/>
-        <source>Automatically open the SysCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Öppna automatiskt SysCoin-klientens port på routern. Detta fungerar endast om din router har UPnP aktiverat.</translation>
+        <source>Automatically open the Syscoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Öppna automatiskt Syscoin-klientens port på routern. Detta fungerar endast om din router har UPnP aktiverat.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -855,8 +855,8 @@ Adress: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Connect to the SysCoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
-        <translation>Anslut till SysCoin-nätverket genom en SOCKS-proxy (t.ex. när du ansluter genom Tor).</translation>
+        <source>Connect to the Syscoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
+        <translation>Anslut till Syscoin-nätverket genom en SOCKS-proxy (t.ex. när du ansluter genom Tor).</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -930,8 +930,8 @@ Adress: %4
     </message>
     <message>
         <location line="+13"/>
-        <source>The user interface language can be set here. This setting will take effect after restarting SysCoin.</source>
-        <translation>Användargränssnittets språk kan ställas in här. Denna inställning träder i kraft efter en omstart av SysCoin.</translation>
+        <source>The user interface language can be set here. This setting will take effect after restarting Syscoin.</source>
+        <translation>Användargränssnittets språk kan ställas in här. Denna inställning träder i kraft efter en omstart av Syscoin.</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -945,8 +945,8 @@ Adress: %4
     </message>
     <message>
         <location line="+9"/>
-        <source>Whether to show SysCoin addresses in the transaction list or not.</source>
-        <translation>Anger om SysCoin-adresser skall visas i transaktionslistan.</translation>
+        <source>Whether to show Syscoin addresses in the transaction list or not.</source>
+        <translation>Anger om Syscoin-adresser skall visas i transaktionslistan.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -997,8 +997,8 @@ Adress: %4
     <message>
         <location line="-9"/>
         <location line="+9"/>
-        <source>This setting will take effect after restarting SysCoin.</source>
-        <translation>Denna inställning träder i kraft efter en omstart av SysCoin.</translation>
+        <source>This setting will take effect after restarting Syscoin.</source>
+        <translation>Denna inställning träder i kraft efter en omstart av Syscoin.</translation>
     </message>
     <message>
         <location line="+29"/>
@@ -1016,8 +1016,8 @@ Adress: %4
     <message>
         <location line="+50"/>
         <location line="+166"/>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the SysCoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Den visade informationen kan vara inaktuell. Plånboken synkroniseras automatiskt med SysCoin-nätverket efter att anslutningen är upprättad, men denna process har inte slutförts ännu.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Syscoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>Den visade informationen kan vara inaktuell. Plånboken synkroniseras automatiskt med Syscoin-nätverket efter att anslutningen är upprättad, men denna process har inte slutförts ännu.</translation>
     </message>
     <message>
         <location line="-124"/>
@@ -1220,8 +1220,8 @@ Adress: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Show the SysCoin-Qt help message to get a list with possible SysCoin command-line options.</source>
-        <translation>Visa SysCoin-Qt hjälpmeddelande för att få en lista med möjliga SysCoin kommandoradsalternativ.</translation>
+        <source>Show the Syscoin-Qt help message to get a list with possible Syscoin command-line options.</source>
+        <translation>Visa Syscoin-Qt hjälpmeddelande för att få en lista med möjliga Syscoin kommandoradsalternativ.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1240,13 +1240,13 @@ Adress: %4
     </message>
     <message>
         <location line="-104"/>
-        <source>SysCoin - Debug window</source>
-        <translation>SysCoin - Debug fönster</translation>
+        <source>Syscoin - Debug window</source>
+        <translation>Syscoin - Debug fönster</translation>
     </message>
     <message>
         <location line="+25"/>
-        <source>SysCoin Core</source>
-        <translation>SysCoin Kärna</translation>
+        <source>Syscoin Core</source>
+        <translation>Syscoin Kärna</translation>
     </message>
     <message>
         <location line="+279"/>
@@ -1255,8 +1255,8 @@ Adress: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Open the SysCoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Öppna SysCoin debug-loggfilen som finns i datakatalogen. Detta kan ta några sekunder för stora loggfiler.</translation>
+        <source>Open the Syscoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Öppna Syscoin debug-loggfilen som finns i datakatalogen. Detta kan ta några sekunder för stora loggfiler.</translation>
     </message>
     <message>
         <location line="+102"/>
@@ -1265,8 +1265,8 @@ Adress: %4
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="-30"/>
-        <source>Welcome to the SysCoin RPC console.</source>
-        <translation>Välkommen till SysCoin RPC-konsollen.</translation>
+        <source>Welcome to the Syscoin RPC console.</source>
+        <translation>Välkommen till Syscoin RPC-konsollen.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1449,8 +1449,8 @@ Adress: %4
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a SysCoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
-        <translation>Ange en SysCoin-adress (t.ex. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</translation>
+        <source>Enter a Syscoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
+        <translation>Ange en Syscoin-adress (t.ex. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</translation>
     </message>
 </context>
 <context>
@@ -1514,7 +1514,7 @@ Adress: %4
     </message>
     <message>
         <location line="+21"/>
-        <source>Sign the message to prove you own this SysCoin address</source>
+        <source>Sign the message to prove you own this Syscoin address</source>
         <translation>Signera meddelandet för att bevisa att du äger denna adress</translation>
     </message>
     <message>
@@ -1550,8 +1550,8 @@ Adress: %4
     </message>
     <message>
         <location line="+40"/>
-        <source>Verify the message to ensure it was signed with the specified SysCoin address</source>
-        <translation>Verifiera meddelandet för att vara säker på att den var signerad med den angivna SysCoin-adressen</translation>
+        <source>Verify the message to ensure it was signed with the specified Syscoin address</source>
+        <translation>Verifiera meddelandet för att vara säker på att den var signerad med den angivna Syscoin-adressen</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1566,8 +1566,8 @@ Adress: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a SysCoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
-        <translation>Ange en SysCoin-adress (t.ex. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</translation>
+        <source>Enter a Syscoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
+        <translation>Ange en Syscoin-adress (t.ex. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</translation>
     </message>
     <message>
         <location line="-2"/>
@@ -1576,8 +1576,8 @@ Adress: %4
     </message>
     <message>
         <location line="+3"/>
-        <source>Enter SysCoin signature</source>
-        <translation>Ange SysCoin-signatur</translation>
+        <source>Enter Syscoin signature</source>
+        <translation>Ange Syscoin-signatur</translation>
     </message>
     <message>
         <location line="+82"/>
@@ -1650,8 +1650,8 @@ Adress: %4
     <name>SplashScreen</name>
     <message>
         <location filename="../splashscreen.cpp" line="+22"/>
-        <source>The SysCoin developers</source>
-        <translation>SysCoin-utvecklarna</translation>
+        <source>The Syscoin developers</source>
+        <translation>Syscoin-utvecklarna</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2188,8 +2188,8 @@ Adress: %4
     <name>bitcoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="+94"/>
-        <source>SysCoin version</source>
-        <translation>SysCoin version</translation>
+        <source>Syscoin version</source>
+        <translation>Syscoin version</translation>
     </message>
     <message>
         <location line="+102"/>
@@ -2307,7 +2307,7 @@ rpcpassword=%s
 The username and password MUST NOT be the same.
 If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s &quot;SysCoin Alert&quot; admin@foo.com
+for example: alertnotify=echo %%s | mail -s &quot;Syscoin Alert&quot; admin@foo.com
 </source>
         <translation>%s, du behöver sätta ett rpclösensord i konfigurationsfilen:
 %s
@@ -2318,7 +2318,7 @@ rpcpassword=%s
 Användarnamnet och lösenordet FÅR INTE bara detsamma.
 Om filen inte existerar, skapa den med enbart ägarläsbara filrättigheter.
 Det är också rekommenderat att sätta alertnotify så du meddelas om problem;
-till exempel: alertnotify=echo %%s | mail -s &quot;SysCoin Alert&quot; admin@foo.com
+till exempel: alertnotify=echo %%s | mail -s &quot;Syscoin Alert&quot; admin@foo.com
 </translation>
     </message>
     <message>
@@ -2333,8 +2333,8 @@ till exempel: alertnotify=echo %%s | mail -s &quot;SysCoin Alert&quot; admin@foo
     </message>
     <message>
         <location line="+3"/>
-        <source>Cannot obtain a lock on data directory %s. SysCoin is probably already running.</source>
-        <translation>Kan inte låsa data-mappen %s. SysCoin körs förmodligen redan.</translation>
+        <source>Cannot obtain a lock on data directory %s. Syscoin is probably already running.</source>
+        <translation>Kan inte låsa data-mappen %s. Syscoin körs förmodligen redan.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2378,8 +2378,8 @@ till exempel: alertnotify=echo %%s | mail -s &quot;SysCoin Alert&quot; admin@foo
     </message>
     <message>
         <location line="+3"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong SysCoin will not work properly.</source>
-        <translation>Varning: Vänligen kolla så att din dators datum och tid är korrekt! Om din klocka går fel kommer SysCoin inte fungera korrekt.</translation>
+        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Syscoin will not work properly.</source>
+        <translation>Varning: Vänligen kolla så att din dators datum och tid är korrekt! Om din klocka går fel kommer Syscoin inte fungera korrekt.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2628,8 +2628,8 @@ till exempel: alertnotify=echo %%s | mail -s &quot;SysCoin Alert&quot; admin@foo
     </message>
     <message>
         <location line="+5"/>
-        <source>SSL options: (see the SysCoin Wiki for SSL setup instructions)</source>
-        <translation>SSL-inställningar: (se SysCoin-wikin för SSL-setup instruktioner)</translation>
+        <source>SSL options: (see the Syscoin Wiki for SSL setup instructions)</source>
+        <translation>SSL-inställningar: (se Syscoin-wikin för SSL-setup instruktioner)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2818,13 +2818,13 @@ till exempel: alertnotify=echo %%s | mail -s &quot;SysCoin Alert&quot; admin@foo
     </message>
     <message>
         <location line="+1"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of SysCoin</source>
-        <translation>Fel vid inläsningen av wallet.dat: Plånboken kräver en senare version av SysCoin</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of Syscoin</source>
+        <translation>Fel vid inläsningen av wallet.dat: Plånboken kräver en senare version av Syscoin</translation>
     </message>
     <message>
         <location line="+93"/>
-        <source>Wallet needed to be rewritten: restart SysCoin to complete</source>
-        <translation>Plånboken behöver skrivas om: Starta om SysCoin för att färdigställa</translation>
+        <source>Wallet needed to be rewritten: restart Syscoin to complete</source>
+        <translation>Plånboken behöver skrivas om: Starta om Syscoin för att färdigställa</translation>
     </message>
     <message>
         <location line="-95"/>
@@ -2883,8 +2883,8 @@ till exempel: alertnotify=echo %%s | mail -s &quot;SysCoin Alert&quot; admin@foo
     </message>
     <message>
         <location line="-25"/>
-        <source>Unable to bind to %s on this computer. SysCoin is probably already running.</source>
-        <translation>Det går inte att binda till %s på den här datorn. SysCoin är förmodligen redan igång.</translation>
+        <source>Unable to bind to %s on this computer. Syscoin is probably already running.</source>
+        <translation>Det går inte att binda till %s på den här datorn. Syscoin är förmodligen redan igång.</translation>
     </message>
     <message>
         <location line="+64"/>

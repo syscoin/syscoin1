@@ -4,13 +4,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
-        <source>About SysCoin</source>
-        <translation>Over SysCoin</translation>
+        <source>About Syscoin</source>
+        <translation>Over Syscoin</translation>
     </message>
     <message>
         <location line="+39"/>
-        <source>&lt;b&gt;SysCoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;SysCoin&lt;/b&gt; versie</translation>
+        <source>&lt;b&gt;Syscoin&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;Syscoin&lt;/b&gt; versie</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -34,8 +34,8 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     </message>
     <message>
         <location line="+0"/>
-        <source>The SysCoin developers</source>
-        <translation>De SysCoin-ontwikkelaars</translation>
+        <source>The Syscoin developers</source>
+        <translation>De Syscoin-ontwikkelaars</translation>
     </message>
 </context>
 <context>
@@ -67,8 +67,8 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="+63"/>
-        <source>These are your SysCoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
-        <translation>Dit zijn uw SysCoinadressen om betalingen mee te ontvangen. U kunt er voor kiezen om een uniek adres aan te maken voor elke afzender. Op deze manier kunt u bijhouden wie al aan u betaald heeft.</translation>
+        <source>These are your Syscoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
+        <translation>Dit zijn uw Syscoinadressen om betalingen mee te ontvangen. U kunt er voor kiezen om een uniek adres aan te maken voor elke afzender. Op deze manier kunt u bijhouden wie al aan u betaald heeft.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="+14"/>
@@ -82,8 +82,8 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     </message>
     <message>
         <location line="+11"/>
-        <source>Sign a message to prove you own a SysCoin address</source>
-        <translation>Onderteken een bericht om te bewijzen dat u een bepaald SysCoinadres bezit</translation>
+        <source>Sign a message to prove you own a Syscoin address</source>
+        <translation>Onderteken een bericht om te bewijzen dat u een bepaald Syscoinadres bezit</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -107,8 +107,8 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     </message>
     <message>
         <location line="-44"/>
-        <source>Verify a message to ensure it was signed with a specified SysCoin address</source>
-        <translation>Controleer een bericht om te verifiëren dat het gespecificeerde SysCoinadres het bericht heeft ondertekend.</translation>
+        <source>Verify a message to ensure it was signed with a specified Syscoin address</source>
+        <translation>Controleer een bericht om te verifiëren dat het gespecificeerde Syscoinadres het bericht heeft ondertekend.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -122,8 +122,8 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="-5"/>
-        <source>These are your SysCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Dit zijn uw SysCoinadressen om betalingen mee te verzenden. Check altijd het bedrag en het ontvangende adres voordat u uw syscoins verzendt.</translation>
+        <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Dit zijn uw Syscoinadressen om betalingen mee te verzenden. Check altijd het bedrag en het ontvangende adres voordat u uw syscoins verzendt.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -275,8 +275,8 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     </message>
     <message>
         <location line="-56"/>
-        <source>SysCoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
-        <translation>SysCoin zal nu afsluiten om het versleutelingsproces te voltooien. Onthoud dat het versleutelen van uw portemonnee u niet volledig kan beschermen: Malware kan uw computer infecteren en uw syscoins stelen.</translation>
+        <source>Syscoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
+        <translation>Syscoin zal nu afsluiten om het versleutelingsproces te voltooien. Onthoud dat het versleutelen van uw portemonnee u niet volledig kan beschermen: Malware kan uw computer infecteren en uw syscoins stelen.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -374,8 +374,8 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     </message>
     <message>
         <location line="+4"/>
-        <source>Show information about SysCoin</source>
-        <translation>Laat informatie zien over SysCoin</translation>
+        <source>Show information about Syscoin</source>
+        <translation>Laat informatie zien over Syscoin</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -419,13 +419,13 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     </message>
     <message>
         <location line="-347"/>
-        <source>Send coins to a SysCoin address</source>
-        <translation>Verstuur munten naar een SysCoinadres</translation>
+        <source>Send coins to a Syscoin address</source>
+        <translation>Verstuur munten naar een Syscoinadres</translation>
     </message>
     <message>
         <location line="+49"/>
-        <source>Modify configuration options for SysCoin</source>
-        <translation>Wijzig instellingen van SysCoin</translation>
+        <source>Modify configuration options for Syscoin</source>
+        <translation>Wijzig instellingen van Syscoin</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -455,8 +455,8 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location line="-165"/>
         <location line="+530"/>
-        <source>SysCoin</source>
-        <translation>SysCoin</translation>
+        <source>Syscoin</source>
+        <translation>Syscoin</translation>
     </message>
     <message>
         <location line="-530"/>
@@ -480,8 +480,8 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     </message>
     <message>
         <location line="+22"/>
-        <source>&amp;About SysCoin</source>
-        <translation>&amp;Over SysCoin</translation>
+        <source>&amp;About Syscoin</source>
+        <translation>&amp;Over Syscoin</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -500,13 +500,13 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     </message>
     <message>
         <location line="+7"/>
-        <source>Sign messages with your SysCoin addresses to prove you own them</source>
-        <translation>Onderteken berichten met uw SysCoinadressen om te bewijzen dat u deze adressen bezit</translation>
+        <source>Sign messages with your Syscoin addresses to prove you own them</source>
+        <translation>Onderteken berichten met uw Syscoinadressen om te bewijzen dat u deze adressen bezit</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Verify messages to ensure they were signed with specified SysCoin addresses</source>
-        <translation>Verifiëer handtekeningen om zeker te zijn dat de berichten zijn ondertekend met de gespecificeerde SysCoinadressen</translation>
+        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
+        <translation>Verifiëer handtekeningen om zeker te zijn dat de berichten zijn ondertekend met de gespecificeerde Syscoinadressen</translation>
     </message>
     <message>
         <location line="+28"/>
@@ -536,13 +536,13 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     </message>
     <message>
         <location line="+47"/>
-        <source>SysCoin client</source>
-        <translation>SysCoin client</translation>
+        <source>Syscoin client</source>
+        <translation>Syscoin client</translation>
     </message>
     <message numerus="yes">
         <location line="+141"/>
-        <source>%n active connection(s) to SysCoin network</source>
-        <translation><numerusform>%n actieve connectie naar SysCoinnetwerk</numerusform><numerusform>%n actieve connecties naar SysCoinnetwerk</numerusform></translation>
+        <source>%n active connection(s) to Syscoin network</source>
+        <translation><numerusform>%n actieve connectie naar Syscoinnetwerk</numerusform><numerusform>%n actieve connecties naar Syscoinnetwerk</numerusform></translation>
     </message>
     <message>
         <location line="+22"/>
@@ -607,7 +607,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location line="+70"/>
         <source>This transaction is over the size limit. You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network. Do you want to pay the fee?</source>
-        <translation>Deze transactie overschrijdt de groottelimiet. Om de transactie alsnog te versturen kunt u transactiekosten betalen van %1. Deze transactiekosten gaan naar de nodes die uw transactie verwerken en het helpt op deze manier bij het ondersteunen van het SysCoinnetwerk. Wilt u de transactiekosten betalen?</translation>
+        <translation>Deze transactie overschrijdt de groottelimiet. Om de transactie alsnog te versturen kunt u transactiekosten betalen van %1. Deze transactiekosten gaan naar de nodes die uw transactie verwerken en het helpt op deze manier bij het ondersteunen van het Syscoinnetwerk. Wilt u de transactiekosten betalen?</translation>
     </message>
     <message>
         <location line="-140"/>
@@ -656,8 +656,8 @@ Adres: %4
     <message>
         <location line="-23"/>
         <location line="+23"/>
-        <source>URI can not be parsed! This can be caused by an invalid SysCoin address or malformed URI parameters.</source>
-        <translation>URI kan niet worden geïnterpreteerd. Dit kan komen door een ongeldig SysCoinadres of misvormde URI-parameters.</translation>
+        <source>URI can not be parsed! This can be caused by an invalid Syscoin address or malformed URI parameters.</source>
+        <translation>URI kan niet worden geïnterpreteerd. Dit kan komen door een ongeldig Syscoinadres of misvormde URI-parameters.</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -671,8 +671,8 @@ Adres: %4
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="+111"/>
-        <source>A fatal error occurred. SysCoin can no longer continue safely and will quit.</source>
-        <translation>Er is een fatale fout opgetreden. SysCoin kan niet meer veilig doorgaan en zal nu afgesloten worden.</translation>
+        <source>A fatal error occurred. Syscoin can no longer continue safely and will quit.</source>
+        <translation>Er is een fatale fout opgetreden. Syscoin kan niet meer veilig doorgaan en zal nu afgesloten worden.</translation>
     </message>
 </context>
 <context>
@@ -737,8 +737,8 @@ Adres: %4
     </message>
     <message>
         <location line="-5"/>
-        <source>The entered address &quot;%1&quot; is not a valid SysCoin address.</source>
-        <translation>Het opgegeven adres &quot;%1&quot; is een ongeldig SysCoinadres</translation>
+        <source>The entered address &quot;%1&quot; is not a valid Syscoin address.</source>
+        <translation>Het opgegeven adres &quot;%1&quot; is een ongeldig Syscoinadres</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -756,8 +756,8 @@ Adres: %4
     <message>
         <location filename="../guiutil.cpp" line="+424"/>
         <location line="+12"/>
-        <source>SysCoin-Qt</source>
-        <translation>SysCoin-Qt</translation>
+        <source>Syscoin-Qt</source>
+        <translation>Syscoin-Qt</translation>
     </message>
     <message>
         <location line="-12"/>
@@ -819,13 +819,13 @@ Adres: %4
     </message>
     <message>
         <location line="+31"/>
-        <source>Automatically start SysCoin after logging in to the system.</source>
-        <translation>Start SysCoin automatisch na inloggen in het systeem</translation>
+        <source>Automatically start Syscoin after logging in to the system.</source>
+        <translation>Start Syscoin automatisch na inloggen in het systeem</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>&amp;Start SysCoin on system login</source>
-        <translation>Start &amp;SysCoin bij het inloggen in het systeem</translation>
+        <source>&amp;Start Syscoin on system login</source>
+        <translation>Start &amp;Syscoin bij het inloggen in het systeem</translation>
     </message>
     <message>
         <location line="+35"/>
@@ -844,8 +844,8 @@ Adres: %4
     </message>
     <message>
         <location line="+6"/>
-        <source>Automatically open the SysCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Open de SysCoin-poort automatisch op de router. Dit werkt alleen als de router UPnP ondersteunt en het aanstaat.</translation>
+        <source>Automatically open the Syscoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Open de Syscoin-poort automatisch op de router. Dit werkt alleen als de router UPnP ondersteunt en het aanstaat.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -854,8 +854,8 @@ Adres: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Connect to the SysCoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
-        <translation>Verbind met het SysCoin-netwerk via een SOCKS-proxy (bijv. wanneer u via Tor wilt verbinden)</translation>
+        <source>Connect to the Syscoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
+        <translation>Verbind met het Syscoin-netwerk via een SOCKS-proxy (bijv. wanneer u via Tor wilt verbinden)</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -929,8 +929,8 @@ Adres: %4
     </message>
     <message>
         <location line="+13"/>
-        <source>The user interface language can be set here. This setting will take effect after restarting SysCoin.</source>
-        <translation>De taal van de gebruikersinterface kan hier ingesteld worden. Deze instelling zal pas van kracht worden nadat SysCoin herstart wordt.</translation>
+        <source>The user interface language can be set here. This setting will take effect after restarting Syscoin.</source>
+        <translation>De taal van de gebruikersinterface kan hier ingesteld worden. Deze instelling zal pas van kracht worden nadat Syscoin herstart wordt.</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -944,8 +944,8 @@ Adres: %4
     </message>
     <message>
         <location line="+9"/>
-        <source>Whether to show SysCoin addresses in the transaction list or not.</source>
-        <translation>Of SysCoinadressen getoond worden in de transactielijst</translation>
+        <source>Whether to show Syscoin addresses in the transaction list or not.</source>
+        <translation>Of Syscoinadressen getoond worden in de transactielijst</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -996,8 +996,8 @@ Adres: %4
     <message>
         <location line="-9"/>
         <location line="+9"/>
-        <source>This setting will take effect after restarting SysCoin.</source>
-        <translation>Deze instelling zal pas van kracht worden na het herstarten van SysCoin.</translation>
+        <source>This setting will take effect after restarting Syscoin.</source>
+        <translation>Deze instelling zal pas van kracht worden na het herstarten van Syscoin.</translation>
     </message>
     <message>
         <location line="+29"/>
@@ -1015,8 +1015,8 @@ Adres: %4
     <message>
         <location line="+50"/>
         <location line="+166"/>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the SysCoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>De weergegeven informatie kan verouderd zijn. Uw portemonnee synchroniseert automaticsh met het SysCoinnetwerk nadat een verbinding is gelegd, maar dit proces is nog niet voltooid.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Syscoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>De weergegeven informatie kan verouderd zijn. Uw portemonnee synchroniseert automaticsh met het Syscoinnetwerk nadat een verbinding is gelegd, maar dit proces is nog niet voltooid.</translation>
     </message>
     <message>
         <location line="-124"/>
@@ -1219,8 +1219,8 @@ Adres: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Show the SysCoin-Qt help message to get a list with possible SysCoin command-line options.</source>
-        <translation>Toon het SysCoinQt-hulpbericht voor een lijst met mogelijke SysCoin commandoregel-opties.</translation>
+        <source>Show the Syscoin-Qt help message to get a list with possible Syscoin command-line options.</source>
+        <translation>Toon het SyscoinQt-hulpbericht voor een lijst met mogelijke Syscoin commandoregel-opties.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1239,13 +1239,13 @@ Adres: %4
     </message>
     <message>
         <location line="-104"/>
-        <source>SysCoin - Debug window</source>
-        <translation>SysCoin-debugscherm</translation>
+        <source>Syscoin - Debug window</source>
+        <translation>Syscoin-debugscherm</translation>
     </message>
     <message>
         <location line="+25"/>
-        <source>SysCoin Core</source>
-        <translation>SysCoin Kern</translation>
+        <source>Syscoin Core</source>
+        <translation>Syscoin Kern</translation>
     </message>
     <message>
         <location line="+279"/>
@@ -1254,8 +1254,8 @@ Adres: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Open the SysCoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Open het SysCoindebug-logbestand van de huidige datamap. Dit kan een aantal seconden duren voor grote logbestanden.</translation>
+        <source>Open the Syscoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Open het Syscoindebug-logbestand van de huidige datamap. Dit kan een aantal seconden duren voor grote logbestanden.</translation>
     </message>
     <message>
         <location line="+102"/>
@@ -1264,8 +1264,8 @@ Adres: %4
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="-30"/>
-        <source>Welcome to the SysCoin RPC console.</source>
-        <translation>Welkom bij de SysCoin RPC-console.</translation>
+        <source>Welcome to the Syscoin RPC console.</source>
+        <translation>Welkom bij de Syscoin RPC-console.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1448,8 +1448,8 @@ Adres: %4
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a SysCoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
-        <translation>Vul een SysCoinadres in (bijv. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</translation>
+        <source>Enter a Syscoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
+        <translation>Vul een Syscoinadres in (bijv. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</translation>
     </message>
 </context>
 <context>
@@ -1513,8 +1513,8 @@ Adres: %4
     </message>
     <message>
         <location line="+21"/>
-        <source>Sign the message to prove you own this SysCoin address</source>
-        <translation>Onderteken een bericht om te bewijzen dat u een bepaald SysCoinadres bezit</translation>
+        <source>Sign the message to prove you own this Syscoin address</source>
+        <translation>Onderteken een bericht om te bewijzen dat u een bepaald Syscoinadres bezit</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1549,8 +1549,8 @@ Adres: %4
     </message>
     <message>
         <location line="+40"/>
-        <source>Verify the message to ensure it was signed with the specified SysCoin address</source>
-        <translation>Controleer een bericht om te verifiëren dat het gespecificeerde SysCoinadres het bericht heeft ondertekend.</translation>
+        <source>Verify the message to ensure it was signed with the specified Syscoin address</source>
+        <translation>Controleer een bericht om te verifiëren dat het gespecificeerde Syscoinadres het bericht heeft ondertekend.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1565,8 +1565,8 @@ Adres: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a SysCoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
-        <translation>Vul een SysCoinadres in (bijv. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</translation>
+        <source>Enter a Syscoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
+        <translation>Vul een Syscoinadres in (bijv. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</translation>
     </message>
     <message>
         <location line="-2"/>
@@ -1575,8 +1575,8 @@ Adres: %4
     </message>
     <message>
         <location line="+3"/>
-        <source>Enter SysCoin signature</source>
-        <translation>Voer SysCoin-handtekening in</translation>
+        <source>Enter Syscoin signature</source>
+        <translation>Voer Syscoin-handtekening in</translation>
     </message>
     <message>
         <location line="+82"/>
@@ -1649,8 +1649,8 @@ Adres: %4
     <name>SplashScreen</name>
     <message>
         <location filename="../splashscreen.cpp" line="+22"/>
-        <source>The SysCoin developers</source>
-        <translation>De SysCoin-ontwikkelaars</translation>
+        <source>The Syscoin developers</source>
+        <translation>De Syscoin-ontwikkelaars</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2187,8 +2187,8 @@ Adres: %4
     <name>bitcoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="+94"/>
-        <source>SysCoin version</source>
-        <translation>SysCoinversie</translation>
+        <source>Syscoin version</source>
+        <translation>Syscoinversie</translation>
     </message>
     <message>
         <location line="+102"/>
@@ -2308,7 +2308,7 @@ rpcpassword=%s
 The username and password MUST NOT be the same.
 If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s &quot;SysCoin Alert&quot; admin@foo.com
+for example: alertnotify=echo %%s | mail -s &quot;Syscoin Alert&quot; admin@foo.com
 </source>
         <translation>%s, u moet een RPC-wachtwoord instellen in het configuratiebestand: %s
 U wordt aangeraden het volgende willekeurige wachtwoord te gebruiken:
@@ -2318,7 +2318,7 @@ rpcpassword=%s
 De gebruikersnaam en wachtwoord mogen niet hetzelfde zijn.
 Als het bestand niet bestaat, make hem dan aan met leesrechten voor enkel de eigenaar.
 Het is ook aan te bevelen &quot;alertnotify&quot; in te stellen zodat u op de hoogte gesteld wordt van problemen;
-for example: alertnotify=echo %%s | mail -s &quot;SysCoin Alert&quot; admin@foo.com</translation>
+for example: alertnotify=echo %%s | mail -s &quot;Syscoin Alert&quot; admin@foo.com</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -2332,8 +2332,8 @@ for example: alertnotify=echo %%s | mail -s &quot;SysCoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+3"/>
-        <source>Cannot obtain a lock on data directory %s. SysCoin is probably already running.</source>
-        <translation>Kan geen lock op de datamap %s verkrijgen. SysCoin draait vermoedelijk reeds.</translation>
+        <source>Cannot obtain a lock on data directory %s. Syscoin is probably already running.</source>
+        <translation>Kan geen lock op de datamap %s verkrijgen. Syscoin draait vermoedelijk reeds.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2377,8 +2377,8 @@ for example: alertnotify=echo %%s | mail -s &quot;SysCoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+3"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong SysCoin will not work properly.</source>
-        <translation>Waarschuwing: Controleer dat de datum en tijd op uw computer correct zijn ingesteld. Als uw klok fout staat zal SysCoin niet correct werken.</translation>
+        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Syscoin will not work properly.</source>
+        <translation>Waarschuwing: Controleer dat de datum en tijd op uw computer correct zijn ingesteld. Als uw klok fout staat zal Syscoin niet correct werken.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2627,8 +2627,8 @@ for example: alertnotify=echo %%s | mail -s &quot;SysCoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+5"/>
-        <source>SSL options: (see the SysCoin Wiki for SSL setup instructions)</source>
-        <translation>SSL-opties: (zie de SysCoin wiki voor SSL-instructies)</translation>
+        <source>SSL options: (see the Syscoin Wiki for SSL setup instructions)</source>
+        <translation>SSL-opties: (zie de Syscoin wiki voor SSL-instructies)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2817,13 +2817,13 @@ for example: alertnotify=echo %%s | mail -s &quot;SysCoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+1"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of SysCoin</source>
-        <translation>Fout bij laden wallet.dat: Portemonnee vereist een nieuwere versie van SysCoin</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of Syscoin</source>
+        <translation>Fout bij laden wallet.dat: Portemonnee vereist een nieuwere versie van Syscoin</translation>
     </message>
     <message>
         <location line="+93"/>
-        <source>Wallet needed to be rewritten: restart SysCoin to complete</source>
-        <translation>Portemonnee moest herschreven worden: Herstart SysCoin om te voltooien</translation>
+        <source>Wallet needed to be rewritten: restart Syscoin to complete</source>
+        <translation>Portemonnee moest herschreven worden: Herstart Syscoin om te voltooien</translation>
     </message>
     <message>
         <location line="-95"/>
@@ -2882,8 +2882,8 @@ for example: alertnotify=echo %%s | mail -s &quot;SysCoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="-25"/>
-        <source>Unable to bind to %s on this computer. SysCoin is probably already running.</source>
-        <translation>Niet in staat om aan %s te binden op deze computer. SysCoin draait vermoedelijk reeds.</translation>
+        <source>Unable to bind to %s on this computer. Syscoin is probably already running.</source>
+        <translation>Niet in staat om aan %s te binden op deze computer. Syscoin draait vermoedelijk reeds.</translation>
     </message>
     <message>
         <location line="+64"/>

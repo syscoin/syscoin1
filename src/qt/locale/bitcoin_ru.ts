@@ -4,13 +4,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
-        <source>About SysCoin</source>
-        <translation>&amp;О SysCoin</translation>
+        <source>About Syscoin</source>
+        <translation>&amp;О Syscoin</translation>
     </message>
     <message>
         <location line="+39"/>
-        <source>&lt;b&gt;SysCoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;SysCoin&lt;/b&gt; версия</translation>
+        <source>&lt;b&gt;Syscoin&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;Syscoin&lt;/b&gt; версия</translation>
     </message>
     <message>
         <location line="+57"/>
@@ -34,8 +34,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+0"/>
-        <source>The SysCoin developers</source>
-        <translation>Разработчики SysCoin</translation>
+        <source>The Syscoin developers</source>
+        <translation>Разработчики Syscoin</translation>
     </message>
 </context>
 <context>
@@ -67,7 +67,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="+63"/>
-        <source>These are your SysCoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
+        <source>These are your Syscoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you.</source>
         <translation>Это Ваши адреса для получения платежей. Вы можете дать разные адреса отправителям, чтобы отслеживать, кто именно вам платит.</translation>
     </message>
     <message>
@@ -82,8 +82,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+11"/>
-        <source>Sign a message to prove you own a SysCoin address</source>
-        <translation>Подписать сообщение, чтобы доказать владение адресом SysCoin</translation>
+        <source>Sign a message to prove you own a Syscoin address</source>
+        <translation>Подписать сообщение, чтобы доказать владение адресом Syscoin</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -107,8 +107,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="-44"/>
-        <source>Verify a message to ensure it was signed with a specified SysCoin address</source>
-        <translation>Проверить сообщение, чтобы убедиться, что оно было подписано указанным адресом SysCoin</translation>
+        <source>Verify a message to ensure it was signed with a specified Syscoin address</source>
+        <translation>Проверить сообщение, чтобы убедиться, что оно было подписано указанным адресом Syscoin</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -122,7 +122,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="-5"/>
-        <source>These are your SysCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Ваши адреса для получения средств. Совет: проверьте сумму и адрес назначения перед переводом.</translation>
     </message>
     <message>
@@ -275,8 +275,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="-56"/>
-        <source>SysCoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
-        <translation>Сейчас программа закроется для завершения процесса шифрования. Помните, что шифрование вашего бумажника не может полностью защитить ваши SysCoin от кражи с помощью инфицирования вашего компьютера вредоносным ПО.</translation>
+        <source>Syscoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
+        <translation>Сейчас программа закроется для завершения процесса шифрования. Помните, что шифрование вашего бумажника не может полностью защитить ваши Syscoin от кражи с помощью инфицирования вашего компьютера вредоносным ПО.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -374,8 +374,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+4"/>
-        <source>Show information about SysCoin</source>
-        <translation>Показать информацию о SysCoin&apos;е</translation>
+        <source>Show information about Syscoin</source>
+        <translation>Показать информацию о Syscoin&apos;е</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -419,13 +419,13 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="-347"/>
-        <source>Send coins to a SysCoin address</source>
-        <translation>Отправить монеты на указанный адрес SysCoin</translation>
+        <source>Send coins to a Syscoin address</source>
+        <translation>Отправить монеты на указанный адрес Syscoin</translation>
     </message>
     <message>
         <location line="+49"/>
-        <source>Modify configuration options for SysCoin</source>
-        <translation>Изменить параметры конфигурации SysCoin</translation>
+        <source>Modify configuration options for Syscoin</source>
+        <translation>Изменить параметры конфигурации Syscoin</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -455,8 +455,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-165"/>
         <location line="+530"/>
-        <source>SysCoin</source>
-        <translation>SysCoin</translation>
+        <source>Syscoin</source>
+        <translation>Syscoin</translation>
     </message>
     <message>
         <location line="-530"/>
@@ -480,8 +480,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+22"/>
-        <source>&amp;About SysCoin</source>
-        <translation>&amp;О SysCoin</translation>
+        <source>&amp;About Syscoin</source>
+        <translation>&amp;О Syscoin</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -500,13 +500,13 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+7"/>
-        <source>Sign messages with your SysCoin addresses to prove you own them</source>
-        <translation>Подписать сообщения вашим адресом SysCoin, чтобы доказать, что вы им владеете</translation>
+        <source>Sign messages with your Syscoin addresses to prove you own them</source>
+        <translation>Подписать сообщения вашим адресом Syscoin, чтобы доказать, что вы им владеете</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Verify messages to ensure they were signed with specified SysCoin addresses</source>
-        <translation>Проверить сообщения, чтобы удостовериться, что они были подписаны определённым адресом SysCoin</translation>
+        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
+        <translation>Проверить сообщения, чтобы удостовериться, что они были подписаны определённым адресом Syscoin</translation>
     </message>
     <message>
         <location line="+28"/>
@@ -536,12 +536,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+47"/>
-        <source>SysCoin client</source>
-        <translation>SysCoin клиент</translation>
+        <source>Syscoin client</source>
+        <translation>Syscoin клиент</translation>
     </message>
     <message numerus="yes">
         <location line="+141"/>
-        <source>%n active connection(s) to SysCoin network</source>
+        <source>%n active connection(s) to Syscoin network</source>
         <translation><numerusform>%n активное соединение с сетью</numerusform><numerusform>%n активных соединений с сетью</numerusform><numerusform>%n активных соединений с сетью</numerusform></translation>
     </message>
     <message>
@@ -656,8 +656,8 @@ Address: %4
     <message>
         <location line="-23"/>
         <location line="+23"/>
-        <source>URI can not be parsed! This can be caused by an invalid SysCoin address or malformed URI parameters.</source>
-        <translation>Не удалось обработать URI! Это может быть связано с неверным адресом SysCoin или неправильными параметрами URI.</translation>
+        <source>URI can not be parsed! This can be caused by an invalid Syscoin address or malformed URI parameters.</source>
+        <translation>Не удалось обработать URI! Это может быть связано с неверным адресом Syscoin или неправильными параметрами URI.</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -671,8 +671,8 @@ Address: %4
     </message>
     <message>
         <location filename="../bitcoin.cpp" line="+111"/>
-        <source>A fatal error occurred. SysCoin can no longer continue safely and will quit.</source>
-        <translation>Произошла неисправимая ошибка. SysCoin не может безопасно продолжать работу и будет закрыт.</translation>
+        <source>A fatal error occurred. Syscoin can no longer continue safely and will quit.</source>
+        <translation>Произошла неисправимая ошибка. Syscoin не может безопасно продолжать работу и будет закрыт.</translation>
     </message>
 </context>
 <context>
@@ -737,8 +737,8 @@ Address: %4
     </message>
     <message>
         <location line="-5"/>
-        <source>The entered address &quot;%1&quot; is not a valid SysCoin address.</source>
-        <translation>Введённый адрес &quot;%1&quot; не является правильным SysCoin-адресом.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid Syscoin address.</source>
+        <translation>Введённый адрес &quot;%1&quot; не является правильным Syscoin-адресом.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -756,8 +756,8 @@ Address: %4
     <message>
         <location filename="../guiutil.cpp" line="+424"/>
         <location line="+12"/>
-        <source>SysCoin-Qt</source>
-        <translation>SysCoin-Qt</translation>
+        <source>Syscoin-Qt</source>
+        <translation>Syscoin-Qt</translation>
     </message>
     <message>
         <location line="-12"/>
@@ -819,13 +819,13 @@ Address: %4
     </message>
     <message>
         <location line="+31"/>
-        <source>Automatically start SysCoin after logging in to the system.</source>
-        <translation>Автоматически запускать SysCoin после входа в систему</translation>
+        <source>Automatically start Syscoin after logging in to the system.</source>
+        <translation>Автоматически запускать Syscoin после входа в систему</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>&amp;Start SysCoin on system login</source>
-        <translation>&amp;Запускать SysCoin при входе в систему</translation>
+        <source>&amp;Start Syscoin on system login</source>
+        <translation>&amp;Запускать Syscoin при входе в систему</translation>
     </message>
     <message>
         <location line="+35"/>
@@ -844,8 +844,8 @@ Address: %4
     </message>
     <message>
         <location line="+6"/>
-        <source>Automatically open the SysCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Автоматически открыть порт для SysCoin-клиента на роутере. Работает только если Ваш роутер поддерживает UPnP, и данная функция включена.</translation>
+        <source>Automatically open the Syscoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Автоматически открыть порт для Syscoin-клиента на роутере. Работает только если Ваш роутер поддерживает UPnP, и данная функция включена.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -854,8 +854,8 @@ Address: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Connect to the SysCoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
-        <translation>Подключаться к сети SysCoin через прокси SOCKS (например, при подключении через Tor).</translation>
+        <source>Connect to the Syscoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
+        <translation>Подключаться к сети Syscoin через прокси SOCKS (например, при подключении через Tor).</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -929,8 +929,8 @@ Address: %4
     </message>
     <message>
         <location line="+13"/>
-        <source>The user interface language can be set here. This setting will take effect after restarting SysCoin.</source>
-        <translation>Здесь можно выбрать язык интерфейса. Настройки вступят в силу после перезапуска SysCoin.</translation>
+        <source>The user interface language can be set here. This setting will take effect after restarting Syscoin.</source>
+        <translation>Здесь можно выбрать язык интерфейса. Настройки вступят в силу после перезапуска Syscoin.</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -944,8 +944,8 @@ Address: %4
     </message>
     <message>
         <location line="+9"/>
-        <source>Whether to show SysCoin addresses in the transaction list or not.</source>
-        <translation>Показывать ли адреса SysCoin в списке транзакций.</translation>
+        <source>Whether to show Syscoin addresses in the transaction list or not.</source>
+        <translation>Показывать ли адреса Syscoin в списке транзакций.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -996,8 +996,8 @@ Address: %4
     <message>
         <location line="-9"/>
         <location line="+9"/>
-        <source>This setting will take effect after restarting SysCoin.</source>
-        <translation>Эта настройка вступит в силу после перезапуска SysCoin</translation>
+        <source>This setting will take effect after restarting Syscoin.</source>
+        <translation>Эта настройка вступит в силу после перезапуска Syscoin</translation>
     </message>
     <message>
         <location line="+29"/>
@@ -1015,8 +1015,8 @@ Address: %4
     <message>
         <location line="+50"/>
         <location line="+166"/>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the SysCoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Отображаемая информация может быть устаревшей. Ваш бумажник автоматически синхронизируется с сетью SysCoin после подключения, но этот процесс пока не завершён.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Syscoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>Отображаемая информация может быть устаревшей. Ваш бумажник автоматически синхронизируется с сетью Syscoin после подключения, но этот процесс пока не завершён.</translation>
     </message>
     <message>
         <location line="-124"/>
@@ -1219,8 +1219,8 @@ Address: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Show the SysCoin-Qt help message to get a list with possible SysCoin command-line options.</source>
-        <translation>Показать помощь по SysCoin-Qt, чтобы получить список доступных параметров командной строки.</translation>
+        <source>Show the Syscoin-Qt help message to get a list with possible Syscoin command-line options.</source>
+        <translation>Показать помощь по Syscoin-Qt, чтобы получить список доступных параметров командной строки.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1239,13 +1239,13 @@ Address: %4
     </message>
     <message>
         <location line="-104"/>
-        <source>SysCoin - Debug window</source>
-        <translation>SysCoin - Окно отладки</translation>
+        <source>Syscoin - Debug window</source>
+        <translation>Syscoin - Окно отладки</translation>
     </message>
     <message>
         <location line="+25"/>
-        <source>SysCoin Core</source>
-        <translation>Ядро SysCoin</translation>
+        <source>Syscoin Core</source>
+        <translation>Ядро Syscoin</translation>
     </message>
     <message>
         <location line="+279"/>
@@ -1254,8 +1254,8 @@ Address: %4
     </message>
     <message>
         <location line="+7"/>
-        <source>Open the SysCoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Открыть отладочный лог-файл SysCoin из текущего каталога данных. Это может занять несколько секунд для больших лог-файлов.</translation>
+        <source>Open the Syscoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Открыть отладочный лог-файл Syscoin из текущего каталога данных. Это может занять несколько секунд для больших лог-файлов.</translation>
     </message>
     <message>
         <location line="+102"/>
@@ -1264,8 +1264,8 @@ Address: %4
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="-30"/>
-        <source>Welcome to the SysCoin RPC console.</source>
-        <translation>Добро пожаловать в RPC-консоль SysCoin.</translation>
+        <source>Welcome to the Syscoin RPC console.</source>
+        <translation>Добро пожаловать в RPC-консоль Syscoin.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1448,8 +1448,8 @@ Address: %4
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a SysCoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
-        <translation>Введите SysCoin-адрес (например 1LA5FtQhnnWnkK6zjFfutR7Stiit4wKd63)</translation>
+        <source>Enter a Syscoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
+        <translation>Введите Syscoin-адрес (например 1LA5FtQhnnWnkK6zjFfutR7Stiit4wKd63)</translation>
     </message>
 </context>
 <context>
@@ -1513,8 +1513,8 @@ Address: %4
     </message>
     <message>
         <location line="+21"/>
-        <source>Sign the message to prove you own this SysCoin address</source>
-        <translation>Подписать сообщение, чтобы доказать владение адресом SysCoin</translation>
+        <source>Sign the message to prove you own this Syscoin address</source>
+        <translation>Подписать сообщение, чтобы доказать владение адресом Syscoin</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1549,8 +1549,8 @@ Address: %4
     </message>
     <message>
         <location line="+40"/>
-        <source>Verify the message to ensure it was signed with the specified SysCoin address</source>
-        <translation>Проверить сообщение, чтобы убедиться, что оно было подписано указанным адресом SysCoin</translation>
+        <source>Verify the message to ensure it was signed with the specified Syscoin address</source>
+        <translation>Проверить сообщение, чтобы убедиться, что оно было подписано указанным адресом Syscoin</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1565,8 +1565,8 @@ Address: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a SysCoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
-        <translation>Введите адрес SysCoin (напр. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</translation>
+        <source>Enter a Syscoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
+        <translation>Введите адрес Syscoin (напр. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</translation>
     </message>
     <message>
         <location line="-2"/>
@@ -1575,8 +1575,8 @@ Address: %4
     </message>
     <message>
         <location line="+3"/>
-        <source>Enter SysCoin signature</source>
-        <translation>Введите подпись SysCoin</translation>
+        <source>Enter Syscoin signature</source>
+        <translation>Введите подпись Syscoin</translation>
     </message>
     <message>
         <location line="+82"/>
@@ -1649,8 +1649,8 @@ Address: %4
     <name>SplashScreen</name>
     <message>
         <location filename="../splashscreen.cpp" line="+22"/>
-        <source>The SysCoin developers</source>
-        <translation>Разработчики SysCoin</translation>
+        <source>The Syscoin developers</source>
+        <translation>Разработчики Syscoin</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2187,7 +2187,7 @@ Address: %4
     <name>bitcoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="+94"/>
-        <source>SysCoin version</source>
+        <source>Syscoin version</source>
         <translation>Версия</translation>
     </message>
     <message>
@@ -2307,7 +2307,7 @@ rpcpassword=%s
 The username and password MUST NOT be the same.
 If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s &quot;SysCoin Alert&quot; admin@foo.com
+for example: alertnotify=echo %%s | mail -s &quot;Syscoin Alert&quot; admin@foo.com
 </source>
         <translation>%s, вы должны установить опцию rpcpassword в конфигурационном файле:
  %s
@@ -2318,7 +2318,7 @@ rpcpassword=%s
 Имя и пароль ДОЛЖНЫ различаться.
 Если файл не существует, создайте его и установите права доступа только для владельца, только для чтения.
 Также рекомендуется включить alertnotify для оповещения о проблемах;
-Например: alertnotify=echo %%s | mail -s &quot;SysCoin Alert&quot; admin@foo.com
+Например: alertnotify=echo %%s | mail -s &quot;Syscoin Alert&quot; admin@foo.com
 </translation>
     </message>
     <message>
@@ -2333,8 +2333,8 @@ rpcpassword=%s
     </message>
     <message>
         <location line="+3"/>
-        <source>Cannot obtain a lock on data directory %s. SysCoin is probably already running.</source>
-        <translation>Не удаётся установить блокировку на каталог данных %s.  Возможно, SysCoin уже работает.</translation>
+        <source>Cannot obtain a lock on data directory %s. Syscoin is probably already running.</source>
+        <translation>Не удаётся установить блокировку на каталог данных %s.  Возможно, Syscoin уже работает.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2378,8 +2378,8 @@ rpcpassword=%s
     </message>
     <message>
         <location line="+3"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong SysCoin will not work properly.</source>
-        <translation>Внимание: убедитесь, что дата и время на Вашем компьютере выставлены верно. Если Ваши часы идут неправильно, SysCoin будет работать некорректно.</translation>
+        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Syscoin will not work properly.</source>
+        <translation>Внимание: убедитесь, что дата и время на Вашем компьютере выставлены верно. Если Ваши часы идут неправильно, Syscoin будет работать некорректно.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2628,9 +2628,9 @@ rpcpassword=%s
     </message>
     <message>
         <location line="+5"/>
-        <source>SSL options: (see the SysCoin Wiki for SSL setup instructions)</source>
+        <source>SSL options: (see the Syscoin Wiki for SSL setup instructions)</source>
         <translation>
-Параметры SSL: (см. SysCoin Wiki для инструкций по настройке SSL)</translation>
+Параметры SSL: (см. Syscoin Wiki для инструкций по настройке SSL)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2819,13 +2819,13 @@ rpcpassword=%s
     </message>
     <message>
         <location line="+1"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of SysCoin</source>
-        <translation>Ошибка загрузки wallet.dat: бумажник требует более новую версию SysCoin</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of Syscoin</source>
+        <translation>Ошибка загрузки wallet.dat: бумажник требует более новую версию Syscoin</translation>
     </message>
     <message>
         <location line="+93"/>
-        <source>Wallet needed to be rewritten: restart SysCoin to complete</source>
-        <translation>Необходимо перезаписать бумажник, перезапустите SysCoin для завершения операции.</translation>
+        <source>Wallet needed to be rewritten: restart Syscoin to complete</source>
+        <translation>Необходимо перезаписать бумажник, перезапустите Syscoin для завершения операции.</translation>
     </message>
     <message>
         <location line="-95"/>
@@ -2884,8 +2884,8 @@ rpcpassword=%s
     </message>
     <message>
         <location line="-25"/>
-        <source>Unable to bind to %s on this computer. SysCoin is probably already running.</source>
-        <translation>Невозможно привязаться к %s на этом компьютере.  Возможно, SysCoin уже работает.</translation>
+        <source>Unable to bind to %s on this computer. Syscoin is probably already running.</source>
+        <translation>Невозможно привязаться к %s на этом компьютере.  Возможно, Syscoin уже работает.</translation>
     </message>
     <message>
         <location line="+64"/>

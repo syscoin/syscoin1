@@ -14,7 +14,7 @@ To Build
 	cd src/
 	make -f makefile.unix		# Headless syscoin
 
-See readme-qt.rst for instructions on building SysCoin-Qt, the graphical user interface.
+See readme-qt.rst for instructions on building Syscoin-Qt, the graphical user interface.
 
 Dependencies
 ---------------------

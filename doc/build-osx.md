@@ -26,7 +26,7 @@ Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.
 Notes
 -----
 
-See `doc/readme-qt.rst` for instructions on building SysCoin-Qt, the
+See `doc/readme-qt.rst` for instructions on building Syscoin-Qt, the
 graphical user interface.
 
 Tested on OS X 10.5 through 10.8 on Intel processors only. PPC is not
@@ -134,7 +134,7 @@ Rerunning "openssl version" should now return the correct version.
 Creating a release build
 ------------------------
 
-A syscoind binary is not included in the SysCoin-Qt.app bundle. You can ignore
+A syscoind binary is not included in the Syscoin-Qt.app bundle. You can ignore
 this section if you are building `syscoind` for your own use.
 
 If you are building `litecond` for others, your build machine should be set up
@@ -156,10 +156,10 @@ As of December 2012, the `boost` port does not obey `macosx_deployment_target`.
 Download `http://gavinandresen-bitcoin.s3.amazonaws.com/boost_macports_fix.zip`
 for a fix. Some ports also seem to obey either `build_arch` or
 `macosx_deployment_target`, but not both at the same time. For example, building
-on an OS X 10.6 64-bit machine fails. Official release builds of SysCoin-Qt are
+on an OS X 10.6 64-bit machine fails. Official release builds of Syscoin-Qt are
 compiled on an OS X 10.6 32-bit machine to workaround that problem.
 
-Once dependencies are compiled, creating `SysCoin-Qt.app` is easy:
+Once dependencies are compiled, creating `Syscoin-Qt.app` is easy:
 
     make -f Makefile.osx RELEASE=1
 
@@ -172,8 +172,8 @@ directory. We have to first create the RPC configuration file, though.
 Run `./syscoind` to get the filename where it should be put, or just try these
 commands:
 
-    echo -e "rpcuser=syscoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/SysCoin/syscoin.conf"
-    chmod 600 "/Users/${USER}/Library/Application Support/SysCoin/syscoin.conf"
+    echo -e "rpcuser=syscoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Syscoin/syscoin.conf"
+    chmod 600 "/Users/${USER}/Library/Application Support/Syscoin/syscoin.conf"
 
 When next you run it, it will start downloading the blockchain, but it won't
 output anything while it's doing this. This process may take several hours.

@@ -32,7 +32,7 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
 #endif
 #if QT_VERSION >= 0x040700
     /* Do not move this to the XML file, Qt before 4.7 will choke on it */
-    ui->lineEditCoinControlChange->setPlaceholderText(tr("Enter a SysCoin address (e.g. UPMdB5j6XH61G6W3xiocGVHKHrLtbo3Pq8)"));
+    ui->lineEditCoinControlChange->setPlaceholderText(tr("Enter a Syscoin address (e.g. UPMdB5j6XH61G6W3xiocGVHKHrLtbo3Pq8)"));
 #endif
 
     addEntry();

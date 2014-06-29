@@ -34,7 +34,7 @@ unsigned int nTransactionsUpdated = 0;
 map<uint256, CBlockIndex*> mapBlockIndex;
 uint256 hashGenesisBlock(
 		"0xc5867632d2d09038ac2ea64af1f9c5474a0efc8e822bf57c43bacfa4c378bf43");
-static CBigNum bnProofOfWorkLimit(~uint256(0) >> 20); // SysCoin: starting difficulty is 1 / 2^12
+static CBigNum bnProofOfWorkLimit(~uint256(0) >> 20); // Syscoin: starting difficulty is 1 / 2^12
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
 uint256 nBestChainWork = 0;
@@ -79,7 +79,7 @@ map<uint256, set<uint256> > mapOrphanTransactionsByPrev;
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "SysCoin Signed Message:\n";
+const string strMessageMagic = "Syscoin Signed Message:\n";
 
 double dHashesPerSec = 0.0;
 int64 nHPSTimerStart = 0;
@@ -409,7 +409,7 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans) {
 //
 
 bool CTxOut::IsDust() const {
-	// SysCoin: IsDust() detection disabled, allows any valid dust to be relayed.
+	// Syscoin: IsDust() detection disabled, allows any valid dust to be relayed.
 	// The fees imposed on each dust txo is considered sufficient spam deterrant.
 	return false;
 }
@@ -789,7 +789,7 @@ int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree,
 			nMinFee = 0;
 	}
 
-	// SysCoin
+	// Syscoin
 	// To limit dust spam, add nBaseFee for each output less than DUST_SOFT_LIMIT
 	BOOST_FOREACH(const CTxOut& txout, vout)
 		if (txout.nValue < DUST_SOFT_LIMIT)
@@ -1285,8 +1285,8 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
 	return nSubsidy + nFees + GetAliasFeeSubsidy(nHeight) + GetOfferFeeSubsidy(nHeight);
 }
 
-static const int64 nTargetTimespan = 1 * 60 * 60; // SysCoin: 1 hour
-static const int64 nTargetSpacing = 1 * 60; // SysCoin: 1 minute
+static const int64 nTargetTimespan = 1 * 60 * 60; // Syscoin: 1 hour
+static const int64 nTargetSpacing = 1 * 60; // Syscoin: 1 minute
 
 //
 // minimum amount of work that could possibly be required nTime after
@@ -4616,7 +4616,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle) {
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// SysCoinMiner
+// SyscoinMiner
 //
 
 int static FormatHashBlocks(void* pbuffer, unsigned int len) {
@@ -5029,7 +5029,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey) {
 					hashTarget.GetHex().c_str());
 
 		//// debug print
-		printf("SysCoinMiner:\n");
+		printf("SyscoinMiner:\n");
 		printf(
 				"AUX proof-of-work found  \n     our hash: %s   \n  parent hash: %s  \n       target: %s\n",
 				hash.GetHex().c_str(),
@@ -5041,7 +5041,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey) {
 			return false;
 
 		//// debug print
-		printf("SysCoinMiner:\n");
+		printf("SyscoinMiner:\n");
 		printf("proof-of-work found  \n  hash: %s  \ntarget: %s\n",
 				hash.GetHex().c_str(), hashTarget.GetHex().c_str());
 	}
@@ -5055,7 +5055,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey) {
 	{
 		LOCK(cs_main);
 		if (pblock->hashPrevBlock != hashBestChain)
-			return error("SysCoinMiner : generated block is stale");
+			return error("SyscoinMiner : generated block is stale");
 
 		// Remove key from key pool
 		reservekey.KeepKey();
@@ -5069,7 +5069,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey) {
 		// Process this block the same as if we had received it from another node
 		CValidationState state;
 		if (!ProcessBlock(state, NULL, pblock))
-			return error("SysCoinMiner : ProcessBlock, block not accepted");
+			return error("SyscoinMiner : ProcessBlock, block not accepted");
 	}
 
 	return true;
@@ -5118,7 +5118,7 @@ CBlockHeader CBlockIndex::GetBlockHeader() const {
 }
 
 void static ScryptMiner(CWallet *pwallet) {
-	printf("SysCoinScryptMiner started\n");
+	printf("SyscoinScryptMiner started\n");
 	SetThreadPriority(THREAD_PRIORITY_LOWEST);
 	RenameThread("syscoin-miner");
 

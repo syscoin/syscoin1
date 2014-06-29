@@ -100,7 +100,7 @@ void EditOfferDialog::accept()
             break;
         case OfferTableModel::INVALID_OFFER:
             QMessageBox::warning(this, windowTitle(),
-                tr("The entered offer \"%1\" is not a valid SysCoin offer.").arg(ui->offerEdit->text()),
+                tr("The entered offer \"%1\" is not a valid Syscoin offer.").arg(ui->offerEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
         case OfferTableModel::DUPLICATE_OFFER:
