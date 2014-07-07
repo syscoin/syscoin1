@@ -289,7 +289,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 5)
         throw runtime_error(
-            "sendtoaddress <datacoinaddress> <amount> [comment] [comment-to] [data]\n"
+            "sendtoaddress <syscoinaddress> <amount> [comment] [comment-to] [data]\n"
             "<amount> is a real and is rounded to the nearest 0.00000001"
             "<data> is a base64 encoded data chunk"
             + HelpRequiringPassphrase());
@@ -683,7 +683,7 @@ Value sendfrom(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 7)
         throw runtime_error(
-            "sendfrom <fromaccount> <todatacoinaddress> <amount> [minconf=1] [comment] [comment-to] [data]\n"
+            "sendfrom <fromaccount> <tosyscoinaddress> <amount> [minconf=1] [comment] [comment-to] [data]\n"
             "<amount> is a real and is rounded to the nearest 0.00000001"
             "<data> is a base64 encoded data chunk"
             + HelpRequiringPassphrase());
