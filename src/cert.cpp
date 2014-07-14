@@ -1028,7 +1028,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
             // check for enough fees
             nNetFee = GetCertNetFee(tx);
-            if (nNetFee < GetCertNetworkFee(4, pindexBlock->nHeight)-COIN)
+            if (nNetFee < GetCertNetworkFee(1, pindexBlock->nHeight)-COIN)
                 return error(
                         "CheckCertInputs() : got tx %s with fee too low %lu",
                         tx.GetHash().GetHex().c_str(),
