@@ -1028,7 +1028,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
             // check for enough fees
             nNetFee = GetCertNetFee(tx);
-            if (nNetFee < GetCertNetworkFee(8, pindexBlock->nHeight)-COIN)
+            if (nNetFee < GetCertNetworkFee(4, pindexBlock->nHeight)-COIN)
                 return error(
                         "CheckCertInputs() : got tx %s with fee too low %lu",
                         tx.GetHash().GetHex().c_str(),
@@ -1526,7 +1526,7 @@ Value certissueractivate(const Array& params, bool fHelp) {
             throw runtime_error("Could not decode certissuer transaction");
 
         // calculate network fees
-        int64 nNetFee = GetCertNetworkFee(8, pindexBest->nHeight);
+        int64 nNetFee = GetCertNetworkFee(4, pindexBest->nHeight);
 
         // unserialize certissuer object from txn, serialize back
         CCertIssuer newCertIssuer;
@@ -1845,7 +1845,7 @@ Value certtransfer(const Array& params, bool fHelp) {
         "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
     // calculate network fees
-    int64 nNetFee = GetCertNetworkFee(2, pindexBest->nHeight);
+    int64 nNetFee = GetCertNetworkFee(4, pindexBest->nHeight);
 
     theCertItem.nFee += nNetFee;
     theCertIssuer.certs.clear();
