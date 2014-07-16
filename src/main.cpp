@@ -10,6 +10,7 @@
 #include "net.h"
 #include "init.h"
 #include "auxpow.h"
+#include "message.h"
 #include "ui_interface.h"
 #include "checkqueue.h"
 #include <boost/algorithm/string/replace.hpp>
@@ -33,7 +34,7 @@ CTxMemPool mempool;
 unsigned int nTransactionsUpdated = 0;
 map<uint256, CBlockIndex*> mapBlockIndex;
 uint256 hashGenesisBlock(
-		"0xc5867632d2d09038ac2ea64af1f9c5474a0efc8e822bf57c43bacfa4c378bf43");
+		"0xc84c8d0f52a7418b28a24e7b5354d6febed47c8cc33b3fa20fdbe4b3a1fcd9c4");
 static CBigNum bnProofOfWorkLimit(~uint256(0) >> 20); // Syscoin: starting difficulty is 1 / 2^12
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
@@ -1277,12 +1278,17 @@ uint256 static GetOrphanRoot(const CBlockHeader* pblock) {
  */
 int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
 	int64 nSubsidy = 1024 * COIN;
-
-	// Subsidy is cut in half every 131400 blocks, which will occur approximately every 3 months
-	nSubsidy >>= (nHeight / 131400);
-	nSubsidy = (nHeight <= 1314000 ? nSubsidy : 0);
-
-	return nSubsidy + nFees + GetAliasFeeSubsidy(nHeight) + GetOfferFeeSubsidy(nHeight);
+	if(nHeight == 1) nSubsidy = 1024 * COIN; // pre-mine amount 
+	if(nHeight > 21600 && nHeight <= 64800)nSubsidy = 768 * COIN;
+	else if(nHeight > 64800 && nHeight <= 280800)nSubsidy = 512 * COIN;
+	else if(nHeight > 280800 && nHeight <= 669600)nSubsidy = 384 * COIN;
+	else if(nHeight > 669600 && nHeight <= 1195200)nSubsidy = 256 * COIN;
+	else if(nHeight > 1195200 && nHeight <= 11754200)nSubsidy = 128 * COIN;
+	else if(nHeight > 11754200) nSubsidy = 0;
+	return nSubsidy + nFees 
+		+ GetAliasFeeSubsidy(nHeight) 
+		+ GetOfferFeeSubsidy(nHeight)
+		+ GetCertFeeSubsidy(nHeight);
 }
 
 static const int64 nTargetTimespan = 1 * 60 * 60; // Syscoin: 1 hour
@@ -2118,7 +2124,6 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 
 	// BIP16 didn't become active until Oct 1 2012
 	int64 nBIP16SwitchTime = 1349049600;
-	fEnforceBIP30 = pindex->nHeight < 5;
 	bool fStrictPayToScriptHash = (pindex->nTime >= nBIP16SwitchTime);
 
 	unsigned int flags =
@@ -2189,8 +2194,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 				nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs - 1));
 
 		if (vtx[0].GetValueOut()
-				> GetBlockValue(pindex->nHeight, nFees, 0) * 2 //todo another HACK to fix until fees recomputed OK on startup
-				&& !fEnforceBIP30)
+				> GetBlockValue(pindex->nHeight, nFees, 0) /* * 2 */ ) //todo another HACK to fix until fees recomputed OK on startup
 			return state.DoS(100,
 					error( "ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",
 							pindex->nHeight, vtx[0].GetValueOut(),
@@ -3325,8 +3329,7 @@ bool LoadBlockIndex() {
 		pchMessageStart[2] = 0xfc;
 		pchMessageStart[3] = 0xcc;
 		hashGenesisBlock =
-				uint256(
-						"0x9a493d201756d3f75eee2ebe6b51170db6c7b7879069bee263c710da8af45bb7");
+				uint256("0x2f42154af40613d1fc0f5c63fcade17c1fbf4aff311722b38dd6698b77668b34");
 	}
 
 	//
@@ -3352,8 +3355,9 @@ bool InitBlockIndex() {
 	if (!fReindex) {
 		// Genesis block
 		const char* pszStartTopic =
-				"Barons of Broadband: Comcast perfectly fits the old notion of monopolists as robber barons.";
+				"NASA: Humans Will Prove ‘We Are Not Alone In The Universe’ Within 20 Years";
 		CTransaction txNew;
+		txNew.data = vchFromString(GENESIS_MESSAGE);
 		txNew.vin.resize(1);
 		txNew.vout.resize(1);
 		txNew.vin[0].scriptSig = CScript() << 0 << CBigNum(999)
@@ -3367,13 +3371,13 @@ bool InitBlockIndex() {
 		block.hashPrevBlock = 0;
 		block.hashMerkleRoot = block.BuildMerkleTree();
 		block.nVersion = 1;
-		block.nTime = 1392757053;
+		block.nTime = 1405483400;
 		block.nBits = 0x1e0ffff0;
-		block.nNonce = 167264;
+		block.nNonce = 1157535;
 
 		if (fTestNet) {
-			block.nTime = 1392757043;
-			block.nNonce = 1201077;
+			block.nTime = 1405483297;
+			block.nNonce = 1565196;
 		}
 
 		//// debug print
@@ -3381,10 +3385,9 @@ bool InitBlockIndex() {
 		printf("%s\n", hash.ToString().c_str());
 		printf("%s\n", hashGenesisBlock.ToString().c_str());
 		printf("%s\n", block.hashMerkleRoot.ToString().c_str());
-		assert(
-				block.hashMerkleRoot
+		assert( block.hashMerkleRoot
 						== uint256(
-								"0xdb84feda376497e836bc74326c7f2cfe924e9cb827fc88eee478f672b8612cdc"));
+								"0x45eef7a7ed92208bcb532a58c3048bc38a299f9edfd8b48b677cabf4370274c9"));
 		block.print();
 
 		//assert(hash == hashGenesisBlock);
