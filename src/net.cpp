@@ -1192,14 +1192,14 @@ void MapPort(bool)
 // The first name is used as information source for addrman.
 // The second name should resolve to a list of seed addresses.
 static const char *strMainNetDNSSeed[][2] = {
-    {"stellanet.dyndns.org", "stellanet.dyndns.org"},
-    {"54.84.175.226", "54.84.175.226"},
+    {"stella.hopto.org", "stella.hopto.org"},
+    {"212.17.40.234", "212.17.40.234"},
     {NULL, NULL}
 };
 
 static const char *strTestNetDNSSeed[][2] = {
-    {"stellanet.dyndns.org", "stellanet.dyndns.org"},
-    {"54.84.175.226", "54.84.175.226"},
+    {"stella.hopto.org", "stella.hopto.org"},
+    {"212.17.40.234", "212.17.40.234"},
     {NULL, NULL}
 };
 

@@ -319,6 +319,20 @@ static const CRPCCommand vRPCCommands[] =
   { "certissuerscan",        &certissuerscan,    false,      false,      true },
   { "certissuerfilter",      &certissuerfilter,  false,      false,      true },
 
+  // use the blockchain as a platform for escrow transactions
+  { "escrownew",       &phrpcfunc,     false,      false,      true },
+  { "escrowcancel",    &phrpcfunc,false,      false,      true },
+  { "escrowaccept",    &phrpcfunc,  false,      false,      true },
+  { "escrowreject",    &phrpcfunc,           false,      false,      true },
+  { "escrowrelease",   &phrpcfunc,      false,      false,      true },
+  { "escrowextend",    &phrpcfunc,      false,      false,      true },
+  { "escrowburn",      &phrpcfunc,      false,      false,      true },
+  { "escrowlist",      &phrpcfunc,    false,      false,      true },
+  { "escrowinfo",      &phrpcfunc,    false,      false,      true },
+  { "escrowhistory",   &phrpcfunc, false,      false,      true },
+  { "escrowscan",      &phrpcfunc,    false,      false,      true },
+  { "escrowfilter",    &phrpcfunc,  false,      false,      true },
+
 };
 
 CRPCTable::CRPCTable()
