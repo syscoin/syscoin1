@@ -1277,15 +1277,26 @@ uint256 static GetOrphanRoot(const CBlockHeader* pblock) {
  * @return
  */
 int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
-	int64 nSubsidy = 1024 * COIN;
+    int64 nSubsidy = 128 * COIN;
+
 	if(nHeight == 1) nSubsidy = 1024 * COIN; // pre-mine amount 
-	if(nHeight > 21600 && nHeight <= 64800)nSubsidy = 768 * COIN;
-	else if(nHeight > 64800 && nHeight <= 280800)nSubsidy = 512 * COIN;
-	else if(nHeight > 280800 && nHeight <= 669600)nSubsidy = 384 * COIN;
-	else if(nHeight > 669600 && nHeight <= 1195200)nSubsidy = 256 * COIN;
-	else if(nHeight > 1195200 && nHeight <= 11754200)nSubsidy = 128 * COIN;
-	else if(nHeight > 11754200) nSubsidy = 0;
-	return nSubsidy + nFees 
+
+    if(nHeight > 259200 && nHeight <= 777600)
+        nSubsidy = 96 * COIN;
+    else if(nHeight > 777600 && nHeight <= 1814400)
+        nSubsidy = 80 * COIN;
+    else if(nHeight > 1814400 && nHeight <= 3369600)
+        nSubsidy = 64 * COIN;
+    else if(nHeight > 3369600 && nHeight <= 5443200)
+        nSubsidy = 48 * COIN;
+    else if(nHeight > 5443200 && nHeight <= 8035200)
+        nSubsidy = 40 * COIN;
+    else if(nHeight > 8035200 && nHeight <= 35913400)
+        nSubsidy = 32 * COIN;
+    else if(nHeight > 35913400)
+        nSubsidy = 0;
+
+    return nSubsidy + nFees
 		+ GetAliasFeeSubsidy(nHeight) 
 		+ GetOfferFeeSubsidy(nHeight)
 		+ GetCertFeeSubsidy(nHeight);
