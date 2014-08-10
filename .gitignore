@@ -39,9 +39,9 @@ build
 *.dat
 *.pid
 
-aliases
-offers
-certificates
-chainstate
-database
-offers
+aliases/
+offers/
+certificates/
+chainstate/
+database/
+offers/
