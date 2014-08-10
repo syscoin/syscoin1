@@ -1,0 +1,295 @@
+2014-08-08 06:54:36 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2014-08-08 06:54:36 Syscoin version v0.8.6.2-unk-beta (2014-02-18 16:44:30 -0800)
+2014-08-08 06:54:36 Using OpenSSL version OpenSSL 0.9.8za 5 Jun 2014
+2014-08-08 06:54:36 Default data directory /Users/sschepis/Library/Application Support/Syscoin
+2014-08-08 06:54:36 Using data directory /Users/sschepis/Development/syscoin-testnet-box/2/testnet
+2014-08-08 06:54:36 Using at most 125 connections (4864 file descriptors available)
+2014-08-08 06:54:36 Using 4 threads for script verification
+2014-08-08 06:54:36 init message: Verifying wallet...
+2014-08-08 06:54:36 dbenv.open LogDir=/Users/sschepis/Development/syscoin-testnet-box/2/testnet/database ErrorFile=/Users/sschepis/Development/syscoin-testnet-box/2/testnet/db.log
+2014-08-08 06:54:36 Bound to [::]:19028
+2014-08-08 06:54:36 Bound to 0.0.0.0:19028
+2014-08-08 06:54:36 init message: Loading block index...
+2014-08-08 06:54:36 Opening LevelDB in /Users/sschepis/Development/syscoin-testnet-box/2/testnet/blocks/index
+2014-08-08 06:54:36 Opened LevelDB successfully
+2014-08-08 06:54:36 Opening LevelDB in /Users/sschepis/Development/syscoin-testnet-box/2/testnet/chainstate
+2014-08-08 06:54:36 Opened LevelDB successfully
+2014-08-08 06:54:36 Opening LevelDB in /Users/sschepis/Development/syscoin-testnet-box/2/testnet/aliases
+2014-08-08 06:54:36 Opened LevelDB successfully
+2014-08-08 06:54:36 Opening LevelDB in /Users/sschepis/Development/syscoin-testnet-box/2/testnet/offers
+2014-08-08 06:54:36 Opened LevelDB successfully
+2014-08-08 06:54:36 Opening LevelDB in /Users/sschepis/Development/syscoin-testnet-box/2/testnet/certificates
+2014-08-08 06:54:36 Opened LevelDB successfully
+2014-08-08 06:54:36 LoadBlockIndexDB(): last block file = 0
+2014-08-08 06:54:36 LoadBlockIndexDB(): transaction index disabled
+2014-08-08 06:54:36 Initializing databases...
+2014-08-08 06:54:36 2f42154af40613d1fc0f5c63fcade17c1fbf4aff311722b38dd6698b77668b34
+2014-08-08 06:54:36 2f42154af40613d1fc0f5c63fcade17c1fbf4aff311722b38dd6698b77668b34
+2014-08-08 06:54:36 45eef7a7ed92208bcb532a58c3048bc38a299f9edfd8b48b677cabf4370274c9
+2014-08-08 06:54:36 CBlock(hash=2f42154af40613d1fc0f5c63fcade17c1fbf4aff311722b38dd6698b77668b34, input=010000000000000000000000000000000000000000000000000000000000000000000000c9740237f4ab7c678bb4d8df9e9f298ac38b04c3582a53cb8b2092eda7f7ee4521f9c553f0ff0f1e0ce21700, PoW=00000e4d24c39ebd34d6748bb2dfd4e62b50e974652b1987a3a42703334450de, ver=1, hashPrevBlock=0000000000000000000000000000000000000000000000000000000000000000, hashMerkleRoot=45eef7a7ed92208bcb532a58c3048bc38a299f9edfd8b48b677cabf4370274c9, nTime=1405483297, nBits=1e0ffff0, nNonce=1565196, vtx=1)
+2014-08-08 06:54:36   CTransaction(hash=45eef7a7ed92208bcb532a58c3048bc38a299f9edfd8b48b677cabf4370274c9, ver=1, vin.size=1, vout.size=1, nLockTime=0, data.size=43108)
+    CTxIn(COutPoint(0000000000000000000000000000000000000000000000000000000000000000, 4294967295), coinbase 0002e7034c4e4e4153413a2048756d616e732057696c6c2050726f766520e28098576520417265204e6f7420416c6f6e6520496e2054686520556e697665727365e280992057697468696e203230205965617273)
+    CTxOut(nValue=1024.00000000, scriptPubKey=)
+  vMerkleTree: 45eef7a7ed92208bcb532a58c3048bc38a299f9edfd8b48b677cabf4370274c9 
+2014-08-08 06:54:36 Pre-allocating up to position 0x1000000 in blk00000.dat
+2014-08-08 06:54:36 SetBestChain: new best=2f42154af40613d1fc0f5c63fcade17c1fbf4aff311722b38dd6698b77668b34  height=0  log2_work=20.000022  tx=1  date=2014-07-16 04:01:37 progress=0.000004
+2014-08-08 06:54:36 init message: Verifying blocks...
+2014-08-08 06:54:36  block index             259ms
+2014-08-08 06:54:36 init message: Loading wallet...
+2014-08-08 06:54:37 nFileVersion = 80602
+2014-08-08 06:54:37 Performing wallet upgrade to 60000
+2014-08-08 06:54:37 keypool added key 1, size=1
+2014-08-08 06:54:37 keypool added key 2, size=2
+2014-08-08 06:54:37 keypool added key 3, size=3
+2014-08-08 06:54:37 keypool added key 4, size=4
+2014-08-08 06:54:37 keypool added key 5, size=5
+2014-08-08 06:54:37 keypool added key 6, size=6
+2014-08-08 06:54:37 keypool added key 7, size=7
+2014-08-08 06:54:37 keypool added key 8, size=8
+2014-08-08 06:54:37 keypool added key 9, size=9
+2014-08-08 06:54:37 keypool added key 10, size=10
+2014-08-08 06:54:37 keypool added key 11, size=11
+2014-08-08 06:54:37 keypool added key 12, size=12
+2014-08-08 06:54:37 keypool added key 13, size=13
+2014-08-08 06:54:37 keypool added key 14, size=14
+2014-08-08 06:54:37 keypool added key 15, size=15
+2014-08-08 06:54:37 keypool added key 16, size=16
+2014-08-08 06:54:37 keypool added key 17, size=17
+2014-08-08 06:54:37 keypool added key 18, size=18
+2014-08-08 06:54:37 keypool added key 19, size=19
+2014-08-08 06:54:37 keypool added key 20, size=20
+2014-08-08 06:54:37 keypool added key 21, size=21
+2014-08-08 06:54:37 keypool added key 22, size=22
+2014-08-08 06:54:37 keypool added key 23, size=23
+2014-08-08 06:54:37 keypool added key 24, size=24
+2014-08-08 06:54:37 keypool added key 25, size=25
+2014-08-08 06:54:37 keypool added key 26, size=26
+2014-08-08 06:54:37 keypool added key 27, size=27
+2014-08-08 06:54:37 keypool added key 28, size=28
+2014-08-08 06:54:37 keypool added key 29, size=29
+2014-08-08 06:54:37 keypool added key 30, size=30
+2014-08-08 06:54:37 keypool added key 31, size=31
+2014-08-08 06:54:37 keypool added key 32, size=32
+2014-08-08 06:54:37 keypool added key 33, size=33
+2014-08-08 06:54:37 keypool added key 34, size=34
+2014-08-08 06:54:37 keypool added key 35, size=35
+2014-08-08 06:54:37 keypool added key 36, size=36
+2014-08-08 06:54:37 keypool added key 37, size=37
+2014-08-08 06:54:37 keypool added key 38, size=38
+2014-08-08 06:54:37 keypool added key 39, size=39
+2014-08-08 06:54:37 keypool added key 40, size=40
+2014-08-08 06:54:37 keypool added key 41, size=41
+2014-08-08 06:54:37 keypool added key 42, size=42
+2014-08-08 06:54:37 keypool added key 43, size=43
+2014-08-08 06:54:37 keypool added key 44, size=44
+2014-08-08 06:54:38 keypool added key 45, size=45
+2014-08-08 06:54:38 keypool added key 46, size=46
+2014-08-08 06:54:38 keypool added key 47, size=47
+2014-08-08 06:54:38 keypool added key 48, size=48
+2014-08-08 06:54:38 keypool added key 49, size=49
+2014-08-08 06:54:38 keypool added key 50, size=50
+2014-08-08 06:54:38 keypool added key 51, size=51
+2014-08-08 06:54:38 keypool added key 52, size=52
+2014-08-08 06:54:38 keypool added key 53, size=53
+2014-08-08 06:54:38 keypool added key 54, size=54
+2014-08-08 06:54:38 keypool added key 55, size=55
+2014-08-08 06:54:38 keypool added key 56, size=56
+2014-08-08 06:54:38 keypool added key 57, size=57
+2014-08-08 06:54:38 keypool added key 58, size=58
+2014-08-08 06:54:38 keypool added key 59, size=59
+2014-08-08 06:54:38 keypool added key 60, size=60
+2014-08-08 06:54:38 keypool added key 61, size=61
+2014-08-08 06:54:38 keypool added key 62, size=62
+2014-08-08 06:54:38 keypool added key 63, size=63
+2014-08-08 06:54:38 keypool added key 64, size=64
+2014-08-08 06:54:38 keypool added key 65, size=65
+2014-08-08 06:54:38 keypool added key 66, size=66
+2014-08-08 06:54:38 keypool added key 67, size=67
+2014-08-08 06:54:38 keypool added key 68, size=68
+2014-08-08 06:54:38 keypool added key 69, size=69
+2014-08-08 06:54:38 keypool added key 70, size=70
+2014-08-08 06:54:38 keypool added key 71, size=71
+2014-08-08 06:54:38 keypool added key 72, size=72
+2014-08-08 06:54:38 keypool added key 73, size=73
+2014-08-08 06:54:38 keypool added key 74, size=74
+2014-08-08 06:54:38 keypool added key 75, size=75
+2014-08-08 06:54:38 keypool added key 76, size=76
+2014-08-08 06:54:38 keypool added key 77, size=77
+2014-08-08 06:54:38 keypool added key 78, size=78
+2014-08-08 06:54:38 keypool added key 79, size=79
+2014-08-08 06:54:38 keypool added key 80, size=80
+2014-08-08 06:54:38 keypool added key 81, size=81
+2014-08-08 06:54:38 keypool added key 82, size=82
+2014-08-08 06:54:38 keypool added key 83, size=83
+2014-08-08 06:54:38 keypool added key 84, size=84
+2014-08-08 06:54:38 keypool added key 85, size=85
+2014-08-08 06:54:38 keypool added key 86, size=86
+2014-08-08 06:54:38 keypool added key 87, size=87
+2014-08-08 06:54:38 keypool added key 88, size=88
+2014-08-08 06:54:38 keypool added key 89, size=89
+2014-08-08 06:54:38 keypool added key 90, size=90
+2014-08-08 06:54:38 keypool added key 91, size=91
+2014-08-08 06:54:38 keypool added key 92, size=92
+2014-08-08 06:54:38 keypool added key 93, size=93
+2014-08-08 06:54:38 keypool added key 94, size=94
+2014-08-08 06:54:38 keypool added key 95, size=95
+2014-08-08 06:54:38 keypool added key 96, size=96
+2014-08-08 06:54:38 keypool added key 97, size=97
+2014-08-08 06:54:39 keypool added key 98, size=98
+2014-08-08 06:54:39 keypool added key 99, size=99
+2014-08-08 06:54:39 keypool added key 100, size=100
+2014-08-08 06:54:39 keypool added key 101, size=101
+2014-08-08 06:54:39 keypool reserve 1
+2014-08-08 06:54:39 keypool keep 1
+2014-08-08 06:54:39  wallet                 2252ms
+2014-08-08 06:54:39 init message: Loading addresses...
+2014-08-08 06:54:39 ERROR: CAddrman::Read() : open failed
+2014-08-08 06:54:39 Invalid or missing peers.dat; recreating
+2014-08-08 06:54:39 Loaded 0 addresses from peers.dat  0ms
+2014-08-08 06:54:39 mapBlockIndex.size() = 1
+2014-08-08 06:54:39 nBestHeight = 0
+2014-08-08 06:54:39 setKeyPool.size() = 100
+2014-08-08 06:54:39 mapWallet.size() = 0
+2014-08-08 06:54:39 mapAddressBook.size() = 1
+2014-08-08 06:54:39 dnsseed thread start
+2014-08-08 06:54:39 Loading addresses from DNS seeds (could take a while)
+2014-08-08 06:54:39 upnp thread start
+2014-08-08 06:54:39 net thread start
+2014-08-08 06:54:39 addcon thread start
+2014-08-08 06:54:39 opencon thread start
+2014-08-08 06:54:39 msghand thread start
+2014-08-08 06:54:39 dumpaddr thread start
+2014-08-08 06:54:39 init message: Done loading
+2014-08-08 06:54:40 Added 1 addresses from 70.176.244.123: 0 tried, 1 new
+2014-08-08 06:54:40 Added 1 addresses from 212.17.40.234: 0 tried, 2 new
+2014-08-08 06:54:40 2 addresses found from DNS seeds
+2014-08-08 06:54:40 dnsseed thread exit
+2014-08-08 06:54:40 connected 70.176.244.123:18369
+2014-08-08 06:54:40 sending: version (102 bytes)
+2014-08-08 06:54:40 received: version (102 bytes)
+2014-08-08 06:54:40 Added time data, samples 2, offset +0 (+0 minutes)
+2014-08-08 06:54:40 sending: verack (0 bytes)
+2014-08-08 06:54:40 sending: getaddr (0 bytes)
+2014-08-08 06:54:40 Moving 70.176.244.123:18369 to tried
+2014-08-08 06:54:40 receive version message: /Satoshi:0.8.6.2/: version 70002, blocks=0, us=70.176.244.123:53999, them=0.0.0.0:0, peer=70.176.244.123:18369
+2014-08-08 06:54:40 received: verack (0 bytes)
+2014-08-08 06:54:40 sending: getblocks (101 bytes)
+2014-08-08 06:54:41 received: getblocks (101 bytes)
+2014-08-08 06:54:41 getblocks -1 to 0000000000000000000000000000000000000000000000000000000000000000 limit 500
+2014-08-08 06:54:41 UPnP: ExternalIPAddress = 70.176.244.123
+2014-08-08 06:54:41 AddLocal(70.176.244.123:19028,3)
+2014-08-08 06:54:41 GetMyExternalIP() received [70.176.244.123] 70.176.244.123:0
+2014-08-08 06:54:41 GetMyExternalIP() returned 70.176.244.123
+2014-08-08 06:54:41 AddLocal(70.176.244.123:19028,4)
+2014-08-08 06:54:41 sending: addr (31 bytes)
+2014-08-08 06:54:41 UPnP Port Mapping successful.
+2014-08-08 06:54:41 received: addr (31 bytes)
+2014-08-08 06:54:50 received: addr (31 bytes)
+2014-08-08 06:55:46 ThreadRPCServer method=setgenerate
+2014-08-08 06:55:46 SyscoinScryptMiner started
+2014-08-08 06:55:46 SyscoinScryptMiner started
+2014-08-08 06:55:46 keypool added key 102, size=101
+2014-08-08 06:55:46 keypool reserve 2
+2014-08-08 06:55:46 CreateNewBlock(): total size 1000
+2014-08-08 06:55:46 Running ScryptMiner with 1 transactions in block (187 bytes)
+2014-08-08 06:55:46 keypool added key 103, size=101
+2014-08-08 06:55:46 keypool reserve 3
+2014-08-08 06:55:46 CreateNewBlock(): total size 1000
+2014-08-08 06:55:46 Running ScryptMiner with 1 transactions in block (187 bytes)
+2014-08-08 06:55:49 Flushing wallet.dat
+2014-08-08 06:55:49 Flushed wallet.dat 8ms
+2014-08-08 06:55:52 hashmeter      1 khash/s
+2014-08-08 06:56:55 ResendWalletTransactions()
+2014-08-08 06:57:19 ThreadRPCServer method=getinfo
+2014-08-08 06:57:19 keypool added key 104, size=101
+2014-08-08 06:57:19 keypool reserve 4
+2014-08-08 06:57:19 keypool return 4
+2014-08-08 06:57:22 Flushing wallet.dat
+2014-08-08 06:57:22 Flushed wallet.dat 8ms
+2014-08-08 06:58:04 ThreadRPCServer method=getinfo
+2014-08-08 06:58:04 keypool reserve 4
+2014-08-08 06:58:04 keypool return 4
+2014-08-08 06:59:14 ThreadRPCServer method=getinfo
+2014-08-08 06:59:14 keypool reserve 4
+2014-08-08 06:59:14 keypool return 4
+2014-08-08 06:59:46 ThreadRPCServer method=getinfo
+2014-08-08 06:59:46 keypool reserve 4
+2014-08-08 06:59:46 keypool return 4
+2014-08-08 07:00:18 ThreadRPCServer method=setgenerate
+2014-08-08 07:00:18 ScryptMiner terminated
+2014-08-08 07:00:18 keypool return 3
+2014-08-08 07:00:18 ScryptMiner terminated
+2014-08-08 07:00:18 keypool return 2
+2014-08-08 07:09:39 Flushed 2 addresses to peers.dat  5ms
+2014-08-08 07:14:41 UPnP Port Mapping successful.
+2014-08-08 07:24:39 Flushed 2 addresses to peers.dat  6ms
+2014-08-08 07:24:42 sending: ping (8 bytes)
+2014-08-08 07:24:42 received: pong (8 bytes)
+2014-08-08 07:34:41 UPnP Port Mapping successful.
+2014-08-08 07:39:39 Flushed 2 addresses to peers.dat  8ms
+2014-08-08 07:54:39 Flushed 2 addresses to peers.dat  8ms
+2014-08-08 07:54:41 UPnP Port Mapping successful.
+2014-08-08 07:54:43 sending: ping (8 bytes)
+2014-08-08 07:54:43 received: ping (8 bytes)
+2014-08-08 07:54:43 sending: pong (8 bytes)
+2014-08-08 07:54:43 received: pong (8 bytes)
+2014-08-08 08:09:39 Flushed 2 addresses to peers.dat  7ms
+2014-08-08 08:14:41 UPnP Port Mapping successful.
+2014-08-08 08:24:39 Flushed 2 addresses to peers.dat  8ms
+2014-08-08 08:24:44 sending: ping (8 bytes)
+2014-08-08 08:24:44 received: ping (8 bytes)
+2014-08-08 08:24:44 sending: pong (8 bytes)
+2014-08-08 08:24:44 received: pong (8 bytes)
+2014-08-08 08:34:42 UPnP Port Mapping successful.
+2014-08-08 08:39:39 Flushed 2 addresses to peers.dat  7ms
+2014-08-08 08:54:39 Flushed 2 addresses to peers.dat  6ms
+2014-08-08 08:54:42 UPnP Port Mapping successful.
+2014-08-08 08:54:45 sending: ping (8 bytes)
+2014-08-08 08:54:45 received: ping (8 bytes)
+2014-08-08 08:54:45 sending: pong (8 bytes)
+2014-08-08 08:54:45 received: pong (8 bytes)
+2014-08-08 09:09:39 Flushed 2 addresses to peers.dat  5ms
+2014-08-08 09:14:42 UPnP Port Mapping successful.
+2014-08-08 09:24:39 Flushed 2 addresses to peers.dat  7ms
+2014-08-08 09:24:46 sending: ping (8 bytes)
+2014-08-08 09:24:46 received: pong (8 bytes)
+2014-08-08 09:34:42 UPnP Port Mapping successful.
+2014-08-08 09:39:39 Flushed 2 addresses to peers.dat  8ms
+2014-08-08 09:54:39 Flushed 2 addresses to peers.dat  7ms
+2014-08-08 09:54:42 UPnP Port Mapping successful.
+2014-08-08 09:54:47 sending: ping (8 bytes)
+2014-08-08 09:54:47 received: ping (8 bytes)
+2014-08-08 09:54:47 sending: pong (8 bytes)
+2014-08-08 09:54:47 received: pong (8 bytes)
+2014-08-08 10:09:39 Flushed 2 addresses to peers.dat  13ms
+2014-08-08 17:50:17 socket inactivity timeout
+2014-08-08 17:50:17 disconnecting node 70.176.244.123:18369
+2014-08-08 17:55:21 AddPortMapping(19028, 19028, 192.168.1.103) failed with code -3 (UnknownError)
+2014-08-08 18:04:02 Flushed 2 addresses to peers.dat  6ms
+2014-08-08 18:16:36 AddPortMapping(19028, 19028, 192.168.1.103) failed with code -3 (UnknownError)
+2014-08-08 18:19:02 Flushed 2 addresses to peers.dat  7ms
+2014-08-08 18:34:02 Flushed 2 addresses to peers.dat  9ms
+2014-08-08 18:37:51 AddPortMapping(19028, 19028, 192.168.1.103) failed with code -3 (UnknownError)
+2014-08-08 18:49:02 Flushed 2 addresses to peers.dat  8ms
+2014-08-08 18:59:06 AddPortMapping(19028, 19028, 192.168.1.103) failed with code -3 (UnknownError)
+2014-08-08 19:01:23 connect() failed: 50
+2014-08-08 19:10:50 Flushed 2 addresses to peers.dat  7ms
