@@ -47,7 +47,7 @@ database/
 offers/
 
 
-contrib/syscoin-testnet-box/1/testnet
-contrib/syscoin-testnet-box/2/testnet
-contrib/syscoin-testnet-box/3/testnet
-contrib/syscoin-testnet-box/4/testnet
+contrib/syscoin-testnet-box/1/testnet/*
+contrib/syscoin-testnet-box/2/testnet/*
+contrib/syscoin-testnet-box/3/testnet/*
+contrib/syscoin-testnet-box/4/testnet/*
