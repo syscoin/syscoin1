@@ -65,6 +65,7 @@ int64 GetOfferNetworkFee(int seed, int nHeight) {
     //if ((nComputedHeight >> 13) >= 60) return 0;
     int64 nStart = seed * COIN;
     if (fTestNet) nStart = 10 * CENT;
+    else if (fCakeNet) return CENT;
     int64 nRes = nStart >> (nComputedHeight >> 13);
     nRes -= (nRes >> 14) * (nComputedHeight % 8192);
     nRes += CENT - 1;

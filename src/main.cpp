@@ -843,7 +843,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 
 	// Rather not work on nonstandard transactions (unless -testnet)
 	string strNonStd;
-	if (!fTestNet && !tx.IsStandard(strNonStd))
+	if (!fTestNet && !fCakeNet && !tx.IsStandard(strNonStd))
 		return error("CTxMemPool::accept() : nonstandard transaction (%s)",
 				strNonStd.c_str());
 
@@ -919,7 +919,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 
 		// Check for non-standard pay-to-script-hash in inputs
 		if (tx.nVersion != SYSCOIN_TX_VERSION && !tx.AreInputsStandard(view)
-				&& !fTestNet)
+				&& !fTestNet && !fCakeNet)
 			return error("CTxMemPool::accept() : nonstandard transaction input");
 
 		// Note: if you modify this code to accept non-standard transactions, then
@@ -1312,7 +1312,7 @@ static const int64 nTargetSpacing = 1 * 60; // Syscoin: 1 minute
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime) {
 	// Testnet has min-difficulty blocks
 	// after nTargetSpacing*2 time between blocks:
-	if (fTestNet && nTime > nTargetSpacing * 2)
+	if ((fTestNet || fCakeNet) && nTime > nTargetSpacing * 2)
 		return bnProofOfWorkLimit.GetCompact();
 
 	CBigNum bnResult;
@@ -1427,7 +1427,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits) {
 	bnTarget.SetCompact(nBits);
 
 	// Check range
-	if (bnTarget <= 0 || bnTarget > bnProofOfWorkLimit)
+	if ( ( bnTarget <= 0 || bnTarget > bnProofOfWorkLimit ) && !fCakeNet)
 		return error("CheckProofOfWork() : nBits below minimum work");
 
 	// Check proof of work matches claimed amount
@@ -1577,9 +1577,8 @@ bool ConnectBestBlock(CValidationState &state) {
 
 void CBlockHeader::UpdateTime(const CBlockIndex* pindexPrev) {
 	nTime = max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
-
 	// Updating time can change work required on testnet:
-	if (fTestNet)
+	if (fTestNet || fCakeNet)
 		nBits = GetNextWorkRequired(pindexPrev, this);
 }
 
@@ -2205,7 +2204,8 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 				nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs - 1));
 
 		if (vtx[0].GetValueOut()
-				> GetBlockValue(pindex->nHeight, nFees, 0) /* * 2 */ ) //todo another HACK to fix until fees recomputed OK on startup
+				> GetBlockValue(pindex->nHeight, nFees, 0)
+				&& pindex->nHeight < 1) // blocks 0 (genesis) and 1 (premine) have no max restrictions
 			return state.DoS(100,
 					error( "ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",
 							pindex->nHeight, vtx[0].GetValueOut(),
@@ -2516,7 +2516,7 @@ bool CBlock::AddToBlockIndex(CValidationState &state,
 //   each merged minable scrypt_1024_1_1_256 coin should have a different one
 //   (if two have the same ID, they can't be merge mined together)
 int GetAuxPowStartBlock() {
-	if (fTestNet)
+	if (fTestNet || fCakeNet)
 		return 1; // never
 	else
 		return 1; // never
@@ -2532,7 +2532,7 @@ bool CBlockHeader::CheckProofOfWork(int nHeight) const {
 		// - this block must have our chain ID
 		// - parent block must not have the same chain ID (see CAuxPow::Check)
 		// - index of this chain in chain merkle tree must be pre-determined (see CAuxPow::Check)
-		if (!fTestNet && nHeight != INT_MAX && GetChainID() != GetOurChainID())
+		if (!fTestNet && !fCakeNet && nHeight != INT_MAX && GetChainID() != GetOurChainID())
 			return error(
 					"CheckProofOfWork() : block does not have our chain ID");
 
@@ -2781,9 +2781,9 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp) {
 
 		// Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
 		if ((nVersion & 0xff) < 2) {
-			if ((!fTestNet
+			if ((!fTestNet && !fCakeNet
 					&& CBlockIndex::IsSuperMajority(2, pindexPrev, 950, 1000))
-					|| (fTestNet
+					|| ( (fTestNet || fCakeNet)
 							&& CBlockIndex::IsSuperMajority(2, pindexPrev, 75,
 									100))) {
 				return state.Invalid(
@@ -2793,9 +2793,9 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp) {
 		// Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
 		if ((nVersion & 0xff) >= 2) {
 			// if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-			if ((!fTestNet
+			if ((!fTestNet && !fCakeNet
 					&& CBlockIndex::IsSuperMajority(2, pindexPrev, 750, 1000))
-					|| (fTestNet
+					|| ( (fTestNet || fCakeNet)
 							&& CBlockIndex::IsSuperMajority(2, pindexPrev, 51,
 									100))) {
 				CScript expect = CScript() << nHeight;
@@ -3343,6 +3343,15 @@ bool LoadBlockIndex() {
 				uint256("0x2f42154af40613d1fc0f5c63fcade17c1fbf4aff311722b38dd6698b77668b34");
 	}
 
+	if (fCakeNet) {
+		pchMessageStart[0] = 0xcf;
+		pchMessageStart[1] = 0xfd;
+		pchMessageStart[2] = 0xfe;
+		pchMessageStart[3] = 0xcf;
+		hashGenesisBlock =
+				uint256("0xf8e257c3a167c9526162173efe060be5ab6e83ed20fc40cdb112133f12bfb75b");
+	}	
+
 	//
 	// Load block index from databases
 	//
@@ -3390,7 +3399,13 @@ bool InitBlockIndex() {
 			block.nTime = 1405483297;
 			block.nNonce = 1565196;
 		}
-
+		
+		if (fCakeNet) {
+			block.nTime = 1405483900;
+			block.nBits = 0x1efff000;
+			block.nNonce = 275232;
+		}
+		
 		//// debug print
 		uint256 hash = block.GetHash();
 		printf("%s\n", hash.ToString().c_str());
@@ -5248,7 +5263,7 @@ void static ScryptMiner(CWallet *pwallet) {
 				// Update nTime every few seconds
 				pblock->UpdateTime(pindexPrev);
 				nBlockTime = ByteReverse(pblock->nTime);
-				if (fTestNet) {
+				if (fTestNet || fCakeNet) {
 					// Changing pblock->nTime can change work required on testnet:
 					nBlockBits = ByteReverse(pblock->nBits);
 					hashTarget =

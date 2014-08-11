@@ -1203,9 +1203,15 @@ static const char *strTestNetDNSSeed[][2] = {
     {NULL, NULL}
 };
 
+static const char *strCakeNetDNSSeed[][2] = {
+    {"stella.hopto.org", "stella.hopto.org"},
+    {"212.17.40.234", "212.17.40.234"},
+    {NULL, NULL}
+};
+
 void ThreadDNSAddressSeed()
 {
-    static const char *(*strDNSSeed)[2] = fTestNet ? strTestNetDNSSeed : strMainNetDNSSeed;
+    static const char *(*strDNSSeed)[2] = fTestNet ? strTestNetDNSSeed : (fCakeNet ? strCakeNetDNSSeed : strMainNetDNSSeed);
 
     int found = 0;
 
@@ -1312,7 +1318,7 @@ void ThreadOpenConnections()
         boost::this_thread::interruption_point();
 
         // Add seed nodes if IRC isn't working
-        if (addrman.size()==0 && (GetTime() - nStart > 60) && !fTestNet)
+        if (addrman.size()==0 && (GetTime() - nStart > 60) && !fTestNet && !fCakeNet)
         {
             std::vector<CAddress> vAdd;
             for (unsigned int i = 0; i < ARRAYLEN(pnSeed); i++)

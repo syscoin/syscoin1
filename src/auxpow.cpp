@@ -22,7 +22,7 @@ bool CAuxPow::Check(uint256 hashAuxBlock, int nChainID)
     if (nIndex != 0)
         return error("AuxPow is not a generate");
 
-    if (!fTestNet && parentBlockHeader.GetChainID() == nChainID)
+    if (!fTestNet && !fCakeNet && parentBlockHeader.GetChainID() == nChainID)
         return error("Aux POW parent has our chain ID");
 
     if (vChainMerkleBranch.size() > 30)

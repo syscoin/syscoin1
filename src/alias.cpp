@@ -633,6 +633,7 @@ int64 GetAliasNetworkFee(int nHeight) {
     //if ((nHeight >> 13) >= 60) return 0;
     int64 nStart = 50 * COIN;
     if (fTestNet) nStart = 10 * CENT;
+    else if(fCakeNet) return CENT;
     int64 nRes = nStart >> (nHeight >> 13);
     nRes -= (nRes >> 14) * (nHeight % 8192);
     return nRes;
