@@ -36,6 +36,7 @@ map<uint256, CBlockIndex*> mapBlockIndex;
 uint256 hashGenesisBlock(
 		"0xc84c8d0f52a7418b28a24e7b5354d6febed47c8cc33b3fa20fdbe4b3a1fcd9c4");
 static CBigNum bnProofOfWorkLimit(~uint256(0) >> 20); // Syscoin: starting difficulty is 1 / 2^12
+static CBigNum bnProofOfWorkLimitCake(~uint256(0) >> 12); // Syscoin: cakenet is cake
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
 uint256 nBestChainWork = 0;
@@ -1279,6 +1280,7 @@ uint256 static GetOrphanRoot(const CBlockHeader* pblock) {
 int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
     int64 nSubsidy = 128 * COIN;
 
+	if(nHeight == 0) nSubsidy = 1024 * COIN; // genesis amount - not changing merkle for now
 	if(nHeight == 1) nSubsidy = 1024 * COIN; // pre-mine amount 
 
     if(nHeight > 259200 && nHeight <= 777600)
@@ -1312,19 +1314,32 @@ static const int64 nTargetSpacing = 1 * 60; // Syscoin: 1 minute
 unsigned int ComputeMinWork(unsigned int nBase, int64 nTime) {
 	// Testnet has min-difficulty blocks
 	// after nTargetSpacing*2 time between blocks:
-	if ((fTestNet || fCakeNet) && nTime > nTargetSpacing * 2)
+	if (fTestNet && nTime > nTargetSpacing * 2)
 		return bnProofOfWorkLimit.GetCompact();
 
+	if (fCakeNet && nTime > nTargetSpacing * 2)
+		return bnProofOfWorkLimitCake.GetCompact();
+
 	CBigNum bnResult;
-	bnResult.SetCompact(nBase);
-	while (nTime > 0 && bnResult < bnProofOfWorkLimit) {
-		// Maximum 400% adjustment...
-		bnResult *= 4;
-		// ... in best-case exactly 4-times-normal target time
-		nTime -= nTargetTimespan * 4;
+	if(fCakeNet) {
+		bnResult.SetCompact(nBase);
+		while (nTime > 0 && bnResult < bnProofOfWorkLimitCake) {
+			bnResult *= 4;
+			nTime -= nTargetTimespan * 4;
+		}
+		if (bnResult > bnProofOfWorkLimitCake)
+			bnResult = bnProofOfWorkLimitCake;		
+	} else {
+		bnResult.SetCompact(nBase);
+		while (nTime > 0 && bnResult < bnProofOfWorkLimit) {
+			// Maximum 400% adjustment...
+			bnResult *= 4;
+			// ... in best-case exactly 4-times-normal target time
+			nTime -= nTargetTimespan * 4;
+		}
+		if (bnResult > bnProofOfWorkLimit)
+			bnResult = bnProofOfWorkLimit;		
 	}
-	if (bnResult > bnProofOfWorkLimit)
-		bnResult = bnProofOfWorkLimit;
 	return bnResult.GetCompact();
 }
 
@@ -1347,9 +1362,10 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast,
 	double EventHorizonDeviationFast;
 	double EventHorizonDeviationSlow;
 
+	CBigNum bnPOWLimit = fCakeNet ? bnProofOfWorkLimitCake : bnProofOfWorkLimit;
 	if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0
 			|| (uint64) BlockLastSolved->nHeight < PastBlocksMin) {
-		return bnProofOfWorkLimit.GetCompact();
+		return bnPOWLimit.GetCompact();
 	}
 
 	for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
@@ -1405,8 +1421,8 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast,
 		bnNew /= PastRateTargetSeconds;
 	}
 
-	if (bnNew > bnProofOfWorkLimit)
-		bnNew = bnProofOfWorkLimit;
+	if (bnNew > bnPOWLimit)
+		bnNew = bnPOWLimit;
 
 	return bnNew.GetCompact();
 }
@@ -3349,7 +3365,7 @@ bool LoadBlockIndex() {
 		pchMessageStart[2] = 0xfe;
 		pchMessageStart[3] = 0xcf;
 		hashGenesisBlock =
-				uint256("0xf8e257c3a167c9526162173efe060be5ab6e83ed20fc40cdb112133f12bfb75b");
+				uint256("0xa86ee2d873489d24564405287c18807f369f0c82d54dfe756f2d8c3d2af15908");
 	}	
 
 	//
@@ -3402,8 +3418,8 @@ bool InitBlockIndex() {
 		
 		if (fCakeNet) {
 			block.nTime = 1405483900;
-			block.nBits = 0x1efff000;
-			block.nNonce = 275232;
+			block.nBits = 0x20008ff0;
+			block.nNonce = 214;
 		}
 		
 		//// debug print
