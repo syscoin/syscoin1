@@ -438,11 +438,6 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                         nHeight);
                 }
             }
-
-            if(pindexBlock->nHeight != pindexBest->nHeight) {
-
-
-            }
         }
     }
     return true;
