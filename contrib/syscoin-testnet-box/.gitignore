@@ -9,5 +9,5 @@ certificates/
 chainstate/
 database/
 offers/
-testnet/
-cakenet/
+testnet/*
+cakenet/*
