@@ -110,6 +110,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
     CBitcoinAddress addr;
     // Save global state
     bool fTestNet_stored = fTestNet;
+    bool fCakeNet_stored = fCakeNet;
 
     BOOST_FOREACH(Value& tv, tests)
     {
@@ -125,7 +126,9 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
         const Object &metadata = test[2].get_obj();
         bool isPrivkey = find_value(metadata, "isPrivkey").get_bool();
         bool isTestnet = find_value(metadata, "isTestnet").get_bool();
+        bool isCakenet = find_value(metadata, "isCakenet").get_bool();
         fTestNet = isTestnet; // Override testnet flag
+        fCakeNet = isCakenet;
         if(isPrivkey)
         {
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
@@ -158,6 +161,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
     }
     // Restore global state
     fTestNet = fTestNet_stored;
+    fCakeNet = fCakeNet_stored;
 }
 
 // Goal: check that generated keys match test vectors
@@ -167,6 +171,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
     std::vector<unsigned char> result;
     // Save global state
     bool fTestNet_stored = fTestNet;
+    bool fCakeNet_stored = fCakeNet;
 
     BOOST_FOREACH(Value& tv, tests)
     {
@@ -182,7 +187,9 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
         const Object &metadata = test[2].get_obj();
         bool isPrivkey = find_value(metadata, "isPrivkey").get_bool();
         bool isTestnet = find_value(metadata, "isTestnet").get_bool();
+        bool isCakenet = find_value(metadata, "isCakenet").get_bool();
         fTestNet = isTestnet; // Override testnet flag
+        fCakeNet = isCakenet;
         if(isPrivkey)
         {
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
@@ -227,6 +234,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
 
     // Restore global state
     fTestNet = fTestNet_stored;
+    fCakeNet = fCakeNet_stored;
 }
 
 // Goal: check that base58 parsing code is robust against a variety of corrupted data

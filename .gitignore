@@ -1,3 +1,8 @@
+contrib/syscoin-testnet-box/1/cakenet
+contrib/syscoin-testnet-box/2/cakenet
+contrib/syscoin-testnet-box/3/cakenet
+contrib/syscoin-testnet-box/4/cakenet
+
 src/*.exe
 src/syscoin
 src/syscoind
@@ -32,3 +37,22 @@ qrc_*.cpp
 build
 
 !src/leveldb-*/Makefile
+
+
+# testnet-box blockchains
+*.log
+*.dat
+*.pid
+
+aliases/
+offers/
+certificates/
+chainstate/
+database/
+offers/
+
+
+contrib/syscoin-testnet-box/1/testnet/*
+contrib/syscoin-testnet-box/2/testnet/*
+contrib/syscoin-testnet-box/3/testnet/*
+contrib/syscoin-testnet-box/4/testnet/*

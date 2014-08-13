@@ -79,6 +79,7 @@ bool fServer = false;
 bool fCommandLine = false;
 string strMiscWarning;
 bool fTestNet = false;
+bool fCakeNet = false;
 bool fBloomFilters = true;
 bool fNoListen = false;
 bool fLogTimestamps = false;
@@ -1082,8 +1083,12 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     } else {
         path = GetDefaultDataDir();
     }
-    if (fNetSpecific && GetBoolArg("-testnet", false))
-        path /= "testnet";
+    if (fNetSpecific) {
+        if(GetBoolArg("-testnet", false))
+            path /= "testnet";
+        else if(GetBoolArg("-cakenet", false))
+            path /= "cakenet";
+    }
 
     fs::create_directories(path);
 

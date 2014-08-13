@@ -41,7 +41,9 @@ static boost::thread_group* rpc_worker_group = NULL;
 
 static inline unsigned short GetDefaultRPCPort()
 {
-    return GetBoolArg("-testnet", false) ? 18368 : 8368;
+    if(GetBoolArg("-testnet", false)) return 18368;
+    else if(GetBoolArg("-cakenet", false)) return 28368;
+    else return 8368;
 }
 
 Object JSONRPCError(int code, const string& message)
@@ -318,6 +320,20 @@ static const CRPCCommand vRPCCommands[] =
   { "certissuerhistory",     &certissuerhistory, false,      false,      true },
   { "certissuerscan",        &certissuerscan,    false,      false,      true },
   { "certissuerfilter",      &certissuerfilter,  false,      false,      true },
+
+  // use the blockchain as a platform for escrow transactions
+  { "escrownew",       &phrpcfunc,     false,      false,      true },
+  { "escrowcancel",    &phrpcfunc,false,      false,      true },
+  { "escrowaccept",    &phrpcfunc,  false,      false,      true },
+  { "escrowreject",    &phrpcfunc,           false,      false,      true },
+  { "escrowrelease",   &phrpcfunc,      false,      false,      true },
+  { "escrowextend",    &phrpcfunc,      false,      false,      true },
+  { "escrowburn",      &phrpcfunc,      false,      false,      true },
+  { "escrowlist",      &phrpcfunc,    false,      false,      true },
+  { "escrowinfo",      &phrpcfunc,    false,      false,      true },
+  { "escrowhistory",   &phrpcfunc, false,      false,      true },
+  { "escrowscan",      &phrpcfunc,    false,      false,      true },
+  { "escrowfilter",    &phrpcfunc,  false,      false,      true },
 
 };
 

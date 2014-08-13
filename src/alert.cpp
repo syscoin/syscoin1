@@ -21,6 +21,7 @@ CCriticalSection cs_mapAlerts;
 
 static const char* pszMainKey = "04a0a5a88b2cebf0d6a7d20214e6bd51c903645505f72d05d536c9f3b996ec428150931cc6e9943f8603f756907b8793d715cb3b4fcca2735110c324c98158f456";
 static const char* pszTestKey = "0400a665daf19bf39db0d2072ea4edd5ca7a9070b81001934bfd4fa0d12561b105be22ea92c4608555f97819ffeb1c80cd701fcc43cd6a38ceefb128699e593aa3";
+static const char* pszCakeKey = "0400a665daf19bf39db0d2072ea4edd5ca7a9070b81001934bfd4fa0d12561b105be22ea92c4608555f97819ffeb1c80cd701fcc43cd6a38ceefb128699e593aa3";
 
 void CUnsignedAlert::SetNull()
 {
@@ -144,7 +145,7 @@ bool CAlert::RelayTo(CNode* pnode) const
 
 bool CAlert::CheckSignature() const
 {
-    CPubKey key(ParseHex(fTestNet ? pszTestKey : pszMainKey));
+    CPubKey key(ParseHex(fTestNet ? pszTestKey : ( fCakeNet ? pszCakeKey : pszMainKey) ) );
     if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
         return error("CAlert::CheckSignature() : verify signature failed");
 

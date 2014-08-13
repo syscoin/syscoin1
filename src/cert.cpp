@@ -64,6 +64,7 @@ int64 GetCertNetworkFee(int seed, int nHeight) {
     //if ((nComputedHeight >> 13) >= 60) return 0;
     int64 nStart = seed * COIN;
     if (fTestNet) nStart = 10 * CENT;
+    else if(fCakeNet) return CENT;
     int64 nRes = nStart >> (nComputedHeight >> 13);
     nRes -= (nRes >> 14) * (nComputedHeight % 8192);
     nRes += CENT - 1;
@@ -1028,7 +1029,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
             // check for enough fees
             nNetFee = GetCertNetFee(tx);
-            if (nNetFee < GetCertNetworkFee(1, pindexBlock->nHeight)-COIN)
+            if (nNetFee < GetCertNetworkFee(4, pindexBlock->nHeight) - COIN)
                 return error(
                         "CheckCertInputs() : got tx %s with fee too low %lu",
                         tx.GetHash().GetHex().c_str(),
@@ -1189,7 +1190,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     return error("could not read certitem from certissuer txn");
 
                 // check for enough fees
-                int64 expectedFee = GetCertNetworkFee(4, pindexBlock->nHeight);
+                int64 expectedFee = GetCertNetworkFee(4, pindexBlock->nHeight) - COIN;
                 nNetFee = GetCertNetFee(tx);
                 if (nNetFee < expectedFee )
                     return error(

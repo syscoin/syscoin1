@@ -65,6 +65,7 @@ int64 GetOfferNetworkFee(int seed, int nHeight) {
     //if ((nComputedHeight >> 13) >= 60) return 0;
     int64 nStart = seed * COIN;
     if (fTestNet) nStart = 10 * CENT;
+    else if (fCakeNet) return CENT;
     int64 nRes = nStart >> (nComputedHeight >> 13);
     nRes -= (nRes >> 14) * (nComputedHeight % 8192);
     nRes += CENT - 1;
@@ -1030,7 +1031,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			// check for enough fees
 			nNetFee = GetOfferNetFee(tx);
-			if (nNetFee < GetOfferNetworkFee(4, pindexBlock->nHeight)-COIN)
+			if (nNetFee < GetOfferNetworkFee(4, pindexBlock->nHeight) - COIN)
 				return error(
 						"CheckOfferInputs() : got tx %s with fee too low %lu",
 						tx.GetHash().GetHex().c_str(),
@@ -1190,8 +1191,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					return error("could not read accept from offer txn");
 
 				// check for enough offer fees with this txn
-				int64 expectedFee = GetOfferNetworkFee(4, pindexBlock->nHeight) 
-				+ ((theOfferAccept.nPrice * theOfferAccept.nQty) / 200) - COIN;
+				int64 expectedFee = GetOfferNetworkFee(4, pindexBlock->nHeight) - COIN;
 				nNetFee = GetOfferNetFee(tx);
 				if (nNetFee < expectedFee )
 					return error(
@@ -1597,7 +1597,7 @@ Value offeractivate(const Array& params, bool fHelp) {
 			throw runtime_error("Could not decode offer transaction");
 
 		// calculate network fees
-		int64 nNetFee = GetOfferNetworkFee(8, pindexBest->nHeight);
+		int64 nNetFee = GetOfferNetworkFee(4, pindexBest->nHeight);
 
 		// unserialize offer object from txn, serialize back
 		COffer newOffer;
@@ -1725,8 +1725,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 
 		// calculate network fees
 		int64 nNetFee = GetOfferNetworkFee(4, pindexBest->nHeight);
-		if(qty > 0) nNetFee += ((price * COIN) * qty) / 200;
-
+		
 		// update offer values
 		theOffer.sCategory = vchCat;
 		theOffer.sTitle = vchTitle;
@@ -1921,7 +1920,7 @@ Value offerpay(const Array& params, bool fHelp) {
     set<pair<const CWalletTx*,unsigned int> > setCoins;
     int64 nValueIn = 0;
     uint64 nTotalValue = ( theOfferAccept.nPrice * theOfferAccept.nQty );
-    int64 nNetFee = GetOfferNetworkFee(4, pindexBest->nHeight) + (nTotalValue / 200);
+    int64 nNetFee = GetOfferNetworkFee(4, pindexBest->nHeight);
     if (!pwalletMain->SelectCoins(nTotalValue + nNetFee, setCoins, nValueIn)) 
         throw runtime_error("insufficient funds to pay for offer");
 
