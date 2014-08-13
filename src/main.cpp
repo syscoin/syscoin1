@@ -36,7 +36,7 @@ map<uint256, CBlockIndex*> mapBlockIndex;
 uint256 hashGenesisBlock(
 		"0xc84c8d0f52a7418b28a24e7b5354d6febed47c8cc33b3fa20fdbe4b3a1fcd9c4");
 static CBigNum bnProofOfWorkLimit(~uint256(0) >> 20); // Syscoin: starting difficulty is 1 / 2^12
-static CBigNum bnProofOfWorkLimitCake(~uint256(0) >> 12); // Syscoin: cakenet is cake
+static CBigNum bnProofOfWorkLimitCake(~uint256(0) >> 11); // Syscoin: cakenet is cake
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
 uint256 nBestChainWork = 0;
