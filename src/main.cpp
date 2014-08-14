@@ -1283,6 +1283,12 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
 	if(nHeight == 0) nSubsidy = 1024 * COIN; // genesis amount - not changing merkle for now
 	if(nHeight == 1) nSubsidy = 1024 * COIN; // pre-mine amount 
 
+	if(nHeight>1 && nHeight<121)
+		return nFees 
+		+ GetAliasFeeSubsidy(nHeight) 
+		+ GetOfferFeeSubsidy(nHeight)
+		+ GetCertFeeSubsidy(nHeight);
+
     if(nHeight > 259200 && nHeight <= 777600)
         nSubsidy = 96 * COIN;
     else if(nHeight > 777600 && nHeight <= 1814400)
@@ -2219,9 +2225,11 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 				0.001 * nTime / vtx.size(),
 				nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs - 1));
 
+		int64 bValue = GetBlockValue(pindex->nHeight, nFees, 0);
+		bValue += (bValue / 100);
 		if (vtx[0].GetValueOut()
-				> GetBlockValue(pindex->nHeight, nFees, 0)
-				&& pindex->nHeight < 1) // blocks 0 (genesis) and 1 (premine) have no max restrictions
+				> bValue
+				&& pindex->nHeight > 1) // blocks 0 (genesis) and 1 (premine) have no max restrictions
 			return state.DoS(100,
 					error( "ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",
 							pindex->nHeight, vtx[0].GetValueOut(),
