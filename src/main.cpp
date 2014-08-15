@@ -1283,11 +1283,12 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
 	if(nHeight == 0) nSubsidy = 1024 * COIN; // genesis amount - not changing merkle for now
 	if(nHeight == 1) nSubsidy = 1024 * COIN; // pre-mine amount 
 
-	if(nHeight>1 && nHeight<121)
+    //fair launch - fees only for first 2hrs
+    /*if(nHeight>1 && nHeight<121)
 		return nFees 
 		+ GetAliasFeeSubsidy(nHeight) 
 		+ GetOfferFeeSubsidy(nHeight)
-		+ GetCertFeeSubsidy(nHeight);
+        + GetCertFeeSubsidy(nHeight);*/
 
     if(nHeight > 259200 && nHeight <= 777600)
         nSubsidy = 96 * COIN;
