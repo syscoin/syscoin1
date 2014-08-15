@@ -1193,19 +1193,16 @@ void MapPort(bool)
 // The second name should resolve to a list of seed addresses.
 static const char *strMainNetDNSSeed[][2] = {
     {"stella.hopto.org", "stella.hopto.org"},
-    {"212.17.40.234", "212.17.40.234"},
     {NULL, NULL}
 };
 
 static const char *strTestNetDNSSeed[][2] = {
     {"stella.hopto.org", "stella.hopto.org"},
-    {"212.17.40.234", "212.17.40.234"},
     {NULL, NULL}
 };
 
 static const char *strCakeNetDNSSeed[][2] = {
     {"stella.hopto.org", "stella.hopto.org"},
-    {"212.17.40.234", "212.17.40.234"},
     {NULL, NULL}
 };
 
