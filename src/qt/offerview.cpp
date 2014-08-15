@@ -1,8 +1,8 @@
 /*
- * Qt4 bitcoin GUI.
+ * Qt4/Qt5 Syscoin GUI.
  *
- * W.J. van der Laan 2011-2012
- * The Bitcoin Developers 2011-2013
+ * Sidhujag
+ * Syscoin Developer 2014
  */
 #include "offerview.h"
 #include "bitcoingui.h"
