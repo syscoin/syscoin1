@@ -7,7 +7,7 @@
 
 #include "csvmodelwriter.h"
 #include "guiutil.h"
-#include <QVBoxLayout>
+
 #include <QSortFilterProxyModel>
 #include <QClipboard>
 #include <QMessageBox>
@@ -20,7 +20,6 @@ AcceptedOfferListPage::AcceptedOfferListPage(QWidget *parent) :
     optionsModel(0)
 {
     ui->setupUi(this);
-	   QVBoxLayout* _layout = new QVBoxLayout(this);
 
     //buttons get created
 
@@ -49,7 +48,7 @@ AcceptedOfferListPage::AcceptedOfferListPage(QWidget *parent) :
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
-	this->setLayout(_layout);
+
 }
 
 AcceptedOfferListPage::~AcceptedOfferListPage()

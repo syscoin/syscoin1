@@ -969,7 +969,7 @@ void JSONRequest::parse(const Value& valRequest)
         throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array");
 }
 
-Object JSONRPCExecOne(const Value& req)
+static Object JSONRPCExecOne(const Value& req)
 {
     Object rpc_result;
 

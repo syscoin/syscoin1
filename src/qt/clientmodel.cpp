@@ -113,7 +113,10 @@ bool ClientModel::isTestNet() const
     return fTestNet;
 }
 
-
+bool ClientModel::isCakeNet() const
+{
+    return fCakeNet;
+}
 
 bool ClientModel::inInitialBlockDownload() const
 {

@@ -18,8 +18,8 @@
 #include <QString>
 using namespace std;
 using namespace json_spirit;
-
-extern Object JSONRPCExecOne(const Value& req);
+extern const CRPCTable tableRPC;
+extern string JSONRPCReply(const Value& result, const Value& error, const Value& id);
 
 AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
     QDialog(parent),
@@ -39,7 +39,7 @@ AcceptandPayOfferListPage::~AcceptandPayOfferListPage()
 {
     delete ui;
 }
-
+// send offeraccept with offer guid/qty as params and then send offerpay with wtxid (first param of response) as param, using RPC commands.
 void AcceptandPayOfferListPage::acceptandpay()
 {
 
@@ -49,95 +49,71 @@ void AcceptandPayOfferListPage::acceptandpay()
 		Value valResult;
 		Array arr;
 		Value valId;
-		Object request;
+		Value result ;
+		string strReply;
+		string strError;
 		string strMethod = string("offeraccept");
 		 
 		params.push_back(ui->offeridEdit->text().toStdString());
 		params.push_back(ui->qtyEdit->text().toStdString());
-		request.push_back(Pair("method", strMethod));
-		request.push_back(Pair("params", params));
-		request.push_back(Pair("id", 1));	
+
 	    try {
-			ret = JSONRPCExecOne(request);
+            result = tableRPC.execute(strMethod, params);
 		}
 		catch (Object& objError)
 		{
+			strError = find_value(objError, "message").get_str();
 			QMessageBox::critical(this, windowTitle(),
-				tr("Error executing offeraccept: \"%1\"").arg(QString::fromStdString(find_value(objError, "message").get_str())),
+			tr("Error accepting offer: \"%1\"").arg(QString::fromStdString(strError)),
 				QMessageBox::Ok, QMessageBox::Ok);
 			return;
 		}
-		catch(...)
+		catch(std::exception& e)
 		{
 			QMessageBox::critical(this, windowTitle(),
-				tr("Unknown Error executing offeraccept"),
+				tr("General exception executing offeraccept"),
 				QMessageBox::Ok, QMessageBox::Ok);
 			return;
 		}
-		valError = find_value(ret, "error");
-		if(valError.type() != null_type)
-		{	
-			QMessageBox::critical(this, windowTitle(),
-				tr("Error accepting offer: \"%1\"").arg(QString::fromStdString(valError.get_str())),
-                QMessageBox::Ok, QMessageBox::Ok);
-			return;
-		}
-		else
+	
+		if (result.type() == array_type)
 		{
-			valResult = find_value(ret, "result");
-			if (valResult.type() == array_type)
-			{
-				arr = valResult.get_array();
-				strMethod = string("offerpay");
-				params.clear();
-				request.clear();
-				params.push_back(arr[0].get_str());
-				request.push_back(Pair("method", strMethod));
-				request.push_back(Pair("params", params));
-				request.push_back(Pair("id", 1));	
-			    try {
-					ret = JSONRPCExecOne(request);
-				}
-				catch (Object& objError)
-				{
-					QMessageBox::critical(this, windowTitle(),
-						tr("Error executing offerpay: \"%1\"").arg(QString::fromStdString(find_value(objError, "message").get_str())),
-						QMessageBox::Ok, QMessageBox::Ok);
-					return;
-				}
-				catch(...)
-				{
-					QMessageBox::critical(this, windowTitle(),
-						tr("Unknown Error executing offerpay"),
-						QMessageBox::Ok, QMessageBox::Ok);
-					return;
-				}
-				ret = JSONRPCExecOne(request);
-				valError = find_value(ret, "error");
-				if(valError.type() != null_type)
-				{	
-					QMessageBox::critical(this, windowTitle(),
-						tr("Error accepting offer: \"%1\"").arg(QString::fromStdString(valError.get_str())),
-						QMessageBox::Ok, QMessageBox::Ok);
-					return;
-				}
-				else
+			arr = result.get_array();
+			strMethod = string("offerpay");
+			params.clear();
+			params.push_back(arr[0].get_str());
 
-				{
-					QMessageBox::information(this, windowTitle(),
-						tr("Offer accepted and paid!"),
-						QMessageBox::Ok, QMessageBox::Ok);
-				}
+		    try {
+                result = tableRPC.execute(strMethod, params);
 			}
-			else
+			catch (Object& objError)
 			{
+				strError = find_value(objError, "message").get_str();
 				QMessageBox::critical(this, windowTitle(),
-					tr("Error: Invalid response from offeraccept command"),
+				tr("Error purchasing offer: \"%1\"").arg(QString::fromStdString(strError)),
 					QMessageBox::Ok, QMessageBox::Ok);
 				return;
 			}
-
+			catch(std::exception& e)
+			{
+				QMessageBox::critical(this, windowTitle(),
+					tr("General exception executing offeraccept"),
+					QMessageBox::Ok, QMessageBox::Ok);
+						return;
+			}
+			
 		}
+		else
+		{
+			QMessageBox::critical(this, windowTitle(),
+				tr("Error: Invalid response from offeraccept command"),
+				QMessageBox::Ok, QMessageBox::Ok);
+			return;
+		}
+
+		QMessageBox::information(this, windowTitle(),
+			tr("Offer transaction completed successfully!"),
+				QMessageBox::Ok, QMessageBox::Ok);	
 
    
 

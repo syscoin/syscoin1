@@ -7,7 +7,7 @@
 #include "editofferdialog.h"
 #include "csvmodelwriter.h"
 #include "guiutil.h"
-#include <QVBoxLayout>
+
 #include <QSortFilterProxyModel>
 #include <QClipboard>
 #include <QMessageBox>
@@ -20,7 +20,6 @@ AllOfferListPage::AllOfferListPage(QWidget *parent) :
     optionsModel(0)
 {
     ui->setupUi(this);
-	   QVBoxLayout* _layout = new QVBoxLayout(this);
 
     //buttons get created
 
@@ -48,8 +47,6 @@ AllOfferListPage::AllOfferListPage(QWidget *parent) :
     connect(copyOfferValueAction, SIGNAL(triggered()), this, SLOT(onCopyOfferValueAction()));
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
-
-	this->setLayout(_layout);
 }
 
 AllOfferListPage::~AllOfferListPage()
