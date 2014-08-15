@@ -51,6 +51,18 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
     vbox->addWidget(transactionView);
     QPushButton *exportButton = new QPushButton(tr("&Export"), this);
     exportButton->setToolTip(tr("Export the data in the current tab to a file"));
+
+    QPalette p;
+    p.setColor(QPalette::Window, QColor(0x22, 0x22, 0x22));
+    p.setColor(QPalette::Button, QColor(0x22, 0x22, 0x22));
+    p.setColor(QPalette::Mid, QColor(0x22, 0x22, 0x22));
+    p.setColor(QPalette::Base, QColor(0x22, 0x22, 0x22));
+    p.setColor(QPalette::AlternateBase, QColor(0x22, 0x22, 0x22));
+    setPalette(p);
+    QFile style(":/text/res/text/style.qss");
+    style.open(QFile::ReadOnly);
+    setStyleSheet(QString::fromUtf8(style.readAll()));
+
 #ifndef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
     exportButton->setIcon(QIcon(":/icons/export"));
 #endif
