@@ -1,8 +1,7 @@
 #include "acceptandpayofferlistpage.h"
 #include "ui_acceptandpayofferlistpage.h"
 
-#include "init.h"
-#include "util.h"
+
 
 #include "offertablemodel.h"
 #include "optionsmodel.h"
@@ -71,7 +70,7 @@ void AcceptandPayOfferListPage::acceptandpay()
 		catch(std::exception& e)
 		{
 			QMessageBox::critical(this, windowTitle(),
-				tr("General exception executing offeraccept"),
+				tr("General exception when accepting offer"),
 				QMessageBox::Ok, QMessageBox::Ok);
 			return;
 		}
@@ -90,14 +89,14 @@ void AcceptandPayOfferListPage::acceptandpay()
 			{
 				strError = find_value(objError, "message").get_str();
 				QMessageBox::critical(this, windowTitle(),
-				tr("Error purchasing offer: \"%1\"").arg(QString::fromStdString(strError)),
+				tr("Error paying for offer: \"%1\"").arg(QString::fromStdString(strError)),
 					QMessageBox::Ok, QMessageBox::Ok);
 				return;
 			}
 			catch(std::exception& e)
 			{
 				QMessageBox::critical(this, windowTitle(),
-					tr("General exception executing offeraccept"),
+					tr("General exception when trying to pay for offer"),
 					QMessageBox::Ok, QMessageBox::Ok);
 						return;
 			}
