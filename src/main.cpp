@@ -2226,7 +2226,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 				nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs - 1));
 
 		int64 bValue = GetBlockValue(pindex->nHeight, nFees, 0);
-		bValue += (bValue / 100);
+		bValue += (bValue / 8); // 12.5% float till fixed
 		if (vtx[0].GetValueOut()
 				> bValue
 				&& pindex->nHeight > 1) // blocks 0 (genesis) and 1 (premine) have no max restrictions
