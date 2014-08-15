@@ -31,6 +31,7 @@ public:
     QString address;
     QString label;
     qint64 amount;
+	bool isSyscoinOffer;
 };
 
 /** Interface to Bitcoin wallet from Qt view code. */
@@ -65,7 +66,8 @@ public:
     OptionsModel *getOptionsModel();
     AddressTableModel *getAddressTableModel();
     AliasTableModel *getAliasTableModel();
-    OfferTableModel *getOfferTableModel();
+    OfferTableModel *getOfferTableModelMine();
+	OfferTableModel *getOfferTableModelAll();
     CertIssuerTableModel *getCertIssuerTableModel();
     TransactionTableModel *getTransactionTableModel();
     
@@ -145,7 +147,8 @@ private:
     AddressTableModel *addressTableModel;
     TransactionTableModel *transactionTableModel;
     AliasTableModel *aliasTableModel;
-    OfferTableModel *offerTableModel;
+    OfferTableModel *offerTableModelMine;
+	OfferTableModel *offerTableModelAll;
     CertIssuerTableModel *certIssuerTableModel;
 
     // Cache some values to be able to detect changes

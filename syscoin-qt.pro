@@ -18,9 +18,9 @@ CONFIG += thread
 #    BOOST_INCLUDE_PATH, BOOST_LIB_PATH, BDB_INCLUDE_PATH,
 #    BDB_LIB_PATH, OPENSSL_INCLUDE_PATH and OPENSSL_LIB_PATH respectively
 win32 {
-    BOOST_LIB_SUFFIX=-mgw48-mt-s-1_55
-    BOOST_INCLUDE_PATH=C:/deps/boost_1_55_0
-    BOOST_LIB_PATH=C:/deps/boost_1_55_0/stage/lib
+    BOOST_LIB_SUFFIX=-mgw48-mt-s-1_54
+    BOOST_INCLUDE_PATH=C:/deps/boost_1_54_0
+    BOOST_LIB_PATH=C:/deps/boost_1_54_0/stage/lib
     BDB_INCLUDE_PATH=C:/deps/db-4.8.30.NC/build_unix
     BDB_LIB_PATH=C:/deps/db-4.8.30.NC/build_unix
     OPENSSL_INCLUDE_PATH=C:/deps/openssl-1.0.1g/include
@@ -211,6 +211,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/keystore.h \
     src/qt/transactionfilterproxy.h \
     src/qt/transactionview.h \
+    src/qt/offerview.h \
     src/qt/walletmodel.h \
     src/qt/walletview.h \
     src/qt/walletstack.h \
@@ -243,7 +244,10 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/aliastablemodel.h \
     src/qt/aliaslistpage.h \
     src/qt/editaliasdialog.h \
-    src/qt/offerlistpage.h \
+    src/qt/allofferlistpage.h \
+    src/qt/acceptandpayofferlistpage.h \
+    src/qt/acceptedofferlistpage.h \
+    src/qt/myofferlistpage.h \
     src/qt/offertablemodel.h \
     src/qt/editofferdialog.h \
     src/qt/editcertdialog.h \
@@ -296,6 +300,7 @@ SOURCES += src/qt/bitcoin.cpp \
     src/keystore.cpp \
     src/qt/transactionfilterproxy.cpp \
     src/qt/transactionview.cpp \
+    src/qt/offerview.cpp \
     src/qt/walletmodel.cpp \
     src/qt/walletview.cpp \
     src/qt/walletstack.cpp \
@@ -327,7 +332,10 @@ SOURCES += src/qt/bitcoin.cpp \
     src/qt/aliastablemodel.cpp \
     src/qt/aliaslistpage.cpp \
     src/qt/editaliasdialog.cpp \
-    src/qt/offerlistpage.cpp \
+    src/qt/allofferlistpage.cpp \
+    src/qt/acceptandpayofferlistpage.cpp \
+    src/qt/acceptedofferlistpage.cpp \
+    src/qt/myofferlistpage.cpp \
     src/qt/offertablemodel.cpp \
     src/qt/editofferdialog.cpp \
     src/qt/certtablemodel.cpp \
@@ -350,7 +358,10 @@ FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/optionsdialog.ui \
     src/qt/forms/aliaslistpage.ui \
     src/qt/forms/editaliasdialog.ui \
-    src/qt/forms/offerlistpage.ui \
+    src/qt/forms/allofferlistpage.ui \
+    src/qt/forms/acceptandpayofferlistpage.ui \
+    src/qt/forms/acceptedofferlistpage.ui \
+    src/qt/forms/myofferlistpage.ui \
     src/qt/forms/editofferdialog.ui \
     src/qt/forms/editcertdialog.ui \
     src/qt/forms/certlistpage.ui

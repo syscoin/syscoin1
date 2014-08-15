@@ -16,7 +16,7 @@ class OfferTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit OfferTableModel(CWallet *wallet, WalletModel *parent = 0);
+    explicit OfferTableModel(CWallet *wallet, WalletModel *parent = 0, bool allOffers = false);
     ~OfferTableModel();
 
     enum ColumnIndex {

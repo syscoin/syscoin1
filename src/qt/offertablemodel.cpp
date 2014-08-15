@@ -68,10 +68,12 @@ public:
     OfferTablePriv(CWallet *wallet, OfferTableModel *parent):
         wallet(wallet), parent(parent) {}
 
-    void refreshOfferTable()
+    void refreshOfferTable(bool allOffers)
     {
+
         cachedOfferTable.clear();
         {
+			
             CBlockIndex* pindex = pindexGenesisBlock;
             LOCK(wallet->cs_wallet);
             while (pindex) {
@@ -88,7 +90,7 @@ public:
                     int op, nOut;
                     vector<vector<unsigned char> > vvchArgs;
                     bool o = DecodeOfferTx(tx, op, nOut, vvchArgs, nHeight);
-                    if (!o || !IsOfferOp(op) || !IsOfferMine(tx)) continue;
+                    if (!o || !IsOfferOp(op) || (!IsOfferMine(tx) && !allOffers)) continue;
 
                     // get the transaction
                     if(!GetTransaction(tx.GetHash(), tx, txblkhash, true))
@@ -125,6 +127,8 @@ public:
                                           QString::fromStdString(strprintf("%d", nQty)),
                                           QString::fromStdString(strprintf("%d", nExpHeight))));
                 }
+				if(size() > 500 && allOffers == true)
+					break;
                 pindex = pindex->pnext;
             }
         }
@@ -203,12 +207,12 @@ public:
     }
 };
 
-OfferTableModel::OfferTableModel(CWallet *wallet, WalletModel *parent) :
+OfferTableModel::OfferTableModel(CWallet *wallet, WalletModel *parent, bool allOffers) :
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0)
 {
     columns << tr("Offer") << tr("Category") << tr("Title") << tr("Price") << tr("Quantity") << tr("Expiration Height");
     priv = new OfferTablePriv(wallet, this);
-    priv->refreshOfferTable();
+    priv->refreshOfferTable(allOffers);
 }
 
 OfferTableModel::~OfferTableModel()

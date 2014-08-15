@@ -36,7 +36,8 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     addressTableModel(0),
     transactionTableModel(0),
     aliasTableModel(0),
-    offerTableModel(0),
+    offerTableModelMine(0),
+	offerTableModelAll(0),
 	certIssuerTableModel(0),
     cachedBalance(0),
     cachedUnconfirmedBalance(0),
@@ -47,7 +48,8 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
 {
     addressTableModel = new AddressTableModel(wallet, this);
     aliasTableModel = new AliasTableModel(wallet, this);
-    offerTableModel = new OfferTableModel(wallet, this);
+    offerTableModelAll = new OfferTableModel(wallet, this, true);
+	offerTableModelMine = new OfferTableModel(wallet, this, false);
     certIssuerTableModel = new CertIssuerTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(wallet, this);
 
@@ -177,8 +179,10 @@ void WalletModel::updateAlias(const QString &alias, const QString &value, const 
 void WalletModel::updateOffer(const QString &offer, const QString &title, const QString &category, 
     const QString &price, const QString &quantity, const QString &expDepth, int status)
 {
-    if(offerTableModel)
-        offerTableModel->updateEntry(offer, title, category, price, quantity, expDepth, false, status);
+    if(offerTableModelMine)
+        offerTableModelMine->updateEntry(offer, title, category, price, quantity, expDepth, false, status);
+    if(offerTableModelAll)
+        offerTableModelAll->updateEntry(offer, title, category, price, quantity, expDepth, false, status);
 }
 
 void WalletModel::updateCertIssuer(const QString &cert, const QString &title, const QString &expDepth, int status)
@@ -308,11 +312,14 @@ AliasTableModel *WalletModel::getAliasTableModel()
     return aliasTableModel;
 }
 
-OfferTableModel *WalletModel::getOfferTableModel()
+OfferTableModel *WalletModel::getOfferTableModelMine()
 {
-    return offerTableModel;
+    return offerTableModelMine;
 }
-
+OfferTableModel *WalletModel::getOfferTableModelAll()
+{
+    return offerTableModelAll;
+}
 CertIssuerTableModel *WalletModel::getCertIssuerTableModel()
 {
     return certIssuerTableModel;

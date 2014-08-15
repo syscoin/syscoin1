@@ -2,6 +2,7 @@
 #include "ui_editofferdialog.h"
 
 #include "offertablemodel.h"
+#include "offer.h"
 #include "guiutil.h"
 
 #include <QDataWidgetMapper>
@@ -13,19 +14,12 @@ EditOfferDialog::EditOfferDialog(Mode mode, QWidget *parent) :
 {
     ui->setupUi(this);
 
-    GUIUtil::setupAddressWidget(ui->offerEdit, this);
+    GUIUtil::setupAddressWidget(ui->nameEdit, this);
 
     switch(mode)
     {
-    case NewOfferAccept:
-        setWindowTitle(tr("New offer accept"));
-        //ui->offerEdit->setEnabled(false);
-        break;
     case NewOffer:
         setWindowTitle(tr("New offer"));
-        break;
-    case EditOfferAccept:
-        setWindowTitle(tr("Edit offer accept"));
         break;
     case EditOffer:
         setWindowTitle(tr("Edit offer"));
@@ -47,8 +41,12 @@ void EditOfferDialog::setModel(OfferTableModel *model)
     if(!model) return;
 
     mapper->setModel(model);
-    mapper->addMapping(ui->labelEdit, OfferTableModel::Title);
-    mapper->addMapping(ui->offerEdit, OfferTableModel::Name);
+    mapper->addMapping(ui->nameEdit, OfferTableModel::Name);
+    mapper->addMapping(ui->catEdit, OfferTableModel::Category);
+	mapper->addMapping(ui->titleEdit, OfferTableModel::Title);
+	mapper->addMapping(ui->priceEdit, OfferTableModel::Price);
+	mapper->addMapping(ui->qtyEdit, OfferTableModel::Quantity);
+	mapper->addMapping(ui->expEdit, OfferTableModel::ExpirationDepth);
 }
 
 void EditOfferDialog::loadRow(int row)
@@ -62,22 +60,19 @@ bool EditOfferDialog::saveCurrentRow()
 
     switch(mode)
     {
-    case NewOfferAccept:
     case NewOffer:
-        offer = model->addRow(
-                mode == NewOffer ? OfferTableModel::Offer : OfferTableModel::OfferAccept,
-                ui->labelEdit->text(),
-                ui->offerEdit->text(),
-                ui->offerEdit->text(),
-                ui->offerEdit->text(),
-                ui->offerEdit->text(),
-                ui->offerEdit->text());
+        offer = model->addRow(OfferTableModel::Offer,
+                ui->nameEdit->text(),
+                ui->catEdit->text(),
+                ui->titleEdit->text(),
+                ui->priceEdit->text(),
+                ui->qtyEdit->text(),
+                ui->expEdit->text());
         break;
-    case EditOfferAccept:
     case EditOffer:
         if(mapper->submit())
         {
-            offer = ui->offerEdit->text();
+            offer = ui->nameEdit->text() + ui->catEdit->text() + ui->titleEdit->text()+ ui->priceEdit->text()+ ui->qtyEdit->text()+ui->expEdit->text();
         }
         break;
     }
@@ -100,12 +95,12 @@ void EditOfferDialog::accept()
             break;
         case OfferTableModel::INVALID_OFFER:
             QMessageBox::warning(this, windowTitle(),
-                tr("The entered offer \"%1\" is not a valid Syscoin offer.").arg(ui->offerEdit->text()),
+                tr("The entered offer \"%1\" is not a valid Syscoin offer.").arg(ui->nameEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
         case OfferTableModel::DUPLICATE_OFFER:
             QMessageBox::warning(this, windowTitle(),
-                tr("The entered offer \"%1\" is already taken.").arg(ui->offerEdit->text()),
+                tr("The entered offer \"%1\" is already taken.").arg(ui->nameEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
         case OfferTableModel::WALLET_UNLOCK_FAILURE:
@@ -119,14 +114,9 @@ void EditOfferDialog::accept()
     }
     QDialog::accept();
 }
-
 QString EditOfferDialog::getOffer() const
 {
     return offer;
 }
 
-void EditOfferDialog::setOffer(const QString &offer)
-{
-    this->offer = offer;
-    ui->offerEdit->setText(offer);
-}
+

@@ -117,12 +117,7 @@ void WalletStack::gotoOfferListPage()
         i.value()->gotoOfferListPage();
 }
 
-void WalletStack::gotoOfferAcceptListPage()
-{
-    QMap<QString, WalletView*>::const_iterator i;
-    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        i.value()->gotoOfferAcceptListPage();
-}
+
 
 void WalletStack::gotoCertIssuerListPage()
 {

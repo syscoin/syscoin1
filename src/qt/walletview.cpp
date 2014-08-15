@@ -9,7 +9,7 @@
 #include "transactiontablemodel.h"
 #include "addressbookpage.h"
 #include "aliaslistpage.h"
-#include "offerlistpage.h"
+#include "offerview.h"
 #include "certlistpage.h"
 #include "sendcoinsdialog.h"
 #include "signverifymessagedialog.h"
@@ -42,11 +42,12 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
 {
     // Create tabs
     overviewPage = new OverviewPage();
-
     transactionsPage = new QWidget(this);
     QVBoxLayout *vbox = new QVBoxLayout();
     QHBoxLayout *hbox_buttons = new QHBoxLayout();
     transactionView = new TransactionView(this);
+	offerListPage = new QStackedWidget();
+	offerView = new OfferView(offerListPage, gui);
     vbox->addWidget(transactionView);
     QPushButton *exportButton = new QPushButton(tr("&Export"), this);
     exportButton->setToolTip(tr("Export the data in the current tab to a file"));
@@ -58,15 +59,12 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
     vbox->addLayout(hbox_buttons);
     transactionsPage->setLayout(vbox);
 
-    addressBookPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab);
+	addressBookPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab);
 
     aliasListPage = new AliasListPage(AliasListPage::ForEditing, AliasListPage::AliasTab);
 
     dataAliasListPage = new AliasListPage(AliasListPage::ForEditing, AliasListPage::DataAliasTab);
 
-    offerListPage = new OfferListPage(OfferListPage::ForEditing, OfferListPage::OfferTab);
-
-    offerAcceptListPage = new OfferListPage(OfferListPage::ForEditing, OfferListPage::OfferAcceptTab);
 
     certIssuerListPage = new CertIssuerListPage(CertIssuerListPage::ForEditing, CertIssuerListPage::CertIssuerTab);
 
@@ -78,17 +76,17 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
 
     signVerifyMessageDialog = new SignVerifyMessageDialog(gui);
 
+	
     addWidget(overviewPage);
     addWidget(transactionsPage);
     addWidget(addressBookPage);
     addWidget(aliasListPage);
     addWidget(dataAliasListPage);
-    addWidget(offerListPage);
-    addWidget(offerAcceptListPage);
     addWidget(certIssuerListPage);
     addWidget(certListPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
+	addWidget(offerListPage);
 
     // Clicking on a transaction on the overview page simply sends you to transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), this, SLOT(gotoHistoryPage()));
@@ -116,6 +114,7 @@ WalletView::~WalletView()
 void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 {
     this->gui = gui;
+	offerView->setBitcoinGUI(gui);
 }
 
 void WalletView::setClientModel(ClientModel *clientModel)
@@ -127,8 +126,7 @@ void WalletView::setClientModel(ClientModel *clientModel)
         addressBookPage->setOptionsModel(clientModel->getOptionsModel());
         aliasListPage->setOptionsModel(clientModel->getOptionsModel());
         dataAliasListPage->setOptionsModel(clientModel->getOptionsModel());
-        offerListPage->setOptionsModel(clientModel->getOptionsModel());
-        offerAcceptListPage->setOptionsModel(clientModel->getOptionsModel());
+        offerView->setClientModel(clientModel);
         certIssuerListPage->setOptionsModel(clientModel->getOptionsModel());
         certListPage->setOptionsModel(clientModel->getOptionsModel());
         receiveCoinsPage->setOptionsModel(clientModel->getOptionsModel());
@@ -148,8 +146,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
         overviewPage->setWalletModel(walletModel);
         aliasListPage->setModel(walletModel->getAliasTableModel());
         dataAliasListPage->setModel(walletModel->getAliasTableModel());
-        offerListPage->setModel(walletModel->getOfferTableModel());
-        offerAcceptListPage->setModel(walletModel->getOfferTableModel());
+        offerView->setWalletModel(walletModel);
         certIssuerListPage->setModel(walletModel->getCertIssuerTableModel());
         certListPage->setModel(walletModel->getCertIssuerTableModel());
         addressBookPage->setModel(walletModel->getAddressTableModel());
@@ -211,16 +208,9 @@ void WalletView::gotoDataAliasListPage()
 
 void WalletView::gotoOfferListPage()
 {
-    gui->getOfferListAction()->setChecked(true);
-    setCurrentWidget(offerListPage);
+	gui->getOfferListAction()->setChecked(true);
+	setCurrentWidget(offerListPage);  
 }
-
-void WalletView::gotoOfferAcceptListPage()
-{
-    gui->getOfferAcceptListAction()->setChecked(true);
-    setCurrentWidget(offerAcceptListPage);
-}
-
 void WalletView::gotoCertIssuerListPage()
 {
     gui->getCertIssuerListAction()->setChecked(true);
@@ -274,8 +264,13 @@ void WalletView::gotoVerifyMessageTab(QString addr)
 
 bool WalletView::handleURI(const QString& strURI)
 {
+ // URI has to be valid
+    if (offerView->handleURI(strURI))
+    {
+        return true;
+    }
     // URI has to be valid
-    if (sendCoinsPage->handleURI(strURI))
+    else if (sendCoinsPage->handleURI(strURI))
     {
         gotoSendCoinsPage();
         emit showNormalIfMinimized();

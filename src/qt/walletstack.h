@@ -16,11 +16,11 @@ class TransactionTableModel;
 class ClientModel;
 class WalletModel;
 class WalletView;
+class OfferView;
 class TransactionView;
 class OverviewPage;
 class AddressBookPage;
 class AliasListPage;
-class OfferListPage;
 class CertIssuerListPage;
 class SendCoinsDialog;
 class SignVerifyMessageDialog;
@@ -83,8 +83,6 @@ public slots:
     void gotoDataAliasListPage();
     /** Switch to address book page */
     void gotoOfferListPage();
-    /** Switch to address book page */
-    void gotoOfferAcceptListPage();
     /** Switch to certificate issuer page */
     void gotoCertIssuerListPage();
     /** Switch to certificate issuer page */

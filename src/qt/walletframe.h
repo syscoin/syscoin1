@@ -54,8 +54,6 @@ public slots:
     void gotoDataAliasListPage();
     /** Switch to offer list page */
     void gotoOfferListPage();
-    /** Switch to offer list page */
-    void gotoOfferAcceptListPage();
         /** Switch to cert issuer list page */
     void gotoCertIssuerListPage();
         /** Switch to cert list page */

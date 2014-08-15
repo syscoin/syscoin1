@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>457</width>
-    <height>126</height>
+    <width>539</width>
+    <height>238</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,34 +22,74 @@
      <item row="0" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>&amp;Label</string>
+        <string>Name</string>
        </property>
        <property name="buddy">
-        <cstring>labelEdit</cstring>
+        <cstring>nameEdit</cstring>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QLineEdit" name="labelEdit">
+      <widget class="QLineEdit" name="nameEdit">
        <property name="toolTip">
         <string>The value associated with this offer.</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_2">
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
        <property name="text">
-        <string>&amp;Offer</string>
-       </property>
-       <property name="buddy">
-        <cstring>offerEdit</cstring>
+        <string>Category</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="offerEdit">
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="catEdit"/>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Title</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QLineEdit" name="titleEdit"/>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Price</string>
+       </property>
+       <property name="buddy">
+        <cstring>priceEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QLineEdit" name="priceEdit">
        <property name="toolTip">
         <string>The offer name.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Expiration Depth</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QLineEdit" name="expEdit"/>
+     </item>
+     <item row="6" column="1">
+      <widget class="QLineEdit" name="qtyEdit"/>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Quantity</string>
        </property>
       </widget>
      </item>

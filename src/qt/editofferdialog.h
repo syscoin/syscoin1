@@ -20,9 +20,7 @@ class EditOfferDialog : public QDialog
 
 public:
     enum Mode {
-        NewOfferAccept,
-        NewOffer,
-        EditOfferAccept,
+        NewOffer = 0,
         EditOffer
     };
 
@@ -31,10 +29,7 @@ public:
 
     void setModel(OfferTableModel *model);
     void loadRow(int row);
-
-    QString getOffer() const;
-    void setOffer(const QString &offer);
-
+	QString getOffer() const;
 public slots:
     void accept();
 
