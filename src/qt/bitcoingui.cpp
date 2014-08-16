@@ -203,14 +203,14 @@ void BitcoinGUI::createActions()
     addressBookAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
     tabGroup->addAction(addressBookAction);
 
-    aliasListAction = new QAction(QIcon(":/icons/domain"), tr("A&liases"), this);
+    aliasListAction = new QAction(QIcon(":/icons/alias"), tr("A&liases"), this);
     aliasListAction->setStatusTip(tr("Manage aliases"));
     aliasListAction->setToolTip(aliasListAction->statusTip());
     aliasListAction->setCheckable(true);
     aliasListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
     tabGroup->addAction(aliasListAction);
 
-    dataAliasListAction = new QAction(QIcon(":/icons/domain"), tr("&Data"), this);
+    dataAliasListAction = new QAction(QIcon(":/icons/data"), tr("&Data"), this);
     dataAliasListAction->setStatusTip(tr("Manage data aliases"));
     dataAliasListAction->setToolTip(dataAliasListAction->statusTip());
     dataAliasListAction->setCheckable(true);
@@ -226,14 +226,14 @@ void BitcoinGUI::createActions()
     tabGroup->addAction(offerListAction);
 
 	
-    certIssuerListAction = new QAction(QIcon(":/icons/cart"), tr("Certificate &Issuers"), this);
+    certIssuerListAction = new QAction(QIcon(":/icons/cert"), tr("Certificate &Issuers"), this);
     certIssuerListAction->setStatusTip(tr("Manage certificate issuers"));
     certIssuerListAction->setToolTip(certIssuerListAction->statusTip());
     certIssuerListAction->setCheckable(true);
     certIssuerListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_0));
     tabGroup->addAction(certIssuerListAction);
 
-    certListAction = new QAction(QIcon(":/icons/cart"), tr("Cert&ificates"), this);
+    certListAction = new QAction(QIcon(":/icons/cert"), tr("Cert&ificates"), this);
     certListAction->setStatusTip(tr("Manage certificates"));
     certListAction->setToolTip(certListAction->statusTip());
     certListAction->setCheckable(true);

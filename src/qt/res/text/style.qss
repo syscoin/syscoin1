@@ -1,5 +1,5 @@
 QDialog, QMainWindow, QFrame {
-	color: white;
+        color: #0094D9;
         background-color: #F5F5F5;
 	border: none;
 }
@@ -9,7 +9,7 @@ QLabel {
 }
 
 QCheckBox {
-    color: white;
+    color: #0094D9;
 }
 
 QFrame#central { background-color: #E7E7E7; border: none }
@@ -22,7 +22,7 @@ QFrame#frame, QFrame#frame_2, QFrame#frame_3 {
 	min-width: 10em;
 	padding: 6px;
 }
-QLabel[openExternalLinks=true], QHeaderView { color: #000000 }
+QLabel[openExternalLinks=true], QHeaderView { color: #0094D9 }
 QLabel[openExternalLinks=false] { color: black; font-weight: normal }
 QPushButton, QToolButton {
         border: 4px solid #E7E7E7;
@@ -36,11 +36,11 @@ QPushButton:pressed, QToolButton:checked {
         color: #000000;
 }
 QPushButton:pressed, QToolButton:pressed {
-        border-color: #000000;
+        border-color: #0094D9;
         color: #000000;
 }
 QPushButton:disabled, QToolButton:disabled {
-	color: #444;
+        color: #444444;
         background-color: #E7E7E7;
 }
 
@@ -67,9 +67,9 @@ QMenuBar::item { background: #E7E7E7; color: black; }
 QLineEdit {
 	border-radius: 6px;
 	border-width: 2px;
-        border-color: #E7E7E7;
+        border-color: #000000;
 	padding: 8px;
-        background-color: #E7E7E7;
+        background-color: #FFFFFF;
         color: black;
 }
 
@@ -93,8 +93,8 @@ QTableView {
         background: #E7E7E7;
         color: black;
 	border-style: none;
-        selection-background-color: #000000;
-    alternate-background-color: #E7E7E7;
+        selection-background-color: #0094D9;
+        alternate-background-color: #E7E7E7;
         selection-color: #E7E7E7;
 	border: 0px solid black;
 }
@@ -104,7 +104,7 @@ QHeaderView::section { color: #000000; background-color: #E7E7E7; }
 QHeaderView::section:checked { background-color: #E7E7E7; }
 
 QTabWidget {
-        background: #E7E7E7;
+     /*   background: #E7E7E7; */
 }
 
  QTabWidget::pane {
@@ -130,7 +130,7 @@ QTabWidget {
      border-top-right-radius: 4px;
      min-width: 8ex;
      padding: 4px;
-     color: #888;
+     color: #464646;
  }
 
  QTabBar::tab:selected, QTabBar::tab:hover {
