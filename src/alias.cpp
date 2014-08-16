@@ -1908,7 +1908,7 @@ Value aliasclean(const Array& params, bool fHelp) {
     }
     return true;
 }
-
+/*
 Value deletetransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -1947,7 +1947,7 @@ Value deletetransaction(const Array& params, bool fHelp)
       return "success, please restart program to clear memory";
     }
 }
-
+*/
 
 Value datanew(const Array& params, bool fHelp)
 {
