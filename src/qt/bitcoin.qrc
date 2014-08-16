@@ -40,8 +40,10 @@
         <file alias="filesave">res/icons/filesave.png</file>
         <file alias="qrcode">res/icons/qrcode.png</file>
         <file alias="debugwindow">res/icons/debugwindow.png</file>
-        <file>res/icons/domain.png</file>
-        <file>res/icons/cart.png</file>
+        <file alias="alias">res/icons/alias.png</file>
+        <file alias="data">res/icons/data.png</file>
+        <file alias="cart">res/icons/cart.png</file>
+        <file alias="cert">res/icons/cert.png</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="about">res/images/bitcoin-about.png</file>
