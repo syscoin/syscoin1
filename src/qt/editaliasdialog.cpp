@@ -18,7 +18,7 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
 {
     ui->setupUi(this);
 
-    GUIUtil::setupAddressWidget(ui->aliasEdit, this);
+    GUIUtil::setupAddressWidget(ui->nameEdit, this);
 
     switch(mode)
     {
@@ -86,29 +86,26 @@ bool EditAliasDialog::saveCurrentRow()
     case NewAlias:
 
 		strMethod = string("aliasnew");
-		params.push_back(ui->nameEdit->text().toStdString());
+		params.push_back(ui->aliasEdit->text().toStdString());
 		try {
             Value result = tableRPC.execute(strMethod, params);
 			if (result.type() == array_type)
 			{
 				Array arr = result.get_array();
-				alias = model->addRow(AliasTableModel::Alias,
-					ui->nameEdit->text(),
-					ui->aliasEdit->text(),
-					"N/A");
-
-
-				this->model->updateEntry(ui->aliasEdit->text(), ui->nameEdit->text(), "N/A", MyAlias, CT_NEW);
-				
-				
+								
 				strMethod = string("aliasactivate");
 				params.clear();
-				params.push_back(ui->nameEdit->text().toStdString());
-				params.push_back(arr[1].get_str());
 				params.push_back(ui->aliasEdit->text().toStdString());
+				params.push_back(arr[1].get_str());
+				params.push_back(ui->nameEdit->text().toStdString());
 				result = tableRPC.execute(strMethod, params);
 				if (result.type() != null_type)
 				{
+					alias = model->addRow(AliasTableModel::Alias,
+						ui->aliasEdit->text(),
+						ui->nameEdit->text(),
+						"N/A");
+					this->model->updateEntry(ui->aliasEdit->text(), ui->nameEdit->text(), "N/A", MyAlias, CT_NEW);
 					QMessageBox::information(this, windowTitle(),
 					tr("New Alias created successfully! GUID for the new Alias is: \"%1\"").arg(QString::fromStdString(arr[1].get_str())),
 					QMessageBox::Ok, QMessageBox::Ok);

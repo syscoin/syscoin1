@@ -86,25 +86,23 @@ bool EditOfferDialog::saveCurrentRow()
 			if (result.type() == array_type)
 			{
 				Array arr = result.get_array();
-				offer = model->addRow(OfferTableModel::Offer,
-							ui->nameEdit->text(),
-							ui->catEdit->text(),
-							ui->titleEdit->text(),
-							ui->priceEdit->text(),
-							ui->qtyEdit->text(),
-							ui->descriptionEdit->toPlainText(),
-							"N/A");
-
-
-				this->model->updateEntry(QString::fromStdString(arr[1].get_str()), ui->titleEdit->text(), ui->catEdit->text(), ui->priceEdit->text(), ui->qtyEdit->text(), ui->descriptionEdit->toPlainText(),QString::fromStdString("N/A"), MyOffers, CT_NEW);
-				
-				
 				strMethod = string("offeractivate");
 				params.clear();
 				params.push_back(arr[1].get_str());
 				result = tableRPC.execute(strMethod, params);
 				if (result.type() != null_type)
 				{
+					offer = model->addRow(OfferTableModel::Offer,
+								ui->nameEdit->text(),
+								ui->catEdit->text(),
+								ui->titleEdit->text(),
+								ui->priceEdit->text(),
+								ui->qtyEdit->text(),
+								ui->descriptionEdit->toPlainText(),
+								"N/A");
+
+
+					this->model->updateEntry(QString::fromStdString(arr[1].get_str()), ui->titleEdit->text(), ui->catEdit->text(), ui->priceEdit->text(), ui->qtyEdit->text(), ui->descriptionEdit->toPlainText(),QString::fromStdString("N/A"), MyOffers, CT_NEW);					
 					QMessageBox::information(this, windowTitle(),
 					tr("New offer created successfully! GUID for the new offer is: \"%1\"").arg(QString::fromStdString(arr[1].get_str())),
 					QMessageBox::Ok, QMessageBox::Ok);
