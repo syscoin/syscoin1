@@ -65,7 +65,7 @@ public:
     AliasTablePriv(CWallet *wallet, AliasTableModel *parent):
         wallet(wallet), parent(parent) {}
 
-    void refreshAliasTable()
+    void refreshAliasTable(AliasModelType type)
     {
         cachedAliasTable.clear();
         {
@@ -85,7 +85,7 @@ public:
                     int op, nOut;
                     vector<vector<unsigned char> > vvchArgs;
                     bool o = DecodeAliasTx(tx, op, nOut, vvchArgs, nHeight);
-                    if (!o || !IsAliasOp(op) || !IsAliasMine(tx)) continue;
+                    if (!o || !IsAliasOp(op) || (!IsAliasMine(tx) && type != AllAlias)) continue;
 
                     // get the transaction
                     if(!GetTransaction(tx.GetHash(), tx, txblkhash, true))
@@ -109,6 +109,8 @@ public:
                                       QString::fromStdString(stringFromVch(vchName)),
                                       QString::fromStdString(strprintf("%lu", nExpDepth))));
                 }
+				if(size() > 500 && type == AllAlias)
+					break;
                 pindex = pindex->pnext;
             }
          }
@@ -116,8 +118,12 @@ public:
         qSort(cachedAliasTable.begin(), cachedAliasTable.end(), AliasTableEntryLessThan());
     }
 
-    void updateEntry(const QString &alias, const QString &value, const QString &exp, bool isData, int status)
+    void updateEntry(const QString &alias, const QString &value, const QString &exp, AliasModelType type, int status)
     {
+		if(!parent || parent->modelType != type)
+		{
+			return;
+		}
         // Find alias / value in model
         QList<AliasTableEntry>::iterator lower = qLowerBound(
             cachedAliasTable.begin(), cachedAliasTable.end(), alias, AliasTableEntryLessThan());
@@ -126,7 +132,7 @@ public:
         int lowerIndex = (lower - cachedAliasTable.begin());
         int upperIndex = (upper - cachedAliasTable.begin());
         bool inModel = (lower != upper);
-        AliasTableEntry::Type newEntryType = isData ? AliasTableEntry::DataAlias : AliasTableEntry::Alias;
+        AliasTableEntry::Type newEntryType = /*isData ? AliasTableEntry::DataAlias :*/ AliasTableEntry::Alias;
 
         switch(status)
         {
@@ -182,12 +188,12 @@ public:
     }
 };
 
-AliasTableModel::AliasTableModel(CWallet *wallet, WalletModel *parent,  bool allAliases) :
-    QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0)
+AliasTableModel::AliasTableModel(CWallet *wallet, WalletModel *parent,  AliasModelType type) :
+    QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0), modelType(type)
 {
     columns << tr("Alias") << tr("Expiration Height") << tr("GUID");
     priv = new AliasTablePriv(wallet, this);
-    priv->refreshAliasTable();
+    priv->refreshAliasTable(type);
 }
 
 AliasTableModel::~AliasTableModel()
@@ -355,10 +361,10 @@ QModelIndex AliasTableModel::index(int row, int column, const QModelIndex &paren
     }
 }
 
-void AliasTableModel::updateEntry(const QString &alias, const QString &value, const QString &exp, bool isMine, int status)
+void AliasTableModel::updateEntry(const QString &alias, const QString &value, const QString &exp, AliasModelType type, int status)
 {
     // Update alias book model from Bitcoin core
-    priv->updateEntry(alias, value, exp, isMine, status);
+    priv->updateEntry(alias, value, exp, type, status);
 }
 
 QString AliasTableModel::addRow(const QString &type, const QString &value, const QString &alias, const QString &exp)

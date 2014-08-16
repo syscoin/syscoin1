@@ -47,6 +47,8 @@ private:
     QString newAliasToSelect;
 
 private slots:
+    /** Create a new alias */
+    void on_newAlias_clicked();
     /** Copy alias of currently selected alias entry to clipboard */
     void on_copyAlias_clicked();
     /** Open send coins dialog for currently selected alias (no button) */

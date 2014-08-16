@@ -12,7 +12,7 @@ class ClientModel;
 class WalletModel;
 class MyAliasListPage;
 class AliasListPage;
-class CreateandActivateAliasListPage;
+
 
 QT_BEGIN_NAMESPACE
 class QObject;
@@ -58,7 +58,6 @@ private:
     QTabWidget *tabWidget;
     MyAliasListPage *myAliasListPage;
     AliasListPage *aliasListPage;
-    CreateandActivateAliasListPage *createandActivateAliasListPage;
 
 public:
     /** Switch to offer page */

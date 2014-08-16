@@ -65,7 +65,7 @@ public:
 
     OptionsModel *getOptionsModel();
     AddressTableModel *getAddressTableModel();
-     AliasTableModel *getAliasTableModelMine();
+    AliasTableModel *getAliasTableModelMine();
     AliasTableModel *getAliasTableModelAll();
     OfferTableModel *getOfferTableModelMine();
 	OfferTableModel *getOfferTableModelAll();

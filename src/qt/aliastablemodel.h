@@ -7,7 +7,9 @@
 class AliasTablePriv;
 class CWallet;
 class WalletModel;
+enum AliasType {AllAlias=0,MyAlias};
 
+typedef enum AliasType AliasModelType;
 /**
    Qt model of the alias                                                                                                                                                        book in the core. This allows views to access and modify the alias book.
  */
@@ -16,7 +18,7 @@ class AliasTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit AliasTableModel(CWallet *wallet, WalletModel *parent = 0, bool allAliases = false);
+    explicit AliasTableModel(CWallet *wallet, WalletModel *parent = 0, AliasModelType = AllAlias);
     ~AliasTableModel();
 
     enum ColumnIndex {
@@ -75,14 +77,14 @@ private:
     AliasTablePriv *priv;
     QStringList columns;
     EditStatus editStatus;
-
+	AliasModelType modelType;
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);
 
 public slots:
     /* Update alias list from core.
      */
-    void updateEntry(const QString &alias, const QString &value, const QString &exp, bool isData, int status);
+    void updateEntry(const QString &alias, const QString &value, const QString &exp, AliasModelType type, int status);
 
     friend class AliasTablePriv;
 };

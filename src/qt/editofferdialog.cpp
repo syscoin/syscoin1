@@ -2,7 +2,7 @@
 #include "ui_editofferdialog.h"
 
 #include "offertablemodel.h"
-#include "offer.h"
+
 #include "guiutil.h"
 #include "bitcoingui.h"
 #include "ui_interface.h"

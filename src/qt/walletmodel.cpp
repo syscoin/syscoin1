@@ -35,7 +35,8 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     optionsModel(optionsModel),
     addressTableModel(0),
     transactionTableModel(0),
-    aliasTableModel(0),
+    aliasTableModelMine(0),
+	aliasTableModelAll(0),
     offerTableModelMine(0),
 	offerTableModelAll(0),
 	certIssuerTableModel(0),
@@ -47,7 +48,9 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     cachedNumBlocks(0)
 {
     addressTableModel = new AddressTableModel(wallet, this);
-    aliasTableModel = new AliasTableModel(wallet, this);
+  
+	aliasTableModelMine = new AliasTableModel(wallet, this, MyAlias);
+	aliasTableModelAll = new AliasTableModel(wallet, this, AllAlias);
 	offerTableModelAll = new OfferTableModel(wallet, this, AllOffers);
 	offerTableModelMine = new OfferTableModel(wallet, this, MyOffers);
     certIssuerTableModel = new CertIssuerTableModel(wallet, this);
@@ -172,8 +175,10 @@ bool WalletModel::validateAlias(const QString &alias)
 
 void WalletModel::updateAlias(const QString &alias, const QString &value, const QString &expDepth, int status)
 {
-    if(aliasTableModel)
-        aliasTableModel->updateEntry(alias, value, expDepth, false, status);
+    if(aliasTableModelMine)
+        aliasTableModelMine->updateEntry(alias, value, expDepth, MyAlias, status);
+    if(aliasTableModelAll)
+        aliasTableModelAll->updateEntry(alias, value, expDepth, AllAlias, status);
 }
 
 void WalletModel::updateOffer(const QString &offer, const QString &title, const QString &category, 
@@ -307,9 +312,13 @@ AddressTableModel *WalletModel::getAddressTableModel()
     return addressTableModel;
 }
 
-AliasTableModel *WalletModel::getAliasTableModel()
+AliasTableModel *WalletModel::getAliasTableModelMine()
 {
-    return aliasTableModel;
+    return aliasTableModelMine;
+}
+AliasTableModel *WalletModel::getAliasTableModelAll()
+{
+    return aliasTableModelAll;
 }
 
 OfferTableModel *WalletModel::getOfferTableModelMine()

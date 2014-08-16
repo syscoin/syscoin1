@@ -11,7 +11,6 @@
 #include "optionsmodel.h"
 #include "myaliaslistpage.h"
 #include "aliaslistpage.h"
-#include "createandactivatealiaslistpage.h"
 #include "aliastablemodel.h"
 #include "ui_interface.h"
 
@@ -31,10 +30,10 @@ AliasView::AliasView(QStackedWidget *parent, BitcoinGUI *_gui):
 	tabWidget = new QTabWidget();
     aliasListPage = new AliasListPage();
     myAliasListPage = new MyAliasListPage();
-	createandActivateAliasListPage = new CreateandActivateAliasListPage();
+
 	tabWidget->addTab(aliasListPage, tr("Aliases"));
 	tabWidget->addTab(myAliasListPage, tr("&My Aliases"));
-	tabWidget->addTab(createandActivateAliasListPage, tr("Create and &Activate Aliases"));
+
 	parent->addWidget(tabWidget);
 
 }
@@ -56,7 +55,7 @@ void AliasView::setClientModel(ClientModel *clientModel)
        
         aliasListPage->setOptionsModel(clientModel->getOptionsModel());
 		myAliasListPage->setOptionsModel(clientModel->getOptionsModel());
-		createandActivateAliasListPage->setOptionsModel(clientModel->getOptionsModel());
+
     }
 }
 
@@ -67,7 +66,7 @@ void AliasView::setWalletModel(WalletModel *walletModel)
     {
         aliasListPage->setModel(walletModel->getAliasTableModelAll());
 		myAliasListPage->setModel(walletModel->getAliasTableModelMine());
-		createandActivateAliasListPage->setModel(NULL);
+
     }
 }
 
@@ -95,12 +94,6 @@ bool AliasView::handleURI(const QString& strURI)
         emit showNormalIfMinimized();
         return true;
     }
-    else if (createandActivateAliasListPage->handleURI(strURI))
-    {
-        tabWidget->setCurrentWidget(createandActivateAliasListPage);
-        emit showNormalIfMinimized();
-        return true;
-    }
-    else
-        return false;
+    
+    return false;
 }

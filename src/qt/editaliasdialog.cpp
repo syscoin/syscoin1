@@ -4,9 +4,14 @@
 #include "aliastablemodel.h"
 #include "guiutil.h"
 
+#include "bitcoingui.h"
+#include "ui_interface.h"
+#include "bitcoinrpc.h"
 #include <QDataWidgetMapper>
 #include <QMessageBox>
-
+using namespace std;
+using namespace json_spirit;
+extern const CRPCTable tableRPC;
 EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::EditAliasDialog), mapper(0), mode(mode), model(0)
@@ -47,8 +52,8 @@ void EditAliasDialog::setModel(AliasTableModel *model)
     if(!model) return;
 
     mapper->setModel(model);
-    mapper->addMapping(ui->labelEdit, AliasTableModel::Value);
     mapper->addMapping(ui->aliasEdit, AliasTableModel::Name);
+    mapper->addMapping(ui->nameEdit, AliasTableModel::Value);
 }
 
 void EditAliasDialog::loadRow(int row)
@@ -58,23 +63,112 @@ void EditAliasDialog::loadRow(int row)
 
 bool EditAliasDialog::saveCurrentRow()
 {
+	// TODO do some input validation on all edit boxes in UI
+   /* if(ui->nameEdit->text().trimmed().isEmpty())
+    {
+        ui->statusLabel->setStyleSheet("QLabel { color: red; }");
+        ui->statusLabel->setText(QString("<nobr>") + tr("You haven't provided an Alias Name.") + QString("</nobr>"));
+        return;
+    }
+    if(ui->aliasEdit->text().trimmed().isEmpty())
+    {
+        ui->statusLabel->setStyleSheet("QLabel { color: red; }");
+        ui->statusLabel->setText(QString("<nobr>") + tr("You haven't provided an Alias Value.") + QString("</nobr>"));
+        return;
+    }*/
     if(!model) return false;
-
+	Array params;
+	string strMethod;
     switch(mode)
     {
     case NewDataAlias:
     case NewAlias:
-        alias = model->addRow(
-                mode == NewAlias ? AliasTableModel::Alias : AliasTableModel::DataAlias,
-                ui->labelEdit->text(),
-                ui->aliasEdit->text(),
-                ui->aliasEdit->text());
+
+		strMethod = string("aliasnew");
+		params.push_back(ui->nameEdit->text().toStdString());
+		try {
+            Value result = tableRPC.execute(strMethod, params);
+			if (result.type() == array_type)
+			{
+				Array arr = result.get_array();
+				alias = model->addRow(AliasTableModel::Alias,
+					ui->nameEdit->text(),
+					ui->aliasEdit->text(),
+					"N/A");
+
+
+				this->model->updateEntry(ui->aliasEdit->text(), ui->nameEdit->text(), "N/A", MyAlias, CT_NEW);
+				
+				
+				strMethod = string("aliasactivate");
+				params.clear();
+				params.push_back(ui->nameEdit->text().toStdString());
+				params.push_back(arr[1].get_str());
+				params.push_back(ui->aliasEdit->text().toStdString());
+				result = tableRPC.execute(strMethod, params);
+				if (result.type() != null_type)
+				{
+					QMessageBox::information(this, windowTitle(),
+					tr("New Alias created successfully! GUID for the new Alias is: \"%1\"").arg(QString::fromStdString(arr[1].get_str())),
+					QMessageBox::Ok, QMessageBox::Ok);
+				}	
+			}
+		}
+		catch (Object& objError)
+		{
+			string strError = find_value(objError, "message").get_str();
+			QMessageBox::critical(this, windowTitle(),
+			tr("Error creating new Alias: \"%1\"").arg(QString::fromStdString(strError)),
+				QMessageBox::Ok, QMessageBox::Ok);
+			break;
+		}
+		catch(std::exception& e)
+		{
+			QMessageBox::critical(this, windowTitle(),
+				tr("General exception creating new alias"),
+				QMessageBox::Ok, QMessageBox::Ok);
+			break;
+		}							
+
         break;
     case EditDataAlias:
     case EditAlias:
         if(mapper->submit())
         {
-            alias = ui->aliasEdit->text();
+			strMethod = string("aliasupdate");
+			params.push_back(ui->nameEdit->text().toStdString());
+			params.push_back(ui->aliasEdit->text().toStdString());
+			
+			try {
+				Value result = tableRPC.execute(strMethod, params);
+				if (result.type() != null_type)
+				{
+					string strResult = result.get_str();
+					alias = ui->nameEdit->text() + ui->aliasEdit->text();
+
+
+					this->model->updateEntry(ui->aliasEdit->text(), ui->nameEdit->text(), "N/A", MyAlias, CT_UPDATED);
+					QMessageBox::information(this, windowTitle(),
+					tr("Offer updated successfully! Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
+						QMessageBox::Ok, QMessageBox::Ok);
+						
+				}
+			}
+			catch (Object& objError)
+			{
+				string strError = find_value(objError, "message").get_str();
+				QMessageBox::critical(this, windowTitle(),
+				tr("Error updating offer: \"%1\"").arg(QString::fromStdString(strError)),
+					QMessageBox::Ok, QMessageBox::Ok);
+				break;
+			}
+			catch(std::exception& e)
+			{
+				QMessageBox::critical(this, windowTitle(),
+					tr("General exception updating offer"),
+					QMessageBox::Ok, QMessageBox::Ok);
+				break;
+			}	
         }
         break;
     }

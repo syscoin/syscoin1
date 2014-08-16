@@ -24,15 +24,7 @@ class AliasListPage : public QDialog
     Q_OBJECT
 
 public:
-    enum Tabs {
-        AliasTab = 0,
-        DataAliasTab = 1
-    };
-
-    enum Mode {
-        ForTransferring, /**< Open alias book to pick alias for transferring */
-        ForEditing  /**< Open alias book for editing */
-    };
+   
 
     explicit AliasListPage(QWidget *parent = 0);
     ~AliasListPage();
@@ -43,15 +35,11 @@ public:
     const QString &getReturnValue() const { return returnValue; }
     bool handleURI(const QString &uri);
 
-public slots:
-    void done(int retval);
-
 private:
     Ui::AliasListPage *ui;
     AliasTableModel *model;
     OptionsModel *optionsModel;
-    Mode mode;
-    Tabs tab;
+
     QString returnValue;
     QSortFilterProxyModel *proxyModel;
     QMenu *contextMenu;
@@ -67,8 +55,7 @@ private slots:
     void on_transferAlias_clicked();
     /** Copy value of currently selected alias entry to clipboard (no button) */
     void onCopyAliasValueAction();
-    /** Edit currently selected alias entry (no button) */
-    void onEditAction();
+
     /** Export button clicked */
     void on_exportButton_clicked();
     /** transfer the alias to a syscoin address  */

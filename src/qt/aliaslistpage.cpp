@@ -29,35 +29,12 @@ AliasListPage::AliasListPage(QWidget *parent) :
     ui->setupUi(this);
 
 #ifdef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
-    ui->newAlias->setIcon(QIcon());
     ui->copyAlias->setIcon(QIcon());
     ui->exportButton->setIcon(QIcon());
 #endif
 
-    switch(mode)
-    {
-    case ForTransferring:
-        connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(accept()));
-        ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-        ui->tableView->setFocus();
-        ui->exportButton->hide();
-        break;
-    case ForEditing:
-        ui->buttonBox->setVisible(false);
-        break;
-    }
-    switch(tab)
-    {
-    case AliasTab:
-        ui->labelExplanation->setText(tr("These are your registered Syscoin aliases. Remember to check the expiration depth of your aliases regularly."));
-        ui->lineEditAliasSearch->setPlaceholderText(tr("Enter an Alias to search"));
-        
-        break;
-    case DataAliasTab:
-        ui->labelExplanation->setText(tr("These are your registered Syscoin data aliases. Remember to check the expiration depth of your data aliases regularly."));
-        break;
-    }
-
+    ui->labelExplanation->setText(tr("These are the first 500 registered Syscoin Aliases."));
+	
     // Context menu actions
     QAction *copyAliasAction = new QAction(ui->copyAlias->text(), this);
     QAction *copyAliasValueAction = new QAction(tr("Copy Va&lue"), this);
@@ -75,13 +52,10 @@ AliasListPage::AliasListPage(QWidget *parent) :
     // Connect signals for context menu actions
     connect(copyAliasAction, SIGNAL(triggered()), this, SLOT(on_copyAlias_clicked()));
     connect(copyAliasValueAction, SIGNAL(triggered()), this, SLOT(onCopyAliasValueAction()));
-    connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
-    connect(transferAliasAction, SIGNAL(triggered()), this, SLOT(onSendCoinsAction()));
-
+   
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
-    // Pass through accept action from button box
-    connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+
     ui->lineEditAliasSearch->setPlaceholderText(tr("Enter an Alias to search"));
 }
 
@@ -100,20 +74,8 @@ void AliasListPage::setModel(AliasTableModel *model)
     proxyModel->setDynamicSortFilter(true);
     proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
     proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-    switch(tab)
-    {
-    case AliasTab:
-        // Receive filter
-        proxyModel->setFilterRole(AliasTableModel::TypeRole);
-        proxyModel->setFilterFixedString(AliasTableModel::Alias);
-
-        break;
-    case DataAliasTab:
-        // Send filter
-        proxyModel->setFilterRole(AliasTableModel::TypeRole);
-        proxyModel->setFilterFixedString(AliasTableModel::DataAlias);
-        break;
-    }
+    proxyModel->setFilterRole(AliasTableModel::TypeRole);
+    proxyModel->setFilterFixedString(AliasTableModel::Alias);
     ui->tableView->setModel(proxyModel);
     ui->tableView->sortByColumn(0, Qt::AscendingOrder);
 
@@ -156,23 +118,6 @@ void AliasListPage::onCopyAliasValueAction()
     GUIUtil::copyEntryData(ui->tableView, AliasTableModel::Value);
 }
 
-void AliasListPage::onEditAction()
-{
-    if(!ui->tableView->selectionModel())
-        return;
-    QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows();
-    if(indexes.isEmpty())
-        return;
-
-    EditAliasDialog dlg(
-            tab == AliasTab ?
-            EditAliasDialog::EditAlias :
-            EditAliasDialog::EditDataAlias);
-    dlg.setModel(model);
-    QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
-    dlg.loadRow(origIndex.row());
-    dlg.exec();
-}
 
 void AliasListPage::onTransferAliasAction()
 {
@@ -201,33 +146,6 @@ void AliasListPage::selectionChanged()
     {
         ui->copyAlias->setEnabled(false);
     }
-}
-
-void AliasListPage::done(int retval)
-{
-    QTableView *table = ui->tableView;
-    if(!table->selectionModel() || !table->model())
-        return;
-    // When this is a tab/widget and not a model dialog, ignore "done"
-    if(mode == ForEditing)
-        return;
-
-    // Figure out which alias was selected, and return it
-    QModelIndexList indexes = table->selectionModel()->selectedRows(AliasTableModel::Name);
-
-    foreach (QModelIndex index, indexes)
-    {
-        QVariant alias = table->model()->data(index);
-        returnValue = alias.toString();
-    }
-
-    if(returnValue.isEmpty())
-    {
-        // If no alias entry selected, return rejected
-        retval = Rejected;
-    }
-
-    QDialog::done(retval);
 }
 
 void AliasListPage::on_exportButton_clicked()

@@ -31,7 +31,7 @@ MyAliasListPage::MyAliasListPage(QWidget *parent) :
     ui->exportButton->setIcon(QIcon());
 #endif
 
-
+	ui->buttonBox->setVisible(false);
     ui->labelExplanation->setText(tr("These are your registered Syscoin Aliases."));
 	
     // Context menu actions
@@ -52,7 +52,6 @@ MyAliasListPage::MyAliasListPage(QWidget *parent) :
     connect(copyAliasAction, SIGNAL(triggered()), this, SLOT(on_copyAlias_clicked()));
     connect(copyAliasValueAction, SIGNAL(triggered()), this, SLOT(onCopyAliasValueAction()));
     connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
-    //connect(transferAliasAction, SIGNAL(triggered()), this, SLOT(onSendCoinsAction()));
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
@@ -147,6 +146,18 @@ void MyAliasListPage::onTransferAliasAction()
     }
 }
 
+void MyAliasListPage::on_newAlias_clicked()
+{
+    if(!model)
+        return;
+
+    EditAliasDialog dlg(EditAliasDialog::NewAlias, this);
+    dlg.setModel(model);
+    if(dlg.exec())
+    {
+        newAliasToSelect = dlg.getAlias();
+    }
+}
 void MyAliasListPage::selectionChanged()
 {
     // Set button states based on selected tab and selection

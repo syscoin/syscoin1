@@ -245,7 +245,6 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/aliastablemodel.h \
     src/qt/editaliasdialog.h \
     src/qt/aliaslistpage.h \
-    src/qt/createandactivatealiaslistpage.h \
     src/qt/myaliaslistpage.h \
     src/qt/allofferlistpage.h \
     src/qt/acceptandpayofferlistpage.h \
@@ -336,7 +335,6 @@ SOURCES += src/qt/bitcoin.cpp \
     src/qt/aliastablemodel.cpp \
     src/qt/editaliasdialog.cpp \
     src/qt/aliaslistpage.cpp \
-    src/qt/createandactivatealiaslistpage.cpp \
     src/qt/myaliaslistpage.cpp \
     src/qt/allofferlistpage.cpp \
     src/qt/acceptandpayofferlistpage.cpp \
@@ -364,7 +362,6 @@ FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/optionsdialog.ui \
     src/qt/forms/aliaslistpage.ui \
     src/qt/forms/editaliasdialog.ui \
-    src/qt/forms/createandactivatealiaslistpage.ui \
     src/qt/forms/myaliaslistpage.ui \
     src/qt/forms/allofferlistpage.ui \
     src/qt/forms/acceptandpayofferlistpage.ui \
