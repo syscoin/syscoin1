@@ -319,7 +319,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
                 // verify enough fees with this txn
                 nNetFee = GetAliasNetFee(tx);
-                if (nNetFee < GetAliasNetworkFee(pindexBlock->nHeight))
+                if (nNetFee < GetAliasNetworkFee(1, pindexBlock->nHeight))
                     return error("CheckAliasInputs() : got tx %s with fee too low %lu",
                         tx.GetHash().GetHex().c_str(), (long unsigned int) nNetFee);
 
@@ -647,25 +647,25 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
     return true;
 }
 
-// int64 GetAliasNetworkFee(int nHeight) {
-//     int64 nRes = 1000 * COIN;
-//     int64 nDif = 400 * COIN;
-//     int nTargetHeight = 360000;
-//     if(nHeight>nTargetHeight) return nRes - nDif;
-//     else return nRes - ( (nHeight/nTargetHeight) * nDif );
-// }
-
-int64 GetAliasNetworkFee(int nHeight) {
-    // Speed up network fee decrease 4x starting at 174720
-    if (nHeight >= 174720) nHeight += (nHeight - 174720) * 3;
-    //if ((nHeight >> 13) >= 60) return 0;
-    int64 nStart = 50 * COIN;
-    if (fTestNet) nStart = 10 * CENT;
-    else if(fCakeNet) return CENT;
-    int64 nRes = nStart >> (nHeight >> 13);
-    nRes -= (nRes >> 14) * (nHeight % 8192);
-    return nRes;
+int64 GetAliasNetworkFee(int nType, int nHeight) {
+    int64 nRes = 5172 * COIN;
+    int64 nDif = 3448 * COIN;
+    int nTargetHeight = 360000;
+    if(nHeight>nTargetHeight) return nRes - nDif;
+    else return nRes - ( (nHeight/nTargetHeight) * nDif );
 }
+
+// int64 GetAliasNetworkFee(int nType, int nHeight) {
+//     // Speed up network fee decrease 4x starting at 174720
+//     if (nHeight >= 174720) nHeight += (nHeight - 174720) * 3;
+//     //if ((nHeight >> 13) >= 60) return 0;
+//     int64 nStart = 50 * COIN;
+//     if (fTestNet) nStart = 10 * CENT;
+//     else if(fCakeNet) return CENT;
+//     int64 nRes = nStart >> (nHeight >> 13);
+//     nRes -= (nRes >> 14) * (nHeight % 8192);
+//     return nRes;
+// }
 
 // 10080 blocks = 1 week
 // alias expiration time is ~ 6 months or 26 weeks
@@ -1349,11 +1349,11 @@ Value aliasactivate(const Array& params, bool fHelp) {
         throw runtime_error("previous tx used a different random value");
     }
 
-    int64 nNetFee = GetAliasNetworkFee(pindexBest->nHeight);
-
+    int64 nNetFee = GetAliasNetworkFee(1, pindexBest->nHeight);
     // Round up to CENT
     nNetFee += CENT - 1;
     nNetFee = (nNetFee / CENT) * CENT;
+    
     string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee, wtxIn, wtx, false);
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
@@ -1424,8 +1424,7 @@ Value aliasupdate(const Array& params, bool fHelp) {
             throw runtime_error("this alias is not in your wallet");
         }
 
-        int64 nNetFee = GetAliasNetworkFee(pindexBest->nHeight);
-
+        int64 nNetFee = GetAliasNetworkFee(2, pindexBest->nHeight);
         // Round up to CENT
         nNetFee += CENT - 1;
         nNetFee = (nNetFee / CENT) * CENT;
@@ -2112,11 +2111,11 @@ Value dataactivate(const Array& params, bool fHelp)
     if (uint160(vchHash) != hash)
         throw runtime_error("previous tx used a different random value");
 
-    int64 nNetFee = GetAliasNetworkFee(pindexBest->nHeight);
-
+    int64 nNetFee = GetAliasNetworkFee(1, pindexBest->nHeight);
     // Round up to CENT
     nNetFee += CENT - 1;
     nNetFee = (nNetFee / CENT) * CENT;
+
     string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee, wtxIn, wtx, false, txdata);
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
@@ -2191,8 +2190,13 @@ Value dataupdate(const Array& params, bool fHelp)
         throw runtime_error("this data is not in your wallet");
     }
 
+    int64 nNetFee = GetAliasNetworkFee(2, pindexBest->nHeight);
+    // Round up to CENT
+    nNetFee += CENT - 1;
+    nNetFee = (nNetFee / CENT) * CENT;
+
     CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
-    string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, 0, wtxIn, wtx, false, txdata);
+    string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee, wtxIn, wtx, false, txdata);
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 

@@ -168,7 +168,7 @@ bool GetAliasAddress(const CTransaction& tx, std::string& strAddress);
 bool GetAliasAddress(const CDiskTxPos& txPos, std::string& strAddress);
 std::string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, bool fAskFee, const std::string& txData = "");
 bool CreateTransactionWithInputTx(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxIn, int nTxOut, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, const std::string& txData = "");
-int64 GetAliasNetworkFee(int nHeight);
+int64 GetAliasNetworkFee(int nType, int nHeight);
 uint64 GetAliasFeeSubsidy(const unsigned int nTime);
 std::string aliasFromOp(int op);
 bool IsAliasOp(int op);

@@ -1029,7 +1029,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
             // check for enough fees
             nNetFee = GetCertNetFee(tx);
-            if (nNetFee < GetCertNetworkFee(4, pindexBlock->nHeight) - COIN)
+            if (nNetFee < GetCertNetworkFee(1, pindexBlock->nHeight) - COIN)
                 return error(
                         "CheckCertInputs() : got tx %s with fee too low %lu",
                         tx.GetHash().GetHex().c_str(),
@@ -1386,10 +1386,10 @@ int GetCertTxPosHeight2(const CDiskTxPos& txPos, int nHeight) {
 }
 
 Value certissuernew(const Array& params, bool fHelp) {
-    if(!fTestNet && !fCakeNet)
-        throw runtime_error(
-        "certissuernew is currently restricted to testnet and cakenet."
-                + HelpRequiringPassphrase());
+    // if(!fTestNet && !fCakeNet)
+    //     throw runtime_error(
+    //     "certissuernew is currently restricted to testnet and cakenet."
+    //             + HelpRequiringPassphrase());
             
     if (fHelp || params.size() != 2)
         throw runtime_error(
@@ -1532,7 +1532,7 @@ Value certissueractivate(const Array& params, bool fHelp) {
             throw runtime_error("Could not decode certissuer transaction");
 
         // calculate network fees
-        int64 nNetFee = GetCertNetworkFee(4, pindexBest->nHeight);
+        int64 nNetFee = GetCertNetworkFee(1, pindexBest->nHeight);
 
         // unserialize certissuer object from txn, serialize back
         CCertIssuer newCertIssuer;
@@ -1652,7 +1652,7 @@ Value certissuerupdate(const Array& params, bool fHelp) {
         theCertIssuer.certs.clear();
 
         // calculate network fees
-        int64 nNetFee = GetCertNetworkFee(4, pindexBest->nHeight);
+        int64 nNetFee = GetCertNetworkFee(2, pindexBest->nHeight);
 
         // update certissuer values
         theCertIssuer.vchTitle = vchTitle;
