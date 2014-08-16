@@ -56,7 +56,7 @@ static const int64 DUST_SOFT_LIMIT = COIN * 10; // 0.001
 /** Dust Hard Limit, ignored as wallet inputs (mininput default) */
 static const int64 DUST_HARD_LIMIT = COIN;   // 0.00001  mininput
 /** No amount larger than this (in satoshi) is valid */
-static const int64 MAX_MONEY = 268824600 * COIN;
+static const int64 MAX_MONEY = 2000000000 * COIN;
 inline bool MoneyRange(int64 nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 static const int64 MIN_TX_FEE = (5 * CENT);
 static const int64 MIN_RELAY_TX_FEE = MIN_TX_FEE;
