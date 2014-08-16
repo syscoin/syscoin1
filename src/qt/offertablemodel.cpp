@@ -68,7 +68,7 @@ public:
     OfferTablePriv(CWallet *wallet, OfferTableModel *parent):
         wallet(wallet), parent(parent) {}
 
-    void refreshOfferTable(bool allOffers)
+		void refreshOfferTable(OfferModelType type)
     {
 
         cachedOfferTable.clear();
@@ -90,7 +90,7 @@ public:
                     int op, nOut;
                     vector<vector<unsigned char> > vvchArgs;
                     bool o = DecodeOfferTx(tx, op, nOut, vvchArgs, nHeight);
-                    if (!o || !IsOfferOp(op) || (!IsOfferMine(tx) && !allOffers)) continue;
+					if (!o || !IsOfferOp(op) || (!IsOfferMine(tx) && type != AllOffers)) continue;
 
                     // get the transaction
                     if(!GetTransaction(tx.GetHash(), tx, txblkhash, true))
@@ -128,7 +128,7 @@ public:
                                           QString::fromStdString(strprintf("%d", nExpHeight)),
 										  QString::fromStdString(stringFromVch(theOffer.sDescription))));
                 }
-				if(size() > 500 && allOffers == true)
+				if(size() > 500 && type == AllOffers)
 					break;
                 pindex = pindex->pnext;
             }
@@ -139,8 +139,12 @@ public:
     }
 
     void updateEntry(const QString &offer, const QString &title, const QString &category,
-                     const QString &price, const QString &quantity, const QString &expdepth, const QString &description, bool isAccept, int status)
+		const QString &price, const QString &quantity, const QString &expdepth, const QString &description, OfferModelType type, int status)
     {
+		if(!parent || parent->modelType != type)
+		{
+			return;
+		}
         // Find offer / value in model
         QList<OfferTableEntry>::iterator lower = qLowerBound(
             cachedOfferTable.begin(), cachedOfferTable.end(), offer, OfferTableEntryLessThan());
@@ -149,7 +153,8 @@ public:
         int lowerIndex = (lower - cachedOfferTable.begin());
         int upperIndex = (upper - cachedOfferTable.begin());
         bool inModel = (lower != upper);
-        OfferTableEntry::Type newEntryType = isAccept ? OfferTableEntry::OfferAccept : OfferTableEntry::Offer;
+		
+        OfferTableEntry::Type newEntryType = /*isAccept ? OfferTableEntry::OfferAccept :*/ OfferTableEntry::Offer;
 
         switch(status)
         {
@@ -209,12 +214,12 @@ public:
     }
 };
 
-OfferTableModel::OfferTableModel(CWallet *wallet, WalletModel *parent, bool allOffers) :
-    QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0)
+OfferTableModel::OfferTableModel(CWallet *wallet, WalletModel *parent, OfferModelType type) :
+    QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0), modelType(type)
 {
     columns << tr("Offer") << tr("Category") << tr("Title") << tr("Price") << tr("Quantity") << tr("Expiration Height") << tr("Description");
     priv = new OfferTablePriv(wallet, this);
-    priv->refreshOfferTable(allOffers);
+    priv->refreshOfferTable(type);
 }
 
 OfferTableModel::~OfferTableModel()
@@ -421,10 +426,10 @@ QModelIndex OfferTableModel::index(int row, int column, const QModelIndex &paren
 }
 
 void OfferTableModel::updateEntry(const QString &offer, const QString &title, const QString &category, const QString &price,
- const QString &quantity, const QString &expdepth, const QString &description, bool isMine, int status)
+								  const QString &quantity, const QString &expdepth, const QString &description, OfferModelType type, int status)
 {
     // Update offer book model from Bitcoin core
-    priv->updateEntry(offer, title, category, price, quantity, expdepth, description, isMine, status);
+    priv->updateEntry(offer, title, category, price, quantity, expdepth, description, type, status);
 }
 
 QString OfferTableModel::addRow(const QString &type, const QString &title, const QString &offer, const QString &category, 
