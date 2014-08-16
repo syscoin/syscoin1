@@ -64,6 +64,7 @@ private:
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
     AliasView *aliasView;
+	AliasView *dataAliasView;
     QStackedWidget* aliasListPage;
     QStackedWidget* dataAliasListPage;
     AddressBookPage *addressBookPage;

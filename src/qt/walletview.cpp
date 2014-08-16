@@ -49,7 +49,7 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
     QHBoxLayout *hbox_buttons = new QHBoxLayout();
     transactionView = new TransactionView(this);
     aliasView = new AliasView(aliasListPage, gui);
-    aliasView = new AliasView(dataAliasListPage, gui);
+    dataAliasView = new AliasView(dataAliasListPage, gui);
 	offerListPage = new QStackedWidget();
 	offerView = new OfferView(offerListPage, gui);
     vbox->addWidget(transactionView);
@@ -127,6 +127,7 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 {
     this->gui = gui;
     aliasView->setBitcoinGUI(gui);
+	dataAliasView->setBitcoinGUI(gui);
 	offerView->setBitcoinGUI(gui);
 }
 
@@ -138,6 +139,7 @@ void WalletView::setClientModel(ClientModel *clientModel)
         overviewPage->setClientModel(clientModel);
         addressBookPage->setOptionsModel(clientModel->getOptionsModel());
         aliasView->setClientModel(clientModel);
+		dataAliasView->setClientModel(clientModel);
         offerView->setClientModel(clientModel);
         certIssuerListPage->setOptionsModel(clientModel->getOptionsModel());
         certListPage->setOptionsModel(clientModel->getOptionsModel());
@@ -157,6 +159,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
         transactionView->setModel(walletModel);
         overviewPage->setWalletModel(walletModel);
         aliasView->setWalletModel(walletModel);
+		dataAliasView->setWalletModel(walletModel);
         offerView->setWalletModel(walletModel);
         certIssuerListPage->setModel(walletModel->getCertIssuerTableModel());
         certListPage->setModel(walletModel->getCertIssuerTableModel());
@@ -277,6 +280,10 @@ bool WalletView::handleURI(const QString& strURI)
 {
  // URI has to be valid
     if (aliasView->handleURI(strURI))
+    {
+        return true;
+    }
+    if (dataAliasView->handleURI(strURI))
     {
         return true;
     }
