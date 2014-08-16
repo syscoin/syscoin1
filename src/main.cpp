@@ -2239,7 +2239,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 		bValue += (bValue / 8); // 12.5% float till fixed
 		if (vtx[0].GetValueOut()
 				> bValue
-				&& pindex->nHeight > 1) // blocks 0 (genesis) and 1 (premine) have no max restrictions
+				&& pindex->nHeight > 241) // blocks 0 (genesis) and 1 (premine) have no max restrictions
 			return state.DoS(100,
 					error( "ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",
 							pindex->nHeight, vtx[0].GetValueOut(),
