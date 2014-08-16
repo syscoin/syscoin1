@@ -16,7 +16,7 @@ class AliasTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit AliasTableModel(CWallet *wallet, WalletModel *parent = 0);
+    explicit AliasTableModel(CWallet *wallet, WalletModel *parent = 0, bool allAliases = false);
     ~AliasTableModel();
 
     enum ColumnIndex {
