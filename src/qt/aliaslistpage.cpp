@@ -4,6 +4,7 @@
 #include "aliastablemodel.h"
 #include "optionsmodel.h"
 #include "bitcoingui.h"
+#include "bitcoinrpc.h"
 #include "editaliasdialog.h"
 #include "csvmodelwriter.h"
 #include "guiutil.h"
@@ -13,13 +14,17 @@
 #include <QMessageBox>
 #include <QMenu>
 
-AliasListPage::AliasListPage(Mode mode, Tabs tab, QWidget *parent) :
+using namespace std;
+using namespace json_spirit;
+
+extern const CRPCTable tableRPC;
+extern string JSONRPCReply(const Value& result, const Value& error, const Value& id);
+
+AliasListPage::AliasListPage(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AliasListPage),
     model(0),
-    optionsModel(0),
-    mode(mode),
-    tab(tab)
+    optionsModel(0)
 {
     ui->setupUi(this);
 
@@ -45,6 +50,8 @@ AliasListPage::AliasListPage(Mode mode, Tabs tab, QWidget *parent) :
     {
     case AliasTab:
         ui->labelExplanation->setText(tr("These are your registered Syscoin aliases. Remember to check the expiration depth of your aliases regularly."));
+        ui->lineEditAliasSearch->setPlaceholderText(tr("Enter an Alias to search"));
+        
         break;
     case DataAliasTab:
         ui->labelExplanation->setText(tr("These are your registered Syscoin data aliases. Remember to check the expiration depth of your data aliases regularly."));
@@ -98,6 +105,7 @@ void AliasListPage::setModel(AliasTableModel *model)
         // Receive filter
         proxyModel->setFilterRole(AliasTableModel::TypeRole);
         proxyModel->setFilterFixedString(AliasTableModel::Alias);
+
         break;
     case DataAliasTab:
         // Send filter
@@ -119,13 +127,17 @@ void AliasListPage::setModel(AliasTableModel *model)
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::ExpirationDepth, QHeaderView::ResizeToContents);
 #endif
 
+    ui->lineEditAliasSearch->setPlaceholderText(tr("Enter an Alias to search"));
+
     connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             this, SLOT(selectionChanged()));
+
 
     // Select row for newly created alias
     connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(selectNewAlias(QModelIndex,int,int)));
 
     selectionChanged();
+
 }
 
 void AliasListPage::setOptionsModel(OptionsModel *optionsModel)
@@ -135,6 +147,7 @@ void AliasListPage::setOptionsModel(OptionsModel *optionsModel)
 
 void AliasListPage::on_copyAlias_clicked()
 {
+   
     GUIUtil::copyEntryData(ui->tableView, AliasTableModel::Name);
 }
 
@@ -170,22 +183,6 @@ void AliasListPage::onTransferAliasAction()
     {
         QString alias = index.data().toString();
         emit transferAlias(alias);
-    }
-}
-
-void AliasListPage::on_newAlias_clicked()
-{
-    if(!model)
-        return;
-
-    EditAliasDialog dlg(
-            tab == AliasTab ?
-            EditAliasDialog::NewAlias :
-            EditAliasDialog::NewDataAlias, this);
-    dlg.setModel(model);
-    if(dlg.exec())
-    {
-        newAliasToSelect = dlg.getAlias();
     }
 }
 
@@ -280,4 +277,66 @@ void AliasListPage::selectNewAlias(const QModelIndex &parent, int begin, int /*e
         ui->tableView->selectRow(idx.row());
         newAliasToSelect.clear();
     }
+}
+
+void AliasListPage::on_searchAlias_clicked()
+{
+    if(ui->lineEditAliasSearch->text().trimmed().isEmpty())
+    {
+        QMessageBox::warning(this, tr("Error Searching Alias"),
+            tr("You haven't entered an Alias"),
+            QMessageBox::Ok, QMessageBox::Ok);
+        return;
+    }
+       Array params;
+        Value valError;
+        Object ret ;
+        Value valResult;
+        Array arr;
+        Value valId;
+        Value result ;
+        string strReply;
+        string strError;
+        string strMethod = string("aliasfilter");
+         
+        params.push_back(ui->lineEditAliasSearch->text().toStdString());
+
+        try {
+            result = tableRPC.execute(strMethod, params);
+        }
+        catch (Object& objError)
+        {
+            strError = find_value(objError, "message").get_str();
+            QMessageBox::critical(this, windowTitle(),
+            tr("Error searching Alias: \"%1\"").arg(QString::fromStdString(strError)),
+                QMessageBox::Ok, QMessageBox::Ok);
+            return;
+        }
+        catch(std::exception& e)
+        {
+            QMessageBox::critical(this, windowTitle(),
+                tr("General exception when searchig alias"),
+                QMessageBox::Ok, QMessageBox::Ok);
+            return;
+        }
+    
+        if (result.type() == array_type)
+        {
+            
+            
+        }
+        else
+        {
+            QMessageBox::critical(this, windowTitle(),
+                tr("Error: Invalid response from aliasnew command"),
+                QMessageBox::Ok, QMessageBox::Ok);
+            return;
+        }
+
+}
+
+bool AliasListPage::handleURI(const QString& strURI)
+{
+ 
+    return false;
 }
