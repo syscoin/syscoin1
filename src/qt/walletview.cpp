@@ -8,7 +8,6 @@
 #include "bitcoingui.h"
 #include "transactiontablemodel.h"
 #include "addressbookpage.h"
-#include "aliaslistpage.h"
 #include "aliasview.h"
 #include "offerview.h"
 #include "certlistpage.h"
