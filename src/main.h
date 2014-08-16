@@ -717,6 +717,8 @@ public:
     // Try to accept this transaction into the memory pool
     bool AcceptToMemoryPool(CValidationState &state, bool fCheckInputs=true, bool fLimitFree = true, bool* pfMissingInputs=NULL);
 
+    bool RemoveFromMemoryPool(bool fRecursive = true);
+
     static const CTxOut &GetOutputFor(const CTxIn& input, CCoinsViewCache& mapInputs);
     static const CCoins &GetOutputCoinsFor(const CTxIn& input, CCoinsViewCache& view);
 };

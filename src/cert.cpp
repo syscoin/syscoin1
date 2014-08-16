@@ -1386,6 +1386,11 @@ int GetCertTxPosHeight2(const CDiskTxPos& txPos, int nHeight) {
 }
 
 Value certissuernew(const Array& params, bool fHelp) {
+    if(!fTestNet && !fCakeNet)
+        throw runtime_error(
+        "certissuernew is currently restricted to testnet and cakenet."
+                + HelpRequiringPassphrase());
+            
     if (fHelp || params.size() != 2)
         throw runtime_error(
                 "certissuernew <title> <data>\n"
@@ -2309,76 +2314,74 @@ Value certissuerscan(const Array& params, bool fHelp) {
 }
 
 
-
-/*
  Value certissuerclean(const Array& params, bool fHelp)
  {
- if (fHelp || params.size())
- throw runtime_error("certissuer_clean\nClean unsatisfiable transactions from the wallet - including certissuer_update on an already taken certissuer\n");
+     if (fHelp || params.size())
+     throw runtime_error("certissuer_clean\nClean unsatisfiable transactions from the wallet\n");
 
 
- {
- LOCK2(cs_main,pwalletMain->cs_wallet);
- map<uint256, CWalletTx> mapRemove;
+     {
+         LOCK2(cs_main,pwalletMain->cs_wallet);
+         map<uint256, CWalletTx> mapRemove;
 
- printf("-----------------------------\n");
+         printf("-----------------------------\n");
 
- {
- BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
- {
- CWalletTx& wtx = item.second;
- vector<unsigned char> vchCertIssuer;
- if (wtx.GetDepthInMainChain() < 1 && IsConflictedAliasTx(pblocktree, wtx, vchCertIssuer))
- {
- uint256 hash = wtx.GetHash();
- mapRemove[hash] = wtx;
- }
- }
+         {
+             BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+             {
+                 CWalletTx& wtx = item.second;
+                 vector<unsigned char> vchCertIssuer;
+                 if (wtx.GetDepthInMainChain() < 1 && IsConflictedCertIssuerTx(*pblocktree, wtx, vchCertIssuer))
+                 {
+                     uint256 hash = wtx.GetHash();
+                     mapRemove[hash] = wtx;
+                 }
+             }
+         }
+
+         bool fRepeat = true;
+         while (fRepeat)
+         {
+             fRepeat = false;
+             BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+             {
+                 CWalletTx& wtx = item.second;
+                 BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+                 {
+                     uint256 hash = wtx.GetHash();
+
+                     // If this tx depends on a tx to be removed, remove it too
+                     if (mapRemove.count(txin.prevout.hash) && !mapRemove.count(hash))
+                     {
+                         mapRemove[hash] = wtx;
+                         fRepeat = true;
+                     }
+                 }
+             }
+         }
+
+         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapRemove)
+         {
+             CWalletTx& wtx = item.second;
+
+             UnspendInputs(wtx);
+             wtx.RemoveFromMemoryPool();
+             pwalletMain->EraseFromWallet(wtx.GetHash());
+             vector<unsigned char> vchCertIssuer;
+             if (GetNameOfCertIssuerTx(wtx, vchCertIssuer) && mapCertIssuerPending.count(vchCertIssuer))
+             {
+                 string certissuer = stringFromVch(vchCertIssuer);
+                 printf("certissuer_clean() : erase %s from pending of certissuer %s",
+                 wtx.GetHash().GetHex().c_str(), certissuer.c_str());
+                 if (!mapCertIssuerPending[vchCertIssuer].erase(wtx.GetHash()))
+                     error("certissuer_clean() : erase but it was not pending");
+             }
+             wtx.print();
+         }
+
+         printf("-----------------------------\n");
+     }
+
+     return true;
  }
 
- bool fRepeat = true;
- while (fRepeat)
- {
- fRepeat = false;
- BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
- {
- CWalletTx& wtx = item.second;
- BOOST_FOREACH(const CTxIn& txin, wtx.vin)
- {
- uint256 hash = wtx.GetHash();
-
- // If this tx depends on a tx to be removed, remove it too
- if (mapRemove.count(txin.prevout.hash) && !mapRemove.count(hash))
- {
- mapRemove[hash] = wtx;
- fRepeat = true;
- }
- }
- }
- }
-
- BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapRemove)
- {
- CWalletTx& wtx = item.second;
-
- UnspendInputs(wtx);
- wtx.RemoveFromMemoryPool();
- pwalletMain->EraseFromWallet(wtx.GetHash());
- vector<unsigned char> vchCertIssuer;
- if (GetNameOfCertIssuerTx(wtx, vchCertIssuer) && mapCertIssuerPending.count(vchCertIssuer))
- {
- string certissuer = stringFromVch(vchCertIssuer);
- printf("certissuer_clean() : erase %s from pending of certissuer %s",
- wtx.GetHash().GetHex().c_str(), certissuer.c_str());
- if (!mapCertIssuerPending[vchCertIssuer].erase(wtx.GetHash()))
- error("certissuer_clean() : erase but it was not pending");
- }
- wtx.print();
- }
-
- printf("-----------------------------\n");
- }
-
- return true;
- }
- */

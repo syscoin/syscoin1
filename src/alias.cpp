@@ -59,6 +59,31 @@ int GetAliasExpirationDepth(int nHeight);
 int64 GetAliasNetFee(const CTransaction& tx);
 bool CheckAliasTxPos(const vector<CAliasIndex> &vtxPos, const int txPos);
 
+void RemoveAliasTxnFromMemoryPool(const CTransaction& tx) {
+    if (tx.nVersion != SYSCOIN_TX_VERSION)
+        return;
+
+    if (tx.vout.size() < 1)
+        return;
+
+    vector<vector<unsigned char> > vvch;
+
+    int op;
+    int nOut;
+
+    if (!DecodeAliasTx(tx, op, nOut, vvch, -1))
+        return;
+
+    if (op != OP_ALIAS_NEW) {
+        {
+            LOCK(cs_main);
+            std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapAliasesPending.find(vvch[0]);
+            if (mi != mapAliasesPending.end())
+                mi->second.erase(tx.GetHash());
+        }
+    }
+}
+
 
 bool IsAliasOp(int op) {
     return op == OP_ALIAS_NEW || op == OP_ALIAS_ACTIVATE || op == OP_ALIAS_UPDATE;
@@ -621,6 +646,14 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
     }
     return true;
 }
+
+// int64 GetAliasNetworkFee(int nHeight) {
+//     int64 nRes = 1000 * COIN;
+//     int64 nDif = 400 * COIN;
+//     int nTargetHeight = 360000;
+//     if(nHeight>nTargetHeight) return nRes - nDif;
+//     else return nRes - ( (nHeight/nTargetHeight) * nDif );
+// }
 
 int64 GetAliasNetworkFee(int nHeight) {
     // Speed up network fee decrease 4x starting at 174720
@@ -1786,7 +1819,38 @@ Value aliasscan(const Array& params, bool fHelp)
     return oRes;
 }
 
-/*
+void UnspendInputs(CWalletTx& wtx)
+{
+    set<CWalletTx*> setCoins;
+    BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+    {
+        if (!pwalletMain->IsMine(txin))
+        {
+            printf("UnspendInputs(): !mine %s", txin.ToString().c_str());
+            continue;
+        }
+        CWalletTx& prev = pwalletMain->mapWallet[txin.prevout.hash];
+        int nOut = txin.prevout.n;
+
+        printf("UnspendInputs(): %s:%d spent %d\n", prev.GetHash().ToString().c_str(), nOut, prev.IsSpent(nOut));
+
+        if (nOut >= prev.vout.size())
+            throw runtime_error("CWalletTx::MarkSpent() : nOut out of range");
+        prev.vfSpent.resize(prev.vout.size());
+        if (prev.vfSpent[nOut])
+        {
+            prev.vfSpent[nOut] = false;
+            prev.fAvailableCreditCached = false;
+            prev.WriteToDisk();
+        }
+#ifdef GUI
+        //pwalletMain->vWalletUpdated.push_back(prev.GetHash());
+        pwalletMain->NotifyTransactionChanged(pwalletMain, prev.GetHash(), CT_DELETED);
+
+#endif
+    }
+}
+
 
 Value aliasclean(const Array& params, bool fHelp) {
     if (fHelp || params.size())
@@ -1800,7 +1864,7 @@ Value aliasclean(const Array& params, bool fHelp) {
             BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
                 CWalletTx& wtx = item.second;
                 vector<unsigned char> vchName;
-                if (wtx.GetDepthInMainChain() < 1 && IsConflictedNameTx(pblocktree, wtx, vchName)) {
+                if (wtx.GetDepthInMainChain() < 1 && IsConflictedAliasTx(*pblocktree, wtx, vchName)) {
                     uint256 hash = wtx.GetHash();
                     mapRemove[hash] = wtx;
                 }
@@ -1853,7 +1917,7 @@ Value deletetransaction(const Array& params, bool fHelp)
                 );
 
     {
-      LOCK2(cs_main,pwalletMain->cs_mapWallet);
+      LOCK2(cs_main, pwalletMain->cs_wallet);
       
       // look for txn in wallet
       uint256 hash;
@@ -1884,7 +1948,6 @@ Value deletetransaction(const Array& params, bool fHelp)
     }
 }
 
-*/
 
 Value datanew(const Array& params, bool fHelp)
 {

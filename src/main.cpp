@@ -1041,6 +1041,14 @@ bool CTransaction::AcceptToMemoryPool(CValidationState &state, bool fCheckInputs
 	}
 }
 
+bool CTransaction::RemoveFromMemoryPool(bool fRecursive) {
+	try {
+		return mempool.remove(*this, fRecursive);
+	} catch (std::runtime_error &e) {
+		return false;
+	}
+}
+
 bool CTxMemPool::addUnchecked(const uint256& hash, const CTransaction &tx) {
 	// Add to memory pool without checking anything.  Don't call this directly,
 	// call CTxMemPool::accept to properly check the transaction first.
@@ -1052,6 +1060,7 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTransaction &tx) {
 	}
 	return true;
 }
+
 
 bool CTxMemPool::remove(const CTransaction &tx, bool fRecursive) {
 	// Remove transaction from memory pool

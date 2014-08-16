@@ -140,7 +140,7 @@ static const int SYSCOIN_TX_VERSION = 0x7400;
 static const int64 MIN_AMOUNT = COIN;
 static const unsigned int MAX_NAME_LENGTH = 255;
 static const unsigned int MAX_VALUE_LENGTH = 1023;
-static const unsigned int MIN_ACTIVATE_DEPTH = 3;
+static const unsigned int MIN_ACTIVATE_DEPTH = 120;
 
 bool CheckAliasInputs(
     CBlockIndex *pindex, const CTransaction &tx, CValidationState &state,
@@ -148,6 +148,7 @@ bool CheckAliasInputs(
     bool fBlock, bool fMiner, bool fJustCheck);
 bool ExtractAliasAddress(const CScript& script, std::string& address);
 bool IsAliasMine(const CTransaction& tx);
+void RemoveAliasTxnFromMemoryPool(const CTransaction& tx);
 bool IsAliasMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasnew = false);
 bool IsAliasOp(int op);
 
@@ -172,5 +173,6 @@ uint64 GetAliasFeeSubsidy(const unsigned int nTime);
 std::string aliasFromOp(int op);
 bool IsAliasOp(int op);
 int GetAliasDisplayExpirationDepth(int nHeight);
+void UnspendInputs(CWalletTx& wtx);
 
 #endif // NAMEDB_H

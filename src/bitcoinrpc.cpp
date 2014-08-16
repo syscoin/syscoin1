@@ -285,6 +285,7 @@ static const CRPCCommand vRPCCommands[] =
     { "aliashistory",      &aliashistory,      false,      false,      true },
     { "aliasfilter",       &aliasfilter,       false,      false,      true },
     { "aliasscan",         &aliasscan,         false,      false,      true },
+    { "aliasclean",        &aliasclean,         false,      false,      true },
     { "sendtoalias",       &sendtoalias,       false,      false,      true },
 
 	// use the blockchain to store provably-ownable data
@@ -306,6 +307,7 @@ static const CRPCCommand vRPCCommands[] =
     { "offerinfo",        &offerinfo,    false,      false,      true },
     { "offerhistory",     &offerhistory, false,      false,      true },
     { "offerscan",        &offerscan,    false,      false,      true },
+    { "offerclean",       &offerclean,    false,      false,      true },
     { "offerfilter",      &offerfilter,  false,      false,      true },
 
   // use the blockchain as a certificate issuance platform
@@ -319,6 +321,7 @@ static const CRPCCommand vRPCCommands[] =
   { "certinfo",              &certinfo,          false,      false,      true },
   { "certissuerhistory",     &certissuerhistory, false,      false,      true },
   { "certissuerscan",        &certissuerscan,    false,      false,      true },
+  { "certissuerclean",       &certissuerclean,   false,      false,      true },
   { "certissuerfilter",      &certissuerfilter,  false,      false,      true },
 
   // use the blockchain as a platform for escrow transactions

@@ -221,6 +221,7 @@ extern json_spirit::Value aliasinfo(const json_spirit::Array& params, bool fHelp
 extern json_spirit::Value aliashistory(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value aliasfilter(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value aliasscan(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value aliasclean(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendtoalias(const json_spirit::Array& params, bool fHelp);
 
 // store key-value pairs using the blockchain
@@ -243,6 +244,7 @@ extern json_spirit::Value offerlist(const json_spirit::Array& params, bool fHelp
 extern json_spirit::Value offerhistory(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerfilter(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerscan(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value offerclean(const json_spirit::Array& params, bool fHelp);
 
 extern json_spirit::Value certissuernew(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value certissueractivate(const json_spirit::Array& params, bool fHelp);
@@ -255,6 +257,7 @@ extern json_spirit::Value certissuerlist(const json_spirit::Array& params, bool 
 extern json_spirit::Value certissuerhistory(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value certissuerfilter(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value certissuerscan(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value certissuerclean(const json_spirit::Array& params, bool fHelp);
 
 extern json_spirit::Value phrpcfunc(const json_spirit::Array& params, bool fHelp);
 

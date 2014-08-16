@@ -59,10 +59,18 @@ bool IsOfferOp(int op) {
 
 int nStartHeight = 161280;
 
+// int64 GetOfferNetworkFee(int seed, int nHeight) {
+//     if (fCakeNet) return CENT;
+//     int64 nRes = 1000 * COIN;
+//     int64 nDif = 400 * COIN;
+//     int nTargetHeight = 360000;
+//     if(nHeight>nTargetHeight) return nRes - nDif;
+//     else return nRes - ( (nHeight/nTargetHeight) * nDif );
+// }
+
 int64 GetOfferNetworkFee(int seed, int nHeight) {
 	int nComputedHeight = nHeight - nStartHeight < 0 ? 1 : ( nHeight - nStartHeight ) + 1;
     if (nComputedHeight >= 13440) nComputedHeight += (nComputedHeight - 13440) * 3;
-    //if ((nComputedHeight >> 13) >= 60) return 0;
     int64 nStart = seed * COIN;
     if (fTestNet) nStart = 10 * CENT;
     else if (fCakeNet) return CENT;
@@ -2351,76 +2359,70 @@ Value offerscan(const Array& params, bool fHelp) {
 }
 
 
-
-/*
  Value offerclean(const Array& params, bool fHelp)
  {
- if (fHelp || params.size())
- throw runtime_error("offer_clean\nClean unsatisfiable transactions from the wallet - including offer_update on an already taken offer\n");
+	if (fHelp || params.size())
+	throw runtime_error("offer_clean\nClean unsatisfiable transactions from the wallet - including offer_update on an already taken offer\n");
 
+	{
+		LOCK2(cs_main,pwalletMain->cs_wallet);
+		map<uint256, CWalletTx> mapRemove;
 
- {
- LOCK2(cs_main,pwalletMain->cs_wallet);
- map<uint256, CWalletTx> mapRemove;
+		printf("-----------------------------\n");
 
- printf("-----------------------------\n");
+		{
+			BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet){
+	 			CWalletTx& wtx = item.second;
+			 	vector<unsigned char> vchOffer;
+	 			if (wtx.GetDepthInMainChain() < 1 && IsConflictedOfferTx(*pblocktree, wtx, vchOffer))
+	 			{
+	 				uint256 hash = wtx.GetHash();
+	 				mapRemove[hash] = wtx;
+	 			}
+	 		}
+	 	}
 
- {
- BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
- {
- CWalletTx& wtx = item.second;
- vector<unsigned char> vchOffer;
- if (wtx.GetDepthInMainChain() < 1 && IsConflictedAliasTx(pblocktree, wtx, vchOffer))
- {
- uint256 hash = wtx.GetHash();
- mapRemove[hash] = wtx;
- }
- }
- }
+	 	bool fRepeat = true;
+	 	while (fRepeat)
+	 	{
+	 		fRepeat = false;
+	 		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+	 		{
+	 			CWalletTx& wtx = item.second;
+	 			BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+	 			{
+	 				uint256 hash = wtx.GetHash();
 
- bool fRepeat = true;
- while (fRepeat)
- {
- fRepeat = false;
- BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
- {
- CWalletTx& wtx = item.second;
- BOOST_FOREACH(const CTxIn& txin, wtx.vin)
- {
- uint256 hash = wtx.GetHash();
+	 				// If this tx depends on a tx to be removed, remove it too
+	 				if (mapRemove.count(txin.prevout.hash) && !mapRemove.count(hash))
+	 				{
+	 					mapRemove[hash] = wtx;
+	 					fRepeat = true;
+	 				}
+	 			}
+	 		}
+	 	}
 
- // If this tx depends on a tx to be removed, remove it too
- if (mapRemove.count(txin.prevout.hash) && !mapRemove.count(hash))
- {
- mapRemove[hash] = wtx;
- fRepeat = true;
- }
- }
- }
- }
+		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapRemove)
+		{
+		 	CWalletTx& wtx = item.second;
 
- BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapRemove)
- {
- CWalletTx& wtx = item.second;
+		 	UnspendInputs(wtx);
+		 	wtx.RemoveFromMemoryPool();
+		 	pwalletMain->EraseFromWallet(wtx.GetHash());
+		 	vector<unsigned char> vchOffer;
+		 	if (GetNameOfOfferTx(wtx, vchOffer) && mapOfferPending.count(vchOffer))
+		 	{
+		 		string offer = stringFromVch(vchOffer);
+		 		printf("offer_clean() : erase %s from pending of offer %s",
+		 			wtx.GetHash().GetHex().c_str(), offer.c_str());
+		 		if (!mapOfferPending[vchOffer].erase(wtx.GetHash()))
+		 			error("offer_clean() : erase but it was not pending");
+		 	}
+		 	wtx.print();
+		}
 
- UnspendInputs(wtx);
- wtx.RemoveFromMemoryPool();
- pwalletMain->EraseFromWallet(wtx.GetHash());
- vector<unsigned char> vchOffer;
- if (GetNameOfOfferTx(wtx, vchOffer) && mapOfferPending.count(vchOffer))
- {
- string offer = stringFromVch(vchOffer);
- printf("offer_clean() : erase %s from pending of offer %s",
- wtx.GetHash().GetHex().c_str(), offer.c_str());
- if (!mapOfferPending[vchOffer].erase(wtx.GetHash()))
- error("offer_clean() : erase but it was not pending");
+		printf("-----------------------------\n");
+	}
+	return true;
  }
- wtx.print();
- }
-
- printf("-----------------------------\n");
- }
-
- return true;
- }
- */
