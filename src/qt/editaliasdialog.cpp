@@ -51,9 +51,10 @@ void EditAliasDialog::setModel(AliasTableModel *model)
     this->model = model;
     if(!model) return;
 
-    mapper->setModel(model);
     mapper->addMapping(ui->aliasEdit, AliasTableModel::Name);
     mapper->addMapping(ui->nameEdit, AliasTableModel::Value);
+	mapper->setModel(model);
+    
 }
 
 void EditAliasDialog::loadRow(int row)
