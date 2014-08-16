@@ -48,8 +48,8 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
 {
     addressTableModel = new AddressTableModel(wallet, this);
     aliasTableModel = new AliasTableModel(wallet, this);
-    offerTableModelAll = new OfferTableModel(wallet, this, true);
-	offerTableModelMine = new OfferTableModel(wallet, this, false);
+	offerTableModelAll = new OfferTableModel(wallet, this, AllOffers);
+	offerTableModelMine = new OfferTableModel(wallet, this, MyOffers);
     certIssuerTableModel = new CertIssuerTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(wallet, this);
 
@@ -180,9 +180,9 @@ void WalletModel::updateOffer(const QString &offer, const QString &title, const 
     const QString &price, const QString &quantity, const QString &expDepth, const QString &description, int status)
 {
     if(offerTableModelMine)
-        offerTableModelMine->updateEntry(offer, title, category, price, quantity, expDepth, description, false, status);
+		offerTableModelMine->updateEntry(offer, title, category, price, quantity, expDepth, description, MyOffers, status);
     if(offerTableModelAll)
-        offerTableModelAll->updateEntry(offer, title, category, price, quantity, expDepth, description, false, status);
+		offerTableModelAll->updateEntry(offer, title, category, price, quantity, expDepth, description, AllOffers, status);
 }
 
 void WalletModel::updateCertIssuer(const QString &cert, const QString &title, const QString &expDepth, int status)

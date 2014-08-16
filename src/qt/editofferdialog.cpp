@@ -96,7 +96,7 @@ bool EditOfferDialog::saveCurrentRow()
 							"N/A");
 
 
-				this->model->updateEntry(QString::fromStdString(arr[1].get_str()), ui->titleEdit->text(), ui->catEdit->text(), ui->priceEdit->text(), ui->qtyEdit->text(), ui->descriptionEdit->toPlainText(),QString::fromStdString("N/A"), false, CT_NEW);
+				this->model->updateEntry(QString::fromStdString(arr[1].get_str()), ui->titleEdit->text(), ui->catEdit->text(), ui->priceEdit->text(), ui->qtyEdit->text(), ui->descriptionEdit->toPlainText(),QString::fromStdString("N/A"), MyOffers, CT_NEW);
 				
 				
 				strMethod = string("offeractivate");
@@ -146,7 +146,7 @@ bool EditOfferDialog::saveCurrentRow()
 					offer = ui->nameEdit->text() + ui->catEdit->text() + ui->titleEdit->text()+ ui->priceEdit->text()+ ui->qtyEdit->text() + ui->descriptionEdit->toPlainText();
 
 
-					this->model->updateEntry(ui->nameEdit->text(), ui->titleEdit->text(), ui->catEdit->text(), ui->priceEdit->text(), ui->qtyEdit->text(), ui->descriptionEdit->toPlainText(), QString::fromStdString("-1"), false, CT_UPDATED);
+					this->model->updateEntry(ui->nameEdit->text(), ui->titleEdit->text(), ui->catEdit->text(), ui->priceEdit->text(), ui->qtyEdit->text(), ui->descriptionEdit->toPlainText(), QString::fromStdString("N/A"), MyOffers ,CT_UPDATED);
 					QMessageBox::information(this, windowTitle(),
 					tr("Offer updated successfully! Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
 						QMessageBox::Ok, QMessageBox::Ok);

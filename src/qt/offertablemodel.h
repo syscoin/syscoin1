@@ -8,6 +8,9 @@ class OfferTablePriv;
 class CWallet;
 class WalletModel;
 
+enum OfferType {AllOffers=0,MyOffers};
+
+typedef enum OfferType OfferModelType;
 /**
    Qt model of the offer                                                                                                                                                        book in the core. This allows views to access and modify the offer book.
  */
@@ -16,7 +19,7 @@ class OfferTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit OfferTableModel(CWallet *wallet, WalletModel *parent = 0, bool allOffers = false);
+	explicit OfferTableModel(CWallet *wallet, WalletModel *parent = 0, OfferModelType type = AllOffers);
     ~OfferTableModel();
 
     enum ColumnIndex {
@@ -80,7 +83,7 @@ private:
     OfferTablePriv *priv;
     QStringList columns;
     EditStatus editStatus;
-
+	OfferModelType modelType;
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);
 
@@ -88,7 +91,7 @@ public slots:
     /* Update offer list from core.
      */
     void updateEntry(const QString &offer, const QString &title, const QString &category, const QString &price,
-                     const QString &quantity, const QString &expdepth, const QString &description, bool isAccept, int status);
+		const QString &quantity, const QString &expdepth, const QString &description, OfferModelType type, int status);
 
     friend class OfferTablePriv;
 };
