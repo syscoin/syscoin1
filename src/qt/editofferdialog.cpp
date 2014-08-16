@@ -51,6 +51,7 @@ void EditOfferDialog::setModel(OfferTableModel *model)
 	mapper->addMapping(ui->titleEdit, OfferTableModel::Title);
 	mapper->addMapping(ui->priceEdit, OfferTableModel::Price);
 	mapper->addMapping(ui->qtyEdit, OfferTableModel::Quantity);
+	mapper->addMapping(ui->descriptionEdit, OfferTableModel::Description);
 }
 
 void EditOfferDialog::loadRow(int row)
@@ -79,7 +80,7 @@ bool EditOfferDialog::saveCurrentRow()
 		params.push_back(ui->titleEdit->text().toStdString());
 		params.push_back(ui->qtyEdit->text().toStdString());
 		params.push_back(ui->priceEdit->text().toStdString());		
-		params.push_back(ui->titleEdit->text().toStdString()); // TODO add description to model, using title twice for now
+		params.push_back(ui->descriptionEdit->toPlainText().toStdString());
 		try {
             Value result = tableRPC.execute(strMethod, params);
 			if (result.type() == array_type)
@@ -91,14 +92,23 @@ bool EditOfferDialog::saveCurrentRow()
 							ui->titleEdit->text(),
 							ui->priceEdit->text(),
 							ui->qtyEdit->text(),
-							"-1");
+							ui->descriptionEdit->toPlainText(),
+							"N/A");
 
 
-				this->model->updateEntry(QString::fromStdString(arr[1].get_str()), ui->titleEdit->text(), ui->catEdit->text(), ui->priceEdit->text(), ui->qtyEdit->text(), QString::fromStdString("-1"), false, CT_NEW);
-				QMessageBox::information(this, windowTitle(),
-				tr("New offer created successfully! GUID for the new offer is: \"%1\"").arg(QString::fromStdString(arr[1].get_str())),
+				this->model->updateEntry(QString::fromStdString(arr[1].get_str()), ui->titleEdit->text(), ui->catEdit->text(), ui->priceEdit->text(), ui->qtyEdit->text(), ui->descriptionEdit->toPlainText(),QString::fromStdString("N/A"), false, CT_NEW);
+				
+				
+				strMethod = string("offeractivate");
+				params.clear();
+				params.push_back(arr[1].get_str());
+				result = tableRPC.execute(strMethod, params);
+				if (result.type() != null_type)
+				{
+					QMessageBox::information(this, windowTitle(),
+					tr("New offer created successfully! GUID for the new offer is: \"%1\"").arg(QString::fromStdString(arr[1].get_str())),
 					QMessageBox::Ok, QMessageBox::Ok);
-					
+				}	
 			}
 		}
 		catch (Object& objError)
@@ -121,16 +131,13 @@ bool EditOfferDialog::saveCurrentRow()
     case EditOffer:
         if(mapper->submit())
         {
-
-				/*"offerupdate <rand> <category> <title> <quantity> <price> [<description>]\n"
-						"Perform an update on an offer you control.\n"*/
-			strMethod = string("offernew");
+			strMethod = string("offerupdate");
 			params.push_back(ui->nameEdit->text().toStdString());
 			params.push_back(ui->catEdit->text().toStdString());
 			params.push_back(ui->titleEdit->text().toStdString());
 			params.push_back(ui->qtyEdit->text().toStdString());
 			params.push_back(ui->priceEdit->text().toStdString());		
-			params.push_back(ui->descriptionEdit->toPlainText().toStdString()); // TODO add description to model
+			params.push_back(ui->descriptionEdit->toPlainText().toStdString());
 			try {
 				Value result = tableRPC.execute(strMethod, params);
 				if (result.type() != null_type)
@@ -139,7 +146,7 @@ bool EditOfferDialog::saveCurrentRow()
 					offer = ui->nameEdit->text() + ui->catEdit->text() + ui->titleEdit->text()+ ui->priceEdit->text()+ ui->qtyEdit->text() + ui->descriptionEdit->toPlainText();
 
 
-					this->model->updateEntry(ui->nameEdit->text(), ui->titleEdit->text(), ui->catEdit->text(), ui->priceEdit->text(), ui->qtyEdit->text(), QString::fromStdString("-1"), false, CT_UPDATED);
+					this->model->updateEntry(ui->nameEdit->text(), ui->titleEdit->text(), ui->catEdit->text(), ui->priceEdit->text(), ui->qtyEdit->text(), ui->descriptionEdit->toPlainText(), QString::fromStdString("-1"), false, CT_UPDATED);
 					QMessageBox::information(this, windowTitle(),
 					tr("Offer updated successfully! Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
 						QMessageBox::Ok, QMessageBox::Ok);

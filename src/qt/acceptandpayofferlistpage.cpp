@@ -1,10 +1,12 @@
 #include "acceptandpayofferlistpage.h"
 #include "ui_acceptandpayofferlistpage.h"
-
+#include "init.h"
+#include "util.h"
 
 
 #include "offertablemodel.h"
-#include "optionsmodel.h"
+#include "offer.h"
+
 #include "bitcoingui.h"
 #include "bitcoinrpc.h"
 
@@ -15,6 +17,7 @@
 #include <QMessageBox>
 #include <QMenu>
 #include <QString>
+#include <QUrl>
 using namespace std;
 using namespace json_spirit;
 extern const CRPCTable tableRPC;
@@ -22,15 +25,12 @@ extern string JSONRPCReply(const Value& result, const Value& error, const Value&
 
 AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::AcceptandPayOfferListPage),
-    model(0),
-    optionsModel(0)
+    ui(new Ui::AcceptandPayOfferListPage)
 {
     ui->setupUi(this);
 
 
     ui->labelExplanation->setText(tr("Accept and purchase this offer, SysCoins will be used to complete the transaction."));
-	 
     connect(ui->pushButton, SIGNAL(clicked()), this, SLOT(acceptandpay()));
 }
 
@@ -117,17 +117,98 @@ void AcceptandPayOfferListPage::acceptandpay()
    
 
 }
-void AcceptandPayOfferListPage::setModel(OfferTableModel *model)
+bool AcceptandPayOfferListPage::handleURI(const QUrl &uri, COffer* offerOut)
 {
-    return;
+	  // return if URI is not valid or is no bitcoin URI
+    if(!uri.isValid() || uri.scheme() != QString("syscoin"))
+        return false;
+
+    COffer rv;
+	rv.nQty = 0;
+	string strError;
+	string strMethod = string("offerinfo");
+	Array params;
+	Value result;
+	params.push_back(uri.path().toStdString());
+
+    try {
+        result = tableRPC.execute(strMethod, params);
+
+		if (result.type() == null_type)
+		{
+			Object offerObj;
+			offerObj = result.get_obj();
+
+			rv.vchRand = vchFromString(find_value(offerObj, "id").get_str());
+			rv.sTitle = vchFromString(find_value(offerObj, "title").get_str());
+			rv.sCategory = vchFromString(find_value(offerObj, "category").get_str());
+			rv.nPrice = find_value(offerObj, "price").get_uint64();
+			rv.nQty = find_value(offerObj, "quantity").get_int64();
+			rv.sDescription = vchFromString(find_value(offerObj, "description").get_str());
+			rv.nFee = find_value(offerObj, "fee").get_uint64();
+			rv.vchPaymentAddress = vchFromString(find_value(offerObj, "payment_address").get_str());
+			if(rv.nQty <= 0)
+			{
+				return false;
+			}
+		}
+		 
+
+	#if QT_VERSION < 0x050000
+		QList<QPair<QString, QString> > items = uri.queryItems();
+	#else
+		QUrlQuery uriQuery(uri);
+		QList<QPair<QString, QString> > items = uriQuery.queryItems();
+	#endif
+		for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
+		{
+			bool fShouldReturnFalse = true;
+			if (i->first == "quantity")
+			{
+				int64 qty = i->second.toLong();
+				if(rv.nQty < qty)
+				{
+					return false;
+				}
+				else
+				{
+					rv.nQty = qty;
+				}
+				fShouldReturnFalse = false;
+			}
+			if (fShouldReturnFalse)
+				return false;
+		}
+		if(offerOut)
+		{
+			*offerOut = rv;
+		}
+	}
+	catch (Object& objError)
+	{
+		return false;
+	}
+	catch(std::exception& e)
+	{
+		return false;
+	}
+
+    return true;
+}
+void AcceptandPayOfferListPage::setValue(const COffer &offer)
+{
+    ui->offeridEdit->setText(QString::fromStdString(stringFromVch(offer.vchRand)));
+    ui->qtyEdit->setText(QString::number(offer.nQty));
 }
 
-void AcceptandPayOfferListPage::setOptionsModel(OptionsModel *optionsModel)
+bool AcceptandPayOfferListPage::handleURI(const QString& strURI, COffer* offerOut)
 {
-    return;
+	QString URI = strURI;
+	if(URI.startsWith("syscoin://"))
+    {
+        URI.replace(0, 11, "syscoin:");
+    }
+    QUrl uriInstance(URI);
+    return handleURI(uriInstance, offerOut);
 }
-bool AcceptandPayOfferListPage::handleURI(const QString& strURI)
-{
- 
-    return false;
-}
+

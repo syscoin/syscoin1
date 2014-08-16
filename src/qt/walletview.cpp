@@ -279,6 +279,8 @@ bool WalletView::handleURI(const QString& strURI)
  // URI has to be valid
     if (offerView->handleURI(strURI))
     {
+		gotoOfferListPage();
+		emit showNormalIfMinimized();
         return true;
     }
     // URI has to be valid

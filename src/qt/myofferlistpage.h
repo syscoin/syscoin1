@@ -8,7 +8,7 @@ namespace Ui {
 }
 class OfferTableModel;
 class OptionsModel;
-
+class COffer;
 QT_BEGIN_NAMESPACE
 class QTableView;
 class QItemSelection;
@@ -32,7 +32,7 @@ public:
     void setModel(OfferTableModel *model);
     void setOptionsModel(OptionsModel *optionsModel);
     const QString &getReturnValue() const { return returnValue; }
-	bool handleURI(const QString &uri);
+	bool handleURI(const QString& strURI, COffer* offerOut);
 public slots:
     void done(int retval);
 

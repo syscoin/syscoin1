@@ -177,12 +177,12 @@ void WalletModel::updateAlias(const QString &alias, const QString &value, const 
 }
 
 void WalletModel::updateOffer(const QString &offer, const QString &title, const QString &category, 
-    const QString &price, const QString &quantity, const QString &expDepth, int status)
+    const QString &price, const QString &quantity, const QString &expDepth, const QString &description, int status)
 {
     if(offerTableModelMine)
-        offerTableModelMine->updateEntry(offer, title, category, price, quantity, expDepth, false, status);
+        offerTableModelMine->updateEntry(offer, title, category, price, quantity, expDepth, description, false, status);
     if(offerTableModelAll)
-        offerTableModelAll->updateEntry(offer, title, category, price, quantity, expDepth, false, status);
+        offerTableModelAll->updateEntry(offer, title, category, price, quantity, expDepth, description, false, status);
 }
 
 void WalletModel::updateCertIssuer(const QString &cert, const QString &title, const QString &expDepth, int status)
@@ -429,11 +429,12 @@ static void NotifyOfferListChanged(WalletModel *walletmodel, CWallet *wallet, co
 {
     unsigned long nExpDepth = offer.nHeight + GetOfferExpirationDepth(offer.nHeight);
     COfferAccept theAccept;
-    std::vector<unsigned char> vchRand, vchTitle;
+    std::vector<unsigned char> vchRand, vchTitle, vchDescription;
     int64 nPrice;
     int nQty;
     vchRand = offer.vchRand;
     vchTitle = offer.sTitle;
+	vchDescription = offer.sDescription;
     nPrice = offer.nPrice;
     nQty = offer.nQty;
     if(offer.accepts.size()) {
@@ -454,6 +455,7 @@ static void NotifyOfferListChanged(WalletModel *walletmodel, CWallet *wallet, co
                               Q_ARG(QString, QString::fromStdString(strprintf("%lf", (double)nPrice / COIN))),
                               Q_ARG(QString, QString::fromStdString(strprintf("%d", nQty))),
                               Q_ARG(QString, QString::fromStdString(strprintf("%lu", nExpDepth))),
+							  Q_ARG(QString, QString::fromStdString(stringFromVch(vchDescription))),
                               Q_ARG(int, status));
 }
 

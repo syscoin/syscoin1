@@ -27,7 +27,7 @@ MyOfferListPage::MyOfferListPage(QWidget *parent) :
     ui->exportButton->setIcon(QIcon());
 #endif
 
-
+	ui->buttonBox->setVisible(false);
     ui->labelExplanation->setText(tr("These all of your registered Syscoin offers. Remember to check the expiration depth of your offers regularly."));
 	
     // Context menu actions
@@ -89,6 +89,7 @@ void MyOfferListPage::setModel(OfferTableModel *model)
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Price, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Quantity, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::ExpirationDepth, QHeaderView::ResizeToContents);
+	ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Description, QHeaderView::ResizeToContents);
 #else
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Category, QHeaderView::ResizeToContents);
@@ -96,6 +97,7 @@ void MyOfferListPage::setModel(OfferTableModel *model)
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Price, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Quantity, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::ExpirationDepth, QHeaderView::ResizeToContents);
+	ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Description, QHeaderView::ResizeToContents);
 #endif
 
     connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
@@ -223,6 +225,7 @@ void MyOfferListPage::on_exportButton_clicked()
     writer.addColumn("Price", OfferTableModel::Price, Qt::EditRole);
     writer.addColumn("Quantity", OfferTableModel::Quantity, Qt::EditRole);
     writer.addColumn("Expiration Depth", OfferTableModel::ExpirationDepth, Qt::EditRole);
+	writer.addColumn("Description", OfferTableModel::ExpirationDepth, Qt::EditRole);
     if(!writer.write())
     {
         QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
@@ -254,7 +257,7 @@ void MyOfferListPage::selectNewOffer(const QModelIndex &parent, int begin, int /
         newOfferToSelect.clear();
     }
 }
-bool MyOfferListPage::handleURI(const QString& strURI)
+bool MyOfferListPage::handleURI(const QString& strURI, COffer* offerOut)
 {
  
     return false;

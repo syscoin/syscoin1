@@ -4,7 +4,6 @@
 #include "offertablemodel.h"
 #include "optionsmodel.h"
 #include "bitcoingui.h"
-
 #include "csvmodelwriter.h"
 #include "guiutil.h"
 
@@ -79,6 +78,7 @@ void AcceptedOfferListPage::setModel(OfferTableModel *model)
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Price, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Quantity, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::ExpirationDepth, QHeaderView::ResizeToContents);
+	ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Description, QHeaderView::ResizeToContents);
 #else
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Category, QHeaderView::ResizeToContents);
@@ -86,6 +86,7 @@ void AcceptedOfferListPage::setModel(OfferTableModel *model)
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Price, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Quantity, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::ExpirationDepth, QHeaderView::ResizeToContents);
+	ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Description, QHeaderView::ResizeToContents);
 #endif
 
     connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
@@ -147,6 +148,7 @@ void AcceptedOfferListPage::on_exportButton_clicked()
     writer.addColumn("Price", OfferTableModel::Price, Qt::EditRole);
     writer.addColumn("Quantity", OfferTableModel::Quantity, Qt::EditRole);
     writer.addColumn("Expiration Depth", OfferTableModel::ExpirationDepth, Qt::EditRole);
+	writer.addColumn("Description", OfferTableModel::Description, Qt::EditRole);
     if(!writer.write())
     {
         QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
@@ -162,8 +164,8 @@ void AcceptedOfferListPage::contextualMenu(const QPoint &point)
         contextMenu->exec(QCursor::pos());
     }
 }
-bool AcceptedOfferListPage::handleURI(const QString& strURI)
+bool AcceptedOfferListPage::handleURI(const QString& strURI, COffer* offerOut)
 {
- 
-    return false;
+	return false;
 }
+

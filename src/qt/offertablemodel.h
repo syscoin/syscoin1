@@ -25,7 +25,8 @@ public:
         Title = 2,  /**< Offer value */
         Price = 3,
         Quantity = 4,
-        ExpirationDepth = 5
+        ExpirationDepth = 5,
+		Description = 6
     };
 
     enum RoleIndex {
@@ -60,7 +61,7 @@ public:
        Returns the added offer on success, and an empty string otherwise.
      */
     QString addRow(const QString &type, const QString &title, const QString &offer, const QString &category, const QString &price,
-                   const QString &quantity, const QString &expdepth);
+                   const QString &quantity, const QString &expdepth, const QString &description);
 
     /* Look up label for offer in offer book, if not found return empty string.
      */
@@ -87,7 +88,7 @@ public slots:
     /* Update offer list from core.
      */
     void updateEntry(const QString &offer, const QString &title, const QString &category, const QString &price,
-                     const QString &quantity, const QString &expdepth, bool isAccept, int status);
+                     const QString &quantity, const QString &expdepth, const QString &description, bool isAccept, int status);
 
     friend class OfferTablePriv;
 };

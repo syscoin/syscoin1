@@ -194,7 +194,7 @@ public slots:
     void updateAlias(const QString &alias, const QString &value, const QString &expDepth, int status);
    /* New, updated or removed offer */
     void updateOffer(const QString &offer, const QString &title, const QString &category, 
-        const QString &price, const QString &quantity, const QString &expDepth,int status);
+        const QString &price, const QString &quantity, const QString &expDepth,const QString &description,int status);
     /* New, updated or removed cert issuer / cert */
     void updateCertIssuer(const QString &cert, const QString &title, const QString &expDepth,int status);
     /* New, updated or removed cert issuer / cert */

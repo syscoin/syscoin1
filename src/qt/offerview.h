@@ -16,6 +16,7 @@ class MyOfferListPage;
 class AllOfferListPage;
 class AcceptandPayOfferListPage;
 class AcceptedOfferListPage;
+class COffer;
 
 QT_BEGIN_NAMESPACE
 class QObject;

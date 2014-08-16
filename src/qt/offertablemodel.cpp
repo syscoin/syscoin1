@@ -33,10 +33,10 @@ struct OfferTableEntry
     QString price;
     QString quantity;
     QString expirationdepth;
-
+	QString description;
     OfferTableEntry() {}
-    OfferTableEntry(Type type, const QString &title, const QString &offer, const QString &category, const QString &price, const QString &quantity, const QString &expirationdepth):
-        type(type), title(title), offer(offer), category(category), price(price), quantity(quantity), expirationdepth(expirationdepth) {}
+    OfferTableEntry(Type type, const QString &title, const QString &offer, const QString &category, const QString &price, const QString &quantity, const QString &expirationdepth, const QString &description):
+        type(type), title(title), offer(offer), category(category), price(price), quantity(quantity), expirationdepth(expirationdepth), description(description) {}
 };
 
 struct OfferTableEntryLessThan
@@ -125,7 +125,8 @@ public:
                                           QString::fromStdString(stringFromVch(theOffer.sCategory)),
                                           QString::fromStdString(strprintf("%lf", nPrice)),
                                           QString::fromStdString(strprintf("%d", nQty)),
-                                          QString::fromStdString(strprintf("%d", nExpHeight))));
+                                          QString::fromStdString(strprintf("%d", nExpHeight)),
+										  QString::fromStdString(stringFromVch(theOffer.sDescription))));
                 }
 				if(size() > 500 && allOffers == true)
 					break;
@@ -138,7 +139,7 @@ public:
     }
 
     void updateEntry(const QString &offer, const QString &title, const QString &category,
-                     const QString &price, const QString &quantity, const QString &expdepth, bool isAccept, int status)
+                     const QString &price, const QString &quantity, const QString &expdepth, const QString &description, bool isAccept, int status)
     {
         // Find offer / value in model
         QList<OfferTableEntry>::iterator lower = qLowerBound(
@@ -159,7 +160,7 @@ public:
                 break;
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedOfferTable.insert(lowerIndex, OfferTableEntry(newEntryType, title, offer, category, price, quantity, expdepth));
+            cachedOfferTable.insert(lowerIndex, OfferTableEntry(newEntryType, title, offer, category, price, quantity, expdepth, description));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
@@ -174,6 +175,7 @@ public:
             lower->price = price;
             lower->quantity = quantity;
             lower->expirationdepth = expdepth;
+			lower->description = description;
             parent->emitDataChanged(lowerIndex);
             break;
         case CT_DELETED:
@@ -210,7 +212,7 @@ public:
 OfferTableModel::OfferTableModel(CWallet *wallet, WalletModel *parent, bool allOffers) :
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0)
 {
-    columns << tr("Offer") << tr("Category") << tr("Title") << tr("Price") << tr("Quantity") << tr("Expiration Height");
+    columns << tr("Offer") << tr("Category") << tr("Title") << tr("Price") << tr("Quantity") << tr("Expiration Height") << tr("Description");
     priv = new OfferTablePriv(wallet, this);
     priv->refreshOfferTable(allOffers);
 }
@@ -255,6 +257,8 @@ QVariant OfferTableModel::data(const QModelIndex &index, int role) const
             return rec->quantity;
         case ExpirationDepth:
             return rec->expirationdepth;
+        case Description:
+            return rec->description;
         }
     }
     else if (role == Qt::FontRole)
@@ -327,6 +331,14 @@ bool OfferTableModel::setData(const QModelIndex &index, const QVariant &value, i
         case Title:
             // Do nothing, if old value == new value
             if(rec->title == value.toString())
+            {
+                editStatus = NO_CHANGES;
+                return false;
+            }
+            break;
+        case Description:
+            // Do nothing, if old value == new value
+            if(rec->description == value.toString())
             {
                 editStatus = NO_CHANGES;
                 return false;
@@ -409,14 +421,14 @@ QModelIndex OfferTableModel::index(int row, int column, const QModelIndex &paren
 }
 
 void OfferTableModel::updateEntry(const QString &offer, const QString &title, const QString &category, const QString &price,
- const QString &quantity, const QString &expdepth, bool isMine, int status)
+ const QString &quantity, const QString &expdepth, const QString &description, bool isMine, int status)
 {
     // Update offer book model from Bitcoin core
-    priv->updateEntry(offer, title, category, price, quantity, expdepth, isMine, status);
+    priv->updateEntry(offer, title, category, price, quantity, expdepth, description, isMine, status);
 }
 
 QString OfferTableModel::addRow(const QString &type, const QString &title, const QString &offer, const QString &category, 
-	const QString &price, const QString &quantity, const QString &expdepth)
+	const QString &price, const QString &quantity, const QString &expdepth, const QString &description)
 {
     std::string strTitle = title.toStdString();
     std::string strOffer = offer.toStdString();
@@ -424,7 +436,7 @@ QString OfferTableModel::addRow(const QString &type, const QString &title, const
     std::string strPrice = price.toStdString();
     std::string strQuantity = quantity.toStdString();
     std::string strExpdepth = expdepth.toStdString();
-
+	std::string strDescription = description.toStdString();
     editStatus = OK;
 
     if(false /*validate offer*/)

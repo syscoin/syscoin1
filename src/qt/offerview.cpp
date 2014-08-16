@@ -10,6 +10,7 @@
 
 #include "clientmodel.h"
 #include "walletmodel.h"
+#include "wallet.h"
 #include "optionsmodel.h"
 #include "myofferlistpage.h"
 #include "allofferlistpage.h"
@@ -61,7 +62,7 @@ void OfferView::setClientModel(ClientModel *clientModel)
        
         allOfferListPage->setOptionsModel(clientModel->getOptionsModel());
 		myOfferListPage->setOptionsModel(clientModel->getOptionsModel());
-		acceptandPayOfferListPage->setOptionsModel(clientModel->getOptionsModel());
+		
 		acceptedOfferListPage->setOptionsModel(clientModel->getOptionsModel());
  
     }
@@ -74,7 +75,6 @@ void OfferView::setWalletModel(WalletModel *walletModel)
     {
         allOfferListPage->setModel(walletModel->getOfferTableModelAll());
 		myOfferListPage->setModel(walletModel->getOfferTableModelMine());
-		acceptandPayOfferListPage->setModel(NULL);
 		acceptedOfferListPage->setModel(walletModel->getOfferTableModelMine());
     }
 }
@@ -88,33 +88,32 @@ void OfferView::gotoOfferListPage()
 
 bool OfferView::handleURI(const QString& strURI)
 {
- // URI has to be valid
-    if (allOfferListPage->handleURI(strURI))
+	COffer myOffer;
+    if (allOfferListPage->handleURI(strURI, &myOffer))
     {
         gotoOfferListPage();
-        emit showNormalIfMinimized();
         return true;
     }
-
-    // URI has to be valid
-    else if (myOfferListPage->handleURI(strURI))
+    else if (myOfferListPage->handleURI(strURI, &myOffer))
     {
         tabWidget->setCurrentWidget(myOfferListPage);
-        emit showNormalIfMinimized();
         return true;
     }
-    else if (acceptandPayOfferListPage->handleURI(strURI))
+    else if (acceptandPayOfferListPage->handleURI(strURI, &myOffer))
     {
+		if(myOffer.nQty <= 0)
+		{
+			return false;
+		}
         tabWidget->setCurrentWidget(acceptandPayOfferListPage);
-        emit showNormalIfMinimized();
+		acceptandPayOfferListPage->setValue(myOffer);
         return true;
     }
-    else if (acceptedOfferListPage->handleURI(strURI))
+    else if (acceptedOfferListPage->handleURI(strURI, &myOffer))
     {
         tabWidget->setCurrentWidget(acceptedOfferListPage);
-        emit showNormalIfMinimized();
         return true;
     }
-    else
-        return false;
+ 
+   return false;
 }

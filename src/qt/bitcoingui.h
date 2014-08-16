@@ -15,7 +15,6 @@ class TransactionView;
 class OverviewPage;
 class AddressBookPage;
 class AliasListPage;
-class OfferListPage;
 class SendCoinsDialog;
 class SignVerifyMessageDialog;
 class Notificator;
