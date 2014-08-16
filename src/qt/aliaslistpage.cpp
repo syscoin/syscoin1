@@ -82,6 +82,7 @@ AliasListPage::AliasListPage(QWidget *parent) :
 
     // Pass through accept action from button box
     connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+    ui->lineEditAliasSearch->setPlaceholderText(tr("Enter an Alias to search"));
 }
 
 AliasListPage::~AliasListPage()
@@ -127,7 +128,6 @@ void AliasListPage::setModel(AliasTableModel *model)
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::ExpirationDepth, QHeaderView::ResizeToContents);
 #endif
 
-    ui->lineEditAliasSearch->setPlaceholderText(tr("Enter an Alias to search"));
 
     connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             this, SLOT(selectionChanged()));
