@@ -15,7 +15,7 @@ class WalletModel;
 class TransactionView;
 class OverviewPage;
 class AddressBookPage;
-class AliasListPage;
+class AliasView;
 class OfferView;
 class CertIssuerListPage;
 class SendCoinsDialog;
@@ -63,8 +63,9 @@ private:
 
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
-    AliasListPage *aliasListPage;
-    AliasListPage *dataAliasListPage;
+    AliasView *aliasView;
+    QStackedWidget* aliasListPage;
+    QStackedWidget* dataAliasListPage;
     AddressBookPage *addressBookPage;
     AddressBookPage *receiveCoinsPage;
     OfferView *offerView;
