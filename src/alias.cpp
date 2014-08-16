@@ -650,7 +650,7 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 int64 GetAliasNetworkFee(int nType, int nHeight) {
     int64 nRes = 5172 * COIN;
     int64 nDif = 3448 * COIN;
-    int nTargetHeight = 360000;
+    int nTargetHeight = 130080;
     if(nHeight>nTargetHeight) return nRes - nDif;
     else return nRes - ( (nHeight/nTargetHeight) * nDif );
 }

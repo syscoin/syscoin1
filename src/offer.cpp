@@ -59,27 +59,31 @@ bool IsOfferOp(int op) {
 
 int nStartHeight = 161280;
 
-// int64 GetOfferNetworkFee(int seed, int nHeight) {
-//     if (fCakeNet) return CENT;
-//     int64 nRes = 1000 * COIN;
-//     int64 nDif = 400 * COIN;
-//     int nTargetHeight = 360000;
-//     if(nHeight>nTargetHeight) return nRes - nDif;
-//     else return nRes - ( (nHeight/nTargetHeight) * nDif );
-// }
-
 int64 GetOfferNetworkFee(int seed, int nHeight) {
-	int nComputedHeight = nHeight - nStartHeight < 0 ? 1 : ( nHeight - nStartHeight ) + 1;
-    if (nComputedHeight >= 13440) nComputedHeight += (nComputedHeight - 13440) * 3;
-    int64 nStart = seed * COIN;
-    if (fTestNet) nStart = 10 * CENT;
-    else if (fCakeNet) return CENT;
-    int64 nRes = nStart >> (nComputedHeight >> 13);
-    nRes -= (nRes >> 14) * (nComputedHeight % 8192);
-    nRes += CENT - 1;
-	nRes = (nRes / CENT) * CENT;
-    return nRes;
+    if (fCakeNet) return CENT;
+    int64 nRes = 88 * COIN;
+    int64 nDif = 77 * COIN;
+    if(seed==2) {
+    	nRes = 474;
+    	nDif = 360;
+    }
+    int nTargetHeight = 130080;
+    if(nHeight>nTargetHeight) return nRes - nDif;
+    else return nRes - ( (nHeight/nTargetHeight) * nDif );
 }
+
+// int64 GetOfferNetworkFee(int seed, int nHeight) {
+// 	int nComputedHeight = nHeight - nStartHeight < 0 ? 1 : ( nHeight - nStartHeight ) + 1;
+//     if (nComputedHeight >= 13440) nComputedHeight += (nComputedHeight - 13440) * 3;
+//     int64 nStart = seed * COIN;
+//     if (fTestNet) nStart = 10 * CENT;
+//     else if (fCakeNet) return CENT;
+//     int64 nRes = nStart >> (nComputedHeight >> 13);
+//     nRes -= (nRes >> 14) * (nComputedHeight % 8192);
+//     nRes += CENT - 1;
+// 	nRes = (nRes / CENT) * CENT;
+//     return nRes;
+// }
 
 // Increase expiration to 36000 gradually starting at block 24000.
 // Use for validation purposes and pass the chain height.
