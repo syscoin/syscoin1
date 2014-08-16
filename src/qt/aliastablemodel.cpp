@@ -182,10 +182,10 @@ public:
     }
 };
 
-AliasTableModel::AliasTableModel(CWallet *wallet, WalletModel *parent) :
+AliasTableModel::AliasTableModel(CWallet *wallet, WalletModel *parent,  bool allAliases) :
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0)
 {
-    columns << tr("Alias") << tr("Value") << tr("Expiration Height");
+    columns << tr("Alias") << tr("Expiration Height") << tr("GUID");
     priv = new AliasTablePriv(wallet, this);
     priv->refreshAliasTable();
 }
