@@ -34,12 +34,14 @@ public:
         ForEditing  /**< Open alias book for editing */
     };
 
-    explicit AliasListPage(Mode mode, Tabs tab, QWidget *parent = 0);
+    explicit AliasListPage(QWidget *parent = 0);
     ~AliasListPage();
+
 
     void setModel(AliasTableModel *model);
     void setOptionsModel(OptionsModel *optionsModel);
     const QString &getReturnValue() const { return returnValue; }
+    bool handleURI(const QString &uri);
 
 public slots:
     void done(int retval);
@@ -57,8 +59,8 @@ private:
     QString newAliasToSelect;
 
 private slots:
+    void on_searchAlias_clicked();
     /** Create a new alias for receiving coins and / or add a new alias book entry */
-    void on_newAlias_clicked();
     /** Copy alias of currently selected alias entry to clipboard */
     void on_copyAlias_clicked();
     /** Open send coins dialog for currently selected alias (no button) */
