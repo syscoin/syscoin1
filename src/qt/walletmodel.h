@@ -65,7 +65,8 @@ public:
 
     OptionsModel *getOptionsModel();
     AddressTableModel *getAddressTableModel();
-    AliasTableModel *getAliasTableModel();
+     AliasTableModel *getAliasTableModelMine();
+    AliasTableModel *getAliasTableModelAll();
     OfferTableModel *getOfferTableModelMine();
 	OfferTableModel *getOfferTableModelAll();
     CertIssuerTableModel *getCertIssuerTableModel();
@@ -146,7 +147,8 @@ private:
 
     AddressTableModel *addressTableModel;
     TransactionTableModel *transactionTableModel;
-    AliasTableModel *aliasTableModel;
+    AliasTableModel *aliasTableModelMine;
+    AliasTableModel *aliasTableModelAll;
     OfferTableModel *offerTableModelMine;
 	OfferTableModel *offerTableModelAll;
     CertIssuerTableModel *certIssuerTableModel;
