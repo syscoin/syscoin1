@@ -9,6 +9,7 @@
 #include "transactiontablemodel.h"
 #include "addressbookpage.h"
 #include "aliaslistpage.h"
+#include "aliasview.h"
 #include "offerview.h"
 #include "certlistpage.h"
 #include "sendcoinsdialog.h"
@@ -43,9 +44,13 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
     // Create tabs
     overviewPage = new OverviewPage();
     transactionsPage = new QWidget(this);
+    aliasListPage = new QStackedWidget();
+    dataAliasListPage = new QStackedWidget();
     QVBoxLayout *vbox = new QVBoxLayout();
     QHBoxLayout *hbox_buttons = new QHBoxLayout();
     transactionView = new TransactionView(this);
+    aliasView = new AliasView(aliasListPage, gui);
+    aliasView = new AliasView(dataAliasListPage, gui);
 	offerListPage = new QStackedWidget();
 	offerView = new OfferView(offerListPage, gui);
     vbox->addWidget(transactionView);
@@ -72,10 +77,6 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
     transactionsPage->setLayout(vbox);
 
 	addressBookPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab);
-
-    aliasListPage = new AliasListPage(AliasListPage::ForEditing, AliasListPage::AliasTab);
-
-    dataAliasListPage = new AliasListPage(AliasListPage::ForEditing, AliasListPage::DataAliasTab);
 
 
     certIssuerListPage = new CertIssuerListPage(CertIssuerListPage::ForEditing, CertIssuerListPage::CertIssuerTab);
@@ -126,6 +127,7 @@ WalletView::~WalletView()
 void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 {
     this->gui = gui;
+    aliasView->setBitcoinGUI(gui);
 	offerView->setBitcoinGUI(gui);
 }
 
@@ -136,8 +138,7 @@ void WalletView::setClientModel(ClientModel *clientModel)
     {
         overviewPage->setClientModel(clientModel);
         addressBookPage->setOptionsModel(clientModel->getOptionsModel());
-        aliasListPage->setOptionsModel(clientModel->getOptionsModel());
-        dataAliasListPage->setOptionsModel(clientModel->getOptionsModel());
+        aliasView->setClientModel(clientModel);
         offerView->setClientModel(clientModel);
         certIssuerListPage->setOptionsModel(clientModel->getOptionsModel());
         certListPage->setOptionsModel(clientModel->getOptionsModel());
@@ -156,8 +157,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
         // Put transaction list in tabs
         transactionView->setModel(walletModel);
         overviewPage->setWalletModel(walletModel);
-        aliasListPage->setModel(walletModel->getAliasTableModel());
-        dataAliasListPage->setModel(walletModel->getAliasTableModel());
+        aliasView->setWalletModel(walletModel);
         offerView->setWalletModel(walletModel);
         certIssuerListPage->setModel(walletModel->getCertIssuerTableModel());
         certListPage->setModel(walletModel->getCertIssuerTableModel());
@@ -277,7 +277,11 @@ void WalletView::gotoVerifyMessageTab(QString addr)
 bool WalletView::handleURI(const QString& strURI)
 {
  // URI has to be valid
-    if (offerView->handleURI(strURI))
+    if (aliasView->handleURI(strURI))
+    {
+        return true;
+    }
+    else if (offerView->handleURI(strURI))
     {
 		gotoOfferListPage();
 		emit showNormalIfMinimized();
