@@ -203,6 +203,9 @@
           <property name="text">
            <string>Follow us on Twitter:</string>
           </property>
+          <property name="scaledContents">
+           <bool>true</bool>
+          </property>
          </widget>
          <widget class="QLabel" name="label_7">
           <property name="geometry">
@@ -287,6 +290,9 @@
           </property>
           <property name="text">
            <string>@syscoin</string>
+          </property>
+          <property name="scaledContents">
+           <bool>true</bool>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -379,6 +385,9 @@
           <property name="text">
            <string>facebook.com/syscoin</string>
           </property>
+          <property name="scaledContents">
+           <bool>true</bool>
+          </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
           </property>
@@ -409,6 +418,9 @@
           </property>
           <property name="text">
            <string>Like us on Facebook:</string>
+          </property>
+          <property name="scaledContents">
+           <bool>true</bool>
           </property>
          </widget>
         </widget>
