@@ -174,7 +174,7 @@ Max 1023 chars. Value to associate with alias, base64-encoded. Max 256kB.
   - < offerkey > offerkey provided at offernew.
   - < offertxid > offertxid provided at offernew.
 - **returns:**
-  - aliastxid
+  - offertxid
 - **example:** 
   - *$ syscoind offeractivate 8d0dabf5e7f2a4a300 913c83bb63998421f9425c21e2b15bf09a96ea8dcbc03722efc3d2f6ffb0e867*
 
@@ -193,27 +193,27 @@ Max 1023 chars. Value to associate with alias, base64-encoded. Max 256kB.
 
 ###offeraccept  *Accept an offer*
 
-####**offeractivate** < offerkey > < quantity >
+####**offeraccept** < offerkey > < quantity >
 - **parameters:**
   - < offerkey > offerkey provided at offernew.
   - < quantity > quantity to accept (optional, default set to 1)
 - **returns:**
-  - accepttxid
-  - acceptkey
+  - offeraccepttxid
+  - offeracceptkey
 - **example:**
   - $ syscoind offeraccept 8d0dabf5e7f2a4a300 5 
 - [ "e229b2ef75807a4d5ceaa46b92677647de6363e45a5374670e500522bf1f2e71", "24579dbfc4b4c3eb00" ]
 
 ###offerpay  *Sends seller payment in Syscoin, and also pays all syscoin service fees and marks the offer as ‘paid’*
 
-####**offeractivate** < acceptkey > < quantity > < message >
+####**offerpay** < acceptkey > < quantity > < message >
 - **parameters:**
   - < acceptkey > acceptkey provided at offeraccept.
-  - < accepttxid > accepttxid provided at offeraccept (only required if client is restarted)
+  - < offeraccepttxid > offeraccepttxid provided at offeraccept (only required if client is restarted)
   - < message > message to seller, accept-specific. ie: buyer’s shipping address. 
 - **returns:**
   - paytxid
-  - offertxid
+  - offeracceptxid
 - **example:**
   - *$ syscoind offerpay 24579dbfc4b4c3eb00 "Please ship to: John Smith, 123 Main Street, Anytown CA 91111"*
   - *[ "387f8e5ea2d21a4c6b679cf33d6dfd2366b0f43222811b21cc1441ed9e680ff7", "3d99e7650dfb60b377717ac4328f13bda92610a8e7076d3e065e231281f13d76" ]*
