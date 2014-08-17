@@ -10,7 +10,7 @@ BLOCK TIME: 1 Minute
 
 RETARGET INTERVAL: every block using fast response KGW
 
-MAX COINS: 268824600
+MAX COINS: 2 billion
 
 REWARD: 1024 / Block. Reward halves every 131400 blocks. All coins 
 mined by block 1314000. Thereafter rewards consist of network fees as

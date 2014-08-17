@@ -18,7 +18,7 @@ The regeneration of service fees is, other than base mining rewards, the key inc
 
 Coin specs: 
 
-1 minute block time. 268,824,600 coin cap. Block Reward starts at 1024 SYS (+ regenerated service fees), decays by 50% every 131,400 blocks until block 1,314,000 (thus decaying by 50%, a total of ten times), whereupon rewards will then consist exclusively of Syscoin service and network fees.
+1 minute block time. 2 billion coin cap. Block Reward starts at 1024 SYS (+ regenerated service fees), decays by 50% every 131,400 blocks until block 1,314,000 (thus decaying by 50%, a total of ten times), whereupon rewards will then consist exclusively of Syscoin service and network fees.
 
 Syscoin uses KGW to retarget difficulty every block. Unlike most KGW implementations however, Syscoin uses extremely small min and max values as algorithmic inputs, which effectively allow for Syscoin's difficulty to retarget much more rapidly and accurately than other altcoins whic use KGW. Consideration was given to a range of other difficulty adjustment algorithms, but none have proven themselves to be sufficiently improved from Syscoin's KGW implementation to warrant replacement. 
 

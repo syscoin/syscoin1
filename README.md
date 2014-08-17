@@ -15,7 +15,7 @@ which leverage the bitcoin protocol and blockchain technology.
  - 1 minute block targets, diff retarget each block using KGW(7/98) 
  - 1024 SYS + regenerated network services fees as subsidies
  - subsidy halves in 131.4k blocks (~3 months)
- - ~268.8 million total coins
+ - 2 billion total coins
  - Scrypt Proof-of-Work
  - Fast-response KGW difficulty adjustment algorithm
  - Merge mineable with any scrypt coin
@@ -29,6 +29,7 @@ Services include:
 - Digital document storage, ownership & exchange
 - Distributed marketplate & exchange
 - Digital Services Provider marketplace & platform
+- (soon) Escrow
 - (soon) Distributed gaming
 - (soon) Distributed elections and polls
 - (soon) Distributed encrypted communication & shared content storage
