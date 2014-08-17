@@ -10,11 +10,9 @@ BLOCK TIME: 1 Minute
 
 RETARGET INTERVAL: every block using fast response KGW
 
-MAX COINS: 2 billion
+MAX COINS: 268824600
 
-REWARD: 1024 / Block. Reward halves every 131400 blocks. All coins 
-mined by block 1314000. Thereafter rewards consist of network fees as
-well as service fees.
+REWARD: 128 SysCoin and regenerated network services fees (block reward decays on fixed schedule until rewards fixate at 32 Syscoin until 2bil coin, after which rewards are purely network and service fees). Please see https://bitcointalk.org/index.php?topic=587080.0 for the rewards schedule table in a nice to read table format.
 
 SERVICE FEES: All services provided by this coin (see below) incur fees;  these fees
 are redistributed to miners by being regenerated (instead of being destroyed
