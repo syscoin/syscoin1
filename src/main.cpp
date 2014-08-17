@@ -52,7 +52,7 @@ bool fBenchmark = false;
 bool fTxIndex = false;
 unsigned int nCoinCacheSize = 5000;
 
-int hardforkLaunch = 60;
+int hardforkLaunch = 1600;
 
 std::map<std::vector<unsigned char>, uint256> dummyTestPool;
 
