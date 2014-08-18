@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>480</width>
+    <width>651</width>
     <height>349</height>
    </rect>
   </property>
@@ -37,7 +37,7 @@
           <cursorShape>IBeamCursor</cursorShape>
          </property>
          <property name="text">
-          <string>&lt;b&gt;SysCoin&lt;/b&gt; v0.1.1</string>
+          <string>&lt;b&gt;SysCoin&lt;/b&gt; v0.1.2</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>

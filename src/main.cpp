@@ -3384,19 +3384,19 @@ void UnloadBlockIndex() {
 
 bool LoadBlockIndex() {
 	if (fTestNet) {
-		pchMessageStart[0] = 0xcc;
-		pchMessageStart[1] = 0xfc;
-		pchMessageStart[2] = 0xfc;
-		pchMessageStart[3] = 0xcc;
+        pchMessageStart[0] = 0xac;
+        pchMessageStart[1] = 0xdc;
+        pchMessageStart[2] = 0xdc;
+        pchMessageStart[3] = 0xac;
 		hashGenesisBlock =
 				uint256("0x2f42154af40613d1fc0f5c63fcade17c1fbf4aff311722b38dd6698b77668b34");
 	}
 
 	if (fCakeNet) {
-		pchMessageStart[0] = 0xcf;
-		pchMessageStart[1] = 0xfd;
-		pchMessageStart[2] = 0xfe;
-		pchMessageStart[3] = 0xcf;
+        pchMessageStart[0] = 0xf9;
+        pchMessageStart[1] = 0xf1;
+        pchMessageStart[2] = 0xf1;
+        pchMessageStart[3] = 0xf9;
 		hashGenesisBlock =
 				uint256("0xa86ee2d873489d24564405287c18807f369f0c82d54dfe756f2d8c3d2af15908");
 	}	
@@ -3740,7 +3740,7 @@ bool static AlreadyHave(const CInv& inv) {
 // The message start string is designed to be unlikely to occur in normal data.
 // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
 // a large 4-byte int at any alignment.
-unsigned char pchMessageStart[4] = { 0xdc, 0xec, 0xec, 0xdc };
+unsigned char pchMessageStart[4] = { 0xf1, 0xf2, 0xf2, 0xf1 };
 
 void static ProcessGetData(CNode* pfrom) {
 	std::deque<CInv>::iterator it = pfrom->vRecvGetData.begin();
