@@ -2565,7 +2565,10 @@ bool CBlock::AddToBlockIndex(CValidationState &state,
 //   each merged minable scrypt_1024_1_1_256 coin should have a different one
 //   (if two have the same ID, they can't be merge mined together)
 int GetAuxPowStartBlock() {
-	return hardforkLaunch+100; 
+	if (fTestNet || fCakeNet)
+		return 10;
+	else
+		return hardforkLaunch+100;  
 }
 
 int GetOurChainID() {
