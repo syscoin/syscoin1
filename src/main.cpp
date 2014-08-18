@@ -52,6 +52,8 @@ bool fBenchmark = false;
 bool fTxIndex = false;
 unsigned int nCoinCacheSize = 5000;
 
+int hardforkLaunch = 1660;
+
 std::map<std::vector<unsigned char>, uint256> dummyTestPool;
 
 extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey,
@@ -1144,7 +1146,10 @@ int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet) const {
 int CMerkleTx::GetBlocksToMaturity() const {
 	if (!IsCoinBase())
 		return 0;
-	return max(0, (COINBASE_MATURITY + 20) - GetDepthInMainChain());
+	if(fTestNet || fCakeNet)
+		return max(0, (8 + 20) - GetDepthInMainChain());
+	else
+		return max(0, (COINBASE_MATURITY + 20) - GetDepthInMainChain());
 }
 
 bool CMerkleTx::AcceptToMemoryPool(bool fCheckInputs, bool fLimitFree) {
@@ -1287,19 +1292,14 @@ uint256 static GetOrphanRoot(const CBlockHeader* pblock) {
  * @return
  */
 int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
+    int64 a,b,c,d,e,s;
     int64 nSubsidy = 128 * COIN;
 
-	if(nHeight == 0) nSubsidy = 1024 * COIN; // genesis amount - not changing merkle for now
-	if(nHeight == 1) nSubsidy = 364222858 * COIN; // pre-mine amount 
-
-    //fair launch - fees only for first 2hrs
-    if(nHeight>1 && nHeight<241)
-		return nFees 
-		+ GetAliasFeeSubsidy(nHeight) 
-		+ GetOfferFeeSubsidy(nHeight)
-        + GetCertFeeSubsidy(nHeight);
-
-    if(nHeight > 259440 && nHeight <= 777840)
+    if(nHeight == 0)
+        nSubsidy = 1024 * COIN; // genesis amount - not changing merkle for now
+    else if(nHeight == 1)
+        nSubsidy = 364222858 * COIN; // pre-mine amount
+    else if(nHeight > 259440 && nHeight <= 777840)
         nSubsidy = 96 * COIN;
     else if(nHeight > 777840 && nHeight <= 1814640)
         nSubsidy = 80 * COIN;
@@ -1311,13 +1311,24 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
         nSubsidy = 40 * COIN;
     else if(nHeight > 8035440 && nHeight <= 35913640)
         nSubsidy = 32 * COIN;
-    else if(nHeight > 35913640)
+    else if( ( !fTestNet && !fCakeNet ) && ( nHeight > 35913640 || nHeight < 241 ) )
         nSubsidy = 0;
+    else if( ( fTestNet || fCakeNet ) && ( nHeight > 35913640 ) )
+        nSubsidy = 0;
+    //fair launch - fees only for first 2hrs
 
-    return nSubsidy + nFees
-		+ GetAliasFeeSubsidy(nHeight) 
-		+ GetOfferFeeSubsidy(nHeight)
-		+ GetCertFeeSubsidy(nHeight);
+    a = nSubsidy;
+    b = GetAliasFeeSubsidy(nHeight);
+    c = GetOfferFeeSubsidy(nHeight);
+    d = GetCertFeeSubsidy(nHeight);
+    e = nFees;
+    s = a+e;
+
+    if (nHeight < hardforkLaunch) s += b+c+d;
+
+    if (fDebug)
+	printf ("GetBlockvalue of Block %d: subsidy=%"PRI64d", fees=%"PRI64d", aliasSubsidy=%"PRI64d", offerSubsidy=%"PRI64d", certSubidy=%"PRI64d", sum=%"PRI64d". \n", nHeight, a,e,b,c,d,s);
+    return s;
 }
 
 static const int64 nTargetTimespan = 1 * 60 * 60; // Syscoin: 1 hour
@@ -1727,7 +1738,7 @@ bool CTransaction::CheckInputs(CBlockIndex *pindex, CValidationState &state, CCo
 
 			// If prev is coinbase, check that it's matured
 			if (coins.IsCoinBase()) {
-				if (nSpendHeight - coins.nHeight < COINBASE_MATURITY)
+                if (nSpendHeight - coins.nHeight < ( fTestNet || fCakeNet ? 8 : COINBASE_MATURITY) )
 					return state.Invalid(
 							error(
 									"CheckInputs() : tried to spend coinbase at depth %d",
@@ -2236,14 +2247,18 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 				nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs - 1));
 
 		int64 bValue = GetBlockValue(pindex->nHeight, nFees, 0);
-		bValue += (bValue / 8); // 12.5% float till fixed
+
+		if (pindex->nHeight < hardforkLaunch) // block before hardfork were allowed to
+		    bValue += (bValue * 8); // 800% float till fixed
+
+
 		if (vtx[0].GetValueOut()
 				> bValue
-				&& pindex->nHeight > 241) // blocks 0 (genesis) and 1 (premine) have no max restrictions
+                && pindex->nHeight > 1500) // blocks 0 (genesis) and 1 (premine) have no max restrictions
 			return state.DoS(100,
 					error( "ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",
 							pindex->nHeight, vtx[0].GetValueOut(),
-							GetBlockValue(pindex->nHeight, nFees, 0)));
+                            bValue));
 
 	if (!control.Wait())
 		return state.DoS(100, false);
