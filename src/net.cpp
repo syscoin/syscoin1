@@ -1194,7 +1194,8 @@ void MapPort(bool)
 static const char *strMainNetDNSSeed[][2] = {
     {"stella.hopto.org", "stella.hopto.org"}, //sys team supernode [seb]
     {"54.198.232.29", "54.198.232.29"}, //sys team supernode [dw]
-    {"107.170.15.21", "107.170.15.21"}, //sys team supernode DNS Seed [jon]
+    {"dnsseed.syscoin.org", "dnsseed.syscoin.org"}, //sys team supernode DNS Seed [jon]
+    {"107.170.15.21", "107.170.15.21"}, //sys team supernode DNS Seed direct-ip [jon]
     {"178.62.10.46", "178.62.10.46"}, //sys team supernode [jon]
     {"node.syscoin.me", "node.syscoin.me"}, //supernode
     {"66.248.204.251", "66.248.204.251"}, //supernode direct ip
@@ -1208,6 +1209,7 @@ static const char *strMainNetDNSSeed[][2] = {
 static const char *strTestNetDNSSeed[][2] = {
     {"stella.hopto.org", "stella.hopto.org"}, //sys team supernode [seb]
     {"54.198.232.29", "54.198.232.29"}, //sys team supernode [dw]
+    {"dnsseed.syscoin.org", "dnsseed.syscoin.org"}, //sys team supernode DNS Seed [jon]
     {"107.170.15.21", "107.170.15.21"}, //sys team supernode DNS Seed [jon]
     {"178.62.10.46", "178.62.10.46"}, //sys team supernode [jon]
     {"node.syscoin.me", "node.syscoin.me"}, //supernode
@@ -1222,6 +1224,7 @@ static const char *strTestNetDNSSeed[][2] = {
 static const char *strCakeNetDNSSeed[][2] = {
     {"stella.hopto.org", "stella.hopto.org"}, //sys team supernode [seb]
     {"54.198.232.29", "54.198.232.29"}, //sys team supernode [dw]
+    {"dnsseed.syscoin.org", "dnsseed.syscoin.org"}, //sys team supernode DNS Seed [jon]
     {"107.170.15.21", "107.170.15.21"}, //sys team supernode DNS Seed [jon]
     {"178.62.10.46", "178.62.10.46"}, //sys team supernode [jon]
     {"node.syscoin.me", "node.syscoin.me"}, //supernode
