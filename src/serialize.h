@@ -50,6 +50,7 @@ enum
     SER_NETWORK         = (1 << 0),
     SER_DISK            = (1 << 1),
     SER_GETHASH         = (1 << 2),
+	SER_GETAUXPOW       = (1 << 3),
 };
 
 #define IMPLEMENT_SERIALIZE(statements)    \
@@ -1011,7 +1012,7 @@ public:
         {
             if (nReadPosNext > vch.size())
             {
-                setstate(std::ios::failbit, "CDataStream::read() : end of data");
+				setstate(std::ios::failbit, "CDataStream::read() : end of data");
                 memset(pch, 0, nSize);
                 nSize = vch.size() - nReadPos;
             }

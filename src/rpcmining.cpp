@@ -740,7 +740,7 @@ Value getworkaux(const Array& params, bool fHelp)
             pow.SetMerkleBranch(pblock);
             pow.nChainIndex = nChainIndex;
             pow.parentBlockHeader = *pblock;
-            CDataStream ss(SER_GETHASH, PROTOCOL_VERSION);
+            CDataStream ss(SER_GETHASH | SER_GETAUXPOW, PROTOCOL_VERSION);
             ss << pow;
             Object result;
             result.push_back(Pair("auxpow", HexStr(ss.begin(), ss.end())));
@@ -842,7 +842,7 @@ Value getauxblock(const Array& params, bool fHelp)
         uint256 hash;
         hash.SetHex(params[0].get_str());
         vector<unsigned char> vchAuxPow = ParseHex(params[1].get_str());
-        CDataStream ss(vchAuxPow, SER_GETHASH, PROTOCOL_VERSION);
+        CDataStream ss(vchAuxPow, SER_GETHASH | SER_GETAUXPOW, PROTOCOL_VERSION);
         CAuxPow* pow = new CAuxPow();
         ss >> *pow;
         if (!mapNewBlock.count(hash))

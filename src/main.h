@@ -493,7 +493,8 @@ public:
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
-        READWRITE(data);
+		if (!(nType & SER_GETAUXPOW))
+			READWRITE(data);
     )
 
     void SetNull()
