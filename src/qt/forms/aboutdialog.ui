@@ -37,7 +37,7 @@
           <cursorShape>IBeamCursor</cursorShape>
          </property>
          <property name="text">
-          <string>&lt;b&gt;SysCoin&lt;/b&gt; version</string>
+          <string>&lt;b&gt;SysCoin&lt;/b&gt; v1.0</string>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -46,6 +46,9 @@
        </item>
        <item>
         <widget class="QLabel" name="versionLabel">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
