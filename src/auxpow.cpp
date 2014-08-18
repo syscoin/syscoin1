@@ -32,6 +32,17 @@ bool CAuxPow::Check(uint256 hashAuxBlock, int nChainID)
     uint256 nRootHash = CBlock::CheckMerkleBranch(hashAuxBlock, vChainMerkleBranch, nChainIndex);
     vector<unsigned char> vchRootHash(nRootHash.begin(), nRootHash.end());
     std::reverse(vchRootHash.begin(), vchRootHash.end()); // correct endian
+		printf(
+				"CBlock::CheckMerkleBranch(hashAuxBlock, vChainMerkleBranch, nChainIndex) where  hashAuxBlock = %s \n nChainIndex = %d \n     result(vchRootHash) = %s  \n ",
+				hashAuxBlock.GetHex().c_str(),
+				nChainIndex,
+				stringFromVch(vchRootHash).c_str());
+
+		printf(
+				"CBlock::CheckMerkleBranch(GetHash(), vMerkleBranch, nIndex) where  GetHash() = %s \n nIndex = %d \n parentBlockHeader.hashMerkleRoot = %s  \n ",
+				GetHash().GetHex().c_str(),
+				nIndex,
+				parentBlockHeader.hashMerkleRoot.GetHex().c_str());
 
     // Check that we are in the parent block merkle tree
     if (CBlock::CheckMerkleBranch(GetHash(), vMerkleBranch, nIndex) != parentBlockHeader.hashMerkleRoot)

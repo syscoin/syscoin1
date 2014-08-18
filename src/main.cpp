@@ -5098,6 +5098,11 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey) {
 	CAuxPow *auxpow = pblock->auxpow.get();
 
 	if (auxpow != NULL) {
+		printf(
+				"AUX proof-of-work CHECK  \n     our hash: %s   \n  parent hash: %s  \n       target: %s\n",
+				hash.GetHex().c_str(),
+				auxpow->GetParentBlockHash().GetHex().c_str(),
+				hashTarget.GetHex().c_str());
 		if (!auxpow->Check(pblock->GetHash(), pblock->GetChainID()))
 			return error("AUX POW is not valid");
 
