@@ -52,7 +52,7 @@ bool fBenchmark = false;
 bool fTxIndex = false;
 unsigned int nCoinCacheSize = 5000;
 
-int hardforkLaunch = 1600;
+int hardforkLaunch = 1660;
 
 std::map<std::vector<unsigned char>, uint256> dummyTestPool;
 
@@ -1296,9 +1296,9 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
     int64 nSubsidy = 128 * COIN;
 
     if(nHeight == 0)
-	nSubsidy = 1024 * COIN; // genesis amount - not changing merkle for now
+        nSubsidy = 1024 * COIN; // genesis amount - not changing merkle for now
     else if(nHeight == 1)
-	nSubsidy = 364222858 * COIN; // pre-mine amount 
+        nSubsidy = 364222858 * COIN; // pre-mine amount
     else if(nHeight > 259440 && nHeight <= 777840)
         nSubsidy = 96 * COIN;
     else if(nHeight > 777840 && nHeight <= 1814640)
@@ -1311,7 +1311,7 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
         nSubsidy = 40 * COIN;
     else if(nHeight > 8035440 && nHeight <= 35913640)
         nSubsidy = 32 * COIN;
-    else if( ( !fTestNet && !fCakeNet ) && ( nHeight > 35913640 || nHeight < 241 ) ) 
+    else if( ( !fTestNet && !fCakeNet ) && ( nHeight > 35913640 || nHeight < 241 ) )
         nSubsidy = 0;
     else if( ( fTestNet || fCakeNet ) && ( nHeight > 35913640 ) )
         nSubsidy = 0;
@@ -2253,11 +2253,11 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 
 		if (vtx[0].GetValueOut()
 				> bValue
-				&& pindex->nHeight > 1) // blocks 0 (genesis) and 1 (premine) have no max restrictions
+                && pindex->nHeight > 241) // blocks 0 (genesis) and 1 (premine) have no max restrictions
 			return state.DoS(100,
 					error( "ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",
 							pindex->nHeight, vtx[0].GetValueOut(),
-							GetBlockValue(pindex->nHeight, nFees, 0)));
+                            bValue));
 
 	if (!control.Wait())
 		return state.DoS(100, false);
