@@ -1192,27 +1192,44 @@ void MapPort(bool)
 // The first name is used as information source for addrman.
 // The second name should resolve to a list of seed addresses.
 static const char *strMainNetDNSSeed[][2] = {
-    {"stella.hopto.org", "stella.hopto.org"},
-    {"66.248.204.251", "66.248.204.251"},
-    {"66.248.204.23", "66.248.204.23"},
-    {"54.198.232.29", "54.198.232.29"},
-    {"107.170.15.21", "107.170.15.21"},
-    {"209.126.71.108", "209.126.71.108"},
+    {"stella.hopto.org", "stella.hopto.org"}, //sys team supernode [seb]
+    {"54.198.232.29", "54.198.232.29"}, //sys team supernode [dw]
+    {"107.170.15.21", "107.170.15.21"}, //sys team supernode DNS Seed [jon]
+    {"178.62.10.46", "178.62.10.46"}, //sys team supernode [jon]
+    {"node.syscoin.me", "node.syscoin.me"}, //supernode
+    {"66.248.204.251", "66.248.204.251"}, //supernode direct ip
+    {"66.248.204.23", "66.248.204.23"}, //supernode [hugo]
+    {"199.48.164.89", "199.48.164.89"}, //supernode [mp]
+    {"37.59.0.211", "37.59.0.211"}, //supernode [OiSis]
+    {"37.187.78.114", "37.187.78.114"}, //supernode [OiSis]
     {NULL, NULL}
 };
 
 static const char *strTestNetDNSSeed[][2] = {
-    {"stella.hopto.org", "stella.hopto.org"},
-    {"66.248.204.251", "66.248.204.251"},
-    {"66.248.204.23", "66.248.204.23"},
-    {"54.198.232.29", "54.198.232.29"},
-    {"107.170.15.21", "107.170.15.21"},
+    {"stella.hopto.org", "stella.hopto.org"}, //sys team supernode [seb]
+    {"54.198.232.29", "54.198.232.29"}, //sys team supernode [dw]
+    {"107.170.15.21", "107.170.15.21"}, //sys team supernode DNS Seed [jon]
+    {"178.62.10.46", "178.62.10.46"}, //sys team supernode [jon]
+    {"node.syscoin.me", "node.syscoin.me"}, //supernode
+    {"66.248.204.251", "66.248.204.251"}, //supernode direct ip
+    {"66.248.204.23", "66.248.204.23"}, //supernode [hugo]
+    {"199.48.164.89", "199.48.164.89"}, //supernode [mp]
+    {"37.59.0.211", "37.59.0.211"}, //supernode [OiSis]
+    {"37.187.78.114", "37.187.78.114"}, //supernode [OiSis]
     {NULL, NULL}
 };
 
 static const char *strCakeNetDNSSeed[][2] = {
-    {"stella.hopto.org", "stella.hopto.org"},
-    {"54.198.232.29", "54.198.232.29"},
+    {"stella.hopto.org", "stella.hopto.org"}, //sys team supernode [seb]
+    {"54.198.232.29", "54.198.232.29"}, //sys team supernode [dw]
+    {"107.170.15.21", "107.170.15.21"}, //sys team supernode DNS Seed [jon]
+    {"178.62.10.46", "178.62.10.46"}, //sys team supernode [jon]
+    {"node.syscoin.me", "node.syscoin.me"}, //supernode
+    {"66.248.204.251", "66.248.204.251"}, //supernode direct ip
+    {"66.248.204.23", "66.248.204.23"}, //supernode [hugo]
+    {"199.48.164.89", "199.48.164.89"}, //supernode [mp]
+    {"37.59.0.211", "37.59.0.211"}, //supernode [OiSis]
+    {"37.187.78.114", "37.187.78.114"}, //supernode [OiSis]
     {NULL, NULL}
 };
 
