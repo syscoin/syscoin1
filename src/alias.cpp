@@ -1682,6 +1682,7 @@ Value aliasfilter(const Array& params, bool fHelp) {
     int nCountFrom = 0;
     int nCountNb = 0;
 
+    /* when changing this to match help, review bitcoinrpc.cpp RPCConvertValues() */
     if (params.size() > 0)
         strRegexp = params[0].get_str();
 

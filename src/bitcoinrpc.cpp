@@ -1268,6 +1268,11 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "verifychain"            && n > 0) ConvertTo<boost::int64_t>(params[0]);
     if (strMethod == "verifychain"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
 
+    /* special commands added in syscoin, list incomplete. */
+    if (strMethod == "aliasfilter"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
+    if (strMethod == "aliasfilter"            && n > 2) ConvertTo<boost::int64_t>(params[2]);
+    if (strMethod == "aliasfilter"            && n > 3) ConvertTo<boost::int64_t>(params[3]);
+
     return params;
 }
 
