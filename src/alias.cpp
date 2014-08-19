@@ -639,11 +639,12 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
                     stringFromVch(vchValue).c_str(),
                     tx.GetHash().ToString().c_str(), 
                     nHeight, nTheFee / COIN);
-            }
-        }
-        pindex = pindex->pnext;
+
+            } /* TX */
+    	    pindex = pindex->pnext;
+        } /* BLOCK */
         Flush();
-    }
+    } /* LOCK */
     return true;
 }
 
