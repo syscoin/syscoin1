@@ -2827,35 +2827,39 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp) {
 					error(
 							"AcceptBlock() : forked chain older than last checkpoint (height %d)",
 							nHeight));
+	
+	//// SYSCOIN currently doesn't enforce 2 blocks, since merged mining
+	//// produces v1 blocks and normal mining should produce v2 blocks.
 
-		// Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
-		if ((nVersion & 0xff) < 2) {
-			if ((!fTestNet && !fCakeNet
-					&& CBlockIndex::IsSuperMajority(2, pindexPrev, 950, 1000))
-					|| ( (fTestNet || fCakeNet)
-							&& CBlockIndex::IsSuperMajority(2, pindexPrev, 75,
-									100))) {
-				return state.Invalid(
-						error("AcceptBlock() : rejected nVersion=1 block"));
-			}
-		}
-		// Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
-		if ((nVersion & 0xff) >= 2) {
-			// if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-			if ((!fTestNet && !fCakeNet
-					&& CBlockIndex::IsSuperMajority(2, pindexPrev, 750, 1000))
-					|| ( (fTestNet || fCakeNet)
-							&& CBlockIndex::IsSuperMajority(2, pindexPrev, 51,
-									100))) {
-				CScript expect = CScript() << nHeight;
-				if (vtx[0].vin[0].scriptSig.size() < expect.size()
-						|| !std::equal(expect.begin(), expect.end(),
-								vtx[0].vin[0].scriptSig.begin()))
-					return state.DoS(100,
-							error(
-									"AcceptBlock() : block height mismatch in coinbase"));
-			}
-		}
+	//	// Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
+	//	if ((nVersion & 0xff) < 2) {
+	//		if ((!fTestNet && !fCakeNet
+	//				&& CBlockIndex::IsSuperMajority(2, pindexPrev, 950, 1000))
+	//				|| ( (fTestNet || fCakeNet)
+	//						&& CBlockIndex::IsSuperMajority(2, pindexPrev, 75,
+	//								100))) {
+	//			return state.Invalid(
+	//					error("AcceptBlock() : rejected nVersion=1 block"));
+	//		}
+	//	}
+	//	// Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
+	//	if ((nVersion & 0xff) >= 2) {
+	//		// if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
+	//		if ((!fTestNet && !fCakeNet
+	//				&& CBlockIndex::IsSuperMajority(2, pindexPrev, 750, 1000))
+	//				|| ( (fTestNet || fCakeNet)
+	//						&& CBlockIndex::IsSuperMajority(2, pindexPrev, 51,
+	//								100))) {
+	//			CScript expect = CScript() << nHeight;
+	//			if (vtx[0].vin[0].scriptSig.size() < expect.size()
+	//					|| !std::equal(expect.begin(), expect.end(),
+	//							vtx[0].vin[0].scriptSig.begin()))
+	//				return state.DoS(100,
+	//						error(
+	//								"AcceptBlock() : block height mismatch in coinbase"));
+	//		}
+	//	}
+
 	}
 
 	// Write block to history file
