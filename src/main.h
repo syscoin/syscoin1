@@ -493,7 +493,7 @@ public:
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
-		if (!(nType & SER_GETAUXPOW))
+		if (!(nType & SER_GETHASH))
 			READWRITE(data);
     )
 
