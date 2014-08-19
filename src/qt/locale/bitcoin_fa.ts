@@ -1780,7 +1780,7 @@ Address: %4
     </message>
     <message>
         <location line="+3"/>
-        <source>Generated coins must mature 120 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <source>Generated coins must mature 80 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
         <translation>سکه های ایجاد شده باید 120 بلاک را قبل از استفاده بالغ کنند. در هنگام ایجاد بلاک، آن بلاک در شبکه منتشر می شود تا به زنجیره بلاکها بپیوندد. اگر در زنجیره قرار نگیرد، پیام وضعیت به غیرقابل قبول تغییر می بپیابد و قابل استفاده نیست. این مورد معمولا زمانی پیش می آید که گره دیگری به طور همزمان بلاکی را با فاصل چند ثانیه ای از شما ایجاد کند.</translation>
     </message>
     <message>

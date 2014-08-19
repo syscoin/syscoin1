@@ -2572,7 +2572,7 @@ int GetAuxPowStartBlock() {
 }
 
 int GetOurChainID() {
-	return 0x007F;
+    return 0x0001;
 }
 
 bool CBlockHeader::CheckProofOfWork(int nHeight) const {
@@ -3740,7 +3740,7 @@ bool static AlreadyHave(const CInv& inv) {
 // The message start string is designed to be unlikely to occur in normal data.
 // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
 // a large 4-byte int at any alignment.
-unsigned char pchMessageStart[4] = { 0xf1, 0xf2, 0xf2, 0xf1 };
+unsigned char pchMessageStart[4] = { 0xdc, 0xec, 0xec, 0xdc };
 
 void static ProcessGetData(CNode* pfrom) {
 	std::deque<CInv>::iterator it = pfrom->vRecvGetData.begin();
