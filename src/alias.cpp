@@ -639,11 +639,12 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
                     stringFromVch(vchValue).c_str(),
                     tx.GetHash().ToString().c_str(), 
                     nHeight, nTheFee / COIN);
-            }
-        }
-        pindex = pindex->pnext;
+
+            } /* TX */
+    	    pindex = pindex->pnext;
+        } /* BLOCK */
         Flush();
-    }
+    } /* LOCK */
     return true;
 }
 
@@ -1681,6 +1682,7 @@ Value aliasfilter(const Array& params, bool fHelp) {
     int nCountFrom = 0;
     int nCountNb = 0;
 
+    /* when changing this to match help, review bitcoinrpc.cpp RPCConvertValues() */
     if (params.size() > 0)
         strRegexp = params[0].get_str();
 

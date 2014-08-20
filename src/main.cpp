@@ -2267,13 +2267,29 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 		    bValue += (bValue * 8); // 800% float till fixed
 
 
-		if (vtx[0].GetValueOut()
+		if (nFees >= 0 && vtx[0].GetValueOut()
 				> bValue
                 && pindex->nHeight > 1500) // blocks 0 (genesis) and 1 (premine) have no max restrictions
 			return state.DoS(100,
 					error( "ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",
 							pindex->nHeight, vtx[0].GetValueOut(),
                             bValue));
+    if(nFees < 0) {
+        std::string strHash = pindex->GetBlockHash().ToString();
+        uint256 hash(strHash);
+    
+        if (mapBlockIndex.count(hash) == 0)
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+    
+        CBlock block;
+        CBlockIndex* pblockindex = mapBlockIndex[hash];
+        block.ReadFromDisk(pblockindex);
+    
+        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+        ssBlock << block;
+        std::string strHex = HexStr(ssBlock.begin(), ssBlock.end());
+        return printf("%s", strHex.c_str());
+    }
 
 	if (!control.Wait())
 		return state.DoS(100, false);
@@ -2834,9 +2850,7 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp) {
 					error(
 							"AcceptBlock() : forked chain older than last checkpoint (height %d)",
 							nHeight));
-
-	//// SYSCOIN currently doesn't enforce 2 blocks, since merged mining
-	//// produces v1 blocks and normal mining should produce v2 blocks.
+	
 
 	//	// Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
 	//	if ((nVersion & 0xff) < 2) {
