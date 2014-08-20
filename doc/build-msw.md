@@ -25,8 +25,8 @@ Libraries you need to download separately and build:
 
 Library | Version | Default Path
 --------|--------------|----------
-[OpenSSL](http://www.openssl.org/source/) | 1.0.1c | \openssl-1.0.1c-mgw 
-[Berkeley DB](http://www.oracle.com/technology/software/products/berkeley-db/index.html) | 4.8.30.NC | \db-4.8.30.NC-mgw
+[OpenSSL](http://www.openssl.org/source/) | 1.0.1i | \openssl-1.0.1i-mgw 
+[Berkeley DB](http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html) | 4.8.30.NC | \db-4.8.30.NC-mgw
 [Boost](http://www.boost.org/users/download/) | 1.50.0 | \boost-1.50.0-mgw  
 [miniupnpc](http://miniupnp.tuxfamily.org/files/) | 1.6 | \miniupnpc-1.6-mgw
 
@@ -46,7 +46,7 @@ MSYS shell:
 un-tar sources with MSYS 'tar xfz' to avoid issue with symlinks (OpenSSL ticket 2377)
 change 'MAKE' env. variable from 'C:\MinGW32\bin\mingw32-make.exe' to '/c/MinGW32/bin/mingw32-make.exe'
 
-	cd /c/openssl-1.0.1c-mgw
+	cd /c/openssl-1.0.1i-mgw
 	./config
 	make
 
