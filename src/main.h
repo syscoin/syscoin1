@@ -1336,7 +1336,7 @@ class CBlockHeader
 {
 public:
     // header
-    static const int CURRENT_VERSION=BLOCK_VERSION_DEFAULT;
+    static const int CURRENT_VERSION=2;
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
