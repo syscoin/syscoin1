@@ -2596,6 +2596,7 @@ int GetOurChainID() {
 
 bool CBlockHeader::CheckProofOfWork(int nHeight) const {
 	if (nHeight >= GetAuxPowStartBlock()) {
+		CTransaction::hashData = true;
 		// Prevent same work from being submitted twice:
 		// - this block must have our chain ID
 		// - parent block must not have the same chain ID (see CAuxPow::Check)
