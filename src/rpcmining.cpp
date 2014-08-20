@@ -623,7 +623,7 @@ Value getworkaux(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "getworkaux method is not available until switch-over block.");
     }
 
-
+	CTransaction::hashData = false;
     static map<uint256, pair<CBlock*, unsigned int> > mapNewBlock;
     static vector<CBlockTemplate*> vNewBlockTemplate;
     static CReserveKey reservekey(pwalletMain);
@@ -789,7 +789,7 @@ Value getauxblock(const Array& params, bool fHelp)
     if ((pindexBest->nHeight+1) < GetAuxPowStartBlock()) {
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "getauxblock method is not available until switch-over block.");
     }
-
+	CTransaction::hashData = false;
     static map<uint256, CBlock*> mapNewBlock;
     static vector<CBlockTemplate*> vNewBlockTemplate;
     static CReserveKey reservekey(pwalletMain);
