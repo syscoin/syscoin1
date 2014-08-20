@@ -965,8 +965,9 @@ CScript RemoveCertIssuerScriptPrefix(const CScript& scriptIn) {
     CScript::const_iterator pc = scriptIn.begin();
 
     if (!DecodeCertScript(scriptIn, op, vvch, pc))
-        throw runtime_error(
-                "RemoveCertIssuerScriptPrefix() : could not decode certissuer script");
+        //throw runtime_error(
+        //        "RemoveCertIssuerScriptPrefix() : could not decode certissuer script");
+	printf ("RemoveCertIssuerScriptPrefix() : Could not decode certissuer script (softfail). This is is known to happen for some OPs annd prevents those from getting displayed or accounted for.");
     return CScript(pc, scriptIn.end());
 }
 
