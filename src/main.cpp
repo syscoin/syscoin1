@@ -24,7 +24,7 @@ using namespace boost;
 //
 // Global state
 //
-
+bool CTransaction::hashData = true;
 CCriticalSection cs_setpwalletRegistered;
 set<CWallet*> setpwalletRegistered;
 
@@ -184,6 +184,17 @@ void static Inventory(const uint256& hash) {
 void static ResendWalletTransactions() {
 	BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
 		pwallet->ResendWalletTransactions();
+}
+// to enable merged mining:
+// - set a block from which it will be enabled
+// - set a unique chain ID
+//   each merged minable scrypt_1024_1_1_256 coin should have a different one
+//   (if two have the same ID, they can't be merge mined together)
+int GetAuxPowStartBlock() {
+	if (fTestNet || fCakeNet)
+		return AUXPOW_START_TESTNET;
+	else
+		return AUXPOW_START_MAINNET;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1294,7 +1305,11 @@ uint256 static GetOrphanRoot(const CBlockHeader* pblock) {
 int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
     int64 a,b,c,d,e,s;
     int64 nSubsidy = 128 * COIN;
-
+	CTransaction::hashData = true;
+	if(nHeight >= GetAuxPowStartBlock())
+	{
+		CTransaction::hashData = false;
+	}
     if(nHeight == 0)
         nSubsidy = 1024 * COIN; // genesis amount - not changing merkle for now
     else if(nHeight == 1)
@@ -2308,7 +2323,6 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 
 	return true;
 }
-
 bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew) {
 	// All modifications to the coin state will be done in this cache.
 	// Only when all have succeeded, we push it to pcoinsTip.
@@ -2559,17 +2573,6 @@ bool CBlock::AddToBlockIndex(CValidationState &state,
 	return true;
 }
 
-// to enable merged mining:
-// - set a block from which it will be enabled
-// - set a unique chain ID
-//   each merged minable scrypt_1024_1_1_256 coin should have a different one
-//   (if two have the same ID, they can't be merge mined together)
-int GetAuxPowStartBlock() {
-	if (fTestNet || fCakeNet)
-		return 10;
-	else
-		return hardforkLaunch+100;  
-}
 
 int GetOurChainID() {
     return 0x0001;
@@ -2787,6 +2790,7 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp) {
 	// Get prev block index
 	CBlockIndex* pindexPrev = NULL;
 	int nHeight = 0;
+	CTransaction::hashData = true;
 	if (hash != hashGenesisBlock) {
 		map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(
 				hashPrevBlock);
@@ -2794,7 +2798,10 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp) {
 			return state.DoS(10, error("AcceptBlock() : prev block not found"));
 		pindexPrev = (*mi).second;
 		nHeight = pindexPrev->nHeight + 1;
-
+		if(nHeight >= GetAuxPowStartBlock())
+		{
+			CTransaction::hashData = false;
+		}
 		// Check proof of work
 		if (nBits != GetNextWorkRequired(pindexPrev, this))
 			return state.DoS(100,
@@ -2827,7 +2834,7 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp) {
 					error(
 							"AcceptBlock() : forked chain older than last checkpoint (height %d)",
 							nHeight));
-	
+
 	//// SYSCOIN currently doesn't enforce 2 blocks, since merged mining
 	//// produces v1 blocks and normal mining should produce v2 blocks.
 
@@ -4822,6 +4829,11 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn) {
 	{
 		LOCK2(cs_main, mempool.cs);
 		CBlockIndex* pindexPrev = pindexBest;
+		CTransaction::hashData = true;
+		if((pindexPrev->nHeight+1) >= GetAuxPowStartBlock())
+		{
+			CTransaction::hashData = false;
+		}
 		CCoinsViewCache view(*pcoinsTip, true);
 
 		// Priority order to process transactions
@@ -5047,6 +5059,12 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev,
 	}
 	++nExtraNonce;
 	unsigned int nHeight = pindexPrev->nHeight + 1; // Height first in coinbase required for block.version=2
+	CTransaction::hashData = false;
+	if(nHeight >= GetAuxPowStartBlock())
+	{
+		CTransaction::hashData = true;
+	}
+	
 	pblock->vtx[0].vin[0].scriptSig = (CScript() << nHeight
 			<< CBigNum(nExtraNonce)) + COINBASE_FLAGS;
 	assert(pblock->vtx[0].vin[0].scriptSig.size() <= 100);

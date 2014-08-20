@@ -618,6 +618,12 @@ Value getworkaux(const Array& params, bool fHelp)
     if (IsInitialBlockDownload())
         throw JSONRPCError(-10, "Syscoin is downloading blocks...");
 
+ // We use height plus one because we're testing the next block
+    if ((pindexBest->nHeight+1) < GetAuxPowStartBlock()) {
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "getworkaux method is not available until switch-over block.");
+    }
+
+
     static map<uint256, pair<CBlock*, unsigned int> > mapNewBlock;
     static vector<CBlockTemplate*> vNewBlockTemplate;
     static CReserveKey reservekey(pwalletMain);
@@ -719,8 +725,8 @@ Value getworkaux(const Array& params, bool fHelp)
         script.GetOp(pc, opcode, vchAux);
 
         RemoveMergedMiningHeader(vchAux);
-
-        pblock->vtx[0].vin[0].scriptSig = MakeCoinbaseWithAux(pblock->nBits, nExtraNonce, vchAux);
+		unsigned int nHeight = pindexBest->nHeight+1; // Height first in coinbase required for block.version=2
+        pblock->vtx[0].vin[0].scriptSig = MakeCoinbaseWithAux(nHeight, nExtraNonce, vchAux);
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
         if (params.size() > 2)
@@ -779,6 +785,11 @@ Value getauxblock(const Array& params, bool fHelp)
     if (IsInitialBlockDownload())
         throw JSONRPCError(-10, "Syscoin is downloading blocks...");
 
+ // We use height plus one because we're testing the next block
+    if ((pindexBest->nHeight+1) < GetAuxPowStartBlock()) {
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "getauxblock method is not available until switch-over block.");
+    }
+
     static map<uint256, CBlock*> mapNewBlock;
     static vector<CBlockTemplate*> vNewBlockTemplate;
     static CReserveKey reservekey(pwalletMain);
@@ -816,9 +827,8 @@ Value getauxblock(const Array& params, bool fHelp)
             pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
             pblock->nNonce = 0;
 
-            // Push OP_2 just in case we want versioning later
-            pblock->vtx[0].vin[0].scriptSig = CScript() << pblock->nBits << CBigNum(1) << OP_2;
-            pblock->hashMerkleRoot = pblock->BuildMerkleTree();
+            static unsigned int nExtraNonce = 0;
+            IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
             // Sets the version
             pblock->SetAuxPow(new CAuxPow());

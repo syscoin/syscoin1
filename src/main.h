@@ -110,7 +110,8 @@ extern int64 nMinimumInputValue;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64 nMinDiskSpace = 52428800;
-
+static const int AUXPOW_START_MAINNET = 5100;
+static const int AUXPOW_START_TESTNET = 1;
 class CWalletTx;
 class CDiskTxPos;
 class CTxOut;
@@ -196,10 +197,11 @@ CBlockIndex * InsertBlockIndex(uint256 hash);
 bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 /** Abort with a message */
 bool AbortNode(const std::string &msg);
-
+int GetAuxPowStartBlock();
 bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
 
 std::string stringFromVch(const std::vector<unsigned char> &vch);
+
 
 struct CDiskBlockPos {
     int nFile;
@@ -480,7 +482,7 @@ public:
     std::vector<CTxOut> vout;
     unsigned int nLockTime;
     std::vector<unsigned char> data;
-
+	static bool hashData; 
     CTransaction()
     {
         SetNull();
@@ -493,7 +495,7 @@ public:
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
-		if (!(nType & SER_GETHASH))
+		if (hashData  || !(nType & SER_GETHASH))
 			READWRITE(data);
     )
 
@@ -1334,7 +1336,7 @@ class CBlockHeader
 {
 public:
     // header
-    static const int CURRENT_VERSION=BLOCK_VERSION_DEFAULT;
+    static const int CURRENT_VERSION=2;
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
@@ -1397,7 +1399,7 @@ public:
 
     int64 GetBlockTime() const
     {
-        return (int64)nTime;
+		return (int64)nTime;
     }
 
     bool CheckProofOfWork(int nHeight) const;
@@ -1447,6 +1449,7 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+		block.auxpow         = auxpow;
         return block;
     }
 
