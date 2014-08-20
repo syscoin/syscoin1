@@ -2595,8 +2595,9 @@ int GetOurChainID() {
 }
 
 bool CBlockHeader::CheckProofOfWork(int nHeight) const {
+	CTransaction::hashData = true;
 	if (nHeight >= GetAuxPowStartBlock()) {
-		CTransaction::hashData = true;
+		CTransaction::hashData = false;
 		// Prevent same work from being submitted twice:
 		// - this block must have our chain ID
 		// - parent block must not have the same chain ID (see CAuxPow::Check)
@@ -5074,10 +5075,10 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev,
 	}
 	++nExtraNonce;
 	unsigned int nHeight = pindexPrev->nHeight + 1; // Height first in coinbase required for block.version=2
-	CTransaction::hashData = false;
+	CTransaction::hashData = true;
 	if(nHeight >= GetAuxPowStartBlock())
 	{
-		CTransaction::hashData = true;
+		CTransaction::hashData = false;
 	}
 	
 	pblock->vtx[0].vin[0].scriptSig = (CScript() << nHeight

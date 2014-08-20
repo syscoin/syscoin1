@@ -232,7 +232,11 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nBits          = diskindex.nBits;
                 pindexNew->nNonce         = diskindex.nNonce;
                 pindexNew->nTx            = diskindex.nTx;
-
+				CTransaction::hashData = true;
+				if(pindexNew->nHeight >= GetAuxPowStartBlock())
+				{
+					CTransaction::hashData = false;
+				}
                 // Watch for genesis block
                 if (pindexGenesisBlock == NULL && pindexNew->GetBlockHash() == hashGenesisBlock)
                     pindexGenesisBlock = pindexNew;
