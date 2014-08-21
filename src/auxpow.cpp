@@ -128,7 +128,7 @@ void IncrementExtraNonceWithAux(CBlock* pblock, CBlockIndex* pindexPrev, unsigne
     ++nExtraNonce;
 	unsigned int nHeight = pindexPrev->nHeight+1; // Height first in coinbase required for block.version=2
     pblock->vtx[0].vin[0].scriptSig = MakeCoinbaseWithAux(nHeight, nExtraNonce, vchAux);
-    pblock->hashMerkleRoot = pblock->BuildMerkleTree(SER_GETHASH | SER_GETAUXHASH);
+    pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 }
 
 

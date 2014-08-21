@@ -726,7 +726,7 @@ Value getworkaux(const Array& params, bool fHelp)
         RemoveMergedMiningHeader(vchAux);
 		unsigned int nHeight = pindexBest->nHeight+1; // Height first in coinbase required for block.version=2
         pblock->vtx[0].vin[0].scriptSig = MakeCoinbaseWithAux(nHeight, nExtraNonce, vchAux);
-        pblock->hashMerkleRoot = pblock->BuildMerkleTree(SER_GETHASH | SER_GETAUXHASH);
+        pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
         if (params.size() > 2)
         {
@@ -742,7 +742,7 @@ Value getworkaux(const Array& params, bool fHelp)
                 pow.vChainMerkleBranch.push_back(nHash);
             }
 
-            pow.SetMerkleBranch(pblock, SER_GETHASH | SER_GETAUXHASH);
+            pow.SetMerkleBranch(pblock);
             pow.nChainIndex = nChainIndex;
             pow.parentBlockHeader = *pblock;
             CDataStream ss(SER_GETHASH | SER_GETAUXHASH, PROTOCOL_VERSION);
