@@ -28,7 +28,7 @@ extern const std::string CLIENT_DATE;
 //70002 = r0.1.1
 //70003 = r0.1.2
 //70004 = r0.1.3
-static const int PROTOCOL_VERSION = 70007;
+static const int PROTOCOL_VERSION = 70006;
 
 // intial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
