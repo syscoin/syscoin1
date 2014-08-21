@@ -217,7 +217,6 @@ void BitcoinGUI::createActions()
     dataAliasListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_7));
     tabGroup->addAction(dataAliasListAction);
 
-
     offerListAction = new QAction(QIcon(":/icons/cart"), tr("&Marketplace"), this);
     offerListAction->setStatusTip(tr("Manage offers"));
     offerListAction->setToolTip(offerListAction->statusTip());
@@ -239,6 +238,17 @@ void BitcoinGUI::createActions()
     certListAction->setCheckable(true);
     certListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_A));
     tabGroup->addAction(certListAction);
+
+#ifndef Q_OS_MAC    
+// Hide buttons until we fixed the issues
+	aliasListAction->setVisible (false);
+	dataAliasListAction->setVisible (false);
+	offerListAction->setVisible (false);
+	certIssuerListAction->setVisible (false);
+	certListAction->setVisible (false);
+#endif
+
+
 
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
