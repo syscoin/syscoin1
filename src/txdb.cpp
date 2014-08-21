@@ -164,8 +164,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) {
         } catch (std::exception &e) {
             return error("%s() : deserialize error", __PRETTY_FUNCTION__);
         }
-    }
-    delete pcursor;
+
     stats.nHeight = GetBestBlock()->nHeight;
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
