@@ -482,7 +482,6 @@ public:
     std::vector<CTxOut> vout;
     unsigned int nLockTime;
     std::vector<unsigned char> data;
-	static bool hashData; 
     CTransaction()
     {
         SetNull();
@@ -495,7 +494,7 @@ public:
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
-		if (hashData  || !(nType & SER_GETHASH))
+		if (!(nType & SER_GETAUXHASH))
 			READWRITE(data);
     )
 
@@ -517,7 +516,11 @@ public:
     {
         return SerializeHash(*this);
     }
-
+	uint256 GetAuxHash() const
+    {
+        return SerializeHash(*this, SER_GETAUXHASH | SER_GETHASH);
+    }
+	
     std::string GetBase64Data() const {
         return stringFromVch(data);
     }
@@ -1194,7 +1197,7 @@ public:
     )
 
 
-    int SetMerkleBranch(const CBlock* pblock=NULL);
+    int SetMerkleBranch(const CBlock* pblock=NULL, int nType=SER_GETHASH);
     int GetDepthInMainChain(CBlockIndex* &pindexRet) const;
     int GetDepthInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
     bool IsInMainChain() const { return GetDepthInMainChain() > 0; }
@@ -1453,11 +1456,20 @@ public:
         return block;
     }
 
-    uint256 BuildMerkleTree() const
+    uint256 BuildMerkleTree(int nType=SER_GETHASH) const
     {
         vMerkleTree.clear();
         BOOST_FOREACH(const CTransaction& tx, vtx)
-            vMerkleTree.push_back(tx.GetHash());
+		{
+			if(nType & SER_GETAUXHASH)
+			{
+				vMerkleTree.push_back(tx.GetAuxHash());
+			}
+			else
+			{
+				vMerkleTree.push_back(tx.GetHash());
+			}
+		}
         int j = 0;
         for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
         {
@@ -1478,10 +1490,10 @@ public:
         return vMerkleTree[nIndex];
     }
 
-    std::vector<uint256> GetMerkleBranch(int nIndex) const
+    std::vector<uint256> GetMerkleBranch(int nIndex, int nType=SER_GETHASH) const
     {
         if (vMerkleTree.empty())
-            BuildMerkleTree();
+            BuildMerkleTree(nType);
         std::vector<uint256> vMerkleBranch;
         int j = 0;
         for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)

@@ -24,7 +24,6 @@ using namespace boost;
 //
 // Global state
 //
-bool CTransaction::hashData = true;
 CCriticalSection cs_setpwalletRegistered;
 set<CWallet*> setpwalletRegistered;
 
@@ -558,7 +557,7 @@ unsigned int CTransaction::GetLegacySigOpCount() const {
 	return nSigOps;
 }
 
-int CMerkleTx::SetMerkleBranch(const CBlock* pblock) {
+int CMerkleTx::SetMerkleBranch(const CBlock* pblock, int nType) {
 	CBlock blockTmp;
 	if (pblock == NULL) {
 		CCoins coins;
@@ -588,7 +587,7 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock) {
 		}
 
 		// Fill in merkle branch
-		vMerkleBranch = pblock->GetMerkleBranch(nIndex);
+		vMerkleBranch = pblock->GetMerkleBranch(nIndex, nType);
 	}
 
 	// Is the tx in a block that's in the main chain
@@ -1305,11 +1304,6 @@ uint256 static GetOrphanRoot(const CBlockHeader* pblock) {
 int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
     int64 a,b,c,d,e,s;
     int64 nSubsidy = 128 * COIN;
-	CTransaction::hashData = true;
-	if(nHeight >= GetAuxPowStartBlock())
-	{
-		CTransaction::hashData = false;
-	}
     if(nHeight == 0)
         nSubsidy = 1024 * COIN; // genesis amount - not changing merkle for now
     else if(nHeight == 1)
@@ -2595,9 +2589,7 @@ int GetOurChainID() {
 }
 
 bool CBlockHeader::CheckProofOfWork(int nHeight) const {
-	CTransaction::hashData = true;
 	if (nHeight >= GetAuxPowStartBlock()) {
-		CTransaction::hashData = false;
 		// Prevent same work from being submitted twice:
 		// - this block must have our chain ID
 		// - parent block must not have the same chain ID (see CAuxPow::Check)
@@ -2808,7 +2800,6 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp) {
 	// Get prev block index
 	CBlockIndex* pindexPrev = NULL;
 	int nHeight = 0;
-	CTransaction::hashData = true;
 	if (hash != hashGenesisBlock) {
 		map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(
 				hashPrevBlock);
@@ -2816,10 +2807,6 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp) {
 			return state.DoS(10, error("AcceptBlock() : prev block not found"));
 		pindexPrev = (*mi).second;
 		nHeight = pindexPrev->nHeight + 1;
-		if(nHeight >= GetAuxPowStartBlock())
-		{
-			CTransaction::hashData = false;
-		}
 		// Check proof of work
 		if (nBits != GetNextWorkRequired(pindexPrev, this))
 			return state.DoS(100,
@@ -4845,11 +4832,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn) {
 	{
 		LOCK2(cs_main, mempool.cs);
 		CBlockIndex* pindexPrev = pindexBest;
-		CTransaction::hashData = true;
-		if((pindexPrev->nHeight+1) >= GetAuxPowStartBlock())
-		{
-			CTransaction::hashData = false;
-		}
 		CCoinsViewCache view(*pcoinsTip, true);
 
 		// Priority order to process transactions
@@ -5075,11 +5057,6 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev,
 	}
 	++nExtraNonce;
 	unsigned int nHeight = pindexPrev->nHeight + 1; // Height first in coinbase required for block.version=2
-	CTransaction::hashData = true;
-	if(nHeight >= GetAuxPowStartBlock())
-	{
-		CTransaction::hashData = false;
-	}
 	
 	pblock->vtx[0].vin[0].scriptSig = (CScript() << nHeight
 			<< CBigNum(nExtraNonce)) + COINBASE_FLAGS;
@@ -5136,11 +5113,6 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey) {
 	CAuxPow *auxpow = pblock->auxpow.get();
 
 	if (auxpow != NULL) {
-		printf(
-				"AUX proof-of-work CHECK  \n     our hash: %s   \n  parent hash: %s  \n       target: %s\n",
-				hash.GetHex().c_str(),
-				auxpow->GetParentBlockHash().GetHex().c_str(),
-				hashTarget.GetHex().c_str());
 		if (!auxpow->Check(pblock->GetHash(), pblock->GetChainID()))
 			return error("AUX POW is not valid");
 
