@@ -49,7 +49,7 @@ int nScriptCheckThreads = 0;
 bool fImporting = false;
 bool fReindex = false;
 bool fBenchmark = false;
-bool fTxIndex = false;
+bool fTxIndex = true; // syscoin is using transaction index by default
 unsigned int nCoinCacheSize = 5000;
 
 int hardforkLaunch = 1660;
