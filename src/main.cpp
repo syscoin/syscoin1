@@ -1324,7 +1324,7 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
     e = nFees;
     s = a+e;
 
-    if (nHeight < hardforkLaunch) s += b+c+d;
+    if (nHeight < hardforkLaunch || (fCakeNet || fTestNet)) s += b+c+d;
 
     if (fDebug)
 	printf ("GetBlockvalue of Block %d: subsidy=%"PRI64d", fees=%"PRI64d", aliasSubsidy=%"PRI64d", offerSubsidy=%"PRI64d", certSubidy=%"PRI64d", sum=%"PRI64d". \n", nHeight, a,e,b,c,d,s);
