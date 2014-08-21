@@ -724,7 +724,8 @@ Value getworkaux(const Array& params, bool fHelp)
         script.GetOp(pc, opcode, vchAux);
 
         RemoveMergedMiningHeader(vchAux);
-		pblock->vtx[0].vin[0].scriptSig = MakeCoinbaseWithAux(pblock->nBits, nExtraNonce, vchAux);
+		unsigned int nHeight = pindexBest->nHeight+1; // Height first in coinbase required for block.version=2
+        pblock->vtx[0].vin[0].scriptSig = MakeCoinbaseWithAux(nHeight, nExtraNonce, vchAux);
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
         if (params.size() > 2)
@@ -825,7 +826,7 @@ Value getauxblock(const Array& params, bool fHelp)
             pblock->nNonce = 0;
 
           // Push OP_2 just in case we want versioning later
-            pblock->vtx[0].vin[0].scriptSig = CScript() << pblock->nBits << CBigNum(1) << OP_2;
+            pblock->vtx[0].vin[0].scriptSig = CScript() << pblock->nHeight << CBigNum(1) << OP_2;
             pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 
             // Sets the version
