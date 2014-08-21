@@ -825,9 +825,8 @@ Value getauxblock(const Array& params, bool fHelp)
             pblock->nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
             pblock->nNonce = 0;
 
-          // Push OP_2 just in case we want versioning later
-            pblock->vtx[0].vin[0].scriptSig = CScript() << pblock->nHeight << CBigNum(1) << OP_2;
-            pblock->hashMerkleRoot = pblock->BuildMerkleTree();
+            static unsigned int nExtraNonce = 0;
+            IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
             // Sets the version
             pblock->SetAuxPow(new CAuxPow());
