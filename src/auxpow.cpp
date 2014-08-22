@@ -34,7 +34,7 @@ bool CAuxPow::Check(uint256 hashAuxBlock, int nChainID)
     std::reverse(vchRootHash.begin(), vchRootHash.end()); // correct endian
 
     // Check that we are in the parent block merkle tree
-    if (CBlock::CheckMerkleBranch(GetAuxHash(), vMerkleBranch, nIndex) != parentBlockHeader.hashMerkleRoot)
+    if (CBlock::CheckMerkleBranch(/*GetAuxHash()*/GetHash(), vMerkleBranch, nIndex) != parentBlockHeader.hashMerkleRoot)
         return error("Aux POW merkle root incorrect");
 
     const CScript script = vin[0].scriptSig;
@@ -128,7 +128,7 @@ void IncrementExtraNonceWithAux(CBlock* pblock, CBlockIndex* pindexPrev, unsigne
     ++nExtraNonce;
 	unsigned int nHeight = pindexPrev->nHeight+1; // Height first in coinbase required for block.version=2
     pblock->vtx[0].vin[0].scriptSig = MakeCoinbaseWithAux(nHeight, nExtraNonce, vchAux);
-    pblock->hashMerkleRoot = pblock->BuildMerkleTree(SER_GETHASH | SER_GETAUXHASH);
+    pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 }
 
 

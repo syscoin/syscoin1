@@ -557,7 +557,7 @@ unsigned int CTransaction::GetLegacySigOpCount() const {
 	return nSigOps;
 }
 
-int CMerkleTx::SetMerkleBranch(const CBlock* pblock, int nType) {
+int CMerkleTx::SetMerkleBranch(const CBlock* pblock) {
 	CBlock blockTmp;
 	if (pblock == NULL) {
 		CCoins coins;
@@ -587,7 +587,7 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock, int nType) {
 		}
 
 		// Fill in merkle branch
-		vMerkleBranch = pblock->GetMerkleBranch(nIndex, nType);
+		vMerkleBranch = pblock->GetMerkleBranch(nIndex);
 	}
 
 	// Is the tx in a block that's in the main chain

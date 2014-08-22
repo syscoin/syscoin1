@@ -1197,7 +1197,7 @@ public:
     )
 
 
-    int SetMerkleBranch(const CBlock* pblock=NULL, int nType=SER_GETHASH);
+    int SetMerkleBranch(const CBlock* pblock=NULL);
     int GetDepthInMainChain(CBlockIndex* &pindexRet) const;
     int GetDepthInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
     bool IsInMainChain() const { return GetDepthInMainChain() > 0; }
@@ -1456,20 +1456,13 @@ public:
         return block;
     }
 
-    uint256 BuildMerkleTree(int nType=SER_GETHASH) const
+    uint256 BuildMerkleTree() const
     {
         vMerkleTree.clear();
         BOOST_FOREACH(const CTransaction& tx, vtx)
-		{
-			if(nType & SER_GETAUXHASH)
-			{
-				vMerkleTree.push_back(tx.GetAuxHash());
-			}
-			else
-			{
-				vMerkleTree.push_back(tx.GetHash());
-			}
-		}
+			vMerkleTree.push_back(tx.GetHash());
+			
+		
         int j = 0;
         for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
         {
@@ -1490,10 +1483,10 @@ public:
         return vMerkleTree[nIndex];
     }
 
-    std::vector<uint256> GetMerkleBranch(int nIndex, int nType=SER_GETHASH) const
+    std::vector<uint256> GetMerkleBranch(int nIndex) const
     {
         if (vMerkleTree.empty())
-            BuildMerkleTree(nType);
+            BuildMerkleTree();
         std::vector<uint256> vMerkleBranch;
         int j = 0;
         for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
