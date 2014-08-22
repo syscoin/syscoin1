@@ -110,8 +110,8 @@ extern int64 nMinimumInputValue;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64 nMinDiskSpace = 52428800;
-static const int AUXPOW_START_MAINNET = 5100;
-static const int AUXPOW_START_TESTNET = 1;
+static const int AUXPOW_START_MAINNET = 510000;
+static const int AUXPOW_START_TESTNET = 1000;
 class CWalletTx;
 class CDiskTxPos;
 class CTxOut;

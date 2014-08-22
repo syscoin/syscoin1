@@ -34,7 +34,7 @@ bool CAuxPow::Check(uint256 hashAuxBlock, int nChainID)
     std::reverse(vchRootHash.begin(), vchRootHash.end()); // correct endian
 
     // Check that we are in the parent block merkle tree
-    if (CBlock::CheckMerkleBranch(/*GetAuxHash()*/GetHash(), vMerkleBranch, nIndex) != parentBlockHeader.hashMerkleRoot)
+    if (CBlock::CheckMerkleBranch(GetAuxHash(), vMerkleBranch, nIndex) != parentBlockHeader.hashMerkleRoot)
         return error("Aux POW merkle root incorrect");
 
     const CScript script = vin[0].scriptSig;
