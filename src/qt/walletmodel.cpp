@@ -49,13 +49,12 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
 {
     addressTableModel = new AddressTableModel(wallet, this);
   
-#ifdef Q_OS_MAC
-	aliasTableModelMine = new AliasTableModel(wallet, this, MyAlias);
+    //do not load SYS service data this way at the moment, need more efficient load mechanism.
+    /*aliasTableModelMine = new AliasTableModel(wallet, this, MyAlias);
 	aliasTableModelAll = new AliasTableModel(wallet, this, AllAlias);
 	offerTableModelAll = new OfferTableModel(wallet, this, AllOffers);
 	offerTableModelMine = new OfferTableModel(wallet, this, MyOffers);
-  certIssuerTableModel = new CertIssuerTableModel(wallet, this);
-#endif
+    certIssuerTableModel = new CertIssuerTableModel(wallet, this);*/
 
     transactionTableModel = new TransactionTableModel(wallet, this);
 
