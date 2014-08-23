@@ -239,16 +239,12 @@ void BitcoinGUI::createActions()
     certListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_A));
     tabGroup->addAction(certListAction);
 
-#ifndef Q_OS_MAC    
-// Hide buttons until we fixed the issues
+    // Hide buttons until we fixed the issues (win and mac)
 	aliasListAction->setVisible (false);
 	dataAliasListAction->setVisible (false);
 	offerListAction->setVisible (false);
 	certIssuerListAction->setVisible (false);
 	certListAction->setVisible (false);
-#endif
-
-
 
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
