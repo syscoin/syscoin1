@@ -110,7 +110,8 @@ extern int64 nMinimumInputValue;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64 nMinDiskSpace = 52428800;
-
+static const int AUXPOW_START_MAINNET = 510000;
+static const int AUXPOW_START_TESTNET = 1000;
 class CWalletTx;
 class CDiskTxPos;
 class CTxOut;
@@ -196,10 +197,11 @@ CBlockIndex * InsertBlockIndex(uint256 hash);
 bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 /** Abort with a message */
 bool AbortNode(const std::string &msg);
-
+int GetAuxPowStartBlock();
 bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
 
 std::string stringFromVch(const std::vector<unsigned char> &vch);
+
 
 struct CDiskBlockPos {
     int nFile;
@@ -480,7 +482,6 @@ public:
     std::vector<CTxOut> vout;
     unsigned int nLockTime;
     std::vector<unsigned char> data;
-
     CTransaction()
     {
         SetNull();
@@ -493,7 +494,7 @@ public:
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
-		if (!(nType & SER_GETAUXPOW))
+		if (!(nType & SER_GETAUXHASH))
 			READWRITE(data);
     )
 
@@ -515,7 +516,11 @@ public:
     {
         return SerializeHash(*this);
     }
-
+	uint256 GetAuxHash() const
+    {
+        return SerializeHash(*this, SER_GETAUXHASH | SER_GETHASH);
+    }
+	
     std::string GetBase64Data() const {
         return stringFromVch(data);
     }
@@ -1397,7 +1402,7 @@ public:
 
     int64 GetBlockTime() const
     {
-        return (int64)nTime;
+		return (int64)nTime;
     }
 
     bool CheckProofOfWork(int nHeight) const;
@@ -1447,6 +1452,7 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+		block.auxpow         = auxpow;
         return block;
     }
 
@@ -1454,7 +1460,9 @@ public:
     {
         vMerkleTree.clear();
         BOOST_FOREACH(const CTransaction& tx, vtx)
-            vMerkleTree.push_back(tx.GetHash());
+			vMerkleTree.push_back(tx.GetHash());
+			
+		
         int j = 0;
         for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
         {
