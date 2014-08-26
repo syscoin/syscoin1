@@ -2200,7 +2200,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 
 	int64 nStart = GetTimeMicros();
 	int nInputs = 0;
-	int nFees = 0;
+	int64 nFees = 0;
 	unsigned int nSigOps = 0;
 	CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(vtx.size()));
 	std::vector<std::pair<uint256, CDiskTxPos> > vPos;
