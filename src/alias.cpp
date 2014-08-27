@@ -1831,7 +1831,7 @@ void UnspendInputs(CWalletTx& wtx)
             continue;
         }
         CWalletTx& prev = pwalletMain->mapWallet[txin.prevout.hash];
-        int nOut = txin.prevout.n;
+        unsigned int nOut = txin.prevout.n;
 
         printf("UnspendInputs(): %s:%d spent %d\n", prev.GetHash().ToString().c_str(), nOut, prev.IsSpent(nOut));
 
