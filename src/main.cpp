@@ -1307,7 +1307,7 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
     int64 a,b,c,d,e,s;
     int64 nSubsidy = 128 * COIN;
     if(nHeight == 0)
-        nSubsidy = 1024 * COIN; // genesis amount - not changing merkle for now
+        nSubsidy = 1024 * COIN; // genesis amount
     else if(nHeight == 1)
         nSubsidy = 364222858 * COIN; // pre-mine amount
     else if(nHeight > 259440 && nHeight <= 777840)
@@ -1326,7 +1326,6 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
         nSubsidy = 0;
     else if( ( fTestNet || fCakeNet ) && ( nHeight > 35913640 ) )
         nSubsidy = 0;
-    //fair launch - fees only for first 2hrs
 
     a = nSubsidy;
     b = GetAliasFeeSubsidy(nHeight);
@@ -1335,7 +1334,9 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
     e = nFees;
     s = a+e;
 
-    if (nHeight < hardforkLaunch || (fCakeNet || fTestNet)) s += b+c+d;
+    if (nHeight < hardforkLaunch 
+        || nHeight >= MM_FEEREGEN_HARDFORK
+        || (fCakeNet || fTestNet)) s += b+c+d;
 
     if (fDebug)
 	printf ("GetBlockvalue of Block %d: subsidy=%"PRI64d", fees=%"PRI64d", aliasSubsidy=%"PRI64d", offerSubsidy=%"PRI64d", certSubidy=%"PRI64d", sum=%"PRI64d". \n", nHeight, a,e,b,c,d,s);
