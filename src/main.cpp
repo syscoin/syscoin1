@@ -190,8 +190,10 @@ void static ResendWalletTransactions() {
 //   each merged minable scrypt_1024_1_1_256 coin should have a different one
 //   (if two have the same ID, they can't be merge mined together)
 int GetAuxPowStartBlock() {
-	if (fTestNet || fCakeNet)
+  if (fTestNet)
 		return AUXPOW_START_TESTNET;
+	else if (fCakeNet)
+		return AUXPOW_START_CAKENET;
 	else
 		return AUXPOW_START_MAINNET;
 }
