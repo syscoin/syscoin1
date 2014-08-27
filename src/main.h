@@ -112,6 +112,7 @@ extern int64 nMinimumInputValue;
 static const uint64 nMinDiskSpace = 52428800;
 static const int AUXPOW_START_MAINNET = 510000;
 static const int AUXPOW_START_TESTNET = 1000;
+static const int AUXPOW_START_CAKENET = 30;
 class CWalletTx;
 class CDiskTxPos;
 class CTxOut;
