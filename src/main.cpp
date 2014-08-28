@@ -24,7 +24,6 @@ using namespace boost;
 //
 // Global state
 //
-
 CCriticalSection cs_setpwalletRegistered;
 set<CWallet*> setpwalletRegistered;
 
@@ -184,6 +183,19 @@ void static Inventory(const uint256& hash) {
 void static ResendWalletTransactions() {
 	BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
 		pwallet->ResendWalletTransactions();
+}
+// to enable merged mining:
+// - set a block from which it will be enabled
+// - set a unique chain ID
+//   each merged minable scrypt_1024_1_1_256 coin should have a different one
+//   (if two have the same ID, they can't be merge mined together)
+int GetAuxPowStartBlock() {
+  if (fTestNet)
+		return AUXPOW_START_TESTNET;
+	else if (fCakeNet)
+		return AUXPOW_START_CAKENET;
+	else
+		return AUXPOW_START_MAINNET;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1294,9 +1306,8 @@ uint256 static GetOrphanRoot(const CBlockHeader* pblock) {
 int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
     int64 a,b,c,d,e,s;
     int64 nSubsidy = 128 * COIN;
-
     if(nHeight == 0)
-        nSubsidy = 1024 * COIN; // genesis amount - not changing merkle for now
+        nSubsidy = 1024 * COIN; // genesis amount
     else if(nHeight == 1)
         nSubsidy = 364222858 * COIN; // pre-mine amount
     else if(nHeight > 259440 && nHeight <= 777840)
@@ -1315,7 +1326,6 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
         nSubsidy = 0;
     else if( ( fTestNet || fCakeNet ) && ( nHeight > 35913640 ) )
         nSubsidy = 0;
-    //fair launch - fees only for first 2hrs
 
     a = nSubsidy;
     b = GetAliasFeeSubsidy(nHeight);
@@ -1324,7 +1334,9 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
     e = nFees;
     s = a+e;
 
-    if (nHeight < hardforkLaunch) s += b+c+d;
+    if (nHeight < hardforkLaunch 
+        || nHeight >= MM_FEEREGEN_HARDFORK
+        || (fCakeNet || fTestNet)) s += b+c+d;
 
     if (fDebug)
 	printf ("GetBlockvalue of Block %d: subsidy=%"PRI64d", fees=%"PRI64d", aliasSubsidy=%"PRI64d", offerSubsidy=%"PRI64d", certSubidy=%"PRI64d", sum=%"PRI64d". \n", nHeight, a,e,b,c,d,s);
@@ -2191,7 +2203,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 
 	int64 nStart = GetTimeMicros();
 	int nInputs = 0;
-	int nFees = 0;
+	int64 nFees = 0;
 	unsigned int nSigOps = 0;
 	CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(vtx.size()));
 	std::vector<std::pair<uint256, CDiskTxPos> > vPos;
@@ -2324,7 +2336,6 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 
 	return true;
 }
-
 bool SetBestChain(CValidationState &state, CBlockIndex* pindexNew) {
 	// All modifications to the coin state will be done in this cache.
 	// Only when all have succeeded, we push it to pcoinsTip.
@@ -2575,17 +2586,6 @@ bool CBlock::AddToBlockIndex(CValidationState &state,
 	return true;
 }
 
-// to enable merged mining:
-// - set a block from which it will be enabled
-// - set a unique chain ID
-//   each merged minable scrypt_1024_1_1_256 coin should have a different one
-//   (if two have the same ID, they can't be merge mined together)
-int GetAuxPowStartBlock() {
-	if (fTestNet || fCakeNet)
-		return 10;
-	else
-		return hardforkLaunch+100;  
-}
 
 int GetOurChainID() {
     return 0x0001;
@@ -2810,7 +2810,6 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp) {
 			return state.DoS(10, error("AcceptBlock() : prev block not found"));
 		pindexPrev = (*mi).second;
 		nHeight = pindexPrev->nHeight + 1;
-
 		// Check proof of work
 		if (nBits != GetNextWorkRequired(pindexPrev, this))
 			return state.DoS(100,
@@ -2844,8 +2843,6 @@ bool CBlock::AcceptBlock(CValidationState &state, CDiskBlockPos *dbp) {
 							"AcceptBlock() : forked chain older than last checkpoint (height %d)",
 							nHeight));
 	
-	//// SYSCOIN currently doesn't enforce 2 blocks, since merged mining
-	//// produces v1 blocks and normal mining should produce v2 blocks.
 
 	//	// Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
 	//	if ((nVersion & 0xff) < 2) {
@@ -5063,6 +5060,7 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev,
 	}
 	++nExtraNonce;
 	unsigned int nHeight = pindexPrev->nHeight + 1; // Height first in coinbase required for block.version=2
+	
 	pblock->vtx[0].vin[0].scriptSig = (CScript() << nHeight
 			<< CBigNum(nExtraNonce)) + COINBASE_FLAGS;
 	assert(pblock->vtx[0].vin[0].scriptSig.size() <= 100);
@@ -5118,11 +5116,6 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey) {
 	CAuxPow *auxpow = pblock->auxpow.get();
 
 	if (auxpow != NULL) {
-		printf(
-				"AUX proof-of-work CHECK  \n     our hash: %s   \n  parent hash: %s  \n       target: %s\n",
-				hash.GetHex().c_str(),
-				auxpow->GetParentBlockHash().GetHex().c_str(),
-				hashTarget.GetHex().c_str());
 		if (!auxpow->Check(pblock->GetHash(), pblock->GetChainID()))
 			return error("AUX POW is not valid");
 

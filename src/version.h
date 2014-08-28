@@ -28,13 +28,14 @@ extern const std::string CLIENT_DATE;
 //70002 = r0.1.1
 //70003 = r0.1.2
 //70004 = r0.1.3
-static const int PROTOCOL_VERSION = 70004;
+//70005 = r0.1.4
+static const int PROTOCOL_VERSION = 70005;
 
 // intial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
 
 // disconnect from peers older than this proto version
-static const int MIN_PEER_PROTO_VERSION = 70003;
+static const int MIN_PEER_PROTO_VERSION = 70005;
 
 // nTime field added to CAddress, starting with this version;
 // if possible, avoid requesting addresses nodes older than this
