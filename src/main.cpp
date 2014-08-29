@@ -1547,9 +1547,9 @@ void static InvalidBlockFound(CBlockIndex *pindex) {
 	}
 }
 
-bool PostConnectBest() {
+bool LoadSyscoinFees() {
     // read alias and offer indexes
-    
+
     // read alias network fees
     lstAliasFees.clear();
     vector<CAliasFee> va;
@@ -1582,14 +1582,14 @@ bool ConnectBestBlock(CValidationState &state) {
 			std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it =
 					setBlockIndexValid.rbegin();
 			if (it == setBlockIndexValid.rend())
-				return PostConnectBest();
+				return LoadSyscoinFees();
 			pindexNewBest = *it;
 		}
 
 		if (pindexNewBest == pindexBest
 				|| (pindexBest
 						&& pindexNewBest->nChainWork == pindexBest->nChainWork))
-			return PostConnectBest(); // nothing to do
+			return LoadSyscoinFees(); // nothing to do
 
 		// check ancestry
 		CBlockIndex *pindexTest = pindexNewBest;
@@ -1623,7 +1623,7 @@ bool ConnectBestBlock(CValidationState &state) {
 						return state.Abort(_("System error: ") + e.what());
 					}
 				}
-				return PostConnectBest();
+				return LoadSyscoinFees();
 			}
 			pindexTest = pindexTest->pprev;
 		} while (true);
@@ -3297,6 +3297,9 @@ bool static LoadBlockIndexDB() {
 bool VerifyDB(int nCheckLevel, int nCheckDepth) {
 	if (pindexBest == NULL || pindexBest->pprev == NULL)
 		return true;
+
+	printf("Loading service fees from DB");
+	LoadSyscoinFees();
 
 	// Verify blocks in the best chain
 	if (nCheckDepth <= 0)
