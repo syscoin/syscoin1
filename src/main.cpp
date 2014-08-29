@@ -1582,14 +1582,14 @@ bool ConnectBestBlock(CValidationState &state) {
 			std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it =
 					setBlockIndexValid.rbegin();
 			if (it == setBlockIndexValid.rend())
-				return LoadSyscoinFees();
+				return true;
 			pindexNewBest = *it;
 		}
 
 		if (pindexNewBest == pindexBest
 				|| (pindexBest
 						&& pindexNewBest->nChainWork == pindexBest->nChainWork))
-			return LoadSyscoinFees(); // nothing to do
+			return true; // nothing to do
 
 		// check ancestry
 		CBlockIndex *pindexTest = pindexNewBest;
@@ -1623,7 +1623,7 @@ bool ConnectBestBlock(CValidationState &state) {
 						return state.Abort(_("System error: ") + e.what());
 					}
 				}
-				return LoadSyscoinFees();
+				return true;
 			}
 			pindexTest = pindexTest->pprev;
 		} while (true);
@@ -3298,7 +3298,7 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth) {
 	if (pindexBest == NULL || pindexBest->pprev == NULL)
 		return true;
 
-	printf("Loading service fees from DB");
+	printf("Loading Syscoin service fees from DB.");
 	LoadSyscoinFees();
 
 	// Verify blocks in the best chain
