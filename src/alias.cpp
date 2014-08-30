@@ -945,7 +945,7 @@ bool GetValueOfName(CAliasDB& dbName, const vector<unsigned char> &vchName, vect
     return true;
 }
 
-bool GetTxOfName(CAliasDB& dbName, const vector<unsigned char> &vchName, CTransaction& tx) {
+bool GetTxOfAlias(CAliasDB& dbName, const vector<unsigned char> &vchName, CTransaction& tx) {
     vector<CAliasIndex> vtxPos;
     if (!paliasdb->ReadAlias(vchName, vtxPos) || vtxPos.empty())
         return false;
@@ -953,13 +953,13 @@ bool GetTxOfName(CAliasDB& dbName, const vector<unsigned char> &vchName, CTransa
     int nHeight = txPos.nHeight;
     if (nHeight + GetAliasExpirationDepth(pindexBest->nHeight) < pindexBest->nHeight) {
         string name = stringFromVch(vchName);
-        printf("GetTxOfName(%s) : expired", name.c_str());
+        printf("GetTxOfAlias(%s) : expired", name.c_str());
         return false;
     }
 
     uint256 hashBlock;
     if (!GetTransaction(txPos.txHash, tx, hashBlock, true))
-        return error("GetTxOfName() : could not read tx from disk");
+        return error("GetTxOfAlias() : could not read tx from disk");
 
     return true;
 }
@@ -989,7 +989,7 @@ Value sendtoalias(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
-            "sendtoalias <syscoinname> <amount> [comment] [comment-to]\n"
+            "sendtoalias <alias> <amount> [comment] [comment-to]\n"
             "<amount> is a real and is rounded to the nearest 0.01"
             + HelpRequiringPassphrase());
 
@@ -999,7 +999,7 @@ Value sendtoalias(const Array& params, bool fHelp)
 
     string strAddress;
     CTransaction tx;
-    GetTxOfName(*paliasdb, vchName, tx);
+    GetTxOfAlias(*paliasdb, vchName, tx);
     GetAliasAddress(tx, strAddress);
 
     uint160 hash160;
@@ -1297,7 +1297,7 @@ Value aliasactivate(const Array& params, bool fHelp) {
     }
 
     CTransaction tx;
-    if (GetTxOfName(*paliasdb, vchName, tx)) {
+    if (GetTxOfAlias(*paliasdb, vchName, tx)) {
         error("aliasactivate() : this alias is already active with tx %s",
                 tx.GetHash().GetHex().c_str());
         throw runtime_error("this alias is already active");
@@ -1411,7 +1411,7 @@ Value aliasupdate(const Array& params, bool fHelp) {
         EnsureWalletIsUnlocked();
 
         CTransaction tx;
-        if (!GetTxOfName(*paliasdb, vchName, tx))
+        if (!GetTxOfAlias(*paliasdb, vchName, tx))
             throw runtime_error("could not find an alias with this name");
         if(tx.GetData().size())
             throw runtime_error("cannot modify this data alias."
@@ -2059,7 +2059,7 @@ Value dataactivate(const Array& params, bool fHelp)
     }
 
     CTransaction tx;
-    if (GetTxOfName(*paliasdb, vchName, tx)) {
+    if (GetTxOfAlias(*paliasdb, vchName, tx)) {
         error("dataactivate() : this data is already active with tx %s",
                 tx.GetHash().GetHex().c_str());
         throw runtime_error("this data is already active");
@@ -2177,7 +2177,7 @@ Value dataupdate(const Array& params, bool fHelp)
     EnsureWalletIsUnlocked();
 
     CTransaction tx;
-    if (!GetTxOfName(*paliasdb, vchName, tx))
+    if (!GetTxOfAlias(*paliasdb, vchName, tx))
         throw runtime_error("could not find this data alias"
                 " in your wallet");
     if(tx.GetData().size()==0)
