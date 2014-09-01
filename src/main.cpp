@@ -1556,6 +1556,9 @@ bool LoadSyscoinFees() {
     paliasdb->ReadAliasTxFees(va);
     list<CAliasFee> lAF(va.begin(), va.end());
     lstAliasFees = lAF;
+	BOOST_FOREACH(CAliasFee& fee, lstAliasFees) {
+		printf("Alias Fee - height: %llu \t value: %llu\n", fee.nHeight, fee.nValue);
+	}
 
     // read offer network fees
     lstOfferFees.clear();
@@ -1563,6 +1566,9 @@ bool LoadSyscoinFees() {
     pofferdb->ReadOfferTxFees(vo);
     list<COfferFee> lOF(vo.begin(), vo.end());
     lstOfferFees = lOF;
+	BOOST_FOREACH(COfferFee& fee, lstOfferFees) {
+		printf("Offer Fee - height: %llu \t value: %llu\n", fee.nHeight, fee.nFee);
+	}
 
     // read cert issuer network fees
     lstCertIssuerFees.clear();
@@ -1570,6 +1576,9 @@ bool LoadSyscoinFees() {
     pcertdb->ReadCertFees(vc);
     list<CCertFee> lCF(vc.begin(), vc.end());
     lstCertIssuerFees = lCF;
+	BOOST_FOREACH(CCertFee& fee, lstCertIssuerFees) {
+		printf("Cert Fee - height: %llu \t value: %llu\n", fee.nHeight, fee.nFee);
+	}
 
     return true;
 }
@@ -1928,6 +1937,15 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 
 				if(!paliasdb->WriteAlias(vvchArgs[0], vtxPos))
 					return error("DisconnectBlock() : failed to write to alias DB");
+                    
+                // write alias fees to db
+                int64 nTheFee = GetAliasNetFee(tx);
+                InsertAliasFee(pindex, tx.GetHash(), nTheFee);
+                if( nTheFee != 0) printf("DisconnectBlock: Added %lf in alias fees to track for regeneration.\n", 
+                    (double) nTheFee / COIN);
+                vector<CAliasFee> vAliasFees(lstAliasFees.begin(), lstAliasFees.end());
+                if (!paliasdb->WriteAliasTxFees(vAliasFees))
+                    return error( "DisconnectBlock() : failed to write fees to alias DB");
 
 		        printf("DISCONNECTED ALIAS TXN: alias=%s op=%s hash=%s  height=%d\n",
 		                stringFromVch(vvchArgs[0]).c_str(),
@@ -1980,13 +1998,20 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 
 			            while(vtxPos.back().txHash == tx.GetHash())
 			                vtxPos.pop_back();
-
-			            // TODO validate that the first pos is the current tx pos
 			        }
 
 			        // write new offer state to db
 					if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 						return error("DisconnectBlock() : failed to write to offer DB");
+
+					// compute verify and write fee data to DB
+                    int64 nTheFee = GetOfferNetFee(tx);
+					InsertOfferFee(pindex, tx.GetHash(), nTheFee);
+					if(nTheFee > 0) printf("DisconnectBlock(): Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
+					vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
+					if (!pofferdb->WriteOfferTxFees(vOfferFees))
+						return error( "DisconnectBlock() : failed to write fees to offer DB");
+
 				} 
                 else if (IsOfferOp(op) && op == OP_OFFER_NEW) {
 					pofferdb->EraseOffer(theOffer.vchRand);
@@ -2039,6 +2064,15 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
                         // write new offer state to db
                         if(!pcertdb->WriteCertIssuer(vvchArgs[0], vtxPos))
                             return error("DisconnectBlock() : failed to write to offer DB");
+
+	                    // compute verify and write fee data to DB
+	                    int64 nTheFee = GetCertNetFee(tx);
+	                    InsertCertFee(pindex, tx.GetHash(), nTheFee);
+	                    if(nTheFee > 0) printf("DisconnectBlock(): Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
+	                    vector<CCertFee> vCertIssuerFees(lstCertIssuerFees.begin(), lstCertIssuerFees.end());
+	                    if (!pcertdb->WriteCertFees(vCertIssuerFees))
+	                        return error( "DisconnectBlock() : failed to write fees to certissuer DB");
+
                     }
                     else if (IsCertOp(op) && op == OP_CERTISSUER_NEW) {
                         pcertdb->EraseCertIssuer(theOffer.vchRand);
@@ -3298,7 +3332,7 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth) {
 	if (pindexBest == NULL || pindexBest->pprev == NULL)
 		return true;
 
-	printf("Loading Syscoin service fees from DB.");
+	printf("Loading Syscoin service fees from DB.\n");
 	LoadSyscoinFees();
 
 	// Verify blocks in the best chain

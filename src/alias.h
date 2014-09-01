@@ -155,7 +155,7 @@ bool IsAliasOp(int op);
 int GetNameTxPosHeight(const CAliasIndex& txPos);
 int GetNameTxPosHeight(const CDiskTxPos& txPos);
 int GetNameTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
-bool GetTxOfName(CAliasDB& dbName, const std::vector<unsigned char> &vchName, CTransaction& tx);
+bool GetTxOfAlias(CAliasDB& dbName, const std::vector<unsigned char> &vchName, CTransaction& tx);
 int IndexOfNameOutput(const CTransaction& tx);
 bool GetValueOfNameTxHash(const uint256& txHash, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
 bool GetAliasOfTx(const CTransaction& tx, std::vector<unsigned char>& name);
@@ -170,6 +170,8 @@ std::string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetF
 bool CreateTransactionWithInputTx(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxIn, int nTxOut, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, const std::string& txData = "");
 int64 GetAliasNetworkFee(int nType, int nHeight);
 uint64 GetAliasFeeSubsidy(const unsigned int nTime);
+int64 GetAliasNetFee(const CTransaction& tx);
+bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 nValue);
 std::string aliasFromOp(int op);
 bool IsAliasOp(int op);
 int GetAliasDisplayExpirationDepth(int nHeight);
