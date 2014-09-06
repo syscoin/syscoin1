@@ -2097,7 +2097,9 @@ Value offerlist(const Array& params, bool fHelp) {
             // decode txn, skip non-alias txns
             vector<vector<unsigned char> > vvch;
             int op, nOut;
-            if (!DecodeOfferTx(tx, op, nOut, vvch, -1) || !IsOfferOp(op))
+            if (!DecodeOfferTx(tx, op, nOut, vvch, -1) 
+            	|| !IsOfferOp(op) 
+            	|| (op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY))
                 continue;
 
             // get the txn height
@@ -2143,6 +2145,99 @@ Value offerlist(const Array& params, bool fHelp) {
 
     return oRes;
 }
+
+Value offeracceptlist(const Array& params, bool fHelp) {
+    if (fHelp || 1 < params.size())
+		throw runtime_error("offeracceptlist [<offer>]\n"
+				"list my accepted offers");
+
+    vector<unsigned char> vchName;
+
+    if (params.size() == 1)
+        vchName = vchFromValue(params[0]);
+
+    vector<unsigned char> vchNameUniq;
+    if (params.size() == 1)
+        vchNameUniq = vchFromValue(params[0]);
+
+    Array oRes;
+    map< vector<unsigned char>, int > vNamesI;
+    map< vector<unsigned char>, Object > vNamesO;
+
+    {
+        LOCK(pwalletMain->cs_wallet);
+
+        uint256 blockHash;
+        uint256 hash;
+        CTransaction tx;
+
+        vector<unsigned char> vchValue;
+        int nHeight;
+
+        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+        {
+            // get txn hash, read txn index
+            hash = item.second.GetHash();
+
+            if (!GetTransaction(hash, tx, blockHash, true))
+                continue;
+
+            // skip non-syscoin txns
+            if (tx.nVersion != SYSCOIN_TX_VERSION)
+                continue;
+
+            // decode txn, skip non-alias txns
+            vector<vector<unsigned char> > vvch;
+            int op, nOut;
+            if (!DecodeOfferTx(tx, op, nOut, vvch, -1) 
+            	|| !IsOfferOp(op) 
+            	|| !(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY))
+                continue;
+
+            // get the txn height
+            nHeight = GetOfferTxHashHeight(hash);
+
+            // get the txn alias name
+            if(!GetNameOfOfferTx(tx, vchName))
+                continue;
+
+            // skip this alias if it doesn't match the given filter value
+            if(vchNameUniq.size() > 0 && vchNameUniq != vchName)
+                continue;
+
+            // get the value of the alias txn
+            if(!GetValueOfOfferTx(tx, vchValue))
+                continue;
+
+            // build the output object
+            Object oName;
+            oName.push_back(Pair("name", stringFromVch(vchName)));
+            oName.push_back(Pair("value", stringFromVch(vchValue)));
+
+            string strAddress = "";
+            GetOfferAddress(tx, strAddress);
+            oName.push_back(Pair("address", strAddress));
+
+            oName.push_back(Pair("expires_in", nHeight
+                                 + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
+            if(nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+                oName.push_back(Pair("expired", 1));
+
+            // get last active name only
+            if(vNamesI.find(vchName) != vNamesI.end() && vNamesI[vchName] > nHeight)
+                continue;
+
+            vNamesI[vchName] = nHeight;
+            vNamesO[vchName] = oName;
+        }
+    }
+
+    BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, Object)& item, vNamesO)
+        oRes.push_back(item.second);
+
+    return oRes;
+}
+
 
 Value offerhistory(const Array& params, bool fHelp) {
 	if (fHelp || 1 != params.size())
