@@ -111,13 +111,11 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
   - < txid > txid of datanew for this data alias, required if daemon restarted.
   - < filename > filename, 1023 chars max.
   - < data >  data base64-encoded. Max 256kB.
-
-
   - May be called directly after datanew; however, the transaction isn’t actually posted to the network until 120 blocks after the datanew.
   - If the client is restarted before dataactivate is called, then dataalias txid parameter is required.
 - **returns:**
   - txid
--**example:**
+- **example:**
   - *$ syscoind dataactivate /dat/mycompany/readme 40738ea3fbd88d5c readme.txt VGhpcyBpcyBteSBjb21wYW55Cg==*
   - *ae07eedeb53b6103d8fa6e689b1466e4c2853f27f5cc389bef910c59eb041dc81*
 
