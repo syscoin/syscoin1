@@ -192,7 +192,7 @@ Same functionality as aliasscan (Use aliasscan for now)
 
 ###offerupdate *Update an offer(also resets expiration height)*
 
-####**offerupdate** <rand> <category> <title> <quantity> <price> [<description>]
+####**offerupdate** < rand > < category > < title > < quantity > < price > [ < description > ]
 - **parameters:**
   - < rand > offerkey
   - < category > category of offer, 255 chars max.
@@ -282,7 +282,7 @@ Same functionality as aliasscan
 
 ###certissueractivate *Activate the certificate issuance*
 
-####**certissueractivate**  <rand > [ < txid > ]
+####**certissueractivate**  < rand > [ < txid > ]
 - **parameters:**
   - < rand > rand provided at certissuernew.
   - < txid > certissuer txid provided at certissuernew.
