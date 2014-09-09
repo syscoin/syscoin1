@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2011 Vincent Durham
+// Copyright (c) 2014 Syscoin Developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 //
@@ -999,8 +999,33 @@ Value sendtoalias(const Array& params, bool fHelp)
 
     string strAddress;
     CTransaction tx;
-    GetTxOfAlias(*paliasdb, vchName, tx);
-    GetAliasAddress(tx, strAddress);
+
+    {
+    LOCK(pwalletMain->cs_wallet);
+
+    // check for alias existence in DB
+    vector<CAliasIndex> vtxPos;
+    if (!paliasdb->ReadAlias(vchName, vtxPos))
+        throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from alias DB");
+    if (vtxPos.size() < 1)
+        throw JSONRPCError(RPC_WALLET_ERROR, "no result returned");
+
+    // get transaction pointed to by alias
+    uint256 blockHash;
+    uint256 txHash = vtxPos.back().txHash;
+    if (!GetTransaction(txHash, tx, blockHash, true))
+        throw JSONRPCError(RPC_WALLET_ERROR, "failed to read transaction from disk");
+
+    Object oName;
+    vector<unsigned char> vchValue;
+    int nHeight;
+
+
+    uint256 hash;
+    if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
+        strAddress = stringFromVch(vchValue);
+    }
+    }
 
     uint160 hash160;
     if (!AddressToHash160(strAddress.c_str(), hash160))

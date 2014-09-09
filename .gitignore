@@ -1,3 +1,5 @@
+src/.cproject
+src/.settings
 contrib/syscoin-testnet-box/1/cakenet
 contrib/syscoin-testnet-box/2/cakenet
 contrib/syscoin-testnet-box/3/cakenet
