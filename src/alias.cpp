@@ -349,7 +349,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
     					return error("CheckAliasInputs() : aliasactivate hash mismatch");
 
     				nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins, GetMinActivateDepth());
-    				if ((fBlock || fMiner) && nDepth >= 0 && (unsigned int) nDepth < GetMinActivateDepth())
+    				if ((fBlock || fMiner) && nDepth >= 0 && nDepth < GetMinActivateDepth())
     					return false;
                     nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins,
                                                              GetAliasExpirationDepth(pindexBlock->nHeight));
@@ -991,44 +991,42 @@ bool GetAliasAddress(const CDiskTxPos& txPos, std::string& strAddress) {
 
 Value sendtoalias(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 2 || params.size() > 4)
+    if (fHelp || params.size() < 2 || params.size() > 5)
         throw runtime_error(
-            "sendtoalias <alias> <amount> [comment] [comment-to]\n"
+            "sendtoalias <alias> <amount> [comment] [comment-to] [data]\n"
             "<amount> is a real and is rounded to the nearest 0.01"
             + HelpRequiringPassphrase());
 
     vector<unsigned char> vchName = vchFromValue(params[0]);
     if (!paliasdb->ExistsAlias(vchName))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Name not found");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Alias not found");
 
     string strAddress;
-    CTransaction tx;
 
     {
-    LOCK(pwalletMain->cs_wallet);
+        LOCK(pwalletMain->cs_wallet);
 
-    // check for alias existence in DB
-    vector<CAliasIndex> vtxPos;
-    if (!paliasdb->ReadAlias(vchName, vtxPos))
-        throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from alias DB");
-    if (vtxPos.size() < 1)
-        throw JSONRPCError(RPC_WALLET_ERROR, "no result returned");
+        // check for alias existence in DB
+        vector<CAliasIndex> vtxPos;
+        if (!paliasdb->ReadAlias(vchName, vtxPos))
+            throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from alias DB");
+        if (vtxPos.size() < 1)
+            throw JSONRPCError(RPC_WALLET_ERROR, "no alias result returned");
 
-    // get transaction pointed to by alias
-    uint256 blockHash;
-    uint256 txHash = vtxPos.back().txHash;
-    if (!GetTransaction(txHash, tx, blockHash, true))
-        throw JSONRPCError(RPC_WALLET_ERROR, "failed to read transaction from disk");
+        // get transaction pointed to by alias
+        uint256 blockHash;
+        CTransaction tx;
+        uint256 txHash = vtxPos.back().txHash;
+        if (!GetTransaction(txHash, tx, blockHash, true))
+            throw JSONRPCError(RPC_WALLET_ERROR, "failed to read transaction from disk");
 
-    Object oName;
-    vector<unsigned char> vchValue;
-    int nHeight;
+        vector<unsigned char> vchValue;
+        int nHeight;
 
-
-    uint256 hash;
-    if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
-        strAddress = stringFromVch(vchValue);
-    }
+        uint256 hash;
+        if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
+            strAddress = stringFromVch(vchValue);
+        }
     }
 
     uint160 hash160;
@@ -1037,6 +1035,8 @@ Value sendtoalias(const Array& params, bool fHelp)
 
     // Amount
     int64 nAmount = AmountFromValue(params[1]);
+    if (nAmount < MIN_TXOUT_AMOUNT)
+        throw JSONRPCError(-101, "Send amount too small");
 
     // Wallet comments
     CWalletTx wtx;
@@ -1045,12 +1045,23 @@ Value sendtoalias(const Array& params, bool fHelp)
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
         wtx.mapValue["to"]      = params[3] .get_str();
 
+    // Transaction data
+    std::string txdata;
+    if (params.size() > 4 && params[4].type() != null_type && !params[4].get_str().empty()) {
+        txdata = params[4].get_str();
+        if (txdata.length() > MAX_TX_DATA_SIZE)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "data chunk is too long. split it the payload to several transactions.");
+    }
+
+    if (pwalletMain->IsLocked())
+        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+
 	{
         LOCK(cs_main);
 
         EnsureWalletIsUnlocked();
 
-        string strError = pwalletMain->SendMoneyToDestination(CBitcoinAddress(strAddress).Get(), nAmount, wtx);
+        string strError = pwalletMain->SendMoneyToDestination(CBitcoinAddress(strAddress).Get(), nAmount, wtx, false, txdata);
         if (strError != "")
             throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
