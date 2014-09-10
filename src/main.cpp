@@ -1906,10 +1906,12 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 	    if (tx.nVersion == SYSCOIN_TX_VERSION) {
 		    vector<vector<unsigned char> > vvchArgs;
 		    int op, nOut;
+		    bool bProcessed = false;
 
 		    // alias, data
             bool good = DecodeAliasTx(tx, op, nOut, vvchArgs, pindex->nHeight);
 		    if (good && IsAliasOp(op)) {
+		    	bProcessed = true;
 		    	if(op != OP_ALIAS_NEW) {
 	                string opName = aliasFromOp(op);
 			        vector<CAliasIndex> vtxPos;
@@ -1941,7 +1943,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 	                if (!paliasdb->WriteAliasTxFees(vAliasFees))
 	                    return error( "DisconnectBlock() : failed to write fees to alias DB");
 		    	} else {
-                	paliasdb->EraseAlias(vvchArgs[0]);		    		
+                	//paliasdb->EraseAlias(vvchArgs[0]);		    		
 		    	}
     			printf("DISCONNECTED ALIAS TXN: alias=%s op=%s hash=%s  height=%d\n",
 	                stringFromVch(vvchArgs[0]).c_str(),
@@ -1951,8 +1953,9 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
             } 
 
             // offer
-            good = DecodeOfferTx(tx, op, nOut, vvchArgs, pindex->nHeight);
-            if (good && IsOfferOp(op)) {
+            if(!bProcessed) good = DecodeOfferTx(tx, op, nOut, vvchArgs, pindex->nHeight);
+            if (good && IsOfferOp(op) && !bProcessed) {
+            	bProcessed = true;
                 string opName = offerFromOp(op);
 				COffer theOffer;
 				theOffer.UnserializeFromTx(tx);
@@ -2005,7 +2008,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 						return error( "DisconnectBlock() : failed to write fees to offer DB");
 				} 
                 else {
-					pofferdb->EraseOffer(theOffer.vchRand);
+					//pofferdb->EraseOffer(theOffer.vchRand);
 				}
 	        	printf("DISCONNECTED OFFER TXN: offer=%s op=%s hash=%s height=%d\n",
 	                stringFromVch(vvchArgs[0]).c_str(),
@@ -2015,8 +2018,9 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 			}
 
 			// certificates
-			good = DecodeCertTx(tx, op, nOut, vvchArgs, pindex->nHeight);
-            if (good && IsCertOp(op)) {
+			if(!bProcessed) good = DecodeCertTx(tx, op, nOut, vvchArgs, pindex->nHeight);
+            if (good && IsCertOp(op) && !bProcessed) {
+            	bProcessed = true;
                 string opName = certissuerFromOp(op);
 
                 CCertIssuer theIssuer;
@@ -2072,7 +2076,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
                         return error( "DisconnectBlock() : failed to write fees to certissuer DB");
                 }
                 else {
-                    pcertdb->EraseCertIssuer(theIssuer.vchRand);
+                    //pcertdb->EraseCertIssuer(theIssuer.vchRand);
                 }
         		printf("DISCONNECTED CERT TXN: title=%s hash=%s height=%d\n",
                     op == OP_CERTISSUER_NEW ? HexStr(vvchArgs[0]).c_str() : stringFromVch(vvchArgs[0]).c_str(),
