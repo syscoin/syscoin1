@@ -84,6 +84,10 @@ void RemoveAliasTxnFromMemoryPool(const CTransaction& tx) {
     }
 }
 
+int GetMinActivateDepth() {
+	if(fCakeNet) return MIN_ACTIVATE_DEPTH_CAKENET;
+	else return MIN_ACTIVATE_DEPTH;
+}
 
 bool IsAliasOp(int op) {
     return op == OP_ALIAS_NEW || op == OP_ALIAS_ACTIVATE || op == OP_ALIAS_UPDATE;
@@ -344,8 +348,8 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
     				if (uint160(vchHash) != hash)
     					return error("CheckAliasInputs() : aliasactivate hash mismatch");
 
-    				nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins, MIN_ACTIVATE_DEPTH);
-    				if ((fBlock || fMiner) && nDepth >= 0 && (unsigned int) nDepth < MIN_ACTIVATE_DEPTH)
+    				nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins, GetMinActivateDepth());
+    				if ((fBlock || fMiner) && nDepth >= 0 && (unsigned int) nDepth < GetMinActivateDepth())
     					return false;
                     nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins,
                                                              GetAliasExpirationDepth(pindexBlock->nHeight));

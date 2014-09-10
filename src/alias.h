@@ -141,6 +141,7 @@ static const int64 MIN_AMOUNT = COIN;
 static const unsigned int MAX_NAME_LENGTH = 255;
 static const unsigned int MAX_VALUE_LENGTH = 1023;
 static const unsigned int MIN_ACTIVATE_DEPTH = 120;
+static const unsigned int MIN_ACTIVATE_DEPTH_CAKENET = 1;
 
 bool CheckAliasInputs(
     CBlockIndex *pindex, const CTransaction &tx, CValidationState &state,
