@@ -23,6 +23,7 @@
 #include "script.h"
 #include "allocators.h"
 
+void GetAliasAddress(const std::string& strName, std::string& strAddress);
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
 // Encode a byte sequence as a base58-encoded string
@@ -362,11 +363,37 @@ public:
     CBitcoinAddress(const std::string& strAddress)
     {
         SetString(strAddress);
+		// try to resolve alias address
+		if (!IsValid())
+		{
+			try 
+			{
+				std::string strAliasAddress;
+				GetAliasAddress(strAddress, strAliasAddress);
+				SetString(strAliasAddress);
+			}
+			catch(...)
+			{
+			}
+		}	
     }
 
     CBitcoinAddress(const char* pszAddress)
     {
         SetString(pszAddress);
+		// try to resolve alias address
+		if (!IsValid())
+		{
+			try 
+			{
+				std::string strAliasAddress;
+				GetAliasAddress(std::string(pszAddress), strAliasAddress);
+				SetString(strAliasAddress);
+			}
+			catch(...)
+			{
+			}
+		}
     }
 
     CTxDestination Get() const {

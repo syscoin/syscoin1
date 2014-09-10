@@ -988,7 +988,38 @@ bool GetAliasAddress(const CDiskTxPos& txPos, std::string& strAddress) {
         return error("GetAliasAddress() : could not read tx from disk");
     return GetAliasAddress(tx, strAddress);
 }
+void GetAliasAddress(const std::string& strName, std::string& strAddress)
+{
+    vector<unsigned char> vchName = vchFromValue(strName);
+    if (!paliasdb->ExistsAlias(vchName))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Alias not found");
+	{
+		LOCK(pwalletMain->cs_wallet);
 
+		// check for alias existence in DB
+		vector<CAliasIndex> vtxPos;
+		if (!paliasdb->ReadAlias(vchName, vtxPos))
+			throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from alias DB");
+		if (vtxPos.size() < 1)
+			throw JSONRPCError(RPC_WALLET_ERROR, "no alias result returned");
+
+		// get transaction pointed to by alias
+		uint256 blockHash;
+		CTransaction tx;
+		uint256 txHash = vtxPos.back().txHash;
+		if (!GetTransaction(txHash, tx, blockHash, true))
+			throw JSONRPCError(RPC_WALLET_ERROR, "failed to read transaction from disk");
+
+		vector<unsigned char> vchValue;
+		int nHeight;
+
+		uint256 hash;
+		if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
+			strAddress = stringFromVch(vchValue);
+		}
+	}
+    
+}
 Value sendtoalias(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 5)
@@ -996,39 +1027,9 @@ Value sendtoalias(const Array& params, bool fHelp)
             "sendtoalias <alias> <amount> [comment] [comment-to] [data]\n"
             "<amount> is a real and is rounded to the nearest 0.01"
             + HelpRequiringPassphrase());
-
-    vector<unsigned char> vchName = vchFromValue(params[0]);
-    if (!paliasdb->ExistsAlias(vchName))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Alias not found");
-
-    string strAddress;
-
-    {
-        LOCK(pwalletMain->cs_wallet);
-
-        // check for alias existence in DB
-        vector<CAliasIndex> vtxPos;
-        if (!paliasdb->ReadAlias(vchName, vtxPos))
-            throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from alias DB");
-        if (vtxPos.size() < 1)
-            throw JSONRPCError(RPC_WALLET_ERROR, "no alias result returned");
-
-        // get transaction pointed to by alias
-        uint256 blockHash;
-        CTransaction tx;
-        uint256 txHash = vtxPos.back().txHash;
-        if (!GetTransaction(txHash, tx, blockHash, true))
-            throw JSONRPCError(RPC_WALLET_ERROR, "failed to read transaction from disk");
-
-        vector<unsigned char> vchValue;
-        int nHeight;
-
-        uint256 hash;
-        if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
-            strAddress = stringFromVch(vchValue);
-        }
-    }
-
+	string strAddress;
+	GetAliasAddress(stringFromValue(params[0]), strAddress);
+ 
     uint160 hash160;
     if (!AddressToHash160(strAddress.c_str(), hash160))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No valid syscoin address");
