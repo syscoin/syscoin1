@@ -1065,8 +1065,12 @@ Value sendtoalias(const Array& params, bool fHelp)
         if (strError != "")
             throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
+    
+    vector<Value> res;
+    res.push_back(strAddress);
+    res.push_back(wtx.GetHash().GetHex());
 
-    return wtx.GetHash().GetHex();
+    return res;
 }
 
 int IndexOfNameOutput(const CTransaction& tx) {
