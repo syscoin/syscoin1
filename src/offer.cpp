@@ -2213,6 +2213,10 @@ Value offeracceptlist(const Array& params, bool fHelp) {
             Object oName;
             oName.push_back(Pair("name", stringFromVch(vchName)));
             oName.push_back(Pair("value", stringFromVch(vchValue)));
+            if(op == OP_OFFER_ACCEPT)
+            	oName.push_back(Pair("status", "accepted"));
+           	else if(op == OP_OFFER_PAY)
+            	oName.push_back(Pair("status", "paid"));           	        
 
             string strAddress = "";
             GetOfferAddress(tx, strAddress);
