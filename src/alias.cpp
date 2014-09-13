@@ -329,7 +329,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
                 // verify rand and value lengths
                 if (vvchArgs[1].size() > 20)
-                    return error("aliasactivate tx with rand too big");
+                    return error("aliasactivate tx with guid too big");
                 if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
                     return error("aliasactivate tx with value too long");
 
@@ -1250,7 +1250,7 @@ Value aliasnew(const Array& params, bool fHelp) {
             throw JSONRPCError(RPC_WALLET_ERROR, strError);
         mapMyAliases[vchName] = wtx.GetHash();
     }
-    printf("aliasnew : name=%s, rand=%s, tx=%s\n", stringFromVch(vchName).c_str(), HexStr(vchRand).c_str(), wtx.GetHash().GetHex().c_str());
+    printf("aliasnew : name=%s, guid=%s, tx=%s\n", stringFromVch(vchName).c_str(), HexStr(vchRand).c_str(), wtx.GetHash().GetHex().c_str());
 
     vector<Value> res;
     res.push_back(wtx.GetHash().GetHex());
@@ -1263,9 +1263,9 @@ Value aliasnew(const Array& params, bool fHelp) {
 Value aliasactivate(const Array& params, bool fHelp) {
     if (fHelp || params.size() < 3 || params.size() > 4)
         throw runtime_error(
-            "aliasactivate <alias> <rand> [<tx>] <value>\n"
+            "aliasactivate <alias> <guid> [<tx>] <value>\n"
             "<alias> alias name.\n"
-            "<rand> alias rand key.\n"
+            "<guid> alias guid key.\n"
             "<tx> txid of aliasnew for this alias, required if daemon restarted.\n"
             "<value> alias value, 1023 chars max.\n"
             "Perform a first update after an aliasnew reservation.\n"
@@ -1985,7 +1985,7 @@ Value datanew(const Array& params, bool fHelp)
             throw JSONRPCError(RPC_WALLET_ERROR, strError);
         mapMyAliases[vchName] = wtx.GetHash();
     }
-    printf("datanew : name=%s, rand=%s, tx=%s\n", stringFromVch(vchName).c_str(), HexStr(vchRand).c_str(), wtx.GetHash().GetHex().c_str());
+    printf("datanew : name=%s, guid=%s, tx=%s\n", stringFromVch(vchName).c_str(), HexStr(vchRand).c_str(), wtx.GetHash().GetHex().c_str());
 
     vector<Value> res;
     res.push_back(wtx.GetHash().GetHex());
@@ -1998,7 +1998,7 @@ Value dataactivate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 4 || params.size() > 5)
         throw runtime_error(
-            "dataactivate <name> <rand> [<tx>] <filename> <data>\n"
+            "dataactivate <name> <guid> [<tx>] <filename> <data>\n"
                         "Perform a data activate after a datanew reservation.\n"
             "Note that the activate will go into a block 120 blocks after the datanew, at the soonest."
             + HelpRequiringPassphrase());
