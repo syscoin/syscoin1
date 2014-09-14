@@ -993,31 +993,29 @@ void GetAliasAddress(const std::string& strName, std::string& strAddress)
     vector<unsigned char> vchName = vchFromValue(strName);
     if (!paliasdb->ExistsAlias(vchName))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Alias not found");
-	{
-		LOCK(pwalletMain->cs_wallet);
 
-		// check for alias existence in DB
-		vector<CAliasIndex> vtxPos;
-		if (!paliasdb->ReadAlias(vchName, vtxPos))
-			throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from alias DB");
-		if (vtxPos.size() < 1)
-			throw JSONRPCError(RPC_WALLET_ERROR, "no alias result returned");
+	// check for alias existence in DB
+	vector<CAliasIndex> vtxPos;
+	if (!paliasdb->ReadAlias(vchName, vtxPos))
+		throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from alias DB");
+	if (vtxPos.size() < 1)
+		throw JSONRPCError(RPC_WALLET_ERROR, "no alias result returned");
 
-		// get transaction pointed to by alias
-		uint256 blockHash;
-		CTransaction tx;
-		uint256 txHash = vtxPos.back().txHash;
-		if (!GetTransaction(txHash, tx, blockHash, true))
-			throw JSONRPCError(RPC_WALLET_ERROR, "failed to read transaction from disk");
+	// get transaction pointed to by alias
+	uint256 blockHash;
+	CTransaction tx;
+	uint256 txHash = vtxPos.back().txHash;
+	if (!GetTransaction(txHash, tx, blockHash, true))
+		throw JSONRPCError(RPC_WALLET_ERROR, "failed to read transaction from disk");
 
-		vector<unsigned char> vchValue;
-		int nHeight;
+	vector<unsigned char> vchValue;
+	int nHeight;
 
-		uint256 hash;
-		if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
-			strAddress = stringFromVch(vchValue);
-		}
+	uint256 hash;
+	if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
+		strAddress = stringFromVch(vchValue);
 	}
+	
     
 }
 Value sendtoalias(const Array& params, bool fHelp)
@@ -1027,9 +1025,12 @@ Value sendtoalias(const Array& params, bool fHelp)
             "sendtoalias <alias> <amount> [comment] [comment-to] [data]\n"
             "<amount> is a real and is rounded to the nearest 0.01"
             + HelpRequiringPassphrase());
-	string strAddress;
-	GetAliasAddress(stringFromValue(params[0]), strAddress);
- 
+		string strAddress;
+		{
+			LOCK(pwalletMain->cs_wallet);
+			
+			GetAliasAddress(stringFromValue(params[0]), strAddress);
+		}
     uint160 hash160;
     if (!AddressToHash160(strAddress.c_str(), hash160))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No valid syscoin address");

@@ -314,8 +314,11 @@ QModelIndex AddressTableModel::index(int row, int column, const QModelIndex &par
 
 void AddressTableModel::updateEntry(const QString &address, const QString &label, bool isMine, int status)
 {
+	std::string strAddress = address.toStdString();
+	CBitcoinAddress myAddress = CBitcoinAddress(strAddress);
+	QString qaddress = QString::fromStdString(myAddress.ToString());
     // Update address book model from Bitcoin core
-    priv->updateEntry(address, label, isMine, status);
+    priv->updateEntry(qaddress, label, isMine, status);
 }
 
 QString AddressTableModel::addRow(const QString &type, const QString &label, const QString &address)
