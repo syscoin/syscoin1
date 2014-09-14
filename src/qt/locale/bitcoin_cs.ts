@@ -1448,7 +1448,7 @@ Adresa: %4
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Syscoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
+        <source>Enter a Syscoin address or alias (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2 or myaliasname)</source>
         <translation>Zadej Syscoinovou adresu (např. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</translation>
     </message>
 </context>
@@ -1565,7 +1565,7 @@ Adresa: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a Syscoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
+        <source>Enter a Syscoin address or alias (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2 or myaliasname)</source>
         <translation>Zadej Syscoinovou adresu (např. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</translation>
     </message>
     <message>

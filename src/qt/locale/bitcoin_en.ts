@@ -1462,8 +1462,8 @@ Address: %4
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Syscoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
-        <translation>Enter a Syscoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</translation>
+        <source>Enter a Syscoin address or alias (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2 or myaliasname)</source>
+        <translation>Enter a Syscoin address or alias (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2 or myaliasname)</translation>
     </message>
 </context>
 <context>
@@ -1579,8 +1579,8 @@ Address: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a Syscoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
-        <translation>Enter a Syscoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</translation>
+        <source>Enter a Syscoin address or alias (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2 or myaliasname)</source>
+        <translation>Enter a Syscoin address or alias (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2 or myaliasname)</translation>
     </message>
     <message>
         <location line="-2"/>
