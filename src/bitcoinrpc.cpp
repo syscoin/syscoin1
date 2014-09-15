@@ -286,7 +286,6 @@ static const CRPCCommand vRPCCommands[] =
     { "aliasfilter",       &aliasfilter,       false,      false,      true },
     { "aliasscan",         &aliasscan,         false,      false,      true },
     { "aliasclean",        &aliasclean,         false,      false,      true },
-    { "sendtoalias",       &sendtoalias,       false,      false,      true },
 
 	// use the blockchain to store provably-ownable data
     { "datanew",          &datanew,         false,      false,      true },
@@ -1269,7 +1268,6 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "verifychain"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
 
     /* special commands added in syscoin, list incomplete. */
-    if (strMethod == "sendtoalias"            && n > 1) ConvertTo<double>(params[1]);
     if (strMethod == "aliasfilter"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "aliasfilter"            && n > 2) ConvertTo<boost::int64_t>(params[2]);
     if (strMethod == "aliasfilter"            && n > 3) ConvertTo<boost::int64_t>(params[3]);

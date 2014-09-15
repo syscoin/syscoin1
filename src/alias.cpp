@@ -992,7 +992,8 @@ void GetAliasAddress(const std::string& strName, std::string& strAddress)
 {
 
 	{
-		LOCK(pwalletMain->cs_wallet);
+		TRY_LOCK(pwalletMain->cs_wallet, cs_trywallet);
+		TRY_LOCK(cs_main, cs_trymain);
 		vector<unsigned char> vchName = vchFromValue(strName);
 		if (!paliasdb->ExistsAlias(vchName))
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Alias not found");
@@ -1020,59 +1021,6 @@ void GetAliasAddress(const std::string& strName, std::string& strAddress)
 		}
 	}
     
-}
-Value sendtoalias(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() < 2 || params.size() > 5)
-        throw runtime_error(
-            "sendtoalias <alias> <amount> [comment] [comment-to] [data]\n"
-            "<amount> is a real and is rounded to the nearest 0.01"
-            + HelpRequiringPassphrase());
-	string strAddress;
-	GetAliasAddress(stringFromValue(params[0]), strAddress);
- 
-    uint160 hash160;
-    if (!AddressToHash160(strAddress.c_str(), hash160))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No valid syscoin address");
-
-    // Amount
-    int64 nAmount = AmountFromValue(params[1]);
-    if (nAmount < MIN_TXOUT_AMOUNT)
-        throw JSONRPCError(-101, "Send amount too small");
-
-    // Wallet comments
-    CWalletTx wtx;
-    if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
-        wtx.mapValue["comment"] = params[2].get_str();
-    if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
-        wtx.mapValue["to"]      = params[3] .get_str();
-
-    // Transaction data
-    std::string txdata;
-    if (params.size() > 4 && params[4].type() != null_type && !params[4].get_str().empty()) {
-        txdata = params[4].get_str();
-        if (txdata.length() > MAX_TX_DATA_SIZE)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "data chunk is too long. split it the payload to several transactions.");
-    }
-
-    if (pwalletMain->IsLocked())
-        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
-
-	{
-        LOCK(cs_main);
-
-        EnsureWalletIsUnlocked();
-
-        string strError = pwalletMain->SendMoneyToDestination(CBitcoinAddress(strAddress).Get(), nAmount, wtx, false, txdata);
-        if (strError != "")
-            throw JSONRPCError(RPC_WALLET_ERROR, strError);
-    }
-    
-    vector<Value> res;
-    res.push_back(strAddress);
-    res.push_back(wtx.GetHash().GetHex());
-
-    return res;
 }
 
 int IndexOfNameOutput(const CTransaction& tx) {

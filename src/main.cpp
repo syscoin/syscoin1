@@ -1190,9 +1190,9 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut,
 		uint256 &hashBlock, bool fAllowSlow) {
 	CBlockIndex *pindexSlow = NULL;
 	{
-		LOCK(cs_main);
+		TRY_LOCK(cs_main, cs_trymain);
 		{
-			LOCK(mempool.cs);
+			TRY_LOCK(mempool.cs, cs_trymempool);
 			if (mempool.exists(hash)) {
 				txOut = mempool.lookup(hash);
 				return true;

@@ -242,17 +242,21 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
     {
         return SendCoinsReturn(AmountWithFeeExceedsBalance, nTransactionFee);
     }
-
-    {
-        LOCK2(cs_main, wallet->cs_wallet);
+	
+    
+        
 
         // Sendmany
         std::vector<std::pair<CScript, int64> > vecSend;
         foreach(const SendCoinsRecipient &rcp, recipients)
         {
-            CScript scriptPubKey;
-            scriptPubKey.SetDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
-            vecSend.push_back(make_pair(scriptPubKey, rcp.amount));
+			CBitcoinAddress myAddress = CBitcoinAddress(rcp.address.toStdString());
+			LOCK2(cs_main, wallet->cs_wallet);
+			{
+				CScript scriptPubKey;
+				scriptPubKey.SetDestination(myAddress.Get());
+				vecSend.push_back(make_pair(scriptPubKey, rcp.amount));
+			}
         }
 
         CWalletTx wtx;
@@ -280,7 +284,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
             return TransactionCommitFailed;
         }
         hex = QString::fromStdString(wtx.GetHash().GetHex());
-    }
+    
 
     // Add addresses / update labels that we've sent to to the address book
     foreach(const SendCoinsRecipient &rcp, recipients)
