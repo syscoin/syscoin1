@@ -292,7 +292,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                          tx.GetHash().GetHex().c_str());
         int64 nNetFee;
 
-        printf("%s : name=%s, tx=%s\n",
+        printf("%s : aliasName=%s, tx=%s\n",
                 aliasFromOp(op).c_str(),
                 stringFromVch(op==OP_ALIAS_NEW ? vchFromString(HexStr(vvchArgs[0])) : vvchArgs[0]).c_str(),
                 tx.GetHash().GetHex().c_str());
@@ -307,7 +307,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 if (vvchArgs[0].size() != 20)
                     return error("aliasnew tx with incorrect hash length");
 
-                printf("CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
+                printf("CONNECTED ALIAS: aliasName=%s  op=%s  hash=%s  height=%d\n",
                     HexStr(vvchArgs[0]).c_str(),
                     aliasFromOp(op).c_str(),
                     tx.GetHash().ToString().c_str(),
@@ -456,7 +456,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                             mi->second.erase(tx.GetHash());
                     }
 
-                    printf("CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
+                    printf("CONNECTED ALIAS: aliasName=%s  op=%s  hash=%s  height=%d\n",
                         stringFromVch(vvchArgs[0]).c_str(),
                         aliasFromOp(op).c_str(),
                         tx.GetHash().ToString().c_str(),
@@ -989,7 +989,7 @@ Value sendtoalias(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
-            "sendtoalias <alias> <amount> [comment] [comment-to]\n"
+            "sendtoalias <aliasName> <amount> [comment] [comment-to]\n"
             "<amount> is a real and is rounded to the nearest 0.01"
             + HelpRequiringPassphrase());
 
@@ -1218,8 +1218,8 @@ bool DecodeAliasScript(const CScript& script, int& op, vector<vector<unsigned ch
 Value aliasnew(const Array& params, bool fHelp) {
     if (fHelp || 1 != params.size())
         throw runtime_error(
-            "aliasnew <name>\n"
-            "<name> name, 255 chars max."
+            "aliasnew <aliasName>\n"
+            "<aliasName> aliasName, 255 chars max."
             + HelpRequiringPassphrase());
 
     vector<unsigned char> vchName = vchFromValue(params[0]);
@@ -1250,7 +1250,7 @@ Value aliasnew(const Array& params, bool fHelp) {
             throw JSONRPCError(RPC_WALLET_ERROR, strError);
         mapMyAliases[vchName] = wtx.GetHash();
     }
-    printf("aliasnew : name=%s, guid=%s, tx=%s\n", stringFromVch(vchName).c_str(), HexStr(vchRand).c_str(), wtx.GetHash().GetHex().c_str());
+    printf("aliasnew : aliasName=%s, guid=%s, tx=%s\n", stringFromVch(vchName).c_str(), HexStr(vchRand).c_str(), wtx.GetHash().GetHex().c_str());
 
     vector<Value> res;
     res.push_back(wtx.GetHash().GetHex());
@@ -1263,8 +1263,8 @@ Value aliasnew(const Array& params, bool fHelp) {
 Value aliasactivate(const Array& params, bool fHelp) {
     if (fHelp || params.size() < 3 || params.size() > 4)
         throw runtime_error(
-            "aliasactivate <alias> <guid> [<tx>] <value>\n"
-            "<alias> alias name.\n"
+            "aliasactivate <aliasName> <guid> [<tx>] <value>\n"
+            "<aliasName> alias name.\n"
             "<guid> alias guid key.\n"
             "<tx> txid of aliasnew for this alias, required if daemon restarted.\n"
             "<value> alias value, 1023 chars max.\n"
@@ -1365,9 +1365,9 @@ Value aliasactivate(const Array& params, bool fHelp) {
 Value aliasupdate(const Array& params, bool fHelp) {
     if (fHelp || 2 > params.size() || 3 < params.size() )
         throw runtime_error(
-            "aliasupdate <alias> <value> [<toaddress>]\n"
+            "aliasupdate <aliasName> <value> [<toaddress>]\n"
             "Update and possibly transfer an alias.\n"
-            "<alias> alias name.\n"
+            "<aliasName> alias name.\n"
             "<value> alias value, 1023 chars max.\n"
             "<toaddress> receiver syscoin address, if transferring alias.\n"
             + HelpRequiringPassphrase());
@@ -1442,9 +1442,9 @@ Value aliasupdate(const Array& params, bool fHelp) {
 Value aliaslist(const Array& params, bool fHelp) {
     if (fHelp || 1 < params.size())
         throw runtime_error(
-                "aliaslist [<name>]\n"
+                "aliaslist [<aliasName>]\n"
                 "list my own aliases.\n"
-                "<name> alias name to use as filter.\n"
+                "<aliasName> alias name to use as filter.\n"
                 );
 
     vector<unsigned char> vchName;
@@ -1544,7 +1544,7 @@ Value aliasinfo(const Array& params, bool fHelp)
 {
     if (fHelp || 1 != params.size())
         throw runtime_error(
-            "aliasinfo <name>\n"
+            "aliasinfo <aliasName>\n"
             "Show values of an alias.\n"
             );
 
@@ -1605,7 +1605,7 @@ Value aliashistory(const Array& params, bool fHelp)
 {
     if (fHelp || 1 != params.size())
         throw runtime_error(
-            "aliashistory <name>\n"
+            "aliashistory <aliasName>\n"
             "List all stored values of an alias.\n");
 
     Array oRes;
@@ -1954,8 +1954,8 @@ Value datanew(const Array& params, bool fHelp)
 {
     if (fHelp || 1 != params.size())
         throw runtime_error(
-            "datanew <alias>\n"
-            "<alias> data alias name, 255 chars max."
+            "datanew <dataaliasName>\n"
+            "<dataaliasName> data alias name, 255 chars max."
             + HelpRequiringPassphrase());
 
     vector<unsigned char> vchName = vchFromValue(params[0]);
@@ -1998,7 +1998,7 @@ Value dataactivate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 4 || params.size() > 5)
         throw runtime_error(
-            "dataactivate <name> <guid> [<tx>] <filename> <data>\n"
+            "dataactivate <dataaliasName> <guid> [<tx>] <filename> <data>\n"
                         "Perform a data activate after a datanew reservation.\n"
             "Note that the activate will go into a block 120 blocks after the datanew, at the soonest."
             + HelpRequiringPassphrase());
@@ -2131,7 +2131,7 @@ Value dataupdate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 4)
         throw runtime_error(
-            "dataupdate <name> <filename> <data> [<toaddress>]\n"
+            "dataupdate <dataaliasName> <filename> <data> [<toaddress>]\n"
             "Update and possibly transfer a data alias."
             + HelpRequiringPassphrase());
 

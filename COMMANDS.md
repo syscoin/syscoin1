@@ -7,9 +7,9 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 ## Alias commands - these commands deal with standard aliases.
 
 ###aliasnew *Create a new alias*
-####**aliasnew** < name >
+####**aliasnew** < aliasName >
 - **parameters:**
-  - < name > alias name, 255 chars max.
+  - < aliasName > alias name, 255 chars max.
 - **returns:**
   - txid
   - guid
@@ -19,9 +19,9 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###aliasactivate *Activate the alias*
 
-####**aliasactivate** < alias > < guid > [ < txid > ] < value >
+####**aliasactivate** < aliasName > < guid > [ < txid > ] < value >
 - **parameters:**
-  - < alias > alias name.
+  - < aliasName > alias name.
   - < guid > alias guid .
   - < txid > txid of aliasnew for this alias, required if daemon restarted.
   - < value > alias value, 1023 chars max.
@@ -35,9 +35,9 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###aliasupdate *Update(or transfer) alias with new data(also resets expiration height)*
 
-####**aliasupdate** < alias > < value > [ < toaddress > ] 
+####**aliasupdate** < aliasName > < value > [ < toaddress > ] 
 - **parameters:**
-  - < alias > alias name.
+  - < aliasName > alias name.
   - < value > alias value, 1023 chars max.
   - < toaddress > receiver syscoin address, if transferring alias.
 - **returns:**
@@ -48,11 +48,11 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###aliasinfo *Show the values of an alias*
 
-####**aliasinfo** < alias >
+####**aliasinfo** < aliasName >
 - **parameters:**
-  -< alias > alias name.
+  -< aliasName > alias name.
 - **returns:**
-  - name
+  - aliasName
   - value
   - txid
   - address
@@ -62,11 +62,11 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###aliashistory *List all stored values of an alias*
 
-####**aliashistory** < name >
+####**aliashistory** < aliasName >
 - **parameters:**
-  - < name > alias name.
+  - < aliasName > alias name.
 - **returns:**
-  - name
+  - aliasName
   - value
   - txid
   - address
@@ -80,7 +80,7 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 - **parameters:**
   - < keyword > keyword used to filter results(can be left blank to show all)
 - **returns:**
-  - name
+  - aliasName
   - value
   - txid
   - address
@@ -92,9 +92,9 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###datanew *Create a new data alias*
 
-####**datanew** < alias >
+####**datanew** < dataaliasName >
 - **parameters:**
-  - < alias > data name alias, 255 chars max. 
+  - < dataaliasName > data name alias, 255 chars max. 
 - **returns:**
   - txid
   - guid
@@ -104,9 +104,9 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###dataactivate *Activate an alias*
 
-####**dataactivate** < name > < guid > [ < txid > ] < filename > < data >
+####**dataactivate** < dataaliasName > < guid > [ < txid > ] < filename > < data >
 - **parameters:**
-  - < alias > data alias name.
+  - < dataaliasName > data alias name.
   - < guid > alias guid .
   - < txid > txid of datanew for this data alias, required if daemon restarted.
   - < filename > filename, 1023 chars max.
@@ -121,9 +121,9 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###dataupdate *Update data alias with new data(also resets expiration height)*
 
-####**dataupdate** < name > < filename > < data > [ < toaddress > ]
+####**dataupdate** < dataaliasName > < filename > < data > [ < toaddress > ]
 - **parameters:**
-  - < name > data alias name.
+  - < dataaliasName > data alias name.
   - < filename > name for file, 1023 chars max.
   - < data > new data to update
   - < toaddress > 
@@ -135,12 +135,12 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###datainfo *Show the values of an data alias*
 
-####datainfo < name >
+####datainfo < dataaliasName >
 
 - **parameters:**
-  - < name > data alias name.
+  - < dataaliasName > data alias name.
 - **returns:**
-  - name
+  - dataaliasName
   - filename
   - txid
   - address
