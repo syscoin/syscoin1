@@ -2014,10 +2014,10 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("height", sHeight));
 			oOfferAccept.push_back(Pair("time", sTime));
 			oOfferAccept.push_back(Pair("quantity", strprintf("%llu", ca.nQty)));
-			oOfferAccept.push_back(Pair("price", (double)ca.nPrice / COIN));
+			oOfferAccept.push_back(Pair("price", ValueFromAmount(ca.nPrice)));
 			oOfferAccept.push_back(Pair("paid", ca.bPaid ? "true" : "false"));
 			if(ca.bPaid) {
-				oOfferAccept.push_back(Pair("fee", (double)ca.nFee / COIN));
+				oOfferAccept.push_back(Pair("service_fee", ValueFromAmount(ca.nFee)));
 				oOfferAccept.push_back(Pair("paytxid", ca.txPayId.GetHex() ));
 				oOfferAccept.push_back(Pair("message", stringFromVch(ca.vchMessage)));
 			}
@@ -2028,6 +2028,7 @@ Value offerinfo(const Array& params, bool fHelp) {
         if (GetValueOfOfferTxHash(txHash, vchValue, offerHash, nHeight)) {
 			oOffer.push_back(Pair("id", offer));
 			oOffer.push_back(Pair("txid", tx.GetHash().GetHex()));
+			oOffer.push_back(Pair("service_fee", ValueFromAmount(theOffer.nFee)));
 			string strAddress = "";
 			GetOfferAddress(tx, strAddress);
 			oOffer.push_back(Pair("address", strAddress));
@@ -2043,8 +2044,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
 			oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
 			oOffer.push_back(Pair("quantity", strprintf("%llu", theOffer.GetRemQty())));
-			oOffer.push_back(Pair("price", (double)theOffer.nPrice / COIN));
-			oOffer.push_back(Pair("fee", (double)theOffer.nFee / COIN));
+			oOffer.push_back(Pair("price", ValueFromAmount(theOffer.nFee) ) );
 			oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 			oOffer.push_back(Pair("accepts", aoOfferAccepts));
 			oLastOffer = oOffer;

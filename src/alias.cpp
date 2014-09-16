@@ -1582,6 +1582,7 @@ Value aliasinfo(const Array& params, bool fHelp)
         string strAddress = "";
         GetAliasAddress(tx, strAddress);
         oName.push_back(Pair("address", strAddress));
+
         oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
         if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0) {
             oName.push_back(Pair("expired", 1));

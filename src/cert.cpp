@@ -1929,7 +1929,7 @@ Value certissuerinfo(const Array& params, bool fHelp) {
             oCertItem.push_back(Pair("txid", ca.txHash.GetHex()));
             oCertItem.push_back(Pair("height", sHeight));
             oCertItem.push_back(Pair("time", sTime));
-            oCertItem.push_back(Pair("fee", (double)ca.nFee / COIN));
+            oCertItem.push_back(Pair("fee", ValueFromAmount(ca.nFee)));
             oCertItem.push_back(Pair("title", stringFromVch(ca.vchTitle)));
             oCertItem.push_back(Pair("data", stringFromVch(ca.vchData)));
             aoCertItems.push_back(oCertItem);
@@ -1939,6 +1939,7 @@ Value certissuerinfo(const Array& params, bool fHelp) {
         if (GetValueOfCertIssuerTxHash(txHash, vchValue, certissuerHash, nHeight)) {
             oCertIssuer.push_back(Pair("id", certissuer));
             oCertIssuer.push_back(Pair("txid", tx.GetHash().GetHex()));
+            oCertIssuer.push_back(Pair("service_fee", ValueFromAmount(theCertIssuer.nFee) ));
             string strAddress = "";
             GetCertAddress(tx, strAddress);
             oCertIssuer.push_back(Pair("address", strAddress));
@@ -1993,7 +1994,7 @@ Value certinfo(const Array& params, bool fHelp) {
         oCertItem.push_back(Pair("txid", ca.txHash.GetHex()));
         oCertItem.push_back(Pair("height", sHeight));
         oCertItem.push_back(Pair("time", sTime));
-        oCertItem.push_back(Pair("fee", (double)ca.nFee / COIN));
+        oCertItem.push_back(Pair("service_fee", ValueFromAmount(ca.nFee)));
         oCertItem.push_back(Pair("title", stringFromVch(ca.vchTitle)));
         oCertItem.push_back(Pair("data", stringFromVch(ca.vchData)));
 
@@ -2002,6 +2003,7 @@ Value certinfo(const Array& params, bool fHelp) {
         if (GetValueOfCertIssuerTxHash(txHash, vchValue, certissuerHash, nHeight)) {
             oCertIssuer.push_back(Pair("id", stringFromVch(theCertIssuer.vchRand) ));
             oCertIssuer.push_back(Pair("txid", tx.GetHash().GetHex()));
+            oCertIssuer.push_back(Pair("service_fee", ValueFromAmount(theCertIssuer.nFee)));
             string strAddress = "";
             GetCertAddress(tx, strAddress);
             oCertIssuer.push_back(Pair("address", strAddress));
