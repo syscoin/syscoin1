@@ -76,7 +76,7 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###aliasfilter *Scan and filter aliases*
 
-####**aliasfilter** < keyword >
+####**aliasfilter** < regexp >
 - **parameters:**
   - < keyword > keyword used to filter results(can be left blank to show all)
 - **returns:**
@@ -92,9 +92,9 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###datanew *Create a new data alias*
 
-####**datanew** < dataaliasName >
+####**datanew** < dataName >
 - **parameters:**
-  - < dataaliasName > data name alias, 255 chars max. 
+  - < dataName > data name , 255 chars max. 
 - **returns:**
   - txid
   - guid
@@ -102,12 +102,12 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
   - *$ syscoind datanew /dat/mycompany/readme*
   - *[ "a42f21f1502fa6078b62cc6500f31815bbc97fb4f12a91e95e5f242d9d467728", "40738ea3fbd88d5c" ]*
 
-###dataactivate *Activate an alias*
+###dataactivate *Activate a data alias*
 
-####**dataactivate** < dataaliasName > < guid > [ < txid > ] < filename > < data >
+####**dataactivate** < dataName  > < guid > [ < txid > ] < filename > < data >
 - **parameters:**
-  - < dataaliasName > data alias name.
-  - < guid > alias guid .
+  - < dataName  > data name.
+  - < guid > alias guid.
   - < txid > txid of datanew for this data alias, required if daemon restarted.
   - < filename > filename, 1023 chars max.
   - < data >  data base64-encoded. Max 256kB.
@@ -121,9 +121,9 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###dataupdate *Update data alias with new data(also resets expiration height)*
 
-####**dataupdate** < dataaliasName > < filename > < data > [ < toaddress > ]
+####**dataupdate** < dataName > < filename > < data > [ < toaddress > ]
 - **parameters:**
-  - < dataaliasName > data alias name.
+  - < dataName > data name.
   - < filename > name for file, 1023 chars max.
   - < data > new data to update
   - < toaddress > 
@@ -135,12 +135,12 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###datainfo *Show the values of an data alias*
 
-####datainfo < dataaliasName >
+####datainfo < dataName >
 
 - **parameters:**
-  - < dataaliasName > data alias name.
+  - < dataName > data name.
 - **returns:**
-  - dataaliasName
+  - dataName
   - filename
   - txid
   - address

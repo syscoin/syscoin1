@@ -1439,13 +1439,7 @@ Value aliasupdate(const Array& params, bool fHelp) {
     return wtx.GetHash().GetHex();
 }
 
-Value aliaslist(const Array& params, bool fHelp) {
-    if (fHelp || 1 < params.size())
-        throw runtime_error(
-                "aliaslist [<aliasName>]\n"
-                "list my own aliases.\n"
-                "<aliasName> alias name to use as filter.\n"
-                );
+Value aliaslistGen(const Array& params) {
 
     vector<unsigned char> vchName;
 
@@ -1534,79 +1528,19 @@ Value aliaslist(const Array& params, bool fHelp) {
     return oRes;
 }
 
-/**
- * [aliasinfo description]
- * @param  params [description]
- * @param  fHelp  [description]
- * @return        [description]
- */
-Value aliasinfo(const Array& params, bool fHelp)
-{
-    if (fHelp || 1 != params.size())
+
+Value aliaslist(const Array& params, bool fHelp) {
+    if (fHelp || 1 < params.size())
         throw runtime_error(
-            "aliasinfo <aliasName>\n"
-            "Show values of an alias.\n"
-            );
-
-    vector<unsigned char> vchName = vchFromValue(params[0]);
-    CTransaction tx;
-    Object oShowResult;
-    
-    {
-    LOCK(pwalletMain->cs_wallet);
-
-    // check for alias existence in DB
-    vector<CAliasIndex> vtxPos;
-    if (!paliasdb->ReadAlias(vchName, vtxPos))
-        throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from alias DB");
-    if (vtxPos.size() < 1)
-        throw JSONRPCError(RPC_WALLET_ERROR, "no result returned");
-
-    // get transaction pointed to by alias
-    uint256 blockHash;
-    uint256 txHash = vtxPos.back().txHash;
-    if (!GetTransaction(txHash, tx, blockHash, true))
-        throw JSONRPCError(RPC_WALLET_ERROR, "failed to read transaction from disk");
-
-    Object oName;
-    vector<unsigned char> vchValue;
-    int nHeight;
-
-    
-    uint256 hash;
-    if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
-        oName.push_back(Pair("name", stringFromVch(vchName)));
-        string value = stringFromVch(vchValue);
-        oName.push_back(Pair(tx.data.size()?"filename":"value", value));
-        oName.push_back(Pair("txid", tx.GetHash().GetHex()));
-        string strAddress = "";
-        GetAliasAddress(tx, strAddress);
-        oName.push_back(Pair("address", strAddress));
-        oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
-        if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0) {
-            oName.push_back(Pair("expired", 1));
-        }
-        if(tx.data.size())
-            oName.push_back(Pair("data", tx.GetBase64Data()));
-
-        oShowResult = oName;
-    }
-    }
-    return oShowResult;
+                "aliaslist [<aliasName>]\n"
+                "list my own aliases.\n"
+                "<aliasName> alias name to use as filter.\n"
+                );
+    return aliaslistGen(params);
 }
 
-/**
- * [aliashistory description]
- * @param  params [description]
- * @param  fHelp  [description]
- * @return        [description]
- */
-Value aliashistory(const Array& params, bool fHelp)
+Value aliashistoryGen(const Array& params)
 {
-    if (fHelp || 1 != params.size())
-        throw runtime_error(
-            "aliashistory <aliasName>\n"
-            "List all stored values of an alias.\n");
 
     Array oRes;
     vector<unsigned char> vchName = vchFromValue(params[0]);
@@ -1654,26 +1588,24 @@ Value aliashistory(const Array& params, bool fHelp)
 }
 
 /**
- * [aliasfilter description]
+ * [aliashistory description]
  * @param  params [description]
  * @param  fHelp  [description]
  * @return        [description]
  */
-Value aliasfilter(const Array& params, bool fHelp) {
-    if (fHelp || params.size() > 5)
+Value aliashistory(const Array& params, bool fHelp)
+{
+    if (fHelp || 1 != params.size())
         throw runtime_error(
-                "aliasfilter [[[[[regexp] maxage=36000] from=0] nb=0] stat]\n"
-                "scan and filter aliases\n"
-                "[regexp] : apply [regexp] on aliases, empty means all aliases\n"
-                "[maxage] : look in last [maxage] blocks\n"
-                "[from] : show results from number [from]\n"
-                "[nb] : show [nb] results, 0 means all\n"
-                "[stat] : show some stats instead of results\n"
-                "aliasfilter \"\" 5 # list aliases updated in last 5 blocks\n"
-                "aliasfilter \"^name\" # list all aliases starting with \"name\"\n"
-                "aliasfilter 36000 0 0 stat # display stats (number of names) on active aliases\n"
-                );
+            "aliashistory <aliasName>\n"
+            "List all stored values of an alias.\n");
+    return aliashistoryGen(params);
 
+}
+
+
+Value aliasfilterGen(const Array& params)
+{
     string strRegexp;
     int nFrom = 0;
     int nNb = 0;
@@ -1763,6 +1695,30 @@ Value aliasfilter(const Array& params, bool fHelp) {
 }
 
 /**
+ * [aliasfilter description]
+ * @param  params [description]
+ * @param  fHelp  [description]
+ * @return        [description]
+ */
+Value aliasfilter(const Array& params, bool fHelp) {
+    if (fHelp || params.size() > 5)
+        throw runtime_error(
+                "aliasfilter [[[[[regexp] maxage=36000] from=0] nb=0] stat]\n"
+                "scan and filter aliases\n"
+                "[regexp] : apply [regexp] on aliases, empty means all aliases\n"
+                "[maxage] : look in last [maxage] blocks\n"
+                "[from] : show results from number [from]\n"
+                "[nb] : show [nb] results, 0 means all\n"
+                "[stat] : show some stats instead of results\n"
+                "aliasfilter \"\" 5 # list aliases updated in last 5 blocks\n"
+                "aliasfilter \"^name\" # list all aliases starting with \"name\"\n"
+                "aliasfilter 36000 0 0 stat # display stats (number of names) on active aliases\n"
+                );
+    return aliasfilterGen(params);
+}
+
+
+/**
  * [aliasscan description]
  * @param  params [description]
  * @param  fHelp  [description]
@@ -1819,6 +1775,70 @@ Value aliasscan(const Array& params, bool fHelp)
 
     return oRes;
 }
+
+Value aliasinfoGen(const Array& params)
+{
+
+    vector<unsigned char> vchName = vchFromValue(params[0]);
+    CTransaction tx;
+    Object oShowResult;
+    
+    {
+    LOCK(pwalletMain->cs_wallet);
+
+    // check for alias existence in DB
+    vector<CAliasIndex> vtxPos;
+    if (!paliasdb->ReadAlias(vchName, vtxPos))
+        throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from alias DB");
+    if (vtxPos.size() < 1)
+        throw JSONRPCError(RPC_WALLET_ERROR, "no result returned");
+
+    // get transaction pointed to by alias
+    uint256 blockHash;
+    uint256 txHash = vtxPos.back().txHash;
+    if (!GetTransaction(txHash, tx, blockHash, true))
+        throw JSONRPCError(RPC_WALLET_ERROR, "failed to read transaction from disk");
+
+    Object oName;
+    vector<unsigned char> vchValue;
+    int nHeight;
+
+    
+    uint256 hash;
+    if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
+        oName.push_back(Pair("name", stringFromVch(vchName)));
+        string value = stringFromVch(vchValue);
+        oName.push_back(Pair(tx.data.size()?"filename":"value", value));
+        oName.push_back(Pair("txid", tx.GetHash().GetHex()));
+        string strAddress = "";
+        GetAliasAddress(tx, strAddress);
+        oName.push_back(Pair("address", strAddress));
+        oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
+        if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0) {
+            oName.push_back(Pair("expired", 1));
+        }
+        if(tx.data.size())
+            oName.push_back(Pair("data", tx.GetBase64Data()));
+
+        oShowResult = oName;
+    }
+    }
+    return oShowResult;
+}
+
+
+Value aliasinfo(const Array& params, bool fHelp)
+{
+    if (fHelp || 1 != params.size())
+        throw runtime_error(
+            "aliasinfo <aliasName>\n"
+            "Show values of an alias.\n"
+            );
+    return aliasinfoGen(params);            
+}
+
+
+
 
 void UnspendInputs(CWalletTx& wtx)
 {
@@ -1954,8 +1974,8 @@ Value datanew(const Array& params, bool fHelp)
 {
     if (fHelp || 1 != params.size())
         throw runtime_error(
-            "datanew <dataaliasName>\n"
-            "<dataaliasName> data alias name, 255 chars max."
+            "datanew <dataName>\n"
+            "<dataName> data alias name, 255 chars max."
             + HelpRequiringPassphrase());
 
     vector<unsigned char> vchName = vchFromValue(params[0]);
@@ -1998,7 +2018,7 @@ Value dataactivate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 4 || params.size() > 5)
         throw runtime_error(
-            "dataactivate <dataaliasName> <guid> [<tx>] <filename> <data>\n"
+            "dataactivate <dataName> <guid> [<tx>] <filename> <data>\n"
                         "Perform a data activate after a datanew reservation.\n"
             "Note that the activate will go into a block 120 blocks after the datanew, at the soonest."
             + HelpRequiringPassphrase());
@@ -2131,7 +2151,7 @@ Value dataupdate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 4)
         throw runtime_error(
-            "dataupdate <dataaliasName> <filename> <data> [<toaddress>]\n"
+            "dataupdate <dataName> <filename> <data> [<toaddress>]\n"
             "Update and possibly transfer a data alias."
             + HelpRequiringPassphrase());
 
@@ -2207,19 +2227,47 @@ Value dataupdate(const Array& params, bool fHelp)
 }
 
 Value datalist(const Array& params, bool fHelp) {
-    return aliaslist(params, fHelp);
+    if (fHelp || 1 < params.size())
+        throw runtime_error(
+                "datalist [<dataName>]\n"
+                "list my own data aliases.\n"
+                "<dataName> data alias name to use as filter.\n"
+                );
+    return aliaslistGen(params);
 }
 
 Value datainfo(const Array& params, bool fHelp) {
-    return aliasinfo(params, fHelp);
+    if (fHelp || 1 != params.size())
+        throw runtime_error(
+            "datainfo <dataName>\n"
+            "Show values of an data alias.\n"
+            );
+    return aliasinfoGen(params);
 }
 
 Value datahistory(const Array& params, bool fHelp)
 {
-    return aliashistory(params, fHelp);
+    if (fHelp || 1 != params.size())
+        throw runtime_error(
+            "datahistory <dataName>\n"
+            "List all stored values of an data alias.\n");
+    return aliashistoryGen(params);
 }
 
 Value datafilter(const Array& params, bool fHelp)
 {
-    return aliasfilter(params, fHelp);
+        throw runtime_error(
+                "datafilter [[[[[regexp] maxage=36000] from=0] nb=0] stat]\n"
+                "scan and filter aliases\n"
+                "[regexp] : apply [regexp] on aliases, empty means all aliases\n"
+                "[maxage] : look in last [maxage] blocks\n"
+                "[from] : show results from number [from]\n"
+                "[nb] : show [nb] results, 0 means all\n"
+                "[stat] : show some stats instead of results\n"
+                "datafilter \"\" 5 # list aliases updated in last 5 blocks\n"
+                "datafilter \"^name\" # list all aliases starting with \"name\"\n"
+                "datafilter 36000 0 0 stat # display stats (number of names) on active aliases\n"
+                );
+	
+    return aliasfilterGen(params);
 }
