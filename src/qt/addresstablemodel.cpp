@@ -177,6 +177,11 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
         case Label:
             if(rec->label.isEmpty() && role == Qt::DisplayRole)
             {
+				CBitcoinAddress myAddress = CBitcoinAddress(rec->address.toStdString());
+				if(myAddress.IsValid() && myAddress.isAlias)
+				{
+					return rec->address;
+				}
                 return tr("(no label)");
             }
             else
@@ -217,6 +222,7 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
     AddressTableEntry *rec = static_cast<AddressTableEntry*>(index.internalPointer());
 	CBitcoinAddress recAddress;
 	CBitcoinAddress valueAddress;
+	std::string myValue;
     editStatus = OK;
 
     if(role == Qt::EditRole)
@@ -224,14 +230,24 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
         switch(index.column())
         {
         case Label:
+			
+			recAddress = CBitcoinAddress(rec->address.toStdString());
+			if(valueAddress.IsValid() && valueAddress.isAlias && rec->label.isEmpty())
+			{
+				myValue = rec->address.toStdString();
+			}
+			else
+			{
+				myValue = value.toString().toStdString();
+			}
             // Do nothing, if old label == new label
             if(rec->label == value.toString())
             {
                 editStatus = NO_CHANGES;
                 return false;
             }
-			recAddress = CBitcoinAddress(rec->address.toStdString());
-            wallet->SetAddressBookName(recAddress.Get(), value.toString().toStdString());
+			
+            wallet->SetAddressBookName(recAddress.Get(), myValue);
             break;
         case Address:
 			recAddress = CBitcoinAddress(rec->address.toStdString());
@@ -260,10 +276,16 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
             {
                 {
                     LOCK(wallet->cs_wallet);
+					std::string newLabel = rec->label.toStdString();
                     // Remove old entry
                     wallet->DelAddressBookName(valueAddress.Get());
+					
+					if(valueAddress.IsValid() && valueAddress.isAlias && rec->label.isEmpty())
+					{
+						newLabel = rec->address.toStdString();
+					}
                     // Add new entry with new address
-                    wallet->SetAddressBookName(valueAddress.Get(), rec->label.toStdString());
+                    wallet->SetAddressBookName(valueAddress.Get(), newLabel);
                 }
             }
             break;
@@ -375,6 +397,11 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
 	CBitcoinAddress myAddress = CBitcoinAddress(strAddress);
     // Add entry
     {
+
+		if(myAddress.IsValid() && myAddress.isAlias && strLabel.length() <= 0)
+		{
+			strLabel = strAddress;
+		}
         LOCK(wallet->cs_wallet);
         wallet->SetAddressBookName(myAddress.Get(), strLabel);
     }

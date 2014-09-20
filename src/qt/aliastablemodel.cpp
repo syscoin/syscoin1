@@ -224,10 +224,10 @@ QVariant AliasTableModel::data(const QModelIndex &index, int role) const
     else if (role == Qt::FontRole)
     {
         QFont font;
-//        if(index.column() == Name)
-//        {
-//            font = GUIUtil::bitcoinAddressFont();
-//        }
+        if(index.column() == Value)
+        {
+            font = GUIUtil::bitcoinAddressFont();
+        }
         return font;
     }
     else if (role == TypeRole)
@@ -281,15 +281,9 @@ bool AliasTableModel::setData(const QModelIndex &index, const QVariant &value, i
                 editStatus = NO_CHANGES;
                 return false;
             }
-            // Refuse to set invalid alias, set error status and return false
-            else if(false /* validate alias */)
-            {
-                editStatus = INVALID_ALIAS;
-                return false;
-            }
             // Check for duplicate aliases to prevent accidental deletion of aliases, if you try
             // to paste an existing alias over another alias (with a different label)
-            else if(false /* check duplicates */)
+            else if(lookupAlias(rec->alias) != -1)
             {
                 editStatus = DUPLICATE_ALIAS;
                 return false;
@@ -363,16 +357,10 @@ QString AliasTableModel::addRow(const QString &type, const QString &value, const
     std::string strExp = exp.toStdString();
 
     editStatus = OK;
-
-    if(false /*validate alias*/)
-    {
-        editStatus = INVALID_ALIAS;
-        return QString();
-    }
     // Check for duplicate aliases
     {
         LOCK(wallet->cs_wallet);
-        if(false/* check duplicate aliases */)
+        if(lookupAlias(alias) != -1)
         {
             editStatus = DUPLICATE_ALIAS;
             return QString();

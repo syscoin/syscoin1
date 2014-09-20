@@ -370,11 +370,7 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx)
                     int op, nOut;
                     bool good = DecodeAliasTx(tx, op, nOut, vvchArgs, -1);
                     if(good && IsAliasOp(op)) {
-                        const vector<unsigned char> &vchName = vvchArgs[0];
-                        vector<CAliasIndex> vtxPos;
-                        if (paliasdb->ReadAlias(vchName, vtxPos)) {
-                            NotifyAliasListChanged(this, &tx, vtxPos.back(), CT_UPDATED);
-                        }
+                        NotifyAliasListChanged(this, &tx, CT_UPDATED);                       
                     } 
                     good = DecodeOfferTx(tx, op, nOut, vvchArgs, -1);
                     if (good && IsOfferOp(op)) {
@@ -528,11 +524,8 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
         bool good = DecodeAliasTx(wtx, op, nOut, vvchArgs, -1);
         if (good){
             if(IsAliasOp(op)) {
-                const vector<unsigned char> &vchName = vvchArgs[0];
-                vector<CAliasIndex> vtxPos;
-                if (paliasdb->ReadAlias(vchName, vtxPos)) {
-                    NotifyAliasListChanged(this, &wtx, vtxPos.back(), fInsertedNew ? CT_NEW : CT_UPDATED);
-                }
+                NotifyAliasListChanged(this, &wtx, fInsertedNew ? CT_NEW : CT_UPDATED);
+                
             } else if (IsOfferOp(op)) {
                 COffer theOffer;
                 theOffer.UnserializeFromTx(wtx);
@@ -1517,11 +1510,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
                 bool good = DecodeAliasTx(wtxNew, op, nOut, vvchArgs, -1);
                 if (good){
                     if(IsAliasOp(op)) {
-                        const vector<unsigned char> &vchName = vvchArgs[0];
-                        vector<CAliasIndex> vtxPos;
-                        if (paliasdb->ReadAlias(vchName, vtxPos)) {
-                            NotifyAliasListChanged(this, &wtxNew, vtxPos.back(), CT_UPDATED);
-                        }
+                        NotifyAliasListChanged(this, &wtxNew, CT_UPDATED);                   
                     } else if (IsOfferOp(op)) {
                         COffer theOffer;
                         theOffer.UnserializeFromTx(wtxNew);
@@ -2093,11 +2082,7 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx)
             bool good = DecodeAliasTx(wtx, op, nOut, vvchArgs, -1);
             if (good){
                 if(IsAliasOp(op)) {
-                    const vector<unsigned char> &vchName = vvchArgs[0];
-                    vector<CAliasIndex> vtxPos;
-                    if (paliasdb->ReadAlias(vchName, vtxPos)) {
-                        NotifyAliasListChanged(this, &wtx, vtxPos.back(), CT_UPDATED);
-                    }
+                    NotifyAliasListChanged(this, &wtx, CT_UPDATED); 
                 } else if (IsOfferOp(op)) {
                     COffer theOffer;
                     theOffer.UnserializeFromTx(wtx);

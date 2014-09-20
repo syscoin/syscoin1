@@ -28,7 +28,8 @@ extern CAliasDB *paliasdb;
 int GetAliasExpirationDepth(int nHeight);
 
 class COfferAccept;
-
+int GetAliasExpirationDepth(int nHeight);
+int GetAliasTxHashHeight(const uint256 txHash);
 WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
     QObject(parent),
     wallet(wallet),
@@ -289,16 +290,21 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
     foreach(const SendCoinsRecipient &rcp, recipients)
     {
         std::string strAddress = rcp.address.toStdString();
+		CBitcoinAddress myAddress = CBitcoinAddress(strAddress);
         CTxDestination dest = CBitcoinAddress(strAddress).Get();
         std::string strLabel = rcp.label.toStdString();
         {
             LOCK(wallet->cs_wallet);
 
             std::map<CTxDestination, std::string>::iterator mi = wallet->mapAddressBook.find(dest);
-
+			if(strLabel.length() <= 0 && myAddress.IsValid() && myAddress.isAlias)
+			{
+				strLabel = myAddress.aliasName;
+			}
             // Check if we have a new address or an updated label
             if (mi == wallet->mapAddressBook.end() || mi->second != strLabel)
             {
+
                 wallet->SetAddressBookName(dest, strLabel);
             }
         }
@@ -421,20 +427,22 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet, 
                               Q_ARG(int, status));
 }
 
-static void NotifyAliasListChanged(WalletModel *walletmodel, CWallet *wallet, const CTransaction *tx, CAliasIndex alias, ChangeType status)
+static void NotifyAliasListChanged(WalletModel *walletmodel, CWallet *wallet, const CTransaction *tx, ChangeType status)
 {
     std::vector<std::vector<unsigned char> > vvchArgs;
     int op, nOut;
     if (!DecodeAliasTx(*tx, op, nOut, vvchArgs, -1)) {
         return;
     }
-    if(!IsAliasOp(op))  return;
-    unsigned long nExpDepth = alias.nHeight + GetAliasExpirationDepth(alias.nHeight);
-
-    OutputDebugStringF("NotifyAliasListChanged %s %s status=%i\n", stringFromVch(vvchArgs[0]).c_str(), stringFromVch(alias.vValue).c_str(), status);
+	if(!IsAliasOp(op) || !IsAliasMine(*tx) || op == OP_ALIAS_NEW)  return;
+	int nHeight = GetAliasTxHashHeight(tx->GetHash());
+	const std::vector<unsigned char> &vchName = vvchArgs[0];
+	const std::vector<unsigned char> &vchValue = vvchArgs[op == OP_ALIAS_ACTIVATE ? 2 : 1];
+    unsigned long nExpDepth = nHeight + GetAliasExpirationDepth(nHeight);
+    OutputDebugStringF("NotifyAliasListChanged %s %s status=%i\n", stringFromVch(vchName).c_str(), stringFromVch(vchValue).c_str(), status);
     QMetaObject::invokeMethod(walletmodel, "updateAlias", Qt::QueuedConnection,
-                              Q_ARG(QString, QString::fromStdString(stringFromVch(vvchArgs[0]))),
-                              Q_ARG(QString, QString::fromStdString(stringFromVch(alias.vValue))),
+                              Q_ARG(QString, QString::fromStdString(stringFromVch(vchName))),
+                              Q_ARG(QString, QString::fromStdString(stringFromVch(vchValue))),
                               Q_ARG(QString, QString::fromStdString(strprintf("%lu", nExpDepth))),
                               Q_ARG(int, status));
 }
@@ -510,7 +518,7 @@ void WalletModel::subscribeToCoreSignals()
     // Connect signals to wallet
     wallet->NotifyStatusChanged.connect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
     wallet->NotifyAddressBookChanged.connect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5));
-    wallet->NotifyAliasListChanged.connect(boost::bind(NotifyAliasListChanged, this, _1, _2, _3, _4));
+    wallet->NotifyAliasListChanged.connect(boost::bind(NotifyAliasListChanged, this, _1, _2, _3));
     wallet->NotifyOfferListChanged.connect(boost::bind(NotifyOfferListChanged, this, _1, _2, _3, _4));
     wallet->NotifyCertIssuerListChanged.connect(boost::bind(NotifyCertIssuerListChanged, this, _1, _2, _3, _4));
     wallet->NotifyTransactionChanged.connect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
@@ -521,7 +529,7 @@ void WalletModel::unsubscribeFromCoreSignals()
     // Disconnect signals from wallet
     wallet->NotifyStatusChanged.disconnect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
     wallet->NotifyAddressBookChanged.disconnect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5));
-    wallet->NotifyAliasListChanged.disconnect(boost::bind(NotifyAliasListChanged, this, _1, _2, _3, _4));
+    wallet->NotifyAliasListChanged.disconnect(boost::bind(NotifyAliasListChanged, this, _1, _2, _3));
     wallet->NotifyOfferListChanged.disconnect(boost::bind(NotifyOfferListChanged, this, _1, _2, _3, _4));
     wallet->NotifyCertIssuerListChanged.disconnect(boost::bind(NotifyCertIssuerListChanged, this, _1, _2, _3, _4));
     wallet->NotifyTransactionChanged.disconnect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));

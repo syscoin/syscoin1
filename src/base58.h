@@ -273,6 +273,7 @@ class CBitcoinAddress : public CBase58Data
 public:
 	bool isAlias;
 	int aliasExpirationHeight;
+	std::string aliasName;
     enum
     {
         PUBKEY_ADDRESS = 63, // syscoin addresses start with S
@@ -357,18 +358,21 @@ public:
     {
 		aliasExpirationHeight = 0;
 		isAlias = false;
+		aliasName = "";
     }
 
     CBitcoinAddress(const CTxDestination &dest)
     {
 		aliasExpirationHeight = 0;
 		isAlias = false;
+		aliasName = "";
         Set(dest);
     }
 
     CBitcoinAddress(const std::string& strAddress)
     {
 		aliasExpirationHeight = 0;
+		aliasName = "";
 		isAlias = false;
         SetString(strAddress);
 		// try to resolve alias address
@@ -379,10 +383,8 @@ public:
 				std::string strAliasAddress;
 				GetAliasAddressandExpHeight(strAddress, strAliasAddress, aliasExpirationHeight);
 				SetString(strAliasAddress);
-				if(IsValid())
-				{
-					isAlias = true;
-				}
+				isAlias = true;
+				aliasName = strAddress;
 			}
 			catch(...)
 			{
@@ -403,10 +405,9 @@ public:
 				std::string strAliasAddress;
 				GetAliasAddressandExpHeight(std::string(pszAddress), strAliasAddress, aliasExpirationHeight);
 				SetString(strAliasAddress);
-				if(IsValid())
-				{
-					isAlias = true;
-				}
+				isAlias = true;
+				aliasName = std::string(pszAddress);
+				
 			}
 			catch(...)
 			{
