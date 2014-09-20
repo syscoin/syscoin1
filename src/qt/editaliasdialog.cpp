@@ -42,8 +42,8 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
         setWindowTitle(tr("Transfer alias"));
 		ui->aliasEdit->setEnabled(false);
 		ui->nameEdit->setEnabled(false);
-		ui->transferEdit->setVisible(false);
-		ui->transferLabel->setVisible(false);
+		ui->transferEdit->setVisible(true);
+		ui->transferLabel->setVisible(true);
         break;
     }
     mapper = new QDataWidgetMapper(this);
@@ -193,9 +193,9 @@ bool EditAliasDialog::saveCurrentRow()
 					alias = ui->nameEdit->text() + ui->aliasEdit->text()+ui->transferEdit->text();
 
 
-					this->model->updateEntry(ui->aliasEdit->text(), ui->nameEdit->text(), "N/A", MyAlias, CT_UPDATED);
+					this->model->updateEntry(ui->aliasEdit->text(), QString("Transfered to ") + ui->transferEdit->text()  , "N/A", MyAlias, CT_UPDATED);
 					QMessageBox::information(this, windowTitle(),
-					tr("Alias transfered successfully! Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
+					tr("Alias transferred successfully! Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
 						QMessageBox::Ok, QMessageBox::Ok);
 						
 				}
@@ -204,14 +204,14 @@ bool EditAliasDialog::saveCurrentRow()
 			{
 				string strError = find_value(objError, "message").get_str();
 				QMessageBox::critical(this, windowTitle(),
-				tr("Error transfering alias: \"%1\"").arg(QString::fromStdString(strError)),
+				tr("Error transferring alias: \"%1\"").arg(QString::fromStdString(strError)),
 					QMessageBox::Ok, QMessageBox::Ok);
 				break;
 			}
 			catch(std::exception& e)
 			{
 				QMessageBox::critical(this, windowTitle(),
-					tr("General exception transfering alias"),
+					tr("General exception transferring alias"),
 					QMessageBox::Ok, QMessageBox::Ok);
 				break;
 			}	
