@@ -96,11 +96,10 @@ public:
                     const vector<unsigned char> &vchName = vvchArgs[0];
                     const vector<unsigned char> &vchValue = vvchArgs[op == OP_ALIAS_ACTIVATE ? 2 : 1];
                     unsigned long nExpDepth = nHeight + GetAliasExpirationDepth(nHeight);
+					updateEntry(QString::fromStdString(stringFromVch(vchName)), QString::fromStdString(stringFromVch(vchValue)), QString::fromStdString(strprintf("%lu", nExpDepth)),type, CT_NEW); 
+					
+					
 
-                    cachedAliasTable.append(AliasTableEntry(tx.data.size() ? AliasTableEntry::DataAlias : AliasTableEntry::Alias,
-                                      QString::fromStdString(stringFromVch(vchValue)),
-                                      QString::fromStdString(stringFromVch(vchName)),
-                                      QString::fromStdString(strprintf("%lu", nExpDepth))));
             }
          }
         // qLowerBound() and qUpperBound() require our cachedAliasTable list to be sorted in asc order
@@ -121,17 +120,22 @@ public:
         int lowerIndex = (lower - cachedAliasTable.begin());
         int upperIndex = (upper - cachedAliasTable.begin());
         bool inModel = (lower != upper);
+		int index;
         AliasTableEntry::Type newEntryType = /*isData ? AliasTableEntry::DataAlias :*/ AliasTableEntry::Alias;
 
         switch(status)
         {
         case CT_NEW:
-            if(inModel || parent->lookupAlias(alias) != -1)
+			index = parent->lookupAlias(alias);
+            if(inModel || index != -1)
             {
 				lower->type = newEntryType;
 				lower->value = value;
 				lower->expirationdepth = exp;
-				parent->emitDataChanged(lowerIndex);
+				if(inModel)
+					parent->emitDataChanged(lowerIndex);
+				else
+					parent->emitDataChanged(index);
 				break;
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
@@ -183,7 +187,15 @@ public:
 AliasTableModel::AliasTableModel(CWallet *wallet, WalletModel *parent,  AliasModelType type) :
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0), modelType(type)
 {
-    columns << tr("Alias") << tr("Value") << tr("Expiration Height");
+	if(type == MyAlias)
+	{
+		columns << tr("Alias") << tr("Value") << tr("Expiration Height");
+	}
+	else
+	{
+		columns << tr("Alias") << tr("Value") << tr("Expires In");
+	}
+    
     priv = new AliasTablePriv(wallet, this);
     priv->refreshAliasTable(type);
 }
@@ -373,11 +385,10 @@ QString AliasTableModel::addRow(const QString &type, const QString &value, const
 
     return QString::fromStdString(strAlias);
 }
-
-bool AliasTableModel::removeRows(int row, int count, const QModelIndex &parent)
+void AliasTableModel::clear()
 {
-    // refuse to remove aliases.
-    return false;
+	removeRows(0,rowCount(QModelIndex()));
+    priv->cachedAliasTable.clear();
 }
 
 /* Look up value for alias, if not found return empty string.

@@ -1,3 +1,6 @@
+#include <boost/assign/list_of.hpp>
+#include <boost/foreach.hpp>
+
 #include "aliaslistpage.h"
 #include "ui_aliaslistpage.h"
 
@@ -8,7 +11,7 @@
 #include "editaliasdialog.h"
 #include "csvmodelwriter.h"
 #include "guiutil.h"
-
+#include "ui_interface.h"
 #include <QSortFilterProxyModel>
 #include <QClipboard>
 #include <QMessageBox>
@@ -240,8 +243,23 @@ void AliasListPage::on_searchAlias_clicked()
     
         if (result.type() == array_type)
         {
-            
-            
+		  this->model->clear();
+          Array arr = result.get_array();
+		  BOOST_FOREACH(Value& input, arr)
+				{
+				if (input.type() != obj_type)
+					continue;
+				Object& o = input.get_obj();
+			
+				std::string name = find_value(o, "name").get_str();
+				std::string value = find_value(o, "value").get_str();
+				int expires = find_value(o, "expires_in").get_int();
+				model->addRow(AliasTableModel::Alias,
+						QString::fromStdString(name),
+						QString::fromStdString(value),
+						QString::fromStdString(strprintf("%d", expires)));
+					this->model->updateEntry(QString::fromStdString(name), QString::fromStdString(value), QString::fromStdString(strprintf("%d", expires)), AllAlias, CT_NEW);
+				}           
         }
         else
         {
