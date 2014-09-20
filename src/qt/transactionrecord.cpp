@@ -124,10 +124,12 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 {
                     //Check if tx is a valid aliasnew (name alias for the moment).
                     if (isValidAlias) {
-                        const vector<unsigned char> &vchName = vvchArgs[0];
+                        /*DecodeAliasTx does not return a decode name for aliasnew txs,
+                        so the line below and the next commented sub.address are pointless*/
+                        //const vector<unsigned char> &vchName = vvchArgs[0];
                         if (op == OP_ALIAS_NEW) {
                             sub.type = TransactionRecord::AliasNew;
-                            sub.address = stringFromVch(vchName);
+                            //sub.address = stringFromVch(vchName);
                             sub.address = mapValue["to"];
                         }
                     } else {
