@@ -52,6 +52,7 @@ MyAliasListPage::MyAliasListPage(QWidget *parent) :
     connect(copyAliasAction, SIGNAL(triggered()), this, SLOT(on_copyAlias_clicked()));
     connect(copyAliasValueAction, SIGNAL(triggered()), this, SLOT(onCopyAliasValueAction()));
     connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
+	connect(transferAliasAction, SIGNAL(triggered()), this, SLOT(onTransferAliasAction()));
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 

@@ -30,7 +30,7 @@
       <enum>Qt::CustomContextMenu</enum>
      </property>
      <property name="toolTip">
-      <string>Double-click to edit certificate</string>
+      <string>Double-click to edit alias</string>
      </property>
      <property name="tabKeyNavigation">
       <bool>false</bool>
@@ -71,7 +71,7 @@
      <item>
       <widget class="QPushButton" name="copyAlias">
        <property name="toolTip">
-        <string>Copy the currently selected certificate issuer to the system clipboard</string>
+        <string>Copy the currently selected alias to the system clipboard</string>
        </property>
        <property name="text">
         <string>&amp;Copy Alias</string>
