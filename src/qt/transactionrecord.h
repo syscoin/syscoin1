@@ -70,7 +70,10 @@ public:
         SendToOther,
         RecvWithAddress,
         RecvFromOther,
-        SendToSelf
+        SendToSelf,
+        AliasNew,
+        AliasActivate,
+        AliasUpdate
     };
 
     /** Number of confirmation needed for transaction */
