@@ -137,14 +137,17 @@ void MyAliasListPage::onEditAction()
 
 void MyAliasListPage::onTransferAliasAction()
 {
-    QTableView *table = ui->tableView;
-    QModelIndexList indexes = table->selectionModel()->selectedRows(AliasTableModel::Name);
+    if(!ui->tableView->selectionModel())
+        return;
+    QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows();
+    if(indexes.isEmpty())
+        return;
 
-    foreach (QModelIndex index, indexes)
-    {
-        QString alias = index.data().toString();
-        emit transferAlias(alias);
-    }
+    EditAliasDialog dlg(EditAliasDialog::TransferAlias);
+    dlg.setModel(model);
+    QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
+    dlg.loadRow(origIndex.row());
+    dlg.exec();
 }
 
 void MyAliasListPage::on_newAlias_clicked()

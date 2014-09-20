@@ -23,7 +23,8 @@ public:
         NewDataAlias,
         NewAlias,
         EditDataAlias,
-        EditAlias
+        EditAlias,
+		TransferAlias
     };
 
     explicit EditAliasDialog(Mode mode, QWidget *parent = 0);

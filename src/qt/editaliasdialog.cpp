@@ -19,7 +19,8 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
     ui->setupUi(this);
 
     GUIUtil::setupAddressWidget(ui->nameEdit, this);
-
+	ui->transferEdit->setVisible(false);
+	ui->transferLabel->setVisible(false);
     switch(mode)
     {
     case NewDataAlias:
@@ -37,8 +38,14 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
         setWindowTitle(tr("Edit alias"));
 		ui->aliasEdit->setEnabled(false);
         break;
+    case TransferAlias:
+        setWindowTitle(tr("Transfer alias"));
+		ui->aliasEdit->setEnabled(false);
+		ui->nameEdit->setEnabled(false);
+		ui->transferEdit->setVisible(false);
+		ui->transferLabel->setVisible(false);
+        break;
     }
-
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 }
@@ -149,7 +156,7 @@ bool EditAliasDialog::saveCurrentRow()
 
 					this->model->updateEntry(ui->aliasEdit->text(), ui->nameEdit->text(), "N/A", MyAlias, CT_UPDATED);
 					QMessageBox::information(this, windowTitle(),
-					tr("Offer updated successfully! Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
+					tr("Alias updated successfully! Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
 						QMessageBox::Ok, QMessageBox::Ok);
 						
 				}
@@ -158,14 +165,53 @@ bool EditAliasDialog::saveCurrentRow()
 			{
 				string strError = find_value(objError, "message").get_str();
 				QMessageBox::critical(this, windowTitle(),
-				tr("Error updating offer: \"%1\"").arg(QString::fromStdString(strError)),
+				tr("Error updating alias: \"%1\"").arg(QString::fromStdString(strError)),
 					QMessageBox::Ok, QMessageBox::Ok);
 				break;
 			}
 			catch(std::exception& e)
 			{
 				QMessageBox::critical(this, windowTitle(),
-					tr("General exception updating offer"),
+					tr("General exception updating alias"),
+					QMessageBox::Ok, QMessageBox::Ok);
+				break;
+			}	
+        }
+        break;
+    case TransferAlias:
+        if(mapper->submit())
+        {
+			strMethod = string("aliasupdate");
+			params.push_back(ui->nameEdit->text().toStdString());
+			params.push_back(ui->aliasEdit->text().toStdString());
+			params.push_back(ui->transferEdit->text().toStdString());
+			try {
+				Value result = tableRPC.execute(strMethod, params);
+				if (result.type() != null_type)
+				{
+					string strResult = result.get_str();
+					alias = ui->nameEdit->text() + ui->aliasEdit->text()+ui->transferEdit->text();
+
+
+					this->model->updateEntry(ui->aliasEdit->text(), ui->nameEdit->text(), "N/A", MyAlias, CT_UPDATED);
+					QMessageBox::information(this, windowTitle(),
+					tr("Alias transfered successfully! Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
+						QMessageBox::Ok, QMessageBox::Ok);
+						
+				}
+			}
+			catch (Object& objError)
+			{
+				string strError = find_value(objError, "message").get_str();
+				QMessageBox::critical(this, windowTitle(),
+				tr("Error transfering alias: \"%1\"").arg(QString::fromStdString(strError)),
+					QMessageBox::Ok, QMessageBox::Ok);
+				break;
+			}
+			catch(std::exception& e)
+			{
+				QMessageBox::critical(this, windowTitle(),
+					tr("General exception transfering alias"),
 					QMessageBox::Ok, QMessageBox::Ok);
 				break;
 			}	

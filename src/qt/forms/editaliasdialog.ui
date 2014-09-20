@@ -19,6 +19,23 @@
      <property name="fieldGrowthPolicy">
       <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
      </property>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>&amp;Alias</string>
+       </property>
+       <property name="buddy">
+        <cstring>aliasEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="aliasEdit">
+       <property name="toolTip">
+        <string>The alias name.</string>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
@@ -36,20 +53,13 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="aliasEdit">
-       <property name="toolTip">
-        <string>The alias name.</string>
-       </property>
-      </widget>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="transferEdit"/>
      </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_2">
+     <item row="2" column="0">
+      <widget class="QLabel" name="transferLabel">
        <property name="text">
-        <string>&amp;Alias</string>
-       </property>
-       <property name="buddy">
-        <cstring>aliasEdit</cstring>
+        <string>Transfer Address</string>
        </property>
       </widget>
      </item>
