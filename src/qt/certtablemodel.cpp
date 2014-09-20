@@ -344,8 +344,7 @@ Qt::ItemFlags CertIssuerTableModel::flags(const QModelIndex &index) const
     {
         retval |= Qt::ItemIsEditable;
     }
-    // return retval;
-    return 0;
+     return retval;
 }
 
 QModelIndex CertIssuerTableModel::index(int row, int column, const QModelIndex &parent) const
