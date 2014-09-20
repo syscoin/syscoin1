@@ -387,8 +387,9 @@ QString AliasTableModel::addRow(const QString &type, const QString &value, const
 }
 void AliasTableModel::clear()
 {
+	priv->cachedAliasTable.clear();
 	removeRows(0,rowCount(QModelIndex()));
-    priv->cachedAliasTable.clear();
+    
 }
 
 /* Look up value for alias, if not found return empty string.
