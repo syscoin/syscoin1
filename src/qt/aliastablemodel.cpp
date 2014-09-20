@@ -326,8 +326,7 @@ Qt::ItemFlags AliasTableModel::flags(const QModelIndex &index) const
     {
         retval |= Qt::ItemIsEditable;
     }
-    // return retval;
-    return 0;
+    return retval;
 }
 
 QModelIndex AliasTableModel::index(int row, int column, const QModelIndex &parent) const
@@ -382,6 +381,9 @@ bool AliasTableModel::removeRows(int row, int count, const QModelIndex &parent)
  */
 QString AliasTableModel::valueForAlias(const QString &alias) const
 {
+	CBitcoinAddress address_parsed(alias.toStdString());
+	if(address_parsed.IsValid() && address_parsed.isAlias)
+		return QString::fromStdString(address_parsed.ToString());
     return QString::fromStdString("{}");
 }
 

@@ -83,7 +83,8 @@ void MyAliasListPage::setModel(AliasTableModel *model)
     
 		ui->tableView->setModel(proxyModel);
 		ui->tableView->sortByColumn(0, Qt::AscendingOrder);
-
+        ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+        ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
     // Set column widths
 #if QT_VERSION < 0x050000
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::Name, QHeaderView::ResizeToContents);
@@ -111,7 +112,7 @@ void MyAliasListPage::setOptionsModel(OptionsModel *optionsModel)
 
 void MyAliasListPage::on_copyAlias_clicked()
 {
-    GUIUtil::copyEntryData(ui->tableView, AliasTableModel::Value);
+    GUIUtil::copyEntryData(ui->tableView, AliasTableModel::Name);
 }
 
 void MyAliasListPage::onCopyAliasValueAction()

@@ -24,16 +24,18 @@ EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
     {
     case NewDataAlias:
         setWindowTitle(tr("New data alias"));
-        //ui->aliasEdit->setEnabled(false);
+        
         break;
     case NewAlias:
         setWindowTitle(tr("New alias"));
         break;
     case EditDataAlias:
         setWindowTitle(tr("Edit data alias"));
+		ui->aliasEdit->setEnabled(false);
         break;
     case EditAlias:
         setWindowTitle(tr("Edit alias"));
+		ui->aliasEdit->setEnabled(false);
         break;
     }
 

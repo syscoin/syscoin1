@@ -291,7 +291,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
     {
         std::string strAddress = rcp.address.toStdString();
 		CBitcoinAddress myAddress = CBitcoinAddress(strAddress);
-        CTxDestination dest = CBitcoinAddress(strAddress).Get();
+        CTxDestination dest = myAddress.Get();
         std::string strLabel = rcp.label.toStdString();
         {
             LOCK(wallet->cs_wallet);

@@ -59,9 +59,11 @@ void AliasView::setClientModel(ClientModel *clientModel)
 
 void AliasView::setWalletModel(WalletModel *walletModel)
 {
+
     this->walletModel = walletModel;
     if (walletModel)
     {
+
         aliasListPage->setModel(walletModel->getAliasTableModelAll());
 		myAliasListPage->setModel(walletModel->getAliasTableModelMine());
 
