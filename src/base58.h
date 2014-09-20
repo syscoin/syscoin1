@@ -23,7 +23,7 @@
 #include "script.h"
 #include "allocators.h"
 
-void GetAliasAddress(const std::string& strName, std::string& strAddress);
+void GetAliasAddressandExpHeight(const std::string& strName, std::string& strAddress, int& height);
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
 // Encode a byte sequence as a base58-encoded string
@@ -271,6 +271,8 @@ public:
 class CBitcoinAddress : public CBase58Data
 {
 public:
+	bool isAlias;
+	int aliasExpirationHeight;
     enum
     {
         PUBKEY_ADDRESS = 63, // syscoin addresses start with S
@@ -353,15 +355,21 @@ public:
 
     CBitcoinAddress()
     {
+		aliasExpirationHeight = 0;
+		isAlias = false;
     }
 
     CBitcoinAddress(const CTxDestination &dest)
     {
+		aliasExpirationHeight = 0;
+		isAlias = false;
         Set(dest);
     }
 
     CBitcoinAddress(const std::string& strAddress)
     {
+		aliasExpirationHeight = 0;
+		isAlias = false;
         SetString(strAddress);
 		// try to resolve alias address
 		if (!IsValid())
@@ -369,8 +377,12 @@ public:
 			try 
 			{
 				std::string strAliasAddress;
-				GetAliasAddress(strAddress, strAliasAddress);
+				GetAliasAddressandExpHeight(strAddress, strAliasAddress, aliasExpirationHeight);
 				SetString(strAliasAddress);
+				if(IsValid())
+				{
+					isAlias = true;
+				}
 			}
 			catch(...)
 			{
@@ -380,6 +392,8 @@ public:
 
     CBitcoinAddress(const char* pszAddress)
     {
+		aliasExpirationHeight = 0;
+		isAlias = false;
         SetString(pszAddress);
 		// try to resolve alias address
 		if (!IsValid())
@@ -387,8 +401,12 @@ public:
 			try 
 			{
 				std::string strAliasAddress;
-				GetAliasAddress(std::string(pszAddress), strAliasAddress);
+				GetAliasAddressandExpHeight(std::string(pszAddress), strAliasAddress, aliasExpirationHeight);
 				SetString(strAliasAddress);
+				if(IsValid())
+				{
+					isAlias = true;
+				}
 			}
 			catch(...)
 			{

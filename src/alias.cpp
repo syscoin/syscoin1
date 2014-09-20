@@ -988,7 +988,7 @@ bool GetAliasAddress(const CDiskTxPos& txPos, std::string& strAddress) {
         return error("GetAliasAddress() : could not read tx from disk");
     return GetAliasAddress(tx, strAddress);
 }
-void GetAliasAddress(const std::string& strName, std::string& strAddress)
+void GetAliasAddressandExpHeight(const std::string& strName, std::string& strAddress, int& nHeight)
 {
 
 	{
@@ -1013,11 +1013,10 @@ void GetAliasAddress(const std::string& strName, std::string& strAddress)
 			throw JSONRPCError(RPC_WALLET_ERROR, "failed to read transaction from disk");
 
 		vector<unsigned char> vchValue;
-		int nHeight;
-
 		uint256 hash;
 		if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
 			strAddress = stringFromVch(vchValue);
+			nHeight = nHeight + GetAliasExpirationDepth(nHeight);
 		}
 	}
     

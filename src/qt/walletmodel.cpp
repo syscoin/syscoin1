@@ -50,14 +50,13 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     addressTableModel = new AddressTableModel(wallet, this);
   
     //do not load SYS service data this way at the moment, need more efficient load mechanism.
-    /*aliasTableModelMine = new AliasTableModel(wallet, this, MyAlias);
-	aliasTableModelAll = new AliasTableModel(wallet, this, AllAlias);
-	offerTableModelAll = new OfferTableModel(wallet, this, AllOffers);
+	/*offerTableModelAll = new OfferTableModel(wallet, this, AllOffers);
 	offerTableModelMine = new OfferTableModel(wallet, this, MyOffers);
     certIssuerTableModel = new CertIssuerTableModel(wallet, this);*/
 
     transactionTableModel = new TransactionTableModel(wallet, this);
-
+    aliasTableModelMine = new AliasTableModel(wallet, this, MyAlias);
+	aliasTableModelAll = new AliasTableModel(wallet, this, AllAlias);
     // This timer will be fired repeatedly to update the balance
     pollTimer = new QTimer(this);
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(pollBalanceChanged()));
@@ -430,7 +429,7 @@ static void NotifyAliasListChanged(WalletModel *walletmodel, CWallet *wallet, co
         return;
     }
     if(!IsAliasOp(op))  return;
-    unsigned long nExpDepth = alias.nHeight + GetOfferExpirationDepth(alias.nHeight);
+    unsigned long nExpDepth = alias.nHeight + GetAliasExpirationDepth(alias.nHeight);
 
     OutputDebugStringF("NotifyAliasListChanged %s %s status=%i\n", stringFromVch(vvchArgs[0]).c_str(), stringFromVch(alias.vValue).c_str(), status);
     QMetaObject::invokeMethod(walletmodel, "updateAlias", Qt::QueuedConnection,

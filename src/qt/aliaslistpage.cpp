@@ -33,7 +33,7 @@ AliasListPage::AliasListPage(QWidget *parent) :
     ui->exportButton->setIcon(QIcon());
 #endif
 
-    ui->labelExplanation->setText(tr("These are the first 500 registered Syscoin Aliases."));
+    ui->labelExplanation->setText(tr("Search for any Syscoin Aliases"));
 	
     // Context menu actions
     QAction *copyAliasAction = new QAction(ui->copyAlias->text(), this);
