@@ -126,10 +126,13 @@ public:
         switch(status)
         {
         case CT_NEW:
-            if(inModel)
+            if(inModel || parent->lookupAlias(alias) != -1)
             {
-                OutputDebugStringF("Warning: AliasTablePriv::updateEntry: Got CT_NOW, but entry is already in model\n");
-                break;
+				lower->type = newEntryType;
+				lower->value = value;
+				lower->expirationdepth = exp;
+				parent->emitDataChanged(lowerIndex);
+				break;
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
             cachedAliasTable.insert(lowerIndex, AliasTableEntry(newEntryType, value, alias, exp));
