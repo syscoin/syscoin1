@@ -60,9 +60,10 @@ void EditAliasDialog::setModel(AliasTableModel *model)
     this->model = model;
     if(!model) return;
 
-    mapper->addMapping(ui->aliasEdit, AliasTableModel::Name);
+    mapper->setModel(model);
+	mapper->addMapping(ui->aliasEdit, AliasTableModel::Name);
     mapper->addMapping(ui->nameEdit, AliasTableModel::Value);
-	mapper->setModel(model);
+	
     
 }
 
@@ -143,8 +144,8 @@ bool EditAliasDialog::saveCurrentRow()
         if(mapper->submit())
         {
 			strMethod = string("aliasupdate");
-			params.push_back(ui->nameEdit->text().toStdString());
 			params.push_back(ui->aliasEdit->text().toStdString());
+			params.push_back(ui->nameEdit->text().toStdString());
 			
 			try {
 				Value result = tableRPC.execute(strMethod, params);
@@ -182,8 +183,8 @@ bool EditAliasDialog::saveCurrentRow()
         if(mapper->submit())
         {
 			strMethod = string("aliasupdate");
-			params.push_back(ui->nameEdit->text().toStdString());
 			params.push_back(ui->aliasEdit->text().toStdString());
+			params.push_back(ui->nameEdit->text().toStdString());
 			params.push_back(ui->transferEdit->text().toStdString());
 			try {
 				Value result = tableRPC.execute(strMethod, params);
@@ -193,7 +194,7 @@ bool EditAliasDialog::saveCurrentRow()
 					alias = ui->nameEdit->text() + ui->aliasEdit->text()+ui->transferEdit->text();
 
 
-					this->model->updateEntry(ui->aliasEdit->text(), QString("Transfered to ") + ui->transferEdit->text()  , "N/A", MyAlias, CT_UPDATED);
+					this->model->updateEntry(ui->aliasEdit->text(), ui->nameEdit->text() + QString("(Transfered to ") + ui->transferEdit->text() + QString(")") , "N/A", MyAlias, CT_UPDATED);
 					QMessageBox::information(this, windowTitle(),
 					tr("Alias transferred successfully! Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
 						QMessageBox::Ok, QMessageBox::Ok);
