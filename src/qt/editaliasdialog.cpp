@@ -188,8 +188,7 @@ bool EditAliasDialog::saveCurrentRow()
 					string strResult = result.get_str();
 
 					alias = ui->nameEdit->text() + ui->aliasEdit->text()+ui->transferEdit->text();
-					if(model)
-						model->refreshAliasTable();
+
 					QMessageBox::information(this, windowTitle(),
 					tr("Alias transferred successfully! Please Refresh to update your Aliases. Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
 						QMessageBox::Ok, QMessageBox::Ok);
