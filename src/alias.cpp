@@ -35,7 +35,7 @@ extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo,
 		unsigned int nIn, int nHashType);
 
 bool GetValueOfAliasTxHash(const uint256 &txHash,
-		vector<unsigned char>& vchValue, uint256& hash, int64& nHeight);
+		vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
 
 //static const bool NAME_DEBUG = false;
 //extern int64 AmountFromValue(const Value& value);
@@ -63,7 +63,7 @@ extern void rescanforoffers(CBlockIndex *pindexRescan);
 //extern Value sendtoaddress(const Array& params, bool fHelp);
 
 CScript RemoveAliasScriptPrefix(const CScript& scriptIn);
-int64 GetAliasExpirationDepth(int64 nHeight);
+int GetAliasExpirationDepth(int nHeight);
 int64 GetAliasNetFee(const CTransaction& tx);
 bool CheckAliasTxPos(const vector<CAliasIndex> &vtxPos, const int txPos);
 
@@ -471,7 +471,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				if (!fMiner && !fJustCheck
 						&& pindexBlock->nHeight != pindexBest->nHeight) {
 
-					int64 nHeight = pindexBlock->nHeight;
+					int nHeight = pindexBlock->nHeight;
 					vector<unsigned char> vchVal;
 					CAliasIndex txPos2;
 					uint256 hash;
@@ -512,7 +512,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					}
 
 					printf(
-							"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%llu\n",
+							"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
 							stringFromVch(vvchArgs[0]).c_str(),
 							aliasFromOp(op).c_str(),
 							tx.GetHash().ToString().c_str(), nHeight);
@@ -739,7 +739,7 @@ int64 GetAliasNetworkFee(int nType, int nHeight) {
 //
 // Increase expiration to 262080 gradually starting at block 174720.
 // Use for validation purposes and pass the chain height.
-int64 GetAliasExpirationDepth(int64 nHeight) {
+int GetAliasExpirationDepth(int nHeight) {
 	if (nHeight < 174720)
 		return 87360;
 	if (nHeight < 349440)
@@ -748,11 +748,11 @@ int64 GetAliasExpirationDepth(int64 nHeight) {
 }
 
 // For display purposes, pass the name height.
-int64 GetAliasDisplayExpirationDepth(int64 nHeight) {
+int GetAliasDisplayExpirationDepth(int nHeight) {
 	return GetAliasExpirationDepth(nHeight);
 }
 
-int64 GetNameTxPosHeight(const CDiskTxPos& txPos) {
+int GetNameTxPosHeight(const CDiskTxPos& txPos) {
 	// Read block header
 	CBlock block;
 	if (!block.ReadFromDisk(txPos))
@@ -768,7 +768,7 @@ int64 GetNameTxPosHeight(const CDiskTxPos& txPos) {
 	return pindex->nHeight;
 }
 
-int64 GetNameTxPosHeight2(const CDiskTxPos& txPos, int64 nHeight) {
+int GetNameTxPosHeight2(const CDiskTxPos& txPos, int nHeight) {
 	nHeight = GetNameTxPosHeight(txPos);
 	return nHeight;
 }
@@ -1014,7 +1014,7 @@ int64 GetAliasTxHashHeight(const uint256 txHash) {
 }
 
 bool GetValueOfAliasTxHash(const uint256 &txHash,
-		vector<unsigned char>& vchValue, uint256& hash, int64& nHeight) {
+		vector<unsigned char>& vchValue, uint256& hash, int& nHeight) {
 	nHeight = GetAliasTxHashHeight(txHash);
 	CTransaction tx;
 	uint256 blockHash;
@@ -1044,7 +1044,7 @@ bool GetTxOfAlias(CAliasDB& dbName, const vector<unsigned char> &vchName,
 	if (!paliasdb->ReadAlias(vchName, vtxPos) || vtxPos.empty())
 		return false;
 	CAliasIndex& txPos = vtxPos.back();
-	int64 nHeight = txPos.nHeight;
+	int nHeight = txPos.nHeight;
 	if (nHeight + GetAliasExpirationDepth(pindexBest->nHeight)
 			< pindexBest->nHeight) {
 		string name = stringFromVch(vchName);
@@ -1106,7 +1106,7 @@ void GetAliasValue(const std::string& strName, std::string& strAddress) {
 
 		vector<unsigned char> vchValue;
 		uint256 hash;
-		int64 nHeight;
+		int nHeight;
 		if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
 			strAddress = stringFromVch(vchValue);
 		}
@@ -1568,7 +1568,7 @@ Value aliaslist(const Array& params, bool fHelp) {
 		CTransaction tx;
 
 		vector<unsigned char> vchValue;
-		int64 nHeight;
+		int nHeight;
 
 		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
 			// get txn hash, read txn index
@@ -1613,12 +1613,11 @@ Value aliaslist(const Array& params, bool fHelp) {
 			string strAddress = "";
 			GetAliasAddress(tx, strAddress);
 			oName.push_back(Pair("address", strAddress));
-			oName.push_back(Pair("lastupdate_height", nHeight));
-			oName.push_back(Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight)));
-			oName.push_back(
-					Pair("expires_in",
-							nHeight + GetAliasDisplayExpirationDepth(nHeight)
-									- pindexBest->nHeight));
+            oName.push_back(Pair("lastupdate_height", Value(nHeight).get_str()));
+            oName.push_back(Pair("expires_on", Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)).get_str()));
+            oName.push_back(
+                    Pair("expires_in",
+                            Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight).get_str()));
 
 			if (nHeight + GetAliasDisplayExpirationDepth(nHeight)
 					- pindexBest->nHeight <= 0)
@@ -1675,7 +1674,7 @@ Value aliasinfo(const Array& params, bool fHelp) {
 
 		Object oName;
 		vector<unsigned char> vchValue;
-		int64 nHeight;
+		int nHeight;
 
 		uint256 hash;
 		if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
@@ -1686,12 +1685,11 @@ Value aliasinfo(const Array& params, bool fHelp) {
 			string strAddress = "";
 			GetAliasAddress(tx, strAddress);
 			oName.push_back(Pair("address", strAddress));
-			oName.push_back(Pair("lastupdate_height", nHeight));
-			oName.push_back( Pair("expires_on", GetAliasDisplayExpirationDepth(nHeight) + nHeight));
-			oName.push_back(
-					Pair("expires_in",
-							nHeight + GetAliasDisplayExpirationDepth(nHeight)
-									- pindexBest->nHeight));
+            oName.push_back(Pair("lastupdate_height", Value(nHeight).get_str()));
+            oName.push_back(Pair("expires_on", Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)).get_str()));
+            oName.push_back(
+                    Pair("expires_in",
+                            Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight).get_str()));
 			if (nHeight + GetAliasDisplayExpirationDepth(nHeight)
 					- pindexBest->nHeight <= 0) {
 				oName.push_back(Pair("expired", 1));
@@ -1741,7 +1739,7 @@ Value aliashistory(const Array& params, bool fHelp) {
 
 			Object oName;
 			vector<unsigned char> vchValue;
-			int64 nHeight;
+			int nHeight;
 			uint256 hash;
 			if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
 				oName.push_back(Pair("name", name));
@@ -1751,14 +1749,11 @@ Value aliashistory(const Array& params, bool fHelp) {
 				string strAddress = "";
 				GetAliasAddress(tx, strAddress);
 				oName.push_back(Pair("address", strAddress));
-				oName.push_back(Pair("lastupdate_height", nHeight));
-				oName.push_back( Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth( nHeight)));
-				oName.push_back(
-						Pair("expires_in",
-								nHeight
-										+ GetAliasDisplayExpirationDepth(
-												nHeight)
-										- pindexBest->nHeight));
+            oName.push_back(Pair("lastupdate_height", Value(nHeight).get_str()));
+            oName.push_back(Pair("expires_on", Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)).get_str()));
+            oName.push_back(
+                    Pair("expires_in",
+                            Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight).get_str()));
 				if (nHeight + GetAliasDisplayExpirationDepth(nHeight)
 						- pindexBest->nHeight <= 0) {
 					oName.push_back(Pair("expired", 1));
@@ -1833,7 +1828,7 @@ Value aliasfilter(const Array& params, bool fHelp) {
 			continue;
 
 		CAliasIndex txName = pairScan.second;
-		int64 nHeight = txName.nHeight;
+		int nHeight = txName.nHeight;
 
 		// max age
 		if (nMaxAge != 0 && pindexBest->nHeight - nHeight >= nMaxAge)
@@ -1858,12 +1853,11 @@ Value aliasfilter(const Array& params, bool fHelp) {
 			string value = stringFromVch(vchValue);
 			oName.push_back(Pair("value", value));
 			oName.push_back(Pair("txid", txHash.GetHex()));
-			oName.push_back(Pair("lastupdate_height", nHeight));
-			oName.push_back( Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight) ));
-			oName.push_back(
-					Pair("expires_in",
-							nHeight + GetAliasDisplayExpirationDepth(nHeight)
-									- pindexBest->nHeight));
+            oName.push_back(Pair("lastupdate_height", Value(nHeight).get_str()));
+            oName.push_back(Pair("expires_on", Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)).get_str()));
+            oName.push_back(
+                    Pair("expires_in",
+                            Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight).get_str()));
 		}
 		oRes.push_back(oName);
 
@@ -1921,7 +1915,7 @@ Value aliasscan(const Array& params, bool fHelp) {
 		CAliasIndex txName = pairScan.second;
 		uint256 blockHash;
 
-		int64 nHeight = txName.nHeight;
+		int nHeight = txName.nHeight;
 		vector<unsigned char> vchValue = txName.vValue;
 		if ((nHeight + GetAliasDisplayExpirationDepth(nHeight)
 				- pindexBest->nHeight <= 0)
@@ -1931,12 +1925,11 @@ Value aliasscan(const Array& params, bool fHelp) {
 			string value = stringFromVch(vchValue);
 			oName.push_back(Pair("txid", txName.txHash.GetHex()));
 			oName.push_back(Pair("value", value));
-			oName.push_back(Pair("lastupdate_height", nHeight));
-			oName.push_back( Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight) ));
+            oName.push_back(Pair("lastupdate_height", Value(nHeight).get_str()));
+            oName.push_back(Pair("expires_on", Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)).get_str()));
 			oName.push_back(
 					Pair("expires_in",
-							nHeight + GetAliasDisplayExpirationDepth(nHeight)
-									- pindexBest->nHeight));
+							Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight).get_str()));
 		}
 		oRes.push_back(oName);
 	}
