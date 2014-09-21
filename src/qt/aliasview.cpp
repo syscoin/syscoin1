@@ -30,8 +30,11 @@ AliasView::AliasView(QStackedWidget *parent, BitcoinGUI *_gui):
 	tabWidget = new QTabWidget();
     aliasListPage = new AliasListPage();
     myAliasListPage = new MyAliasListPage();
+	
 	tabWidget->addTab(myAliasListPage, tr("&My Aliases"));
 	tabWidget->addTab(aliasListPage, tr("&Search"));
+	tabWidget->setTabIcon(0, QIcon(":/icons/alias"));
+	tabWidget->setTabIcon(1, QIcon(":/icons/search"));
 	parent->addWidget(tabWidget);
 
 }

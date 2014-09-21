@@ -30,7 +30,7 @@
       <enum>Qt::CustomContextMenu</enum>
      </property>
      <property name="toolTip">
-      <string></string>
+      <string/>
      </property>
      <property name="tabKeyNavigation">
       <bool>false</bool>
@@ -61,7 +61,7 @@
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
-         <normaloff>:/icons/alias</normaloff>:/icons/alias</iconset>
+         <normaloff>:/icons/refresh</normaloff>:/icons/refresh</iconset>
        </property>
       </widget>
      </item>

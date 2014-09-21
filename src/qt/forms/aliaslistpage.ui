@@ -34,6 +34,10 @@
        <property name="text">
         <string>Search</string>
        </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/search</normaloff>:/icons/search</iconset>
+       </property>
       </widget>
      </item>
     </layout>
@@ -44,7 +48,7 @@
       <enum>Qt::CustomContextMenu</enum>
      </property>
      <property name="toolTip">
-      <string></string>
+      <string/>
      </property>
      <property name="tabKeyNavigation">
       <bool>false</bool>
