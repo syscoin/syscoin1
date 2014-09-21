@@ -32,7 +32,7 @@ MyAliasListPage::MyAliasListPage(QWidget *parent) :
 #endif
 
 	ui->buttonBox->setVisible(false);
-    ui->labelExplanation->setText(tr("These are your registered Syscoin Aliases. Click on Refresh once you have synchronized with the blockchain."));
+    ui->labelExplanation->setText(tr("These are your registered Syscoin Aliases."));
 	
     // Context menu actions
     QAction *copyAliasAction = new QAction(ui->copyAlias->text(), this);
@@ -155,13 +155,13 @@ void MyAliasListPage::on_refreshButton_clicked()
 {
     if(!model)
         return;
-	if(this->clientModel->inInitialBlockDownload())
+	/*if(this->clientModel->inInitialBlockDownload())
 	{
         QMessageBox::critical(this, windowTitle(),
             tr("The blockchain must be fully synchronized before loading Aliases. Please try again later."),
             QMessageBox::Ok, QMessageBox::Ok);
 		return;
-	}
+	}*/
     model->refreshAliasTable();
 }
 void MyAliasListPage::on_newAlias_clicked()
