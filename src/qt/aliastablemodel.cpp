@@ -203,6 +203,7 @@ AliasTableModel::AliasTableModel(CWallet *wallet, WalletModel *parent,  AliasMod
 
 	columns << tr("Alias") << tr("Value") << tr("Expires In");		 
     priv = new AliasTablePriv(wallet, this);
+	refreshAliasTable();
 }
 
 AliasTableModel::~AliasTableModel()
