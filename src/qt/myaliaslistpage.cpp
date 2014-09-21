@@ -4,8 +4,8 @@
  */
 #include "myaliaslistpage.h"
 #include "ui_myaliaslistpage.h"
-
 #include "aliastablemodel.h"
+#include "clientmodel.h"
 #include "optionsmodel.h"
 #include "bitcoingui.h"
 #include "editaliasdialog.h"
@@ -32,7 +32,7 @@ MyAliasListPage::MyAliasListPage(QWidget *parent) :
 #endif
 
 	ui->buttonBox->setVisible(false);
-    ui->labelExplanation->setText(tr("These are your registered Syscoin Aliases."));
+    ui->labelExplanation->setText(tr("These are your registered Syscoin Aliases. Click on Refresh once you have synchronized with the blockchain."));
 	
     // Context menu actions
     QAction *copyAliasAction = new QAction(ui->copyAlias->text(), this);
@@ -106,9 +106,10 @@ void MyAliasListPage::setModel(AliasTableModel *model)
     selectionChanged();
 }
 
-void MyAliasListPage::setOptionsModel(OptionsModel *optionsModel)
+void MyAliasListPage::setOptionsModel(ClientModel* clientmodel, OptionsModel *optionsModel)
 {
     this->optionsModel = optionsModel;
+	this->clientModel = clientmodel;
 }
 
 void MyAliasListPage::on_copyAlias_clicked()
@@ -150,7 +151,19 @@ void MyAliasListPage::onTransferAliasAction()
     dlg.loadRow(origIndex.row());
     dlg.exec();
 }
-
+void MyAliasListPage::on_refreshButton_clicked()
+{
+    if(!model)
+        return;
+	if(this->clientModel->inInitialBlockDownload())
+	{
+        QMessageBox::critical(this, windowTitle(),
+            tr("The blockchain must be fully synchronized before loading Aliases. Please try again later."),
+            QMessageBox::Ok, QMessageBox::Ok);
+		return;
+	}
+    model->refreshAliasTable();
+}
 void MyAliasListPage::on_newAlias_clicked()
 {
     if(!model)

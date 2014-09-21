@@ -52,7 +52,7 @@ void AliasView::setClientModel(ClientModel *clientModel)
     {
        
         aliasListPage->setOptionsModel(clientModel->getOptionsModel());
-		myAliasListPage->setOptionsModel(clientModel->getOptionsModel());
+		myAliasListPage->setOptionsModel(clientModel,clientModel->getOptionsModel());
 
     }
 }

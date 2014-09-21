@@ -69,6 +69,7 @@ public:
      */
     int lookupAlias(const QString &alias) const;
 	void clear();
+	void refreshAliasTable();
     EditStatus getEditStatus() const { return editStatus; }
 
 private:

@@ -8,7 +8,7 @@ namespace Ui {
 }
 class AliasTableModel;
 class OptionsModel;
-
+class ClientModel;
 QT_BEGIN_NAMESPACE
 class QTableView;
 class QItemSelection;
@@ -30,13 +30,14 @@ public:
     ~MyAliasListPage();
 
     void setModel(AliasTableModel *model);
-    void setOptionsModel(OptionsModel *optionsModel);
+    void setOptionsModel(ClientModel* clientmodel, OptionsModel *optionsModel);
     const QString &getReturnValue() const { return returnValue; }
 	bool handleURI(const QString &uri);
 public slots:
     void done(int retval);
 
 private:
+	ClientModel* clientModel;
     Ui::MyAliasListPage *ui;
     AliasTableModel *model;
     OptionsModel *optionsModel;
@@ -61,6 +62,7 @@ private slots:
     void on_exportButton_clicked();
     /** transfer the alias to a syscoin address  */
     void onTransferAliasAction();
+	void on_refreshButton_clicked();
 
     /** Set button states based on selected tab and selection */
     void selectionChanged();

@@ -167,7 +167,7 @@ bool DecodeAliasTx(const CCoins& tx, int& op, int& nOut, std::vector<std::vector
 bool DecodeAliasScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 bool GetAliasAddress(const CTransaction& tx, std::string& strAddress);
 bool GetAliasAddress(const CDiskTxPos& txPos, std::string& strAddress);
-extern void GetAliasAddressandExpHeight(const std::string& strName, std::string& strAddress, int& height);
+extern void GetAliasValue(const std::string& strName, std::string& strAddress);
 std::string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, bool fAskFee, const std::string& txData = "");
 bool CreateTransactionWithInputTx(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxIn, int nTxOut, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, const std::string& txData = "");
 int64 GetAliasNetworkFee(int nType, int nHeight);

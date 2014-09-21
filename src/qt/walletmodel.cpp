@@ -429,22 +429,7 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet, 
 
 static void NotifyAliasListChanged(WalletModel *walletmodel, CWallet *wallet, const CTransaction *tx, ChangeType status)
 {
-    std::vector<std::vector<unsigned char> > vvchArgs;
-    int op, nOut;
-    if (!DecodeAliasTx(*tx, op, nOut, vvchArgs, -1)) {
-        return;
-    }
-	if(!IsAliasOp(op) || !IsAliasMine(*tx) || op == OP_ALIAS_NEW)  return;
-	int nHeight = GetAliasTxHashHeight(tx->GetHash());
-	const std::vector<unsigned char> &vchName = vvchArgs[0];
-	const std::vector<unsigned char> &vchValue = vvchArgs[op == OP_ALIAS_ACTIVATE ? 2 : 1];
-    unsigned long nExpDepth = nHeight + GetAliasExpirationDepth(nHeight);
-    OutputDebugStringF("NotifyAliasListChanged %s %s status=%i\n", stringFromVch(vchName).c_str(), stringFromVch(vchValue).c_str(), status);
-    QMetaObject::invokeMethod(walletmodel, "updateAlias", Qt::QueuedConnection,
-                              Q_ARG(QString, QString::fromStdString(stringFromVch(vchName))),
-                              Q_ARG(QString, QString::fromStdString(stringFromVch(vchValue))),
-                              Q_ARG(QString, QString::fromStdString(strprintf("%lu", nExpDepth))),
-                              Q_ARG(int, status));
+    
 }
 
 static void NotifyOfferListChanged(WalletModel *walletmodel, CWallet *wallet, const CTransaction *tx, COffer offer, ChangeType status)

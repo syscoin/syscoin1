@@ -9,6 +9,7 @@
 #include <QFont>
 
 using namespace std;
+bool GetValueOfAliasTxHash(const uint256 &txHash, vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
 
 const QString AliasTableModel::Alias = "A";
 const QString AliasTableModel::DataAlias = "D";
@@ -73,13 +74,9 @@ public:
             TRY_LOCK(wallet->cs_wallet, cs_trywallet);
 			BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, wallet->mapWallet)
 			{
-					uint256 txblkhash;	
 					// get txn hash, read txn index
 					CTransaction &tx = item.second;
-						// get the transaction
-					if(!GetTransaction(tx.GetHash(), tx, txblkhash, true))
-						continue;
-
+					CTransaction lastTx;
 					// skip non-syscoin txns
 					if (tx.nVersion != SYSCOIN_TX_VERSION)
 						continue;
@@ -87,18 +84,35 @@ public:
                     int op, nOut, nHeight;
 					
                     vector<vector<unsigned char> > vvchArgs;
+					vector<unsigned char> vchValue;
                     bool o = DecodeAliasTx(tx, op, nOut, vvchArgs, -1);
+					// prune out this tx if its not an alias that is yours
                     if (type != MyAlias || !o || !IsAliasOp(op) || !IsAliasMine(tx)) continue;
-
-
                     if (op == OP_ALIAS_NEW) continue;
-					nHeight = GetAliasTxHashHeight(tx.GetHash());
-                    const vector<unsigned char> &vchName = vvchArgs[0];
-                    const vector<unsigned char> &vchValue = vvchArgs[op == OP_ALIAS_ACTIVATE ? 2 : 1];
-                    unsigned long nExpDepth = nHeight + GetAliasExpirationDepth(nHeight);
-					updateEntry(QString::fromStdString(stringFromVch(vchName)), QString::fromStdString(stringFromVch(vchValue)), QString::fromStdString(strprintf("%lu", nExpDepth)),type, CT_NEW); 
+					  
+					// check for alias existence in DB (check that the alias wasn't transferred)
+					vector<CAliasIndex> vtxPos;
+					if (!paliasdb->ReadAlias(vvchArgs[0], vtxPos))
+						continue;
+					if (vtxPos.size() < 1)
+						continue;
+					// alias was transferred because it was mine before, but the last alias address isn't yours
+					if (!IsAliasMine(tx)) continue; 
+					// get alias data
+					uint256 hash;
+					uint256 txHash = vtxPos.back().txHash;
+					if (!GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight))
+						continue;
+
+					unsigned long nExpDepth = nHeight + GetAliasExpirationDepth(nHeight) - pindexBest->nHeight;
+					std::string strExpDepth;
+					if(nExpDepth <= 0) 
+						strExpDepth = "Expired";
+					else
+						strExpDepth = strprintf("%lu", nExpDepth);
+					updateEntry(QString::fromStdString(stringFromVch(vvchArgs[0])), QString::fromStdString(stringFromVch(vchValue)), QString::fromStdString(strExpDepth),type, CT_NEW); 
 					
-					
+		
 
             }
          }
@@ -187,24 +201,20 @@ public:
 AliasTableModel::AliasTableModel(CWallet *wallet, WalletModel *parent,  AliasModelType type) :
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0), modelType(type)
 {
-	if(type == MyAlias)
-	{
-		columns << tr("Alias") << tr("Value") << tr("Expiration Height");
-	}
-	else
-	{
-		columns << tr("Alias") << tr("Value") << tr("Expires In");
-	}
-    
+
+	columns << tr("Alias") << tr("Value") << tr("Expires In");		 
     priv = new AliasTablePriv(wallet, this);
-    priv->refreshAliasTable(type);
 }
 
 AliasTableModel::~AliasTableModel()
 {
     delete priv;
 }
-
+void AliasTableModel::refreshAliasTable() 
+{
+	clear();
+	priv->refreshAliasTable(modelType);
+}
 int AliasTableModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
@@ -333,14 +343,7 @@ Qt::ItemFlags AliasTableModel::flags(const QModelIndex &index) const
 {
     if(!index.isValid())
         return 0;
-    //AliasTableEntry *rec = static_cast<AliasTableEntry*>(index.internalPointer());
-
     Qt::ItemFlags retval = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
-    // only value is editable.
-    if(index.column()==Value)
-    {
-        retval |= Qt::ItemIsEditable;
-    }
     return retval;
 }
 

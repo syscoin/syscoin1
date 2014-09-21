@@ -111,13 +111,9 @@ bool EditAliasDialog::saveCurrentRow()
 				result = tableRPC.execute(strMethod, params);
 				if (result.type() != null_type)
 				{
-					alias = model->addRow(AliasTableModel::Alias,
-						ui->aliasEdit->text(),
-						ui->nameEdit->text(),
-						"N/A");
-					this->model->updateEntry(ui->aliasEdit->text(), ui->nameEdit->text(), "N/A", MyAlias, CT_NEW);
+					
 					QMessageBox::information(this, windowTitle(),
-					tr("New Alias created successfully! GUID for the new Alias is: \"%1\"").arg(QString::fromStdString(arr[1].get_str())),
+					tr("New Alias created successfully! Please Refresh to update your Aliases. GUID for the new Alias is: \"%1\"").arg(QString::fromStdString(arr[1].get_str())),
 					QMessageBox::Ok, QMessageBox::Ok);
 				}	
 			}
@@ -154,10 +150,8 @@ bool EditAliasDialog::saveCurrentRow()
 					string strResult = result.get_str();
 					alias = ui->nameEdit->text() + ui->aliasEdit->text();
 
-
-					this->model->updateEntry(ui->aliasEdit->text(), ui->nameEdit->text(), "N/A", MyAlias, CT_UPDATED);
 					QMessageBox::information(this, windowTitle(),
-					tr("Alias updated successfully! Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
+					tr("Alias updated successfully! Please Refresh to update your Aliases. Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
 						QMessageBox::Ok, QMessageBox::Ok);
 						
 				}
@@ -193,10 +187,8 @@ bool EditAliasDialog::saveCurrentRow()
 					string strResult = result.get_str();
 					alias = ui->nameEdit->text() + ui->aliasEdit->text()+ui->transferEdit->text();
 
-
-					this->model->updateEntry(ui->aliasEdit->text(), ui->nameEdit->text() + QString("(Transfered to ") + ui->transferEdit->text() + QString(")") , "N/A", MyAlias, CT_UPDATED);
 					QMessageBox::information(this, windowTitle(),
-					tr("Alias transferred successfully! Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
+					tr("Alias transferred successfully! Please Refresh to update your Aliases. Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
 						QMessageBox::Ok, QMessageBox::Ok);
 						
 				}

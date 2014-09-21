@@ -988,7 +988,7 @@ bool GetAliasAddress(const CDiskTxPos& txPos, std::string& strAddress) {
         return error("GetAliasAddress() : could not read tx from disk");
     return GetAliasAddress(tx, strAddress);
 }
-void GetAliasAddressandExpHeight(const std::string& strName, std::string& strAddress, int& nHeight)
+void GetAliasValue(const std::string& strName, std::string& strAddress)
 {
 
 	{
@@ -1014,9 +1014,9 @@ void GetAliasAddressandExpHeight(const std::string& strName, std::string& strAdd
 
 		vector<unsigned char> vchValue;
 		uint256 hash;
+		int nHeight;
 		if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
 			strAddress = stringFromVch(vchValue);
-			nHeight = nHeight + GetAliasExpirationDepth(nHeight);
 		}
 	}
     
