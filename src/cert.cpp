@@ -323,9 +323,9 @@ int CheckCertIssuerTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
 }
 
 int GetCertTxHashHeight(const uint256 txHash) {
-    CDiskTxPos postx;
-    pblocktree->ReadTxIndex(txHash, postx);
-    return postx.nPos;
+	CDiskTxPos postx;
+	pblocktree->ReadTxIndex(txHash, postx);
+	return GetNameTxPosHeight(postx);
 }
 
 uint64 GetCertFeeSubsidy(unsigned int nHeight) {

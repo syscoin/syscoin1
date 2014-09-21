@@ -322,7 +322,7 @@ int CheckOfferTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
 int GetOfferTxHashHeight(const uint256 txHash) {
 	CDiskTxPos postx;
 	pblocktree->ReadTxIndex(txHash, postx);
-	return postx.nPos;
+	return GetNameTxPosHeight(postx);
 }
 
 uint64 GetOfferFeeSubsidy(unsigned int nHeight) {
