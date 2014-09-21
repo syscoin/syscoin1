@@ -9,7 +9,7 @@
 #include <QFont>
 
 using namespace std;
-bool GetValueOfAliasTxHash(const uint256 &txHash, vector<unsigned char>& vchValue, uint256& hash, int64& nHeight);
+bool GetValueOfAliasTxHash(const uint256 &txHash, vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
 
 const QString AliasTableModel::Alias = "A";
 const QString AliasTableModel::DataAlias = "D";
@@ -18,7 +18,7 @@ class CAliasDB;
 
 extern CAliasDB *paliasdb;
 
-int64 GetAliasExpirationDepth(int64 nHeight);
+int GetAliasExpirationDepth(int nHeight);
 int64 GetAliasTxHashHeight(const uint256 txHash);
 struct AliasTableEntry
 {
@@ -81,8 +81,7 @@ public:
 					if (tx.nVersion != SYSCOIN_TX_VERSION)
 						continue;
 
-                    int op, nOut;
-					int64 nHeight;
+                    int op, nOut, nHeight;
 					
                     vector<vector<unsigned char> > vvchArgs;
 					vector<unsigned char> vchValue;
