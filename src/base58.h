@@ -279,8 +279,8 @@ public:
         SCRIPT_ADDRESS = 5,
         PUBKEY_ADDRESS_TEST = 65, // testnet keys start with T
         SCRIPT_ADDRESS_TEST = 196,
-        PUBKEY_ADDRESS_CAKE = 67, // testnet keys start with U
-        SCRIPT_ADDRESS_CAKE = 199,
+        PUBKEY_ADDRESS_CAKE = 66, // cakenet keys also start with T. live with it.
+        SCRIPT_ADDRESS_CAKE = 197,
     };
 
     bool Set(const CKeyID &id) {
@@ -315,6 +315,7 @@ public:
         bool fExpectCakeNet = false;
         switch(nVersion)
         {
+        	// mainnet
             case PUBKEY_ADDRESS:
                 nExpectedSize = 20; // Hash of public key
                 fExpectTestNet = false;
@@ -325,7 +326,7 @@ public:
                 fExpectTestNet = false;
                 fExpectCakeNet = false;
                 break;
-
+            // testnet
             case PUBKEY_ADDRESS_TEST:
                 nExpectedSize = 20;
                 fExpectTestNet = true;
@@ -335,8 +336,7 @@ public:
                 nExpectedSize = 20;
                 fExpectTestNet = true;
                 fExpectCakeNet = false;
-                break;
-
+            //cakenet
             case PUBKEY_ADDRESS_CAKE:
                 nExpectedSize = 20;
                 fExpectTestNet = false;
@@ -347,6 +347,7 @@ public:
                 fExpectTestNet = false;
                 fExpectCakeNet = true;
                 break;
+
             default:
                 return false;
         }
@@ -415,13 +416,15 @@ public:
             return CNoDestination();
         switch (nVersion) {
         case PUBKEY_ADDRESS:
-        case PUBKEY_ADDRESS_TEST: {
+        case PUBKEY_ADDRESS_TEST:
+        case PUBKEY_ADDRESS_CAKE: {
             uint160 id;
             memcpy(&id, &vchData[0], 20);
             return CKeyID(id);
         }
         case SCRIPT_ADDRESS:
-        case SCRIPT_ADDRESS_TEST: {
+        case SCRIPT_ADDRESS_TEST:
+        case SCRIPT_ADDRESS_CAKE: {
             uint160 id;
             memcpy(&id, &vchData[0], 20);
             return CScriptID(id);
@@ -435,7 +438,8 @@ public:
             return false;
         switch (nVersion) {
         case PUBKEY_ADDRESS:
-        case PUBKEY_ADDRESS_TEST: {
+        case PUBKEY_ADDRESS_TEST:
+        case PUBKEY_ADDRESS_CAKE: {
             uint160 id;
             memcpy(&id, &vchData[0], 20);
             keyID = CKeyID(id);
@@ -450,7 +454,8 @@ public:
             return false;
         switch (nVersion) {
         case SCRIPT_ADDRESS:
-        case SCRIPT_ADDRESS_TEST: {
+        case SCRIPT_ADDRESS_TEST:
+        case SCRIPT_ADDRESS_CAKE: {
             return true;
         }
         default: return false;
