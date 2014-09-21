@@ -22,7 +22,7 @@ using namespace json_spirit;
 
 extern const CRPCTable tableRPC;
 extern string JSONRPCReply(const Value& result, const Value& error, const Value& id);
-int GetAliasExpirationDepth(int nHeight);
+int64 GetAliasExpirationDepth(int64 nHeight);
 AliasListPage::AliasListPage(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AliasListPage),

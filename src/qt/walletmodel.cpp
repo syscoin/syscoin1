@@ -25,10 +25,8 @@ int GetCertExpirationDepth(int nHeight);
 
 class CAliasDB;
 extern CAliasDB *paliasdb;
-int GetAliasExpirationDepth(int nHeight);
 
 class COfferAccept;
-int GetAliasExpirationDepth(int nHeight);
 int GetAliasTxHashHeight(const uint256 txHash);
 WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
     QObject(parent),
