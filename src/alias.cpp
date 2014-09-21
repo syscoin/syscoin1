@@ -1843,6 +1843,8 @@ Value aliasfilter(const Array& params, bool fHelp) {
 		if (nCountFrom < nFrom + 1)
 			continue;
 
+
+
 		Object oName;
 		oName.push_back(Pair("name", name));
 		CTransaction tx;
@@ -1853,7 +1855,8 @@ Value aliasfilter(const Array& params, bool fHelp) {
 				|| !GetTransaction(txHash, tx, blockHash, true)) {
 			oName.push_back(Pair("expired", 1));
 		} else {
-			vector<unsigned char> vchValue = txName.vValue;
+			vector<unsigned char> vchValue;
+			GetValueOfAliasTx(tx, vchValue);
 			string value = stringFromVch(vchValue);
 			oName.push_back(Pair("value", value));
 			oName.push_back(Pair("txid", txHash.GetHex()));
