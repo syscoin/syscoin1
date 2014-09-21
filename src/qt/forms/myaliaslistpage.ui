@@ -30,7 +30,7 @@
       <enum>Qt::CustomContextMenu</enum>
      </property>
      <property name="toolTip">
-      <string>Double-click to edit alias</string>
+      <string></string>
      </property>
      <property name="tabKeyNavigation">
       <bool>false</bool>
