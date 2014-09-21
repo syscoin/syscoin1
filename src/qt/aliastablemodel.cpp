@@ -81,7 +81,8 @@ public:
 					if (tx.nVersion != SYSCOIN_TX_VERSION)
 						continue;
 
-                    int op, nOut, nHeight;
+                    int op, nOut;
+					int64 nHeight;
 					
                     vector<vector<unsigned char> > vvchArgs;
 					vector<unsigned char> vchValue;
