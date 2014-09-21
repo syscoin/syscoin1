@@ -27,7 +27,7 @@ class CAliasDB;
 extern CAliasDB *paliasdb;
 
 class COfferAccept;
-int GetAliasTxHashHeight(const uint256 txHash);
+
 WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
     QObject(parent),
     wallet(wallet),
@@ -176,9 +176,9 @@ bool WalletModel::validateAlias(const QString &alias)
 void WalletModel::updateAlias(const QString &alias, const QString &value, const QString &expDepth, int status)
 {
     if(aliasTableModelMine)
-        aliasTableModelMine->updateEntry(alias, value, expDepth, MyAlias, status);
-    if(aliasTableModelAll)
-        aliasTableModelAll->updateEntry(alias, value, expDepth, AllAlias, status);
+        aliasTableModelMine->refreshAliasTable();
+    //if(aliasTableModelAll)
+      //  aliasTableModelAll->updateEntry(alias, value, expDepth, AllAlias, status);
 }
 
 void WalletModel::updateOffer(const QString &offer, const QString &title, const QString &category, 
@@ -427,7 +427,23 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet, 
 
 static void NotifyAliasListChanged(WalletModel *walletmodel, CWallet *wallet, const CTransaction *tx, ChangeType status)
 {
-    
+    std::vector<std::vector<unsigned char> > vvchArgs;
+    int op, nOut;
+    if (!DecodeAliasTx(*tx, op, nOut, vvchArgs, -1)) {
+        return;
+    }
+	if(!IsAliasOp(op) || !IsAliasMine(*tx) || op == OP_ALIAS_NEW)  return;
+	
+	const std::vector<unsigned char> &vchName = vvchArgs[0];
+	const std::vector<unsigned char> &vchValue = vvchArgs[op == OP_ALIAS_ACTIVATE ? 2 : 1];
+    //unsigned long nExpDepth = nHeight + GetAliasExpirationDepth(nHeight)- pindexBest->nHeight;
+    OutputDebugStringF("NotifyAliasListChanged %s %s status=%i\n", stringFromVch(vchName).c_str(), stringFromVch(vchValue).c_str(), status);
+    QMetaObject::invokeMethod(walletmodel, "updateAlias", Qt::QueuedConnection,
+                              Q_ARG(QString, QString::fromStdString(stringFromVch(vchName))),
+                              Q_ARG(QString, QString::fromStdString(stringFromVch(vchValue))),
+                              Q_ARG(QString, QString::fromStdString("0")),
+                              Q_ARG(int, status)); 
+
 }
 
 static void NotifyOfferListChanged(WalletModel *walletmodel, CWallet *wallet, const CTransaction *tx, COffer offer, ChangeType status)
