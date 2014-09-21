@@ -153,9 +153,9 @@ void RemoveAliasTxnFromMemoryPool(const CTransaction& tx);
 bool IsAliasMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasnew = false);
 bool IsAliasOp(int op);
 
-int GetNameTxPosHeight(const CAliasIndex& txPos);
-int GetNameTxPosHeight(const CDiskTxPos& txPos);
-int GetNameTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
+int64 GetNameTxPosHeight(const CAliasIndex& txPos);
+int64 GetNameTxPosHeight(const CDiskTxPos& txPos);
+int64 GetNameTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
 bool GetTxOfAlias(CAliasDB& dbName, const std::vector<unsigned char> &vchName, CTransaction& tx);
 int IndexOfNameOutput(const CTransaction& tx);
 bool GetValueOfNameTxHash(const uint256& txHash, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
