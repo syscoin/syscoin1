@@ -123,6 +123,7 @@ bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
 	BOOST_FOREACH(CAliasFee &nmTxnValue, lstAliasFees) {
 		if (txnVal.hash == nmTxnValue.hash
 				&& txnVal.nHeight == nmTxnValue.nHeight) {
+			nmTxnValue = txnVal;
 			bFound = true;
 			break;
 		}
@@ -470,41 +471,43 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 				if (!fMiner && !fJustCheck
 						&& pindexBlock->nHeight != pindexBest->nHeight) {
-
+					
 					int nHeight = pindexBlock->nHeight;
-					vector<unsigned char> vchVal;
-					CAliasIndex txPos2;
-					uint256 hash;
-					GetValueOfAliasTxHash(tx.GetHash(), vchVal, hash, nHeight);
-					txPos2.nHeight = nHeight;
-					txPos2.vValue = vchVal;
-					txPos2.txHash = tx.GetHash();
-					txPos2.txPrevOut = *prevOutput;
-
-					if (vtxPos.size() > 0 && vtxPos.back().nHeight == nHeight)
-						vtxPos.pop_back();
-					vtxPos.push_back(txPos2); // fin add
-
-					if (!paliasdb->WriteAlias(vvchArgs[0], vtxPos))
-						return error(
-								"CheckAliasInputs() :  failed to write to alias DB");
-					mapTestPool[vvchArgs[0]] = tx.GetHash();
-
-					// write alias fees to db
-					int64 nTheFee = GetAliasNetFee(tx);
-					InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
-					if (nTheFee != 0)
-						printf(
-								"ALIAS FEES: Added %lf in fees to track for regeneration.\n",
-								(double) nTheFee / COIN);
-					vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
-							lstAliasFees.end());
-					if (!paliasdb->WriteAliasTxFees(vAliasFees))
-						return error(
-								"CheckOfferInputs() : failed to write fees to alias DB");
-
 					{
 						LOCK(cs_main);
+
+						vector<unsigned char> vchVal;
+						CAliasIndex txPos2;
+						uint256 hash;
+						GetValueOfAliasTxHash(tx.GetHash(), vchVal, hash, nHeight);
+						txPos2.nHeight = nHeight;
+						txPos2.vValue = vchVal;
+						txPos2.txHash = tx.GetHash();
+						txPos2.txPrevOut = *prevOutput;
+
+						if (vtxPos.size() > 0 && vtxPos.back().nHeight == nHeight)
+							vtxPos.pop_back();
+						vtxPos.push_back(txPos2); // fin add
+
+
+						if (!paliasdb->WriteAlias(vvchArgs[0], vtxPos))
+							return error(
+									"CheckAliasInputs() :  failed to write to alias DB");
+						mapTestPool[vvchArgs[0]] = tx.GetHash();
+
+						// write alias fees to db
+						int64 nTheFee = GetAliasNetFee(tx);
+						InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
+						if (nTheFee != 0)
+							printf(
+									"ALIAS FEES: Added %lf in fees to track for regeneration.\n",
+									(double) nTheFee / COIN);
+						vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
+								lstAliasFees.end());
+						if (!paliasdb->WriteAliasTxFees(vAliasFees))
+							return error(
+									"CheckOfferInputs() : failed to write fees to alias DB");
+
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi =
 								mapAliasesPending.find(vvchArgs[0]);
 						if (mi != mapAliasesPending.end())
@@ -640,6 +643,7 @@ void rescanforaliases(CBlockIndex *pindexRescan) {
 bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 	CDiskTxPos txindex;
 	CBlockIndex* pindex = pindexRescan;
+	lstAliasFees.clear();
 
 	{
 		LOCK(pwalletMain->cs_wallet);
@@ -692,6 +696,12 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 				// get fees for txn and add them to regenerate list
 				int64 nTheFee = GetAliasNetFee(tx);
 				InsertAliasFee(pindex, tx.GetHash(), nTheFee);
+				vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
+					lstAliasFees.end());
+				if (!paliasdb->WriteAliasTxFees(vAliasFees))
+					return error(
+							"CheckOfferInputs() : failed to write fees to alias DB");
+
 
 				printf(
 						"RECONSTRUCT ALIAS: op=%s alias=%s value=%s hash=%s height=%d fees=%llu\n",

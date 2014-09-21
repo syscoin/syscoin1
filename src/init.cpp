@@ -908,8 +908,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 pofferdb = new COfferDB(nNameDBCache*2, false, fReindex);
                 pcertdb = new CCertDB(nNameDBCache*2, false, fReindex);
 
-                if (fReindex)
-                    pblocktree->WriteReindexing(true);
+                if (fReindex) pblocktree->WriteReindexing(true);
 
                 if (!LoadBlockIndex()) {
                     strLoadError = _("Error loading block database");
@@ -934,7 +933,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 }
 
                 uiInterface.InitMessage(_("Verifying blocks..."));
-                if (!VerifyDB(GetArg("-checklevel", 3),
+                if (!VerifyDB(GetArg("-checklevel", 4),
                               GetArg( "-checkblocks", 288))) {
                     strLoadError = _("Corrupted block database detected");
                     break;
