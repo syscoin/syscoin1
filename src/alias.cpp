@@ -1613,11 +1613,9 @@ Value aliaslist(const Array& params, bool fHelp) {
 			string strAddress = "";
 			GetAliasAddress(tx, strAddress);
 			oName.push_back(Pair("address", strAddress));
-            oName.push_back(Pair("lastupdate_height", Value(nHeight).get_str()));
-            oName.push_back(Pair("expires_on", Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)).get_str()));
-            oName.push_back(
-                    Pair("expires_in",
-                            Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight).get_str()));
+            oName.push_back(Pair("lastupdate_height", nHeight));
+            oName.push_back(Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight)));
+            oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight ));
 
 			if (nHeight + GetAliasDisplayExpirationDepth(nHeight)
 					- pindexBest->nHeight <= 0)
@@ -1685,11 +1683,9 @@ Value aliasinfo(const Array& params, bool fHelp) {
 			string strAddress = "";
 			GetAliasAddress(tx, strAddress);
 			oName.push_back(Pair("address", strAddress));
-            oName.push_back(Pair("lastupdate_height", Value(nHeight).get_str()));
-            oName.push_back(Pair("expires_on", Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)).get_str()));
-            oName.push_back(
-                    Pair("expires_in",
-                            Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight).get_str()));
+            oName.push_back(Pair("lastupdate_height", nHeight));
+            oName.push_back(Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight)));
+            oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight ));
 			if (nHeight + GetAliasDisplayExpirationDepth(nHeight)
 					- pindexBest->nHeight <= 0) {
 				oName.push_back(Pair("expired", 1));
@@ -1749,11 +1745,9 @@ Value aliashistory(const Array& params, bool fHelp) {
 				string strAddress = "";
 				GetAliasAddress(tx, strAddress);
 				oName.push_back(Pair("address", strAddress));
-            oName.push_back(Pair("lastupdate_height", Value(nHeight).get_str()));
-            oName.push_back(Pair("expires_on", Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)).get_str()));
-            oName.push_back(
-                    Pair("expires_in",
-                            Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight).get_str()));
+	            oName.push_back(Pair("lastupdate_height", nHeight));
+	            oName.push_back(Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight)));
+	            oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight ));
 				if (nHeight + GetAliasDisplayExpirationDepth(nHeight)
 						- pindexBest->nHeight <= 0) {
 					oName.push_back(Pair("expired", 1));
@@ -1853,11 +1847,9 @@ Value aliasfilter(const Array& params, bool fHelp) {
 			string value = stringFromVch(vchValue);
 			oName.push_back(Pair("value", value));
 			oName.push_back(Pair("txid", txHash.GetHex()));
-            oName.push_back(Pair("lastupdate_height", Value(nHeight).get_str()));
-            oName.push_back(Pair("expires_on", Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)).get_str()));
-            oName.push_back(
-                    Pair("expires_in",
-                            Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight).get_str()));
+            oName.push_back(Pair("lastupdate_height", nHeight));
+            oName.push_back(Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight)));
+            oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight ));
 		}
 		oRes.push_back(oName);
 
@@ -1925,11 +1917,9 @@ Value aliasscan(const Array& params, bool fHelp) {
 			string value = stringFromVch(vchValue);
 			oName.push_back(Pair("txid", txName.txHash.GetHex()));
 			oName.push_back(Pair("value", value));
-            oName.push_back(Pair("lastupdate_height", Value(nHeight).get_str()));
-            oName.push_back(Pair("expires_on", Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)).get_str()));
-			oName.push_back(
-					Pair("expires_in",
-							Value(nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight).get_str()));
+            oName.push_back(Pair("lastupdate_height", nHeight));
+            oName.push_back(Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight)));
+            oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight ));
 		}
 		oRes.push_back(oName);
 	}
