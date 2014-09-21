@@ -250,6 +250,7 @@ void AliasListPage::on_searchAlias_clicked()
 			std::string name = "";
 			std::string value = "";
 			std::string expires = "";
+			int expired = 0;
 			int expiresi = 0;
 			const Value& nv = find_value(o, "name");
 			if (nv.type() == str_type)
@@ -260,7 +261,17 @@ void AliasListPage::on_searchAlias_clicked()
 			const Value& ev = find_value(o, "expires_in");
 			if (ev.type() == int_type)
 				expiresi = ev.get_int();
-			expires = strprintf("%d", expiresi);
+			const Value& expv = find_value(o, "expired");
+			if (expv.type() == int_type)
+				expired = expv.get_int();
+			if(expired == 1)
+			{
+				expires = "Expired";
+			}
+			else
+			{
+				expires = strprintf("%d", expiresi);
+			}
 				model->addRow(AliasTableModel::Alias,
 						QString::fromStdString(name),
 						QString::fromStdString(value),
