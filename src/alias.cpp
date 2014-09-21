@@ -1736,6 +1736,7 @@ Value aliasfilter(const Array& params, bool fHelp) {
             vector<unsigned char> vchValue = txName.vValue;
             string value = stringFromVch(vchValue);
             oName.push_back(Pair("value", value));
+            oName.push_back(Pair("txid", txHash.GetHex()));
             oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
         }
         oRes.push_back(oName);
@@ -1805,6 +1806,7 @@ Value aliasscan(const Array& params, bool fHelp)
         }
         else {
             string value = stringFromVch(vchValue);
+            oName.push_back(Pair("txid", txName.txHash.GetHex()));
             oName.push_back(Pair("value", value));
             oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
         }
