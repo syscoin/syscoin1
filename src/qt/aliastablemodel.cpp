@@ -96,12 +96,16 @@ public:
 						continue;
 					if (vtxPos.size() < 1)
 						continue;
-					// alias was transferred because it was mine before, but the last alias address isn't yours
-					if (!IsAliasMine(tx)) continue; 
-					// get alias data
-					uint256 hash;
+					uint256 hashBlock;
 					uint256 txHash = vtxPos.back().txHash;
-					if (!GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight))
+					if (!GetTransaction(txHash, lastTx, hashBlock, true))
+						continue;
+					// alias was transferred because it was mine before, but the last alias address isn't yours
+					if (!IsAliasMine(lastTx)) continue; 
+					// get alias data
+					
+					
+					if (!GetValueOfAliasTxHash(txHash, vchValue, hashBlock, nHeight))
 						continue;
 
 					unsigned long nExpDepth = nHeight + GetAliasExpirationDepth(nHeight) - pindexBest->nHeight;
@@ -143,14 +147,9 @@ public:
 			index = parent->lookupAlias(alias);
             if(inModel || index != -1)
             {
-				lower->type = newEntryType;
-				lower->value = value;
-				lower->expirationdepth = exp;
-				if(inModel)
-					parent->emitDataChanged(lowerIndex);
-				else
-					parent->emitDataChanged(index);
-				break;
+                OutputDebugStringF("Warning: AliasTablePriv::updateEntry: Got CT_NOW, but entry is already in model\n");
+                break;
+            
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
             cachedAliasTable.insert(lowerIndex, AliasTableEntry(newEntryType, value, alias, exp));
