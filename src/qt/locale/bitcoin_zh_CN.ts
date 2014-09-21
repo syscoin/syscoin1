@@ -1566,13 +1566,8 @@ Address: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-<<<<<<< HEAD
         <source>Enter a Syscoin address or alias (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2 or myaliasname)</source>
         <translation>请输入莱特币地址 (例如: Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</translation>
-=======
-        <source>Enter a Syscoin address (e.g. Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</source>
-        <translation>请输入系统币地址 (例如: Ler4HNAEfwYhBmGXcFP2Po1NpRUEiK8km2)</translation>
->>>>>>> e645871d9d193194df803d9d0509fbef6a1c0fff
     </message>
     <message>
         <location line="-2"/>
