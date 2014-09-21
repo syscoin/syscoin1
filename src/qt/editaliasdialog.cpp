@@ -115,6 +115,7 @@ bool EditAliasDialog::saveCurrentRow()
 					QMessageBox::information(this, windowTitle(),
 					tr("New Alias created successfully! Please Refresh to update your Aliases. GUID for the new Alias is: \"%1\"").arg(QString::fromStdString(arr[1].get_str())),
 					QMessageBox::Ok, QMessageBox::Ok);
+					return true;
 				}	
 			}
 		}
@@ -185,6 +186,7 @@ bool EditAliasDialog::saveCurrentRow()
 				if (result.type() != null_type)
 				{
 					string strResult = result.get_str();
+
 					alias = ui->nameEdit->text() + ui->aliasEdit->text()+ui->transferEdit->text();
 
 					QMessageBox::information(this, windowTitle(),
