@@ -1,11 +1,11 @@
 QDialog, QMainWindow, QFrame {
         color: #0094D9;
         background-color: #F5F5F5;
-	border: none;
+        border: none;
 }
 
 QLabel {
-	background-color: transparent;
+        background-color: transparent;
 }
 
 QCheckBox {
@@ -15,22 +15,22 @@ QCheckBox {
 QFrame#central { background-color: #E7E7E7; border: none }
 QFrame#frame, QFrame#frame_2, QFrame#frame_3 {
         background-color: #E7E7E7;
-	border-style: plain;
-	border-width: 20px;
-	border-radius: 20px;
+        border-style: plain;
+        border-width: 20px;
+        border-radius: 20px;
         border-color: #E7E7E7;
-	min-width: 10em;
-	padding: 6px;
+        min-width: 10em;
+        padding: 6px;
 }
 QLabel[openExternalLinks=true], QHeaderView { color: #0094D9 }
 QLabel[openExternalLinks=false] { color: black; font-weight: normal }
 QPushButton, QToolButton {
         border: 4px solid #E7E7E7;
-	border-radius: 12px;
+        border-radius: 12px;
         background-color: #E7E7E7;
         color: black;
-	padding: 6px;
-	margin: 6px;
+        padding: 6px;
+        margin: 6px;
 }
 QPushButton:pressed, QToolButton:checked {
         color: #000000;
@@ -46,11 +46,11 @@ QPushButton:disabled, QToolButton:disabled {
 
 
 #scrollAreaWidgetContents QToolButton {
-	border-radius: 8px;
-	border-width: 0px;
+        border-radius: 8px;
+        border-width: 0px;
 }
 
-/* the background-color is overridden to transparent for mac os x 
+/* the background-color is overridden to transparent for mac os x
    due to the entire toolbar area not being drawable in a regular
    QMainWindow
 */
@@ -65,26 +65,26 @@ QMenuBar::item { background: #E7E7E7; color: black; }
 #scrollAreaWidgetContents > QFrame { background-color: #E7E7E7; border-width: 0px; border-style: none; }
 
 QLineEdit {
-	border-radius: 6px;
-	border-width: 2px;
+        border-radius: 6px;
+        border-width: 2px;
         border-color: #000000;
-	padding: 8px;
+        padding: 8px;
         background-color: #FFFFFF;
         color: black;
 }
 
 QComboBox {
-	border-radius: 6px;
-	border-width: 0;
-	border-style: none;
-	padding: 8px;
+        border-radius: 6px;
+        border-width: 0;
+        border-style: none;
+        padding: 8px;
         background-color: #E7E7E7;
         color: black;
 }
 
 QComboBox::drop-down {
-	border-width: 0;
-	border-style: none;
+        border-width: 0;
+        border-style: none;
         background-color: #E7E7E7;
         color: black;
 }
@@ -92,11 +92,11 @@ QComboBox::drop-down {
 QTableView {
         background: #E7E7E7;
         color: black;
-	border-style: none;
+        border-style: none;
         selection-background-color: #0094D9;
         alternate-background-color: #E7E7E7;
         selection-color: #E7E7E7;
-	border: 0px solid black;
+        border: 0px solid black;
 }
 
 QHeaderView { color: #000000; background-color: #E7E7E7; background-image: none; }
@@ -109,7 +109,7 @@ QTabWidget {
 
  QTabWidget::pane {
      border-top: 2px solid #E7E7E7;
-     border: 4px solid #E7E7E7;
+     border: 4px solid #b8b8b8;
      border-bottom-left-radius: 8px;
      border-bottom-right-radius: 8px;
      border-top-right-radius: 8px;
@@ -138,19 +138,20 @@ QTabWidget {
  }
 
  QTabBar::tab:selected {
-     border-color: #E7E7E7; /* same as pane color */
-     border-top-color: #000000;
+     border-color: #b8b8b8; /* same as pane color */
+     background: #b8b8b8;
  }
 
  QTabBar::tab:!selected {
-     margin-top: 2px; /* make non-selected tabs look smaller */
+     margin-top: 5px; /* make non-selected tabs look smaller */
  }
 
  /* make use of negative margins for overlapping tabs */
  QTabBar::tab:selected {
      /* expand/overlap to the left and right by 4px */
-     margin-left: -4px;
-     margin-right: -4px;
+     margin-top: 5px;
+     margin-left: 1px;
+     margin-right: 1px;
  }
 
  QTabBar::tab:first:selected {

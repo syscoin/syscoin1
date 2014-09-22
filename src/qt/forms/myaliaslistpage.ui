@@ -56,6 +56,12 @@
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QPushButton" name="refreshButton">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>48</height>
+        </size>
+       </property>
        <property name="text">
         <string>&amp;Refresh</string>
        </property>
