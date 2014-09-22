@@ -8,7 +8,7 @@ namespace Ui {
 }
 class AliasTableModel;
 class OptionsModel;
-
+class WalletModel;
 QT_BEGIN_NAMESPACE
 class QTableView;
 class QItemSelection;
@@ -30,7 +30,7 @@ public:
     ~AliasListPage();
 
 
-    void setModel(AliasTableModel *model);
+    void setModel(WalletModel*, AliasTableModel *model);
     void setOptionsModel(OptionsModel *optionsModel);
     const QString &getReturnValue() const { return returnValue; }
     bool handleURI(const QString &uri);
@@ -39,7 +39,7 @@ private:
     Ui::AliasListPage *ui;
     AliasTableModel *model;
     OptionsModel *optionsModel;
-
+	WalletModel* walletModel;
     QString returnValue;
     QSortFilterProxyModel *proxyModel;
     QMenu *contextMenu;

@@ -14,7 +14,6 @@ using namespace std;
 using namespace json_spirit;
 extern int nBestHeight;
 extern const CRPCTable tableRPC;
-uint64 GetAliasFeeSubsidy(unsigned int nHeight);
 int64 GetAliasNetworkFee(int nType, int nHeight);
 EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
@@ -97,7 +96,7 @@ bool EditAliasDialog::saveCurrentRow()
     {
     case NewDataAlias:
     case NewAlias:
-		newFee = GetAliasFeeSubsidy(nBestHeight)/COIN;
+		newFee = 1;
 		QMessageBox::StandardButton retval;
 		updateFee = GetAliasNetworkFee(1, nBestHeight)/COIN;
 		newFeeStr = strprintf("%"PRI64d, newFee);

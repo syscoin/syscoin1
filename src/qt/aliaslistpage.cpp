@@ -6,6 +6,7 @@
 
 #include "aliastablemodel.h"
 #include "optionsmodel.h"
+#include "walletmodel.h"
 #include "bitcoingui.h"
 #include "bitcoinrpc.h"
 #include "editaliasdialog.h"
@@ -64,9 +65,10 @@ AliasListPage::~AliasListPage()
     delete ui;
 }
 
-void AliasListPage::setModel(AliasTableModel *model)
+void AliasListPage::setModel(WalletModel* walletModel, AliasTableModel *model)
 {
     this->model = model;
+	this->walletModel = walletModel;
     if(!model) return;
 
     proxyModel = new QSortFilterProxyModel(this);
@@ -199,6 +201,12 @@ void AliasListPage::selectNewAlias(const QModelIndex &parent, int begin, int /*e
 
 void AliasListPage::on_searchAlias_clicked()
 {
+    if(!walletModel) return;
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+    if(!ctx.isValid())
+    {
+        return;
+    }
     if(ui->lineEditAliasSearch->text().trimmed().isEmpty())
     {
         QMessageBox::warning(this, tr("Error Searching Alias"),

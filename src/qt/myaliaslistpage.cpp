@@ -7,6 +7,7 @@
 #include "aliastablemodel.h"
 #include "clientmodel.h"
 #include "optionsmodel.h"
+#include "walletmodel.h"
 #include "bitcoingui.h"
 #include "editaliasdialog.h"
 #include "csvmodelwriter.h"
@@ -156,13 +157,11 @@ void MyAliasListPage::on_refreshButton_clicked()
 {
     if(!model)
         return;
-	/*if(this->clientModel->inInitialBlockDownload())
-	{
-        QMessageBox::critical(this, windowTitle(),
-            tr("The blockchain must be fully synchronized before loading Aliases. Please try again later."),
-            QMessageBox::Ok, QMessageBox::Ok);
-		return;
-	}*/
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+    if(!ctx.isValid())
+    {
+        return;
+    }
     model->refreshAliasTable();
 }
 void MyAliasListPage::on_newAlias_clicked()

@@ -5253,7 +5253,7 @@ CBlockHeader CBlockIndex::GetBlockHeader() const {
 }
 
 void static ScryptMiner(CWallet *pwallet) {
-	printf("SyscoinScryptMiner started\n");
+	printf("SyscoinscryptMiner started\n");
 	SetThreadPriority(THREAD_PRIORITY_LOWEST);
 	RenameThread("syscoin-miner");
 

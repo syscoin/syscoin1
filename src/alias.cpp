@@ -1483,11 +1483,9 @@ Value aliasupdate(const Array& params, bool fHelp) {
 	vector<unsigned char> vchValue = vchFromValue(params[1]);
 	if (vchValue.size() > 1023)
 		throw runtime_error("alias value > 1023 bytes!\n");
-
 	CWalletTx wtx;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 	CScript scriptPubKeyOrig;
-
 	if (params.size() == 3) {
 		string strAddress = params[2].get_str();
 		CBitcoinAddress myAddress = CBitcoinAddress(strAddress);
@@ -1555,7 +1553,7 @@ Value aliaslist(const Array& params, bool fHelp) {
 		throw runtime_error("aliaslist [<name>]\n"
 				"list my own aliases.\n"
 				"<name> alias name to use as filter.\n");
-
+	
 	vector<unsigned char> vchName;
 
 	if (params.size() == 1)
@@ -1564,7 +1562,7 @@ Value aliaslist(const Array& params, bool fHelp) {
 	vector<unsigned char> vchNameUniq;
 	if (params.size() == 1)
 		vchNameUniq = vchFromValue(params[0]);
-
+	EnsureWalletIsUnlocked();
 	Array oRes;
 	map<vector<unsigned char>, int> vNamesI;
 	map<vector<unsigned char>, Object> vNamesO;
@@ -1656,7 +1654,7 @@ Value aliasinfo(const Array& params, bool fHelp) {
 	if (fHelp || 1 != params.size())
 		throw runtime_error("aliasinfo <name>\n"
 				"Show values of an alias.\n");
-
+	EnsureWalletIsUnlocked();
 	vector<unsigned char> vchName = vchFromValue(params[0]);
 	CTransaction tx;
 	Object oShowResult;
@@ -1718,7 +1716,7 @@ Value aliashistory(const Array& params, bool fHelp) {
 	if (fHelp || 1 != params.size())
 		throw runtime_error("aliashistory <name>\n"
 				"List all stored values of an alias.\n");
-
+	EnsureWalletIsUnlocked();
 	Array oRes;
 	vector<unsigned char> vchName = vchFromValue(params[0]);
 	string name = stringFromVch(vchName);
@@ -1795,7 +1793,7 @@ Value aliasfilter(const Array& params, bool fHelp) {
 	bool fStat = false;
 	int nCountFrom = 0;
 	int nCountNb = 0;
-
+	EnsureWalletIsUnlocked();
 	/* when changing this to match help, review bitcoinrpc.cpp RPCConvertValues() */
 	if (params.size() > 0)
 		strRegexp = params[0].get_str();
@@ -1897,7 +1895,7 @@ Value aliasscan(const Array& params, bool fHelp) {
 	int nMax = 500;
 	if (params.size() > 0)
 		vchName = vchFromValue(params[0]);
-
+	EnsureWalletIsUnlocked();
 	if (params.size() > 1) {
 		Value vMax = params[1];
 		ConvertTo<double>(vMax);
@@ -1973,6 +1971,7 @@ Value aliasclean(const Array& params, bool fHelp) {
 		throw runtime_error(
 				"aliasclean\nClean unsatisfiable alias transactions from the wallet - including aliasactivate on an already taken alias\n");
 	{
+		EnsureWalletIsUnlocked();
 		LOCK2(cs_main, pwalletMain->cs_wallet);
 		map<uint256, CWalletTx> mapRemove;
 
@@ -2080,6 +2079,7 @@ Value getaliasfees(const Array& params, bool fHelp) {
 		throw runtime_error(
 				"getaliasfees\n"
 						"get current service fees for alias transactions\n");
+	EnsureWalletIsUnlocked();
 	Object oRes;
 	oRes.push_back(Pair("height", nBestHeight ));
 	oRes.push_back(Pair("subsidy", ValueFromAmount(GetAliasFeeSubsidy(nBestHeight) )));
@@ -2096,7 +2096,7 @@ Value datanew(const Array& params, bool fHelp) {
 				"datanew <alias>\n"
 						"<alias> data alias name, 255 chars max."
 						+ HelpRequiringPassphrase());
-
+	
 	vector<unsigned char> vchName = vchFromValue(params[0]);
 	if (vchName.size() > 255)
 		throw runtime_error("data name > 255 bytes!\n");
