@@ -102,7 +102,7 @@ bool EditAliasDialog::saveCurrentRow()
     {
     case NewDataAlias:
     case NewAlias:
-		newFee = (int64)GetAliasFeeSubsidy(nBestHeight) ;
+		newFee = GetAliasFeeSubsidy(nBestHeight)/COIN;
 		QMessageBox::StandardButton retval;
 		updateFee = GetAliasNetworkFee(1, nBestHeight)/COIN;
 		newFeeStr = strprintf("%"PRI64d, newFee);
