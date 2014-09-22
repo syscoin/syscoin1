@@ -15,6 +15,7 @@ class QItemSelection;
 class QSortFilterProxyModel;
 class QMenu;
 class QModelIndex;
+class QKeyEvent;
 QT_END_NAMESPACE
 
 /** Widget that shows a list of owned aliases.
@@ -34,7 +35,7 @@ public:
     void setOptionsModel(OptionsModel *optionsModel);
     const QString &getReturnValue() const { return returnValue; }
     bool handleURI(const QString &uri);
-
+	void keyPressEvent(QKeyEvent * event);
 private:
     Ui::AliasListPage *ui;
     AliasTableModel *model;

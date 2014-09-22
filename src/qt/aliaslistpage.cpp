@@ -16,6 +16,7 @@
 #include <QSortFilterProxyModel>
 #include <QClipboard>
 #include <QMessageBox>
+#include <QKeyEvent>
 #include <QMenu>
 #include "main.h"
 using namespace std;
@@ -149,7 +150,16 @@ void AliasListPage::selectionChanged()
         ui->copyAlias->setEnabled(false);
     }
 }
-
+void AliasListPage::keyPressEvent(QKeyEvent * event)
+{
+  if( event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter )
+  {
+	on_searchAlias_clicked();
+    event->accept();
+  }
+  else
+    QDialog::keyPressEvent( event );
+}
 void AliasListPage::on_exportButton_clicked()
 {
     // CSV is currently the only supported format
