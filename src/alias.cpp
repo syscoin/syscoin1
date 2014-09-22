@@ -2084,6 +2084,7 @@ Value getaliasfees(const Array& params, bool fHelp) {
 	Object oRes;
 	oRes.push_back(Pair("height", nBestHeight ));
 	oRes.push_back(Pair("subsidy", ValueFromAmount(GetAliasFeeSubsidy(nBestHeight) )));
+	oRes.push_back(Pair("new_fee", (double)1.0));
 	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetAliasNetworkFee(1, nBestHeight) )));
 	oRes.push_back(Pair("update_fee", ValueFromAmount(GetAliasNetworkFee(2, nBestHeight) )));
 	return oRes;
