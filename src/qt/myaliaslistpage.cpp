@@ -17,7 +17,6 @@
 #include <QClipboard>
 #include <QMessageBox>
 #include <QMenu>
-
 MyAliasListPage::MyAliasListPage(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MyAliasListPage),
@@ -33,7 +32,9 @@ MyAliasListPage::MyAliasListPage(QWidget *parent) :
 #endif
 
 	ui->buttonBox->setVisible(false);
-    ui->labelExplanation->setText(tr("These are your registered Syscoin Aliases."));
+
+	ui->labelExplanation->setText(tr("These are your registered Syscoin Aliases."));
+	
 	
     // Context menu actions
     QAction *copyAliasAction = new QAction(ui->copyAlias->text(), this);
@@ -65,13 +66,22 @@ MyAliasListPage::~MyAliasListPage()
 {
     delete ui;
 }
-
+void MyAliasListPage::showEvent ( QShowEvent * event )
+{
+    if(!walletModel) return;
+	if(walletModel->getEncryptionStatus() == WalletModel::Locked)
+	{
+		ui->labelExplanation->setText(tr("<font color='red'>WARNING: Your wallet is currently locked. For security purposes you cannot interact with Syscoin Aliases with a locked wallet. Please unlock your wallet to use this feature/service. Click 'Refresh' once you have unlocked your wallet. </font><a href=\"http://lockedwallet.syscoin.org\">[more info]</a>"));
+		ui->labelExplanation->setTextFormat(Qt::RichText);
+		ui->labelExplanation->setTextInteractionFlags(Qt::TextBrowserInteraction);
+		ui->labelExplanation->setOpenExternalLinks(true);
+	}
+}
 void MyAliasListPage::setModel(WalletModel *walletModel, AliasTableModel *model)
 {
     this->model = model;
 	this->walletModel = walletModel;
     if(!model) return;
-
     proxyModel = new QSortFilterProxyModel(this);
     proxyModel->setSourceModel(model);
     proxyModel->setDynamicSortFilter(true);
@@ -162,6 +172,7 @@ void MyAliasListPage::on_refreshButton_clicked()
     {
         return;
     }
+	ui->labelExplanation->setText(tr("These are your registered Syscoin Aliases."));
     model->refreshAliasTable();
 }
 void MyAliasListPage::on_newAlias_clicked()

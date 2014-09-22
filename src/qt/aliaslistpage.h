@@ -36,6 +36,7 @@ public:
     const QString &getReturnValue() const { return returnValue; }
     bool handleURI(const QString &uri);
 	void keyPressEvent(QKeyEvent * event);
+	void showEvent ( QShowEvent * event );
 private:
     Ui::AliasListPage *ui;
     AliasTableModel *model;

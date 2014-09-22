@@ -34,6 +34,7 @@ public:
     void setOptionsModel(ClientModel* clientmodel, OptionsModel *optionsModel);
     const QString &getReturnValue() const { return returnValue; }
 	bool handleURI(const QString &uri);
+	void showEvent ( QShowEvent * event );
 public slots:
     void done(int retval);
 
