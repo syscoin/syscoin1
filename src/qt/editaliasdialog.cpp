@@ -9,9 +9,13 @@
 #include "bitcoinrpc.h"
 #include <QDataWidgetMapper>
 #include <QMessageBox>
+
 using namespace std;
 using namespace json_spirit;
+extern int nBestHeight;
 extern const CRPCTable tableRPC;
+uint64 GetAliasFeeSubsidy(unsigned int nHeight);
+int64 GetAliasNetworkFee(int nType, int nHeight);
 EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::EditAliasDialog), mapper(0), mode(mode), model(0)
@@ -90,11 +94,27 @@ bool EditAliasDialog::saveCurrentRow()
     if(!model) return false;
 	Array params;
 	string strMethod;
+	int64 newFee;
+	int64 updateFee;
+	std::string newFeeStr, updateFeeStr;
+	QMessageBox::StandardButton retval;
     switch(mode)
     {
     case NewDataAlias:
     case NewAlias:
-
+		newFee = (int64)GetAliasFeeSubsidy(nBestHeight) ;
+		QMessageBox::StandardButton retval;
+		updateFee = GetAliasNetworkFee(1, nBestHeight)/COIN;
+		newFeeStr = strprintf("%"PRI64d, newFee);
+		updateFeeStr = strprintf("%"PRI64d, updateFee);
+		retval = QMessageBox::question(this, tr("Confirm new Alias"),
+			tr("Warning: Creating new Alias will cost ") + QString::fromStdString(newFeeStr) + tr(" SYS, and activating will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish to create an Alias?"),
+                 QMessageBox::Yes|QMessageBox::Cancel,
+                 QMessageBox::Cancel);
+        if(retval != QMessageBox::Yes)
+        {
+			return false;
+		}
 		strMethod = string("aliasnew");
 		params.push_back(ui->aliasEdit->text().toStdString());
 		try {
@@ -113,7 +133,7 @@ bool EditAliasDialog::saveCurrentRow()
 				{
 					
 					QMessageBox::information(this, windowTitle(),
-					tr("New Alias created successfully! Please Refresh to update your Aliases. GUID for the new Alias is: \"%1\"").arg(QString::fromStdString(arr[1].get_str())),
+					tr("New Alias created successfully! GUID for the new Alias is: \"%1\"").arg(QString::fromStdString(arr[1].get_str())),
 					QMessageBox::Ok, QMessageBox::Ok);
 					return true;
 				}	
@@ -130,7 +150,7 @@ bool EditAliasDialog::saveCurrentRow()
 		catch(std::exception& e)
 		{
 			QMessageBox::critical(this, windowTitle(),
-				tr("General exception creating new alias"),
+				tr("General exception creating new Alias"),
 				QMessageBox::Ok, QMessageBox::Ok);
 			break;
 		}							
@@ -140,6 +160,16 @@ bool EditAliasDialog::saveCurrentRow()
     case EditAlias:
         if(mapper->submit())
         {
+			updateFee = GetAliasNetworkFee(2, nBestHeight)/COIN;
+			updateFeeStr = strprintf("%"PRI64d, updateFee);
+			retval = QMessageBox::question(this, tr("Confirm Alias update"),
+				tr("Warning: Updating Alias will cost ") + QString::fromStdString(updateFeeStr) + "<br><br>" + tr("Are you sure you wish update this Alias?"),
+					 QMessageBox::Yes|QMessageBox::Cancel,
+					 QMessageBox::Cancel);
+			if(retval != QMessageBox::Yes)
+			{
+				return false;
+			}
 			strMethod = string("aliasupdate");
 			params.push_back(ui->aliasEdit->text().toStdString());
 			params.push_back(ui->nameEdit->text().toStdString());
@@ -152,7 +182,7 @@ bool EditAliasDialog::saveCurrentRow()
 					alias = ui->nameEdit->text() + ui->aliasEdit->text();
 
 					QMessageBox::information(this, windowTitle(),
-					tr("Alias updated successfully! Please Refresh to update your Aliases. Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
+					tr("Alias updated successfully! Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
 						QMessageBox::Ok, QMessageBox::Ok);
 						
 				}
@@ -161,14 +191,14 @@ bool EditAliasDialog::saveCurrentRow()
 			{
 				string strError = find_value(objError, "message").get_str();
 				QMessageBox::critical(this, windowTitle(),
-				tr("Error updating alias: \"%1\"").arg(QString::fromStdString(strError)),
+				tr("Error updating Alias: \"%1\"").arg(QString::fromStdString(strError)),
 					QMessageBox::Ok, QMessageBox::Ok);
 				break;
 			}
 			catch(std::exception& e)
 			{
 				QMessageBox::critical(this, windowTitle(),
-					tr("General exception updating alias"),
+					tr("General exception updating Alias"),
 					QMessageBox::Ok, QMessageBox::Ok);
 				break;
 			}	
@@ -177,6 +207,16 @@ bool EditAliasDialog::saveCurrentRow()
     case TransferAlias:
         if(mapper->submit())
         {
+			updateFee = GetAliasNetworkFee(2, nBestHeight)/COIN;
+			updateFeeStr = strprintf("%"PRI64d, updateFee);
+			retval = QMessageBox::question(this, tr("Confirm Alias transfer"),
+				tr("Warning: Transfering Alias will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish transfer this Alias?"),
+					 QMessageBox::Yes|QMessageBox::Cancel,
+					 QMessageBox::Cancel);
+			if(retval != QMessageBox::Yes)
+			{
+				return false;
+			}
 			strMethod = string("aliasupdate");
 			params.push_back(ui->aliasEdit->text().toStdString());
 			params.push_back(ui->nameEdit->text().toStdString());

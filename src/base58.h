@@ -380,7 +380,7 @@ public:
 				std::string strAliasAddress;
 				GetAliasValue(strAddress, strAliasAddress);
 				SetString(strAliasAddress);
-				aliasName = strAliasAddress;
+				aliasName = strAddress;
 				isAlias = true;
 			}
 			catch(...)
