@@ -1401,6 +1401,21 @@ int GetCertTxPosHeight2(const CDiskTxPos& txPos, int nHeight) {
     return nHeight;
 }
 
+Value getcertfees(const Array& params, bool fHelp) {
+    if (fHelp || 0 != params.size())
+        throw runtime_error(
+                "getaliasfees\n"
+                        "get current service fees for alias transactions\n");
+    Object oRes;
+    oRes.push_back(Pair("height", nBestHeight ));
+    oRes.push_back(Pair("subsidy", ValueFromAmount(GetCertFeeSubsidy(nBestHeight) )));
+    oRes.push_back(Pair("activate_fee", ValueFromAmount(GetCertNetworkFee(1, nBestHeight) )));
+    oRes.push_back(Pair("cert_fee", ValueFromAmount(GetCertNetworkFee(2, nBestHeight) )));
+    oRes.push_back(Pair("transfer_fee", ValueFromAmount(GetCertNetworkFee(3, nBestHeight) )));
+    return oRes;
+
+}
+
 Value certissuernew(const Array& params, bool fHelp) {
     // if(!fTestNet && !fCakeNet)
     //     throw runtime_error(

@@ -2070,6 +2070,26 @@ Value aliasclean(const Array& params, bool fHelp) {
  }
  */
 
+/**
+ * [aliasscan description]
+ * @param  params [description]
+ * @param  fHelp  [description]
+ * @return        [description]
+ */
+Value getaliasfees(const Array& params, bool fHelp) {
+	if (fHelp || 0 != params.size())
+		throw runtime_error(
+				"getaliasfees\n"
+						"get current service fees for alias transactions\n");
+	Object oRes;
+	oRes.push_back(Pair("height", nBestHeight ));
+	oRes.push_back(Pair("subsidy", ValueFromAmount(GetAliasFeeSubsidy(nBestHeight) )));
+	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetAliasNetworkFee(1, nBestHeight) )));
+	oRes.push_back(Pair("update_fee", ValueFromAmount(GetAliasNetworkFee(2, nBestHeight) )));
+	return oRes;
+
+}
+
 Value datanew(const Array& params, bool fHelp) {
 	if (fHelp || 1 != params.size())
 		throw runtime_error(

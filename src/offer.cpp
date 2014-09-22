@@ -1432,6 +1432,21 @@ int GetOfferTxPosHeight2(const CDiskTxPos& txPos, int nHeight) {
     return nHeight;
 }
 
+Value getofferfees(const Array& params, bool fHelp) {
+	if (fHelp || 0 != params.size())
+		throw runtime_error(
+				"getaliasfees\n"
+						"get current service fees for alias transactions\n");
+	Object oRes;
+	oRes.push_back(Pair("height", nBestHeight ));
+	oRes.push_back(Pair("subsidy", ValueFromAmount(GetOfferFeeSubsidy(nBestHeight) )));
+	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetOfferNetworkFee(1, nBestHeight) )));
+	oRes.push_back(Pair("update_fee", ValueFromAmount(GetOfferNetworkFee(2, nBestHeight) )));
+	oRes.push_back(Pair("pay_fee", ValueFromAmount(GetOfferNetworkFee(3, nBestHeight) )));
+	return oRes;
+
+}
+
 Value offernew(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 5 || params.size() > 6)
 		throw runtime_error(
