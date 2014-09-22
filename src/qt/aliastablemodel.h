@@ -71,13 +71,13 @@ public:
 	void clear();
 	void refreshAliasTable();
     EditStatus getEditStatus() const { return editStatus; }
-
+	EditStatus editStatus;
 private:
     WalletModel *walletModel;
     CWallet *wallet;
     AliasTablePriv *priv;
     QStringList columns;
-    EditStatus editStatus;
+    
 	AliasModelType modelType;
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);

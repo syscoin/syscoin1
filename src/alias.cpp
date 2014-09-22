@@ -1490,12 +1490,11 @@ Value aliasupdate(const Array& params, bool fHelp) {
 
 	if (params.size() == 3) {
 		string strAddress = params[2].get_str();
-		uint160 hash160;
-		bool isValid = AddressToHash160(strAddress.c_str(), hash160);
-		if (!isValid)
+		CBitcoinAddress myAddress = CBitcoinAddress(strAddress);
+		if (!myAddress.IsValid())
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
 					"Invalid syscoin address");
-		scriptPubKeyOrig.SetDestination(CBitcoinAddress(strAddress).Get());
+		scriptPubKeyOrig.SetDestination(myAddress.Get());
 	} else {
 		CPubKey newDefaultKey;
 		pwalletMain->GetKeyFromPool(newDefaultKey, false);
@@ -2298,12 +2297,11 @@ Value dataupdate(const Array& params, bool fHelp) {
 
 	if (params.size() == 4) {
 		string strAddress = params[3].get_str();
-		uint160 hash160;
-		bool isValid = AddressToHash160(strAddress.c_str(), hash160);
-		if (!isValid)
+		CBitcoinAddress myAddress = CBitcoinAddress(strAddress);
+		if (!myAddress.IsValid())
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
 					"Invalid syscoin address");
-		scriptPubKeyOrig.SetDestination(CBitcoinAddress(strAddress).Get());
+		scriptPubKeyOrig.SetDestination(myAddress.Get());
 	} else {
 		CPubKey newDefaultKey;
 		pwalletMain->GetKeyFromPool(newDefaultKey, false);

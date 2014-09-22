@@ -68,7 +68,7 @@ void AliasView::setWalletModel(WalletModel *walletModel)
     {
 
         aliasListPage->setModel(walletModel->getAliasTableModelAll());
-		myAliasListPage->setModel(walletModel->getAliasTableModelMine());
+		myAliasListPage->setModel(walletModel, walletModel->getAliasTableModelMine());
 
     }
 }

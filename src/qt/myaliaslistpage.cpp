@@ -65,9 +65,10 @@ MyAliasListPage::~MyAliasListPage()
     delete ui;
 }
 
-void MyAliasListPage::setModel(AliasTableModel *model)
+void MyAliasListPage::setModel(WalletModel *walletModel, AliasTableModel *model)
 {
     this->model = model;
+	this->walletModel = walletModel;
     if(!model) return;
 
     proxyModel = new QSortFilterProxyModel(this);
@@ -131,7 +132,7 @@ void MyAliasListPage::onEditAction()
         return;
 
     EditAliasDialog dlg(EditAliasDialog::EditAlias);
-    dlg.setModel(model);
+    dlg.setModel(walletModel, model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
     dlg.loadRow(origIndex.row());
     dlg.exec();
@@ -146,7 +147,7 @@ void MyAliasListPage::onTransferAliasAction()
         return;
 
     EditAliasDialog dlg(EditAliasDialog::TransferAlias);
-    dlg.setModel(model);
+    dlg.setModel(walletModel, model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
     dlg.loadRow(origIndex.row());
     dlg.exec();
@@ -170,7 +171,7 @@ void MyAliasListPage::on_newAlias_clicked()
         return;
 
     EditAliasDialog dlg(EditAliasDialog::NewAlias, this);
-    dlg.setModel(model);
+    dlg.setModel(walletModel,model);
     if(dlg.exec())
     {
         newAliasToSelect = dlg.getAlias();

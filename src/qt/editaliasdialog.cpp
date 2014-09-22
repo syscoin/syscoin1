@@ -3,7 +3,7 @@
 
 #include "aliastablemodel.h"
 #include "guiutil.h"
-
+#include "walletmodel.h"
 #include "bitcoingui.h"
 #include "ui_interface.h"
 #include "bitcoinrpc.h"
@@ -59,9 +59,10 @@ EditAliasDialog::~EditAliasDialog()
     delete ui;
 }
 
-void EditAliasDialog::setModel(AliasTableModel *model)
+void EditAliasDialog::setModel(WalletModel* walletModel, AliasTableModel *model)
 {
     this->model = model;
+	this->walletModel = walletModel;
     if(!model) return;
 
     mapper->setModel(model);
@@ -78,20 +79,14 @@ void EditAliasDialog::loadRow(int row)
 
 bool EditAliasDialog::saveCurrentRow()
 {
-	// TODO do some input validation on all edit boxes in UI
-   /* if(ui->nameEdit->text().trimmed().isEmpty())
+
+    if(!model || !walletModel) return false;
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+    if(!ctx.isValid())
     {
-        ui->statusLabel->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel->setText(QString("<nobr>") + tr("You haven't provided an Alias Name.") + QString("</nobr>"));
-        return;
+		model->editStatus = AliasTableModel::WALLET_UNLOCK_FAILURE;
+        return false;
     }
-    if(ui->aliasEdit->text().trimmed().isEmpty())
-    {
-        ui->statusLabel->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel->setText(QString("<nobr>") + tr("You haven't provided an Alias Value.") + QString("</nobr>"));
-        return;
-    }*/
-    if(!model) return false;
 	Array params;
 	string strMethod;
 	int64 newFee;

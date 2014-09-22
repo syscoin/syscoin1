@@ -7,7 +7,7 @@ namespace Ui {
     class EditAliasDialog;
 }
 class AliasTableModel;
-
+class WalletModel;
 QT_BEGIN_NAMESPACE
 class QDataWidgetMapper;
 QT_END_NAMESPACE
@@ -30,7 +30,7 @@ public:
     explicit EditAliasDialog(Mode mode, QWidget *parent = 0);
     ~EditAliasDialog();
 
-    void setModel(AliasTableModel *model);
+    void setModel(WalletModel*,AliasTableModel *model);
     void loadRow(int row);
 
     QString getAlias() const;
@@ -46,7 +46,7 @@ private:
     QDataWidgetMapper *mapper;
     Mode mode;
     AliasTableModel *model;
-
+	WalletModel* walletModel;
     QString alias;
 };
 

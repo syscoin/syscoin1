@@ -9,6 +9,7 @@ namespace Ui {
 class AliasTableModel;
 class OptionsModel;
 class ClientModel;
+class WalletModel;
 QT_BEGIN_NAMESPACE
 class QTableView;
 class QItemSelection;
@@ -29,7 +30,7 @@ public:
     explicit MyAliasListPage(QWidget *parent = 0);
     ~MyAliasListPage();
 
-    void setModel(AliasTableModel *model);
+    void setModel(WalletModel*, AliasTableModel *model);
     void setOptionsModel(ClientModel* clientmodel, OptionsModel *optionsModel);
     const QString &getReturnValue() const { return returnValue; }
 	bool handleURI(const QString &uri);
@@ -38,6 +39,7 @@ public slots:
 
 private:
 	ClientModel* clientModel;
+	WalletModel *walletModel;
     Ui::MyAliasListPage *ui;
     AliasTableModel *model;
     OptionsModel *optionsModel;

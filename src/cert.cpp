@@ -1409,7 +1409,7 @@ Value getcertfees(const Array& params, bool fHelp) {
     Object oRes;
     oRes.push_back(Pair("height", nBestHeight ));
     oRes.push_back(Pair("subsidy", ValueFromAmount(GetCertFeeSubsidy(nBestHeight) )));
-    oRes.push_back(Pair("new_fee", (double)1.0));
+	oRes.push_back(Pair("new_fee", (double)1.0));
     oRes.push_back(Pair("activate_fee", ValueFromAmount(GetCertNetworkFee(1, nBestHeight) )));
     oRes.push_back(Pair("cert_fee", ValueFromAmount(GetCertNetworkFee(2, nBestHeight) )));
     oRes.push_back(Pair("transfer_fee", ValueFromAmount(GetCertNetworkFee(3, nBestHeight) )));
