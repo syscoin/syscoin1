@@ -3,6 +3,8 @@
 #include "wallet.h"
 #include "base58.h"
 
+using namespace std;
+
 /* Return positive answer if transaction should be shown in list.
  */
 bool TransactionRecord::showTransaction(const CWalletTx &wtx)
@@ -67,7 +69,14 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         }
     }
     else
-    {
+    {   
+        //Check if tx is a valid alias (name alias for the moment).
+        bool isValidAlias = false;
+        vector<vector<unsigned char> > vvchArgs;
+        int op, nOut;
+        bool o = DecodeAliasTx(wtx, op, nOut, vvchArgs, -1);
+        if (o && IsAliasOp(op) && IsAliasMine(wtx)) isValidAlias = true;
+
         bool fAllFromMe = true;
         BOOST_FOREACH(const CTxIn& txin, wtx.vin)
             fAllFromMe = fAllFromMe && wallet->IsMine(txin);
@@ -113,9 +122,21 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 }
                 else
                 {
-                    // Sent to IP, or other non-address transaction like OP_EVAL
-                    sub.type = TransactionRecord::SendToOther;
-                    sub.address = mapValue["to"];
+                    //Check if tx is a valid aliasnew (name alias for the moment).
+                    if (isValidAlias) {
+                        /*DecodeAliasTx does not return a decode name for aliasnew txs,
+                        so the line below and the next commented sub.address are pointless*/
+                        //const vector<unsigned char> &vchName = vvchArgs[0];
+                        if (op == OP_ALIAS_NEW) {
+                            sub.type = TransactionRecord::AliasNew;
+                            //sub.address = stringFromVch(vchName);
+                            sub.address = mapValue["to"];
+                        }
+                    } else {
+                        // Sent to IP, or other non-address transaction like OP_EVAL
+                        sub.type = TransactionRecord::SendToOther;
+                        sub.address = mapValue["to"];
+                    }
                 }
 
                 int64 nValue = txout.nValue;
@@ -135,7 +156,23 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             //
             // Mixed debit transaction, can't break down payees
             //
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
+
+            //Check if tx is a valid aliasactivate or aliasupdate (name alias for the moment).
+            if (isValidAlias){
+                TransactionRecord sub(hash, nTime);
+                const vector<unsigned char> &vchName = vvchArgs[0];
+                if (op == OP_ALIAS_ACTIVATE) {
+                    sub.type = TransactionRecord::AliasActivate;
+                } else if (op == OP_ALIAS_UPDATE) {
+                    sub.type = TransactionRecord::AliasUpdate;
+                }
+                sub.address = stringFromVch(vchName);
+                sub.debit = nNet;
+                parts.append(sub);
+            } else {
+
+                parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
+            }
         }
     }
 

@@ -360,6 +360,12 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
         return tr("Mined");
+    case TransactionRecord::AliasNew:
+        return tr("New Alias");
+    case TransactionRecord::AliasActivate:
+        return tr("Alias Activated");
+    case TransactionRecord::AliasUpdate:
+        return tr("Alias Updated");
     default:
         return QString();
     }
@@ -376,6 +382,7 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
         return QIcon(":/icons/tx_input");
     case TransactionRecord::SendToAddress:
     case TransactionRecord::SendToOther:
+    case TransactionRecord::AliasNew:
         return QIcon(":/icons/tx_output");
     default:
         return QIcon(":/icons/tx_inout");
@@ -394,6 +401,9 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     case TransactionRecord::Generated:
         return lookupAddress(wtx->address, tooltip);
     case TransactionRecord::SendToOther:
+    case TransactionRecord::AliasNew:
+    case TransactionRecord::AliasActivate:
+    case TransactionRecord::AliasUpdate:
         return QString::fromStdString(wtx->address);
     case TransactionRecord::SendToSelf:
     default:
