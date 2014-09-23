@@ -1936,14 +1936,14 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 	                    
 	                // write alias fees to db
 	                int64 nTheFee = GetAliasNetFee(tx);
-	                InsertAliasFee(pindex, tx.GetHash(), nTheFee);
-	                if( nTheFee != 0) printf("DisconnectBlock: Added %lf in alias fees to track for regeneration.\n", 
+	                InsertAliasFee(pindex, tx.GetHash(), 0);
+	                if( nTheFee != 0) printf("DisconnectBlock: Removed %lf in alias fees from regeneration.\n", 
 	                    (double) nTheFee / COIN);
 	                vector<CAliasFee> vAliasFees(lstAliasFees.begin(), lstAliasFees.end());
 	                if (!paliasdb->WriteAliasTxFees(vAliasFees))
 	                    return error( "DisconnectBlock() : failed to write fees to alias DB");
 		    	} else {
-                	//paliasdb->EraseAlias(vvchArgs[0]);		    		
+                	paliasdb->EraseAlias(vvchArgs[0]);		    		
 		    	}
     			printf("DISCONNECTED ALIAS TXN: alias=%s op=%s hash=%s  height=%d\n",
 	                stringFromVch(vvchArgs[0]).c_str(),
@@ -2001,14 +2001,14 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 
 					// compute verify and write fee data to DB
                     int64 nTheFee = GetOfferNetFee(tx);
-					InsertOfferFee(pindex, tx.GetHash(), nTheFee);
-					if(nTheFee > 0) printf("DisconnectBlock(): Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
+					InsertOfferFee(pindex, tx.GetHash(), 0);
+					if(nTheFee > 0) printf("DisconnectBlock(): Removed %lf in offer fees from regeneration.\n", (double) nTheFee / COIN);
 					vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
 					if (!pofferdb->WriteOfferTxFees(vOfferFees))
 						return error( "DisconnectBlock() : failed to write fees to offer DB");
 				} 
                 else {
-					//pofferdb->EraseOffer(theOffer.vchRand);
+					pofferdb->EraseOffer(theOffer.vchRand);
 				}
 	        	printf("DISCONNECTED OFFER TXN: offer=%s op=%s hash=%s height=%d\n",
 	                stringFromVch(vvchArgs[0]).c_str(),
@@ -2070,13 +2070,13 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
                     // compute verify and write fee data to DB
                     int64 nTheFee = GetCertNetFee(tx);
                     InsertCertFee(pindex, tx.GetHash(), nTheFee);
-                    if(nTheFee > 0) printf("DisconnectBlock(): Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
+                    if(nTheFee > 0) printf("DisconnectBlock(): Removed %lf in alias certificate from regeneration.\n", (double) nTheFee / COIN);
                     vector<CCertFee> vCertIssuerFees(lstCertIssuerFees.begin(), lstCertIssuerFees.end());
                     if (!pcertdb->WriteCertFees(vCertIssuerFees))
                         return error( "DisconnectBlock() : failed to write fees to certissuer DB");
                 }
                 else {
-                    //pcertdb->EraseCertIssuer(theIssuer.vchRand);
+                    pcertdb->EraseCertIssuer(theIssuer.vchRand);
                 }
         		printf("DISCONNECTED CERT TXN: title=%s hash=%s height=%d\n",
                     op == OP_CERTISSUER_NEW ? HexStr(vvchArgs[0]).c_str() : stringFromVch(vvchArgs[0]).c_str(),

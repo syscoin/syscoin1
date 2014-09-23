@@ -372,14 +372,14 @@ bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
 	unsigned int tHeight =
 			pindex->nHeight - 2880 < 0 ? 0 : pindex->nHeight - 2880;
 	
-	while (true) {
-		if (lstOfferFees.size() > 0
-				&& (lstOfferFees.back().nTime + h12 < pindex->nTime
-						|| lstOfferFees.back().nHeight < tHeight))
-			lstOfferFees.pop_back();
-		else
-			break;
-	}
+	// while (true) {
+	// 	if (lstOfferFees.size() > 0
+	// 			&& (lstOfferFees.back().nTime + h12 < pindex->nTime
+	// 					|| lstOfferFees.back().nHeight < tHeight))
+	// 		lstOfferFees.pop_back();
+	// 	else
+	// 		break;
+	// }
 	BOOST_FOREACH(COfferFee &nmFee, lstOfferFees) {
 		if (oFee.hash == nmFee.hash
 				&& oFee.nHeight == nmFee.nHeight) {

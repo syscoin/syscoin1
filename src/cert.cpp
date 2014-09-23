@@ -375,14 +375,14 @@ bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
     unsigned int tHeight =
             pindex->nHeight - 2880 < 0 ? 0 : pindex->nHeight - 2880;
 
-    while (true) {
-        if (lstCertIssuerFees.size() > 0
-                && (lstCertIssuerFees.back().nTime + h12 < pindex->nTime
-                        || lstCertIssuerFees.back().nHeight < tHeight))
-            lstCertIssuerFees.pop_back();
-        else
-            break;
-    }
+    // while (true) {
+    //     if (lstCertIssuerFees.size() > 0
+    //             && (lstCertIssuerFees.back().nTime + h12 < pindex->nTime
+    //                     || lstCertIssuerFees.back().nHeight < tHeight))
+    //         lstCertIssuerFees.pop_back();
+    //     else
+    //         break;
+    // }
     BOOST_FOREACH(CCertFee &nmFee, lstCertIssuerFees) {
         if (oFee.hash == nmFee.hash
                 && oFee.nHeight == nmFee.nHeight) {

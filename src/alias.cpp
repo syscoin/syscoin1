@@ -112,14 +112,14 @@ bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
 	bool bFound = false;
 	unsigned int tHeight =
 			pindex->nHeight - 2880 < 0 ? 0 : pindex->nHeight - 2880;
-	while (true) {
-		if (lstAliasFees.size() > 0
-				&& (lstAliasFees.back().nBlockTime + h12 < pindex->nTime
-						|| lstAliasFees.back().nHeight < tHeight))
-			lstAliasFees.pop_back();
-		else
-			break;
-	}
+	// while (true) {
+	// 	if (lstAliasFees.size() > 0
+	// 			&& (lstAliasFees.back().nBlockTime + h12 < pindex->nTime
+	// 					|| lstAliasFees.back().nHeight < tHeight))
+	// 		lstAliasFees.pop_back();
+	// 	else
+	// 		break;
+	// }
 	BOOST_FOREACH(CAliasFee &nmTxnValue, lstAliasFees) {
 		if (txnVal.hash == nmTxnValue.hash
 				&& txnVal.nHeight == nmTxnValue.nHeight) {
@@ -643,7 +643,6 @@ void rescanforaliases(CBlockIndex *pindexRescan) {
 bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 	CDiskTxPos txindex;
 	CBlockIndex* pindex = pindexRescan;
-	lstAliasFees.clear();
 
 	{
 		LOCK(pwalletMain->cs_wallet);
