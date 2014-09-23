@@ -273,6 +273,8 @@ AliasTableModel::~AliasTableModel()
 }
 void AliasTableModel::refreshAliasTable() 
 {
+	if(modelType != MyAlias)
+		return;
 	clear();
 	priv->refreshAliasTable(modelType);
 }
