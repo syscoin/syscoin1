@@ -83,6 +83,7 @@ public:
 			int expired = 0;
 			int expires_in = 0;
 			int expires_on = 0;
+			int transferred = 0;
 			int lastupdate_height = 0;
 			try {
 				result = tableRPC.execute(strMethod, params);
@@ -107,6 +108,7 @@ public:
 				expires_in = 0;
 				expires_on = 0;
 				lastupdate_height = 0;
+				transferred = 0;
 				Array arr = result.get_array();
 				BOOST_FOREACH(Value& input, arr)
 				{
@@ -122,13 +124,16 @@ public:
 					expires_in = 0;
 					expires_on = 0;
 					lastupdate_height = 0;
-
+					transferred = 0;
 					const Value& name_value = find_value(o, "name");
 					if (name_value.type() == str_type)
 						name_str = name_value.get_str();
 					const Value& value_value = find_value(o, "value");
 					if (value_value.type() == str_type)
 						value_str = value_value.get_str();
+					const Value& transferred_value = find_value(o, "transferred");
+					if (transferred_value.type() == int_type)
+						transferred = transferred_value.get_int();
 					const Value& lastupdate_height_value = find_value(o, "lastupdate_height");
 					if (lastupdate_height_value.type() == int_type)
 						lastupdate_height = lastupdate_height_value.get_int();
@@ -153,7 +158,8 @@ public:
 					expires_on_str = strprintf("Block %d", expires_on);
 					if(lastupdate_height > 0)
 						lastupdate_height_str = strprintf("Block %d", lastupdate_height);
-					updateEntry(QString::fromStdString(name_str), QString::fromStdString(value_str), QString::fromStdString(lastupdate_height_str), QString::fromStdString(expires_on_str), QString::fromStdString(expires_in_str), QString::fromStdString(expired_str),type, CT_NEW); 
+					if(transferred == 0)
+						updateEntry(QString::fromStdString(name_str), QString::fromStdString(value_str), QString::fromStdString(lastupdate_height_str), QString::fromStdString(expires_on_str), QString::fromStdString(expires_in_str), QString::fromStdString(expired_str),type, CT_NEW); 
 				}
 			}
             
