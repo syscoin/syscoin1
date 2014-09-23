@@ -53,8 +53,6 @@ private slots:
     /** Create a new alias for receiving coins and / or add a new alias book entry */
     /** Copy alias of currently selected alias entry to clipboard */
     void on_copyAlias_clicked();
-    /** Open send coins dialog for currently selected alias (no button) */
-    void on_transferAlias_clicked();
     /** Copy value of currently selected alias entry to clipboard (no button) */
     void onCopyAliasValueAction();
 
