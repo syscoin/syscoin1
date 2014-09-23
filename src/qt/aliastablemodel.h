@@ -25,11 +25,10 @@ public:
         Name = 0,   /**< alias name */
         Value = 1,  /**< Alias value */
         Transferred = 2,
-		Address = 3,
-		LastUpdateHeight = 4,
-		ExpiresOn = 5,
-		ExpiresIn = 6,
-		Expired = 7
+		LastUpdateHeight = 3,
+		ExpiresOn = 4,
+		ExpiresIn = 5,
+		Expired = 6
     };
 
     enum RoleIndex {
@@ -63,7 +62,7 @@ public:
     /* Add an alias to the model.
        Returns the added alias on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &alias, const QString &value, const QString &transferred, const QString &address, const QString &lastupdate_height, const QString &expires_on,const QString &expires_in, const QString &expired);
+    QString addRow(const QString &type, const QString &alias, const QString &value, const QString &transferred, const QString &lastupdate_height, const QString &expires_on,const QString &expires_in, const QString &expired);
 
     /* Look up label for alias in alias book, if not found return empty string.
      */
@@ -90,7 +89,7 @@ private:
 public slots:
     /* Update alias list from core.
      */
-    void updateEntry(const QString &alias, const QString &value, const QString &transferred, const QString &address, const QString &lastupdate_height, const QString &expires_on,const QString &expires_in, const QString &expired, AliasModelType type, int status);
+    void updateEntry(const QString &alias, const QString &value, const QString &transferred,const QString &lastupdate_height, const QString &expires_on,const QString &expires_in, const QString &expired, AliasModelType type, int status);
 
     friend class AliasTablePriv;
 };

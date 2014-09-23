@@ -96,7 +96,7 @@ void AliasListPage::setModel(WalletModel* walletModel, AliasTableModel *model)
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::Value, QHeaderView::Stretch);
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::Transferred, QHeaderView::ResizeToContents);
-    ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::Address, QHeaderView::ResizeToContents);
+
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::LastUpdateHeight, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::ExpiresOn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::ExpiresIn, QHeaderView::ResizeToContents);
@@ -105,7 +105,7 @@ void AliasListPage::setModel(WalletModel* walletModel, AliasTableModel *model)
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::Value, QHeaderView::Stretch);
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::Transferred, QHeaderView::ResizeToContents);
-    ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::Address, QHeaderView::ResizeToContents);
+
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::LastUpdateHeight, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::ExpiresOn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::ExpiresIn, QHeaderView::ResizeToContents);
@@ -196,7 +196,7 @@ void AliasListPage::on_exportButton_clicked()
     writer.addColumn("Alias", AliasTableModel::Name, Qt::EditRole);
     writer.addColumn("Value", AliasTableModel::Value, Qt::EditRole);
     writer.addColumn("Transfer", AliasTableModel::Transferred, Qt::EditRole);
-	writer.addColumn("Address", AliasTableModel::Address, Qt::EditRole);
+	
 	writer.addColumn("Last Update", AliasTableModel::LastUpdateHeight, Qt::EditRole);
 	writer.addColumn("Expires On", AliasTableModel::ExpiresOn, Qt::EditRole);
 	writer.addColumn("Expires In", AliasTableModel::ExpiresIn, Qt::EditRole);
@@ -351,13 +351,14 @@ void AliasListPage::on_searchAlias_clicked()
 				if(lastupdate_height > 0)
 					lastupdate_height_str = strprintf("Block %d", lastupdate_height);
 				if(transferred == 1)
-					transferred_str = "Transferred";
+					transferred_str = "Transferred to " + address_str;
+					
 				
 				model->addRow(AliasTableModel::Alias,
 						QString::fromStdString(name_str),
 						QString::fromStdString(value_str),
 						QString::fromStdString(transferred_str),
-						QString::fromStdString(address_str),
+	
 						QString::fromStdString(lastupdate_height_str),
 						QString::fromStdString(expires_on_str),
 						QString::fromStdString(expires_in_str),
@@ -365,7 +366,7 @@ void AliasListPage::on_searchAlias_clicked()
 					this->model->updateEntry(QString::fromStdString(name_str),
 						QString::fromStdString(value_str),
 						QString::fromStdString(transferred_str),
-						QString::fromStdString(address_str),
+
 						QString::fromStdString(lastupdate_height_str),
 						QString::fromStdString(expires_on_str),
 						QString::fromStdString(expires_in_str),
