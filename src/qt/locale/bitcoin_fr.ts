@@ -434,32 +434,32 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../aliastablemodel.cpp" line="+251"/>
         <source>Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Alias</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Valeur</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Last Update</source>
-        <translation type="unfinished"></translation>
+        <translation>Dernière édition</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Expires On</source>
-        <translation type="unfinished"></translation>
+        <translation>Expire le</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Expires In</source>
-        <translation type="unfinished"></translation>
+        <translation>Expire Dans</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Alias Status</source>
-        <translation type="unfinished"></translation>
+        <translation>Alias Statut</translation>
     </message>
 </context>
 <context>
@@ -2412,12 +2412,12 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+88"/>
         <source>&lt;a href=&quot;https://twitter.com/syscoin&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0093dd;&quot;&gt;@syscoin&lt;/span&gt;&lt;/a&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+94"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;http://www.facebook.com/syscoin&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0093dd;&quot;&gt;facebook.com/syscoin&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+34"/>
@@ -2429,7 +2429,7 @@ Aimez-nous sur Facebook:</translation>
         <location line="+58"/>
         <location line="+173"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the SysCoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="-49"/>
