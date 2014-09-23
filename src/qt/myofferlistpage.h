@@ -51,8 +51,7 @@ private slots:
     void on_newOffer_clicked();
     /** Copy offer of currently selected offer entry to clipboard */
     void on_copyOffer_clicked();
-    /** Open send coins dialog for currently selected offer (no button) */
-    void on_transferOffer_clicked();
+
     /** Copy value of currently selected offer entry to clipboard (no button) */
     void onCopyOfferValueAction();
     /** Edit currently selected offer entry (no button) */

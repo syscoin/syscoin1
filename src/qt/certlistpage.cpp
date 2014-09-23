@@ -257,10 +257,7 @@ void CertIssuerListPage::on_exportButton_clicked()
     }
 }
 
-void CertIssuerListPage::on_transferCertIssuer_clicked()
-{
 
-}
 
 void CertIssuerListPage::contextualMenu(const QPoint &point)
 {
