@@ -242,7 +242,7 @@ AliasTableModel::AliasTableModel(CWallet *wallet, WalletModel *parent,  AliasMod
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0), modelType(type)
 {
 
-	columns << tr("Alias") << tr("Value") << tr("Transfer") << tr("Last Update") << tr("Expires On") << tr("Expires In") << tr("Alias Status");		 
+	columns << tr("Alias") << tr("Value") << tr("Last Update") << tr("Expires On") << tr("Expires In") << tr("Alias Status");		 
     priv = new AliasTablePriv(wallet, this);
 	refreshAliasTable();
 }
