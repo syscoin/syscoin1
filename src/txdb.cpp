@@ -214,7 +214,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
             ssKey >> cType;
             if (cType == 'b') {
                 if (slKey.size() < ssKeySet.size()) {
-                    return error("Database key size is %d expected %d, require reindex to upgrade.", slKey.size(), ssKeySet.size());
+                    return error("Database key size is %lu expected %lu, require reindex to upgrade.", slKey.size(), ssKeySet.size());
                 }
                 ssKey >> hash;
 

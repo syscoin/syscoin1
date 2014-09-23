@@ -354,10 +354,12 @@ uint64 GetOfferFeeSubsidy(unsigned int nHeight) {
 			}
 		}
 	}
-	hr12 /= (nHeight - blk12hrht) + 1;
-	hr1 /= (nHeight - blk1hrht) + 1;
-	uint64 nSubsidyOut = hr1 > hr12 ? hr1 : hr12;
-	return nSubsidyOut;
+	if((nHeight - blk12hrht) + 1 != 0) {
+		hr12 /= (nHeight - blk12hrht) + 1;
+		hr1 /= (nHeight - blk1hrht) + 1;
+		return (hr12 + hr1) / 2;
+	}
+	else return 0;
 }
 
 bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
