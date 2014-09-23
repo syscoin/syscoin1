@@ -357,12 +357,10 @@ uint64 GetCertFeeSubsidy(unsigned int nHeight) {
             }
         }
     }
-	if((nHeight - blk12hrht) + 1 != 0) {
-		hr12 /= (nHeight - blk12hrht) + 1;
-		hr1 /= (nHeight - blk1hrht) + 1;
-		return (hr12 + hr1) / 2;
-	}
-	else return 0;
+    hr12 /= (nHeight - blk12hrht) + 1;
+    hr1 /= (nHeight - blk1hrht) + 1;
+    uint64 nSubsidyOut = hr1 > hr12 ? hr1 : hr12;
+    return nSubsidyOut;
 }
 
 bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {

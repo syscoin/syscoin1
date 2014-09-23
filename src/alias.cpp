@@ -160,13 +160,10 @@ uint64 GetAliasFeeSubsidy(unsigned int nHeight) {
 			}
 		}
 	}
-	if((nHeight - blk12hrht) + 1 != 0) {
-		hr12 /= (nHeight - blk12hrht) + 1;
-		hr1 /= (nHeight - blk1hrht) + 1;
-
-		return (hr12 + hr1) / 2;
-	}
-	else return 0;
+	hr12 /= (nHeight - blk12hrht) + 1;
+	hr1 /= (nHeight - blk1hrht) + 1;
+//	printf("GetAliasFeeSubsidy() : Alias fee mining reward for height %d: %llu\n", nHeight, nSubsidyOut);
+	return (hr12 + hr1) / 2;
 }
 
 bool IsMyAlias(const CTransaction& tx, const CTxOut& txout) {
