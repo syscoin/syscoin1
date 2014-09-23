@@ -1846,12 +1846,14 @@ Value aliasfilter(const Array& params, bool fHelp) {
 		oName.push_back(Pair("name", name));
 		CTransaction tx;
 		uint256 blockHash;
+		bool expired = false;
 		std::string strAddress;
 		uint256 txHash = txName.txHash;
 		if ((nHeight + GetAliasDisplayExpirationDepth(nHeight)
 				- pindexBest->nHeight <= 0)
 				|| !GetTransaction(txHash, tx, blockHash, true)) {
-			oName.push_back(Pair("expired", 1));
+					expired = true;
+			
 		} 
 		vector<unsigned char> vchValue;
 		GetValueOfAliasTx(tx, vchValue);
@@ -1862,11 +1864,12 @@ Value aliasfilter(const Array& params, bool fHelp) {
 
 		GetAliasAddress(tx, strAddress);
 		oName.push_back(Pair("address", strAddress));
-		oName.push_back(Pair("txid", txHash.GetHex()));
         oName.push_back(Pair("lastupdate_height", nHeight));
         oName.push_back(Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight)));
         oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight ));
-		
+		if(expired)
+			oName.push_back(Pair("expired", 1));
+		oName.push_back(Pair("txid", txHash.GetHex()));
 		oRes.push_back(oName);
 
 		nCountNb++;

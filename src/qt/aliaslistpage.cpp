@@ -195,7 +195,7 @@ void AliasListPage::on_exportButton_clicked()
     writer.setModel(proxyModel);
     writer.addColumn("Alias", AliasTableModel::Name, Qt::EditRole);
     writer.addColumn("Value", AliasTableModel::Value, Qt::EditRole);
-    writer.addColumn("Transfer Status", AliasTableModel::Transferred, Qt::EditRole);
+    writer.addColumn("Transfer", AliasTableModel::Transferred, Qt::EditRole);
 	writer.addColumn("Address", AliasTableModel::Address, Qt::EditRole);
 	writer.addColumn("Last Update", AliasTableModel::LastUpdateHeight, Qt::EditRole);
 	writer.addColumn("Expires On", AliasTableModel::ExpiresOn, Qt::EditRole);
@@ -314,30 +314,30 @@ void AliasListPage::on_searchAlias_clicked()
 				lastupdate_height = 0;
 				transferred = 0;
 
-				const Value& name_value = find_value(o, "name");
-				if (name_value.type() == str_type)
-					name_str = name_value.get_str();
-				const Value& value_value = find_value(o, "value");
-				if (value_value.type() == str_type)
-					value_str = value_value.get_str();
-				const Value& address_value = find_value(o, "address");
-				if (address_value.type() == str_type)
-					address_str = address_value.get_str();
-				const Value& transferred_value = find_value(o, "transferred");
-				if (transferred_value.type() == int_type)
-					transferred = transferred_value.get_int();
-				const Value& lastupdate_height_value = find_value(o, "lastupdate_height");
-				if (lastupdate_height_value.type() == int_type)
-					lastupdate_height = lastupdate_height_value.get_int();
-				const Value& expires_in_value = find_value(o, "expires_in");
-				if (expires_in_value.type() == int_type)
-					expires_in = expires_in_value.get_int();
-				const Value& expires_on_value = find_value(o, "expires_on");
-				if (expires_on_value.type() == int_type)
-					expires_on = expires_on_value.get_int();
-				const Value& expired_value = find_value(o, "expired");
-				if (expired_value.type() == int_type)
-					expired = expired_value.get_int();
+					const Value& name_value = find_value(o, "name");
+					if (name_value.type() == str_type)
+						name_str = name_value.get_str();
+					const Value& value_value = find_value(o, "value");
+					if (value_value.type() == str_type)
+						value_str = value_value.get_str();
+					const Value& transferred_value = find_value(o, "transferred");
+					if (transferred_value.type() == int_type)
+						transferred = transferred_value.get_int();
+					const Value& address_value = find_value(o, "address");
+					if (address_value.type() == str_type)
+						address_str = address_value.get_str();
+					const Value& lastupdate_height_value = find_value(o, "lastupdate_height");
+					if (lastupdate_height_value.type() == int_type)
+						lastupdate_height = lastupdate_height_value.get_int();
+					const Value& expires_on_value = find_value(o, "expires_on");
+					if (expires_on_value.type() == int_type)
+						expires_on = expires_on_value.get_int();
+					const Value& expires_in_value = find_value(o, "expires_in");
+					if (expires_in_value.type() == int_type)
+						expires_in = expires_in_value.get_int();
+					const Value& expired_value = find_value(o, "expired");
+					if (expired_value.type() == int_type)
+						expired = expired_value.get_int();
 				if(expired == 1)
 				{
 					expired_str = "Expired";
@@ -348,7 +348,8 @@ void AliasListPage::on_searchAlias_clicked()
 				}
 				expires_in_str = strprintf("%d Blocks", expires_in);
 				expires_on_str = strprintf("Block %d", expires_on);
-				lastupdate_height_str = strprintf("Block %d", lastupdate_height);
+				if(lastupdate_height > 0)
+					lastupdate_height_str = strprintf("Block %d", lastupdate_height);
 				if(transferred == 1)
 					transferred_str = "Transferred";
 				transferred_str = strprintf("%d", transferred);

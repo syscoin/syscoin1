@@ -253,7 +253,7 @@ void MyAliasListPage::on_exportButton_clicked()
     writer.setModel(proxyModel);
     writer.addColumn("Alias", AliasTableModel::Name, Qt::EditRole);
     writer.addColumn("Value", AliasTableModel::Value, Qt::EditRole);
-    writer.addColumn("Transfer Status", AliasTableModel::Transferred, Qt::EditRole);
+    writer.addColumn("Transfer", AliasTableModel::Transferred, Qt::EditRole);
 	writer.addColumn("Address", AliasTableModel::Address, Qt::EditRole);
 	writer.addColumn("Last Update", AliasTableModel::LastUpdateHeight, Qt::EditRole);
 	writer.addColumn("Expires On", AliasTableModel::ExpiresOn, Qt::EditRole);
