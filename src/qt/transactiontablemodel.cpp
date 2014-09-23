@@ -366,6 +366,8 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Alias Activated");
     case TransactionRecord::AliasUpdate:
         return tr("Alias Updated");
+    case TransactionRecord::AliasTransfer:
+        return tr("Alias Updated (Transfer)");
     default:
         return QString();
     }
@@ -404,6 +406,7 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     case TransactionRecord::AliasNew:
     case TransactionRecord::AliasActivate:
     case TransactionRecord::AliasUpdate:
+    case TransactionRecord::AliasTransfer:
         return QString::fromStdString(wtx->address);
     case TransactionRecord::SendToSelf:
     default:

@@ -75,7 +75,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         vector<vector<unsigned char> > vvchArgs;
         int op, nOut;
         bool o = DecodeAliasTx(wtx, op, nOut, vvchArgs, -1);
-        if (o && IsAliasOp(op) && IsAliasMine(wtx)) isValidAlias = true;
+        if (o && IsAliasOp(op)) isValidAlias = true;
 
         bool fAllFromMe = true;
         BOOST_FOREACH(const CTxIn& txin, wtx.vin)
@@ -164,7 +164,12 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 if (op == OP_ALIAS_ACTIVATE) {
                     sub.type = TransactionRecord::AliasActivate;
                 } else if (op == OP_ALIAS_UPDATE) {
-                    sub.type = TransactionRecord::AliasUpdate;
+                    if (!wallet->IsCrypted()) {
+                        sub.type = (IsAliasMine(wtx)) ? TransactionRecord::AliasUpdate : TransactionRecord::AliasTransfer;
+                    }
+                    else {
+                        sub.type = TransactionRecord::AliasUpdate;
+                    }
                 }
                 sub.address = stringFromVch(vchName);
                 sub.debit = nNet;

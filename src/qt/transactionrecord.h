@@ -73,7 +73,8 @@ public:
         SendToSelf,
         AliasNew,
         AliasActivate,
-        AliasUpdate
+        AliasUpdate,
+        AliasTransfer
     };
 
     /** Number of confirmation needed for transaction */

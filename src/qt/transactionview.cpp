@@ -3,6 +3,8 @@
 #include "transactionfilterproxy.h"
 #include "transactionrecord.h"
 #include "walletmodel.h"
+#include "wallet.h"
+#include "init.h"
 #include "addresstablemodel.h"
 #include "transactiontablemodel.h"
 #include "bitcoinunits.h"
@@ -76,6 +78,7 @@ TransactionView::TransactionView(QWidget *parent) :
     typeWidget->addItem(tr("New Alias"), TransactionFilterProxy::TYPE(TransactionRecord::AliasNew));
     typeWidget->addItem(tr("Alias Activated"), TransactionFilterProxy::TYPE(TransactionRecord::AliasActivate));
     typeWidget->addItem(tr("Alias Updated"), TransactionFilterProxy::TYPE(TransactionRecord::AliasUpdate));
+    if (!pwalletMain->IsCrypted()) typeWidget->addItem(tr("Alias Updated (Transfer)"), TransactionFilterProxy::TYPE(TransactionRecord::AliasTransfer));
 
     hlayout->addWidget(typeWidget);
 
