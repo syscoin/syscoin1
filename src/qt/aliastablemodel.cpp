@@ -170,7 +170,7 @@ public:
 						lastupdate_height_str = strprintf("Block %d", lastupdate_height);
 					if(transferred == 1)
 						transferred_str = "Transferred";
-					transferred_str = strprintf("%d", transferred);
+					
 					updateEntry(QString::fromStdString(name_str), QString::fromStdString(value_str), QString::fromStdString(transferred_str), QString::fromStdString(address_str),  QString::fromStdString(lastupdate_height_str), QString::fromStdString(expires_on_str), QString::fromStdString(expires_in_str), QString::fromStdString(expired_str),type, CT_NEW); 
 				}
 			}
