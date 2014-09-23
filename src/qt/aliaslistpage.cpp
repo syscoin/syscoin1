@@ -328,9 +328,11 @@ void AliasListPage::on_searchAlias_clicked()
 				else
 				{
 					expired_str = "Valid";
+					expires_in_str = strprintf("%d Blocks", expires_in);
+					expires_on_str = strprintf("Block %d", expires_on);
 				}
-				expires_in_str = strprintf("%d Blocks", expires_in);
-				expires_on_str = strprintf("Block %d", expires_on);
+
+				
 				if(lastupdate_height > 0)
 					lastupdate_height_str = strprintf("Block %d", lastupdate_height);
 
