@@ -102,8 +102,6 @@ void MyAliasListPage::setModel(WalletModel *walletModel, AliasTableModel *model)
 #if QT_VERSION < 0x050000
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::Value, QHeaderView::Stretch);
-    ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::Transferred, QHeaderView::ResizeToContents);
-
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::LastUpdateHeight, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::ExpiresOn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::ExpiresIn, QHeaderView::ResizeToContents);
@@ -111,8 +109,6 @@ void MyAliasListPage::setModel(WalletModel *walletModel, AliasTableModel *model)
 #else
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::Value, QHeaderView::Stretch);
-    ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::Transferred, QHeaderView::ResizeToContents);
-
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::LastUpdateHeight, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::ExpiresOn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::ExpiresIn, QHeaderView::ResizeToContents);
@@ -253,8 +249,6 @@ void MyAliasListPage::on_exportButton_clicked()
     writer.setModel(proxyModel);
     writer.addColumn("Alias", AliasTableModel::Name, Qt::EditRole);
     writer.addColumn("Value", AliasTableModel::Value, Qt::EditRole);
-    writer.addColumn("Transfer", AliasTableModel::Transferred, Qt::EditRole);
-	
 	writer.addColumn("Last Update", AliasTableModel::LastUpdateHeight, Qt::EditRole);
 	writer.addColumn("Expires On", AliasTableModel::ExpiresOn, Qt::EditRole);
 	writer.addColumn("Expires In", AliasTableModel::ExpiresIn, Qt::EditRole);

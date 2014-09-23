@@ -95,8 +95,6 @@ void AliasListPage::setModel(WalletModel* walletModel, AliasTableModel *model)
 #if QT_VERSION < 0x050000
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::Value, QHeaderView::Stretch);
-    ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::Transferred, QHeaderView::ResizeToContents);
-
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::LastUpdateHeight, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::ExpiresOn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::ExpiresIn, QHeaderView::ResizeToContents);
@@ -104,8 +102,6 @@ void AliasListPage::setModel(WalletModel* walletModel, AliasTableModel *model)
 #else
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::Value, QHeaderView::Stretch);
-    ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::Transferred, QHeaderView::ResizeToContents);
-
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::LastUpdateHeight, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::ExpiresOn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::ExpiresIn, QHeaderView::ResizeToContents);
@@ -195,8 +191,6 @@ void AliasListPage::on_exportButton_clicked()
     writer.setModel(proxyModel);
     writer.addColumn("Alias", AliasTableModel::Name, Qt::EditRole);
     writer.addColumn("Value", AliasTableModel::Value, Qt::EditRole);
-    writer.addColumn("Transfer", AliasTableModel::Transferred, Qt::EditRole);
-	
 	writer.addColumn("Last Update", AliasTableModel::LastUpdateHeight, Qt::EditRole);
 	writer.addColumn("Expires On", AliasTableModel::ExpiresOn, Qt::EditRole);
 	writer.addColumn("Expires In", AliasTableModel::ExpiresIn, Qt::EditRole);
@@ -258,19 +252,16 @@ void AliasListPage::on_searchAlias_clicked()
         string strReply;
         string strError;
         string strMethod = string("aliasfilter");
-		string transferred_str;
 		string name_str;
 		string value_str;
 		string expires_in_str;
 		string lastupdate_height_str;
 		string expires_on_str;
 		string expired_str;
-		string address_str;
 		int expired = 0;
 		int expires_in = 0;
 		int expires_on = 0;
-		int lastupdate_height = 0;
-		int transferred = 0;        
+		int lastupdate_height = 0;    
         params.push_back(ui->lineEditAliasSearch->text().toStdString());
         params.push_back(GetAliasDisplayExpirationDepth(pindexBest->nHeight));
 
@@ -307,12 +298,10 @@ void AliasListPage::on_searchAlias_clicked()
 				expires_in_str = "";
 				lastupdate_height_str = "";
 				expires_on_str = "";
-				address_str = "";
 				expired = 0;
 				expires_in = 0;
 				expires_on = 0;
 				lastupdate_height = 0;
-				transferred = 0;
 
 					const Value& name_value = find_value(o, "name");
 					if (name_value.type() == str_type)
@@ -320,12 +309,6 @@ void AliasListPage::on_searchAlias_clicked()
 					const Value& value_value = find_value(o, "value");
 					if (value_value.type() == str_type)
 						value_str = value_value.get_str();
-					const Value& transferred_value = find_value(o, "transferred");
-					if (transferred_value.type() == int_type)
-						transferred = transferred_value.get_int();
-					const Value& address_value = find_value(o, "address");
-					if (address_value.type() == str_type)
-						address_str = address_value.get_str();
 					const Value& lastupdate_height_value = find_value(o, "lastupdate_height");
 					if (lastupdate_height_value.type() == int_type)
 						lastupdate_height = lastupdate_height_value.get_int();
@@ -350,23 +333,17 @@ void AliasListPage::on_searchAlias_clicked()
 				expires_on_str = strprintf("Block %d", expires_on);
 				if(lastupdate_height > 0)
 					lastupdate_height_str = strprintf("Block %d", lastupdate_height);
-				if(transferred == 1)
-					transferred_str = "Transferred to " + address_str;
-					
+
 				
 				model->addRow(AliasTableModel::Alias,
 						QString::fromStdString(name_str),
 						QString::fromStdString(value_str),
-						QString::fromStdString(transferred_str),
-	
 						QString::fromStdString(lastupdate_height_str),
 						QString::fromStdString(expires_on_str),
 						QString::fromStdString(expires_in_str),
 						QString::fromStdString(expired_str));
 					this->model->updateEntry(QString::fromStdString(name_str),
 						QString::fromStdString(value_str),
-						QString::fromStdString(transferred_str),
-
 						QString::fromStdString(lastupdate_height_str),
 						QString::fromStdString(expires_on_str),
 						QString::fromStdString(expires_in_str),

@@ -28,14 +28,13 @@ struct AliasTableEntry
     Type type;
     QString value;
     QString alias;
-    QString transferred;
 	QString lastupdate_height;
 	QString expires_on;
 	QString expires_in;
 	QString expired;
     AliasTableEntry() {}
-    AliasTableEntry(Type type, const QString &alias, const QString &value, const QString &transferred, const QString &lastupdate_height, const QString &expires_on,const QString &expires_in, const QString &expired):
-        type(type), alias(alias), value(value), transferred(transferred), lastupdate_height(lastupdate_height), expires_on(expires_on), expires_in(expires_in), expired(expired) {}
+    AliasTableEntry(Type type, const QString &alias, const QString &value, const QString &lastupdate_height, const QString &expires_on,const QString &expires_in, const QString &expired):
+        type(type), alias(alias), value(value), lastupdate_height(lastupdate_height), expires_on(expires_on), expires_in(expires_in), expired(expired) {}
 };
 
 struct AliasTableEntryLessThan
@@ -75,19 +74,16 @@ public:
 			string strMethod = string("aliaslist");
 	        Array params; 
 			Value result ;
-			string transferred_str;
 			string name_str;
 			string value_str;
 			string expires_in_str;
 			string lastupdate_height_str;
 			string expires_on_str;
 			string expired_str;
-			string address_str;
 			int expired = 0;
 			int expires_in = 0;
 			int expires_on = 0;
 			int lastupdate_height = 0;
-			int transferred = 0;  
 			try {
 				result = tableRPC.execute(strMethod, params);
 			}
@@ -106,12 +102,11 @@ public:
 				expires_in_str = "";
 				lastupdate_height_str = "";
 				expires_on_str = "";
-				address_str = "";
+
 				expired = 0;
 				expires_in = 0;
 				expires_on = 0;
 				lastupdate_height = 0;
-				transferred = 0;
 				Array arr = result.get_array();
 				BOOST_FOREACH(Value& input, arr)
 				{
@@ -123,13 +118,10 @@ public:
 					expires_in_str = "";
 					lastupdate_height_str = "";
 					expires_on_str = "";
-					lastupdate_height_str = "";
-					address_str = "";
 					expired = 0;
 					expires_in = 0;
 					expires_on = 0;
 					lastupdate_height = 0;
-					transferred = 0;
 
 					const Value& name_value = find_value(o, "name");
 					if (name_value.type() == str_type)
@@ -137,12 +129,6 @@ public:
 					const Value& value_value = find_value(o, "value");
 					if (value_value.type() == str_type)
 						value_str = value_value.get_str();
-					const Value& transferred_value = find_value(o, "transferred");
-					if (transferred_value.type() == int_type)
-						transferred = transferred_value.get_int();
-					const Value& address_value = find_value(o, "address");
-					if (address_value.type() == str_type)
-						address_str = address_value.get_str();
 					const Value& lastupdate_height_value = find_value(o, "lastupdate_height");
 					if (lastupdate_height_value.type() == int_type)
 						lastupdate_height = lastupdate_height_value.get_int();
@@ -167,10 +153,7 @@ public:
 					expires_on_str = strprintf("Block %d", expires_on);
 					if(lastupdate_height > 0)
 						lastupdate_height_str = strprintf("Block %d", lastupdate_height);
-					if(transferred == 1)
-						transferred_str = "Transferred to " + address_str;
-					
-					updateEntry(QString::fromStdString(name_str), QString::fromStdString(value_str), QString::fromStdString(transferred_str), QString::fromStdString(lastupdate_height_str), QString::fromStdString(expires_on_str), QString::fromStdString(expires_in_str), QString::fromStdString(expired_str),type, CT_NEW); 
+					updateEntry(QString::fromStdString(name_str), QString::fromStdString(value_str), QString::fromStdString(lastupdate_height_str), QString::fromStdString(expires_on_str), QString::fromStdString(expires_in_str), QString::fromStdString(expired_str),type, CT_NEW); 
 				}
 			}
             
@@ -179,7 +162,7 @@ public:
         qSort(cachedAliasTable.begin(), cachedAliasTable.end(), AliasTableEntryLessThan());
     }
 
-    void updateEntry(const QString &alias, const QString &value, const QString &transferred, const QString &lastupdate_height, const QString &expires_on,const QString &expires_in, const QString &expired, AliasModelType type, int status)
+    void updateEntry(const QString &alias, const QString &value, const QString &lastupdate_height, const QString &expires_on,const QString &expires_in, const QString &expired, AliasModelType type, int status)
     {
 		if(!parent || parent->modelType != type)
 		{
@@ -207,7 +190,7 @@ public:
             
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedAliasTable.insert(lowerIndex, AliasTableEntry(newEntryType, alias, value, transferred,lastupdate_height, expires_on, expires_in, expired));
+            cachedAliasTable.insert(lowerIndex, AliasTableEntry(newEntryType, alias, value, lastupdate_height, expires_on, expires_in, expired));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
@@ -218,7 +201,6 @@ public:
             }
             lower->type = newEntryType;
             lower->value = value;
-            lower->transferred = transferred;
 			lower->lastupdate_height = lastupdate_height;
 			lower->expires_on = expires_on;
 			lower->expires_in = expires_in;
@@ -303,8 +285,6 @@ QVariant AliasTableModel::data(const QModelIndex &index, int role) const
             return rec->value;
         case Name:
             return rec->alias;
-        case Transferred:
-            return rec->transferred;
         case LastUpdateHeight:
             return rec->lastupdate_height;
         case ExpiresOn:
@@ -350,15 +330,7 @@ bool AliasTableModel::setData(const QModelIndex &index, const QVariant &value, i
     {
         switch(index.column())
         {
-        case Transferred:
-            // Do nothing, if old value == new value
-            if(rec->transferred == value.toString())
-            {
-                editStatus = NO_CHANGES;
-                return false;
-            }
-           
-            break;
+        
         case ExpiresOn:
             // Do nothing, if old value == new value
             if(rec->expires_on == value.toString())
@@ -466,13 +438,13 @@ QModelIndex AliasTableModel::index(int row, int column, const QModelIndex &paren
     }
 }
 
-void AliasTableModel::updateEntry(const QString &alias, const QString &value, const QString &transferred, const QString &lastupdate_height, const QString &expires_on,const QString &expires_in, const QString &expired, AliasModelType type, int status)
+void AliasTableModel::updateEntry(const QString &alias, const QString &value, const QString &lastupdate_height, const QString &expires_on,const QString &expires_in, const QString &expired, AliasModelType type, int status)
 {
-    // Update alias book model from Bitcoin core
-    priv->updateEntry(alias, value, transferred, lastupdate_height, expires_on, expires_in, expired, type, status);
+    // Update alias book model from Syscoin core
+    priv->updateEntry(alias, value, lastupdate_height, expires_on, expires_in, expired, type, status);
 }
 
-QString AliasTableModel::addRow(const QString &type, const QString &alias, const QString &value, const QString &transferred, const QString &lastupdate_height, const QString &expires_on,const QString &expires_in, const QString &expired)
+QString AliasTableModel::addRow(const QString &type, const QString &alias, const QString &value, const QString &lastupdate_height, const QString &expires_on,const QString &expires_in, const QString &expired)
 {
     std::string strAlias = alias.toStdString();
     editStatus = OK;
