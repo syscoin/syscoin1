@@ -69,7 +69,7 @@ CertIssuerListPage::CertIssuerListPage(Mode mode, Tabs tab, QWidget *parent) :
     connect(copyCertIssuerAction, SIGNAL(triggered()), this, SLOT(on_copyCertIssuer_clicked()));
     connect(copyCertIssuerValueAction, SIGNAL(triggered()), this, SLOT(onCopyCertIssuerValueAction()));
     connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
-    connect(transferCertIssuerAction, SIGNAL(triggered()), this, SLOT(onSendCoinsAction()));
+
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
@@ -257,10 +257,7 @@ void CertIssuerListPage::on_exportButton_clicked()
     }
 }
 
-void CertIssuerListPage::on_transferCertIssuer_clicked()
-{
 
-}
 
 void CertIssuerListPage::contextualMenu(const QPoint &point)
 {

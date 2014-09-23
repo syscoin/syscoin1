@@ -202,10 +202,7 @@ void AliasListPage::on_exportButton_clicked()
     }
 }
 
-void AliasListPage::on_transferAlias_clicked()
-{
 
-}
 
 void AliasListPage::contextualMenu(const QPoint &point)
 {

@@ -55,8 +55,7 @@ private slots:
     void on_newAlias_clicked();
     /** Copy alias of currently selected alias entry to clipboard */
     void on_copyAlias_clicked();
-    /** Open send coins dialog for currently selected alias (no button) */
-    void on_transferAlias_clicked();
+
     /** Copy value of currently selected alias entry to clipboard (no button) */
     void onCopyAliasValueAction();
     /** Edit currently selected alias entry (no button) */

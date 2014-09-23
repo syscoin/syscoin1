@@ -61,8 +61,7 @@ private slots:
     void on_newCertIssuer_clicked();
     /** Copy cert of currently selected cert entry to clipboard */
     void on_copyCertIssuer_clicked();
-    /** Open send coins dialog for currently selected cert (no button) */
-    void on_transferCertIssuer_clicked();
+
     /** Copy value of currently selected cert entry to clipboard (no button) */
     void onCopyCertIssuerValueAction();
     /** Edit currently selected cert entry (no button) */

@@ -233,10 +233,6 @@ void MyOfferListPage::on_exportButton_clicked()
     }
 }
 
-void MyOfferListPage::on_transferOffer_clicked()
-{
-
-}
 
 void MyOfferListPage::contextualMenu(const QPoint &point)
 {
