@@ -102,11 +102,21 @@ void MyAliasListPage::setModel(WalletModel *walletModel, AliasTableModel *model)
 #if QT_VERSION < 0x050000
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::Value, QHeaderView::Stretch);
-    ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::ExpirationDepth, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::Transferred, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::Address, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::LastUpdateHeight, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::ExpiresOn, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::ExpiresIn, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setResizeMode(AliasTableModel::Expired, QHeaderView::ResizeToContents);
 #else
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::Value, QHeaderView::Stretch);
-    ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::ExpirationDepth, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::Transferred, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::Address, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::LastUpdateHeight, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::ExpiresOn, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::ExpiresIn, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(AliasTableModel::Expired, QHeaderView::ResizeToContents);
 #endif
 
     connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
@@ -172,7 +182,6 @@ void MyAliasListPage::on_refreshButton_clicked()
     {
         return;
     }
-	ui->labelExplanation->setText(tr("These are your registered Syscoin Aliases."));
     model->refreshAliasTable();
 }
 void MyAliasListPage::on_newAlias_clicked()
@@ -244,7 +253,12 @@ void MyAliasListPage::on_exportButton_clicked()
     writer.setModel(proxyModel);
     writer.addColumn("Alias", AliasTableModel::Name, Qt::EditRole);
     writer.addColumn("Value", AliasTableModel::Value, Qt::EditRole);
-    writer.addColumn("Expiration Depth", AliasTableModel::ExpirationDepth, Qt::EditRole);
+    writer.addColumn("Transfer Status", AliasTableModel::Transferred, Qt::EditRole);
+	writer.addColumn("Address", AliasTableModel::Address, Qt::EditRole);
+	writer.addColumn("Last Update", AliasTableModel::LastUpdateHeight, Qt::EditRole);
+	writer.addColumn("Expires On", AliasTableModel::ExpiresOn, Qt::EditRole);
+	writer.addColumn("Expires In", AliasTableModel::ExpiresIn, Qt::EditRole);
+	writer.addColumn("Expired", AliasTableModel::Expired, Qt::EditRole);
     if(!writer.write())
     {
         QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),

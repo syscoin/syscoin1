@@ -1846,21 +1846,27 @@ Value aliasfilter(const Array& params, bool fHelp) {
 		oName.push_back(Pair("name", name));
 		CTransaction tx;
 		uint256 blockHash;
+		std::string strAddress;
 		uint256 txHash = txName.txHash;
 		if ((nHeight + GetAliasDisplayExpirationDepth(nHeight)
 				- pindexBest->nHeight <= 0)
 				|| !GetTransaction(txHash, tx, blockHash, true)) {
 			oName.push_back(Pair("expired", 1));
-		} else {
-			vector<unsigned char> vchValue;
-			GetValueOfAliasTx(tx, vchValue);
-			string value = stringFromVch(vchValue);
-			oName.push_back(Pair("value", value));
-			oName.push_back(Pair("txid", txHash.GetHex()));
-            oName.push_back(Pair("lastupdate_height", nHeight));
-            oName.push_back(Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight)));
-            oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight ));
-		}
+		} 
+		vector<unsigned char> vchValue;
+		GetValueOfAliasTx(tx, vchValue);
+		string value = stringFromVch(vchValue);
+		oName.push_back(Pair("value", value));
+		if (!IsAliasMine(pwalletMain->mapWallet[tx.GetHash()]))
+			oName.push_back(Pair("transferred", 1));
+
+		GetAliasAddress(tx, strAddress);
+		oName.push_back(Pair("address", strAddress));
+		oName.push_back(Pair("txid", txHash.GetHex()));
+        oName.push_back(Pair("lastupdate_height", nHeight));
+        oName.push_back(Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight)));
+        oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight ));
+		
 		oRes.push_back(oName);
 
 		nCountNb++;
