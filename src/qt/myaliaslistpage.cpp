@@ -33,7 +33,7 @@ MyAliasListPage::MyAliasListPage(QWidget *parent) :
 
 	ui->buttonBox->setVisible(false);
 
-	ui->labelExplanation->setText(tr("These are your registered Syscoin Aliases."));
+    ui->labelExplanation->setText(tr("These are your registered Syscoin Aliases. NOTE: New Syscoin Aliases take 120 blocks to appear in this list and alias updates or transfers can take up to 6 blocks to appear in this list."));
 	
 	
     // Context menu actions
@@ -71,7 +71,7 @@ void MyAliasListPage::showEvent ( QShowEvent * event )
     if(!walletModel) return;
 	if(walletModel->getEncryptionStatus() == WalletModel::Locked)
 	{
-		ui->labelExplanation->setText(tr("<font color='red'>WARNING: Your wallet is currently locked. For security purposes you cannot interact with Syscoin Aliases with a locked wallet. Please unlock your wallet to use this feature/service. Click 'Refresh' once you have unlocked your wallet. </font><a href=\"http://lockedwallet.syscoin.org\">[more info]</a>"));
+        ui->labelExplanation->setText(tr("<font color='red'>WARNING: Your wallet is currently locked. For security purposes you'll need to enter your passphrase in order to interact with Syscoin Aliases. Click refresh to load aliases securely. </font> <a href=\"http://lockedwallet.syscoin.org\">more info</a><br><br>These are your registered Syscoin Aliases. NOTE: New Syscoin Aliases take 120 blocks to appear in this list and alias updates or transfers can take up to 6 blocks to appear in this list."));
 		ui->labelExplanation->setTextFormat(Qt::RichText);
 		ui->labelExplanation->setTextInteractionFlags(Qt::TextBrowserInteraction);
 		ui->labelExplanation->setOpenExternalLinks(true);
