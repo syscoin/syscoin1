@@ -33,7 +33,7 @@ MyAliasListPage::MyAliasListPage(QWidget *parent) :
 
 	ui->buttonBox->setVisible(false);
 
-    ui->labelExplanation->setText(tr("These are your registered Syscoin Aliases. New Syscoin Aliases take 120 confirmations to appear in this table. Alias updates take 1 confirmation to appear in this table.<br><br>Alias transfers require clicking refresh after 1 confirmation for the table to update."));
+    ui->labelExplanation->setText(tr("These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table. Alias transfers require clicking refresh after 1 confirmation for the table to update."));
 	
 	
     // Context menu actions
@@ -71,7 +71,7 @@ void MyAliasListPage::showEvent ( QShowEvent * event )
     if(!walletModel) return;
 	if(walletModel->getEncryptionStatus() == WalletModel::Locked)
 	{
-        ui->labelExplanation->setText(tr("<font color='red'>WARNING: Your wallet is currently locked. For security purposes you'll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating, updateing or transferring an Alias. </font> <a href=\"http://lockedwallet.syscoin.org\">more info</a><br><br>These are your registered Syscoin Aliases. New Syscoin Aliases take 120 confirmations to appear in this table. Alias updates take 1 confirmation to appear in this table.<br><br>Alias transfers require clicking refresh after 1 confirmation for the table to update."));
+        ui->labelExplanation->setText(tr("<font color='red'>WARNING: Your wallet is currently locked. For security purposes you'll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating, updateing or transferring an Alias. </font> <a href=\"http://lockedwallet.syscoin.org\">more info</a><br><br>These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table. Alias transfers require clicking refresh after 1 confirmation for the table to update."));
 		ui->labelExplanation->setTextFormat(Qt::RichText);
 		ui->labelExplanation->setTextInteractionFlags(Qt::TextBrowserInteraction);
 		ui->labelExplanation->setOpenExternalLinks(true);
