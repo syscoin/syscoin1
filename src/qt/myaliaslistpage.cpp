@@ -173,11 +173,6 @@ void MyAliasListPage::on_refreshButton_clicked()
 {
     if(!model)
         return;
-    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
-    if(!ctx.isValid())
-    {
-        return;
-    }
     model->refreshAliasTable();
 }
 void MyAliasListPage::on_newAlias_clicked()

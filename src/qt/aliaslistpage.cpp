@@ -227,11 +227,6 @@ void AliasListPage::selectNewAlias(const QModelIndex &parent, int begin, int /*e
 void AliasListPage::on_searchAlias_clicked()
 {
     if(!walletModel) return;
-    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
-    if(!ctx.isValid())
-    {
-        return;
-    }
     if(ui->lineEditAliasSearch->text().trimmed().isEmpty())
     {
         QMessageBox::warning(this, tr("Error Searching Alias"),
