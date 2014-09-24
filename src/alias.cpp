@@ -1581,8 +1581,8 @@ Value aliaslist(const Array& params, bool fHelp) {
 		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
 			// get txn hash, read txn index
 			hash = item.second.GetHash();
-
-			if (!GetTransaction(hash, tx, blockHash, true))
+			// only get aliases in your mempool (your aliases)
+			if (!GetTransaction(hash, tx, blockHash))
 				continue;
 
 			// skip non-syscoin txns
@@ -1614,13 +1614,6 @@ Value aliaslist(const Array& params, bool fHelp) {
 			Object oName;
 			oName.push_back(Pair("name", stringFromVch(vchName)));
 			oName.push_back(Pair("value", stringFromVch(vchValue)));
-
-			if (!IsAliasMine(pwalletMain->mapWallet[tx.GetHash()]))
-				oName.push_back(Pair("transferred", 1));
-
-			string strAddress = "";
-			GetAliasAddress(tx, strAddress);
-			oName.push_back(Pair("address", strAddress));
             oName.push_back(Pair("lastupdate_height", nHeight));
             oName.push_back(Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight)));
             oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight ));

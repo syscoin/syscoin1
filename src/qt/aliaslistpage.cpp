@@ -335,15 +335,13 @@ void AliasListPage::on_searchAlias_clicked()
 						QString::fromStdString(lastupdate_height_str),
 						QString::fromStdString(expires_on_str),
 						QString::fromStdString(expires_in_str),
-						QString::fromStdString(expired_str),
-						QString::fromStdString(""));
+						QString::fromStdString(expired_str));
 					this->model->updateEntry(QString::fromStdString(name_str),
 						QString::fromStdString(value_str),
 						QString::fromStdString(lastupdate_height_str),
 						QString::fromStdString(expires_on_str),
 						QString::fromStdString(expires_in_str),
-						QString::fromStdString(expired_str), 
-						QString::fromStdString(""), AllAlias, CT_NEW);	
+						QString::fromStdString(expired_str), AllAlias, CT_NEW);	
 			  }
 
             
