@@ -127,7 +127,7 @@ bool EditAliasDialog::saveCurrentRow()
 				{
 					
 					QMessageBox::information(this, windowTitle(),
-                    tr("New Alias created successfully! Alias will be active after 120 blocks. GUID for the new Alias is: \"%1\"").arg(QString::fromStdString(arr[1].get_str())),
+                    tr("New Alias created successfully! Alias will be active after 120 confirmations. GUID for the new Alias is: \"%1\"").arg(QString::fromStdString(arr[1].get_str())),
 					QMessageBox::Ok, QMessageBox::Ok);
 					return true;
 				}	
@@ -176,7 +176,7 @@ bool EditAliasDialog::saveCurrentRow()
 					alias = ui->nameEdit->text() + ui->aliasEdit->text();
 
 					QMessageBox::information(this, windowTitle(),
-                    tr("Alias updated successfully! Update will take effect after 1 block. Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
+                    tr("Alias updated successfully! Update will take effect after 1 confirmation. Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
 						QMessageBox::Ok, QMessageBox::Ok);
 						
 				}
@@ -224,7 +224,8 @@ bool EditAliasDialog::saveCurrentRow()
 					alias = ui->nameEdit->text() + ui->aliasEdit->text()+ui->transferEdit->text();
 
 					QMessageBox::information(this, windowTitle(),
-                    tr("Alias transferred successfully! Please refresh after at least 6 blocks to update your Aliases. Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
+                    tr("Alias transferred successfully! Transaction Id for the update is: \"%1\" <br><br>").arg(QString::fromStdString(strResult)) +
+                    tr("Please click refresh after 1 confirmation to update the Alias table."),
 						QMessageBox::Ok, QMessageBox::Ok);
 						
 				}
