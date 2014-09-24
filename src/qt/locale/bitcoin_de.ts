@@ -19,7 +19,7 @@
     </message>
     <message>
         <location line="+24"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Syscoin &lt;/span&gt;0.1.5 RC1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Syscoin &lt;/span&gt;0.1.5 RC2&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -57,7 +57,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     <message>
         <location line="+2"/>
         <source>2014 The Syscoin developers</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">2014 Die Syscoin Entwickler</translation>
     </message>
     <message>
         <source>The Syscoin developers</source>
@@ -167,7 +167,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     <message>
         <location line="+4"/>
         <source>Copy Va&amp;lue</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Wert Kopieren</translation>
     </message>
     <message>
         <location line="+101"/>
@@ -379,9 +379,13 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Suchbegriff eingeben, regex angenommen (dh: ^ Name gibt alle Aliase mit &apos;name&apos;)</translation>
     </message>
     <message>
-        <location line="+12"/>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;</source>
-        <translation>&lt;font color=&apos;red&apos;&gt;WARNUNG: Die Geldbörse ist derzeit gesperrt. Aus Sicherheitsgründen müssen Sie Ihre Passphrase, um mit Syscoin Aliases interagieren eingeben.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;mehr Infos&lt;/a&gt;</translation>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;WARNUNG: Die Geldbörse ist derzeit gesperrt. Aus Sicherheitsgründen müssen Sie Ihre Passphrase, um mit Syscoin Aliases interagieren eingeben.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;mehr Infos&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to search Syscoin Aliases.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;</source>
+        <translation>&lt;font color=&apos;red&apos;&gt; &lt;/font&gt;WARNUNG: Die Geldbörse ist derzeit gesperrt. Aus Sicherheitsgründen müssen Sie Ihre Passphrase, um zu suchen Syscoin Aliases eingeben. &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;mehr Infos&lt;/a&gt;</translation>
     </message>
     <message>
         <location line="+111"/>
@@ -515,7 +519,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     <message>
         <location line="+4"/>
         <source>Copy Va&amp;lue</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Wert Kopieren</translation>
     </message>
     <message>
         <location line="+99"/>
@@ -1154,7 +1158,7 @@ Adresse: %4</translation>
     <message>
         <location line="+6"/>
         <source>Copy Va&amp;lue</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Wert Kopieren</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1557,162 +1561,167 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location filename="../forms/editaliasdialog.ui" line="+14"/>
         <location filename="../editaliasdialog.cpp" line="+41"/>
         <source>Edit Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Alias ​​bearbeiten</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>&amp;Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Alias</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>The alias name.</source>
-        <translation type="unfinished"></translation>
+        <translation>Der Alias-Name.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Wert</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>The value associated with this alias.</source>
-        <translation type="unfinished"></translation>
+        <translation>Der Wert mit diesem Alias ​​verbunden.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Transfer Address</source>
-        <translation type="unfinished"></translation>
+        <translation>Transfer-Adresse</translation>
     </message>
     <message>
         <location filename="../editaliasdialog.cpp" line="-11"/>
         <source>New Data Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Neue Daten Alias</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>New Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Neuer Alias</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Edit Data Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Daten bearbeiten Alias</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Transfer Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Alias ​​übertragen</translation>
     </message>
     <message>
         <location line="+59"/>
         <source>Confirm new Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Bestätigen Sie das neue Alias</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: Creating new Alias will cost </source>
-        <translation type="unfinished"></translation>
+        <translation>Warnung: Erstellen von neuen Alias ​​kostet </translation>
     </message>
     <message>
         <location line="+0"/>
         <source> SYS, and activating will cost </source>
-        <translation type="unfinished"></translation>
+        <translation> SYS, und Aktivieren kostet </translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Are you sure you wish to create an Alias?</source>
-        <translation type="unfinished"></translation>
+        <translation>Sind Sie sicher, dass Sie einen Alias ​​erstellen?</translation>
     </message>
     <message>
         <location line="+25"/>
-        <source>New Alias created successfully! Alias will be active after 120 blocks. GUID for the new Alias is: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <source>New Alias created successfully! Alias will be active after 120 confirmations. GUID for the new Alias is: &quot;%1&quot;</source>
+        <translation>Neuer Alias ​​erfolgreich erstellt! Alias ​​wird nach 120 Bestätigungen aktiv sein. Für die neue Alias​​-GUID ist: &quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+49"/>
+        <source>Alias updated successfully! Update will take effect after 1 confirmation. Transaction Id for the update is: &quot;%1&quot;</source>
+        <translation>Alias ​​erfolgreich aktualisiert! Update wird die nach dem 1. Bestätigung zu nehmen. Transaktions-ID für das Update ist: &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Alias transferred successfully! Transaction Id for the update is: &quot;%1&quot; &lt;br&gt;&lt;br&gt;</source>
+        <translation>Alias ​​erfolgreich übertragen! Transaktions-ID für das Update ist: &quot;%1&quot; &lt;br&gt;&lt;br&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Please click refresh after 1 confirmation to update the Alias table.</source>
+        <translation>Bitte klicken Sie auf Refresh nach dem 1. Bestätigung, um die Alias​​-Tabelle zu aktualisieren.</translation>
+    </message>
+    <message>
+        <location line="-88"/>
         <source>Error creating new Alias: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>Fehler beim Erstellen des neuen Alias​​: &quot;%1&quot;</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>General exception creating new Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Allgemeine Ausnahme Schaffung neuer Alias</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Confirm Alias Update</source>
-        <translation type="unfinished"></translation>
+        <translation>Bestätigen Alias ​​aktualisieren</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: Updating Alias will cost </source>
-        <translation type="unfinished"></translation>
+        <translation>Warnung: Aktualisierung Alias ​​kostet </translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Are you sure you wish update this Alias?</source>
-        <translation type="unfinished"></translation>
+        <translation>Sind Sie sicher, dass Sie diese aktualisieren möchten Alias​​?</translation>
     </message>
     <message>
-        <location line="+19"/>
-        <source>Alias updated successfully! Update will take effect after 1 block. Transaction Id for the update is: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+9"/>
+        <location line="+28"/>
         <source>Error updating Alias: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>Fehler beim Aktualisieren der Alias​​: &quot;%1&quot;</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>General exception updating Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Allgemeine Ausnahme Aktualisierung Alias</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Confirm Alias Transfer</source>
-        <translation type="unfinished"></translation>
+        <translation>Bestätigen Alias ​​Überweisung</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: Transfering Alias will cost </source>
-        <translation type="unfinished"></translation>
+        <translation>Warnung: Fördern von Alias ​​kostet </translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Are you sure you wish transfer this Alias?</source>
-        <translation type="unfinished"></translation>
+        <translation>Sind Sie sicher, dass Sie diesen Alias ​​übertragen wollen?</translation>
     </message>
     <message>
-        <location line="+20"/>
-        <source>Alias transferred successfully! Please refresh after at least 6 blocks to update your Aliases. Transaction Id for the update is: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+9"/>
+        <location line="+30"/>
         <source>Error transferring Alias: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>Fehler beim Übertragen Alias​​: &quot;%1&quot;</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>General exception transferring Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Allgemeine Ausnahme Übertragung Alias</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>The entered alias &quot;%1&quot; is not a valid Syscoin Alias.</source>
-        <translation type="unfinished"></translation>
+        <translation>Der eingegebene alias &quot;%1&quot; ist keine gültige Syscoin Alias.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>The entered alias &quot;%1&quot; is already taken.</source>
-        <translation type="unfinished"></translation>
+        <translation>Der eingegebene alias &quot;%1&quot; ist bereits vergeben.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished">Die Brieftasche konnte nicht entsperrt werden.</translation>
+        <translation>Die Brieftasche konnte nicht entsperrt werden.</translation>
     </message>
 </context>
 <context>
@@ -1968,12 +1977,11 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>E&amp;xportieren</translation>
     </message>
     <message>
-        <location filename="../myaliaslistpage.cpp" line="+36"/>
         <source>These are your registered Syscoin Aliases. NOTE: New Syscoin Aliases take 120 blocks to appear in this list and alias updates or transfers can take up to 6 blocks to appear in this list.</source>
-        <translation>Dies sind Ihre registrierte Syscoin Aliases. HINWEIS: Neue Syscoin Aliases nehmen 120 Blöcke, um in dieser Liste und Alias-Updates oder Transfers erscheinen können bis zu 6 Blöcke zu ergreifen, um in dieser Liste angezeigt.</translation>
+        <translation type="obsolete">Dies sind Ihre registrierte Syscoin Aliases. HINWEIS: Neue Syscoin Aliases nehmen 120 Blöcke, um in dieser Liste und Alias-Updates oder Transfers erscheinen können bis zu 6 Blöcke zu ergreifen, um in dieser Liste angezeigt.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location filename="../myaliaslistpage.cpp" line="+41"/>
         <source>Copy Va&amp;lue</source>
         <translation>&amp;Wert Kopieren</translation>
     </message>
@@ -1988,9 +1996,26 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Alias ​​über&amp;tragen</translation>
     </message>
     <message>
-        <location line="+31"/>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Click refresh to load aliases securely. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. NOTE: New Syscoin Aliases take 120 blocks to appear in this list and alias updates or transfers can take up to 6 blocks to appear in this list.</source>
-        <translation>&lt;font color=&apos;red&apos;&gt;WARNUNG: Die Geldbörse ist derzeit gesperrt. Aus Sicherheitsgründen müssen Sie Ihre Passphrase, um mit Syscoin Aliases interagieren eingeben. Klicken Sie auf Aktualisieren, um Aliase sicher laden. &lt;/font&gt;&lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;mehr Infos&lt;/a&gt;&lt;br&gt;&lt;br&gt;Dies sind Ihre registrierte Syscoin Aliases. HINWEIS: Neue Syscoin Aliases nehmen 120 Blöcke, um in dieser Liste und Alias-Updates oder Transfers erscheinen können bis zu 6 Blöcke zu ergreifen, um in dieser Liste angezeigt.</translation>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;WARNUNG: Die Geldbörse ist derzeit gesperrt. Aus Sicherheitsgründen müssen Sie Ihre Passphrase, um mit Syscoin Aliases interagieren eingeben. Klicken Sie auf Aktualisieren, um Aliase sicher laden. &lt;/font&gt;&lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;mehr Infos&lt;/a&gt;&lt;br&gt;&lt;br&gt;Dies sind Ihre registrierte Syscoin Aliases. HINWEIS: Neue Syscoin Aliases nehmen 120 Blöcke, um in dieser Liste und Alias-Updates oder Transfers erscheinen können bis zu 6 Blöcke zu ergreifen, um in dieser Liste angezeigt.</translation>
+    </message>
+    <message>
+        <source>These are your registered Syscoin Aliases. New Syscoin Aliases take 120 confirmations to appear in this table. Alias updates take 1 confirmation to appear in this table.&lt;br&gt;&lt;br&gt;Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
+        <translation type="obsolete">Dies sind Ihre registrierte Syscoin Aliases. New Syscoin Aliases nehmen 120 Bestätigungen in dieser Tabelle angezeigt. Alias​​-Updates nehmen Sie 1 Bestätigung in dieser Tabelle angezeigt.&lt;br&gt;&lt;br&gt;Alias ​​Transfers benötigen Sie auf Aktualisieren klicken nach dem 1. Bestätigung für die Tabelle zu aktualisieren.</translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating, updateing or transferring an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. New Syscoin Aliases take 120 confirmations to appear in this table. Alias updates take 1 confirmation to appear in this table.&lt;br&gt;&lt;br&gt;Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt; &lt;/font&gt;WARNUNG: Die Geldbörse ist derzeit gesperrt. Aus Sicherheitsgründen müssen Sie Ihre Passphrase, um mit Syscoin Aliases interagieren eingeben. Weil Ihre Geldbörse gesperrt ist, müssen Sie manuell diese Tabelle nach der Erstellung, Aktualisierung oder Übertragung eines Alias ​​zu aktualisieren. &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;mehr Infos&lt;/a&gt;&lt;br&gt;&lt;br&gt;Dies sind Ihre registrierte Syscoin Aliases. New Syscoin Aliases nehmen 120 Bestätigungen in dieser Tabelle angezeigt. Alias​​-Updates nehmen Sie 1 Bestätigung in dieser Tabelle angezeigt.&lt;br&gt;&lt;br&gt;Alias ​​Transfers benötigen Sie auf Aktualisieren klicken nach dem 1. Bestätigung für die Tabelle zu aktualisieren.</translation>
+    </message>
+    <message>
+        <location line="-7"/>
+        <source>These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table. Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
+        <translation>Dies sind Ihre registrierte Syscoin Aliases. Alias​​-Updates nehmen Sie 1 Bestätigung in dieser Tabelle angezeigt. Alias ​​Transfers benötigen Sie auf Aktualisieren klicken nach dem 1. Bestätigung für die Tabelle zu aktualisieren.</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating, updateing or transferring an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table. Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
+        <translation>&lt;font color=&apos;red&apos;&gt;WARNUNG: Die Geldbörse ist derzeit gesperrt. Aus Sicherheitsgründen müssen Sie Ihre Passphrase, um mit Syscoin Aliases interagieren eingeben. Weil Ihre Geldbörse gesperrt ist, müssen Sie manuell diese Tabelle nach dem Erstellen, updateing oder Übertragung eines Alias ​​zu aktualisieren. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;mehr Infos&lt;/a&gt;&lt;br&gt;&lt;br&gt;Dies sind Ihre registrierte Syscoin Aliases. Alias​​-Updates nehmen Sie 1 Bestätigung in dieser Tabelle angezeigt. Alias ​​Transfers benötigen Sie auf Aktualisieren klicken nach dem 1. Bestätigung für die Tabelle zu aktualisieren.</translation>
     </message>
     <message>
         <location line="+167"/>
@@ -2063,7 +2088,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+4"/>
         <source>Copy Va&amp;lue</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Wert Kopieren</translation>
     </message>
     <message>
         <location line="+1"/>

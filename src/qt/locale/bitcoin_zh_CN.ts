@@ -19,7 +19,7 @@
     </message>
     <message>
         <location line="+24"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Syscoin &lt;/span&gt;0.1.5 RC1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Syscoin &lt;/span&gt;0.1.5 RC2&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -57,7 +57,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+2"/>
         <source>2014 The Syscoin developers</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">2014 该Syscoin开发商</translation>
     </message>
     <message>
         <source>The Syscoin developers</source>
@@ -167,7 +167,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+4"/>
         <source>Copy Va&amp;lue</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;复制值</translation>
     </message>
     <message>
         <location line="+101"/>
@@ -379,9 +379,13 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>输入搜索词，正则表达式接受（即：^名返回所有别名以&apos;名&apos;）</translation>
     </message>
     <message>
-        <location line="+12"/>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;</source>
-        <translation>&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要以与Syscoin别名交互输入您的密码。&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息&lt;/a&gt;</translation>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要以与Syscoin别名交互输入您的密码。&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to search Syscoin Aliases.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;</source>
+        <translation>&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要为了寻找Syscoin别名输入您的密码。 &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息&lt;/a&gt;</translation>
     </message>
     <message>
         <location line="+111"/>
@@ -515,7 +519,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+4"/>
         <source>Copy Va&amp;lue</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;复制值</translation>
     </message>
     <message>
         <location line="+99"/>
@@ -1151,7 +1155,7 @@ Address: %4
     <message>
         <location line="+6"/>
         <source>Copy Va&amp;lue</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;复制值</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1554,162 +1558,168 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location filename="../forms/editaliasdialog.ui" line="+14"/>
         <location filename="../editaliasdialog.cpp" line="+41"/>
         <source>Edit Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>编辑别名</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>&amp;Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;别名</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>The alias name.</source>
-        <translation type="unfinished"></translation>
+        <translation>别名。</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Value</source>
-        <translation type="unfinished"></translation>
+        <translation>价值</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>The value associated with this alias.</source>
-        <translation type="unfinished"></translation>
+        <translation>与此别名相关联的值。</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Transfer Address</source>
-        <translation type="unfinished"></translation>
+        <translation>传输地址</translation>
     </message>
     <message>
         <location filename="../editaliasdialog.cpp" line="-11"/>
         <source>New Data Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>新数据别名</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>New Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>新建别名</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Edit Data Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>编辑数据别名</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Transfer Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>转让别名</translation>
     </message>
     <message>
         <location line="+59"/>
         <source>Confirm new Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>确认新别名</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: Creating new Alias will cost </source>
-        <translation type="unfinished"></translation>
+        <translation>警告：创建新的别名将成本 </translation>
     </message>
     <message>
         <location line="+0"/>
         <source> SYS, and activating will cost </source>
-        <translation type="unfinished"></translation>
+        <translation> SYS, 和激活的费用 </translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Are you sure you wish to create an Alias?</source>
-        <translation type="unfinished"></translation>
+        <translation>您确定要创建一个别名？</translation>
     </message>
     <message>
         <location line="+25"/>
-        <source>New Alias created successfully! Alias will be active after 120 blocks. GUID for the new Alias is: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <source>New Alias created successfully! Alias will be active after 120 confirmations. GUID for the new Alias is: &quot;%1&quot;</source>
+        <translation>新别名创建成功！经过120确认别名将被激活。 GUID为新的别名： &quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+49"/>
+        <source>Alias updated successfully! Update will take effect after 1 confirmation. Transaction Id for the update is: &quot;%1&quot;</source>
+        <translation>别名成功更新！ 1确认后更新才会生效。 交易ID的更新： &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Alias transferred successfully! Transaction Id for the update is: &quot;%1&quot; &lt;br&gt;&lt;br&gt;</source>
+        <translation>别名成功转移！交易ID的更新： &quot;%1&quot; &lt;br&gt;&lt;br&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Please click refresh after 1 confirmation to update the Alias table.</source>
+        <translation>1，请确认后点击刷新，更新表的别名。</translation>
+    </message>
+    <message>
+        <location line="-88"/>
         <source>Error creating new Alias: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>错误创建新的别名： &quot;%1&quot;</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>General exception creating new Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>一般例外创造新的别名</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Confirm Alias Update</source>
-        <translation type="unfinished"></translation>
+        <translation>确认别名更新</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: Updating Alias will cost </source>
-        <translation type="unfinished"></translation>
+        <translation>警告：更新别名将花费 </translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Are you sure you wish update this Alias?</source>
-        <translation type="unfinished"></translation>
+        <translation>您确定要更新这个别名？</translation>
     </message>
     <message>
-        <location line="+19"/>
-        <source>Alias updated successfully! Update will take effect after 1 block. Transaction Id for the update is: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+9"/>
+        <location line="+28"/>
         <source>Error updating Alias: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>更新时出错别名： &quot;%1&quot;</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>General exception updating Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>一般例外更新别名</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Confirm Alias Transfer</source>
-        <translation type="unfinished"></translation>
+        <translation>确认别名转让</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: Transfering Alias will cost </source>
-        <translation type="unfinished"></translation>
+        <translation>警告：Transfering别名将花费 </translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Are you sure you wish transfer this Alias?</source>
-        <translation type="unfinished"></translation>
+        <translation>你确定你想转让此别名？</translation>
     </message>
     <message>
-        <location line="+20"/>
-        <source>Alias transferred successfully! Please refresh after at least 6 blocks to update your Aliases. Transaction Id for the update is: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+9"/>
+        <location line="+30"/>
         <source>Error transferring Alias: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>错误转移别名： &quot;%1&quot;</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>General exception transferring Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>一般例外转移别名</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>The entered alias &quot;%1&quot; is not a valid Syscoin Alias.</source>
-        <translation type="unfinished"></translation>
+        <translation>输入的别名&quot;%1&quot;不是有效的Syscoin别名。</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>The entered alias &quot;%1&quot; is already taken.</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>输入的别名&quot;%1&quot;已被使用。</translatorcomment>
+        <translation></translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished">无法解锁钱包</translation>
+        <translation>无法解开钱包。</translation>
     </message>
 </context>
 <context>
@@ -1966,12 +1976,11 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>&amp;导出</translation>
     </message>
     <message>
-        <location filename="../myaliaslistpage.cpp" line="+36"/>
         <source>These are your registered Syscoin Aliases. NOTE: New Syscoin Aliases take 120 blocks to appear in this list and alias updates or transfers can take up to 6 blocks to appear in this list.</source>
-        <translation>这是您注册的Syscoin别名。注：新Syscoin别名取120块出现在这个列表和别名更新或传输可能需要长达6个街区出现在列表中。</translation>
+        <translation type="obsolete">这是您注册的Syscoin别名。注：新Syscoin别名取120块出现在这个列表和别名更新或传输可能需要长达6个街区出现在列表中。</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location filename="../myaliaslistpage.cpp" line="+41"/>
         <source>Copy Va&amp;lue</source>
         <translation>&amp;复制值</translation>
     </message>
@@ -1986,9 +1995,26 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>&amp;转让别名</translation>
     </message>
     <message>
-        <location line="+31"/>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Click refresh to load aliases securely. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. NOTE: New Syscoin Aliases take 120 blocks to appear in this list and alias updates or transfers can take up to 6 blocks to appear in this list.</source>
-        <translation>&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要以与Syscoin别名交互输入您的密码。单击刷新安全地加载别名。 &lt;/font&gt;&lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息&lt;/a&gt;&lt;br&gt;&lt;br&gt;这是您注册的Syscoin别名。注：新Syscoin别名取120块出现在这个列表和别名更新或传输可能需要长达6个街区出现在列表中。</translation>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要以与Syscoin别名交互输入您的密码。单击刷新安全地加载别名。 &lt;/font&gt;&lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息&lt;/a&gt;&lt;br&gt;&lt;br&gt;这是您注册的Syscoin别名。注：新Syscoin别名取120块出现在这个列表和别名更新或传输可能需要长达6个街区出现在列表中。</translation>
+    </message>
+    <message>
+        <source>These are your registered Syscoin Aliases. New Syscoin Aliases take 120 confirmations to appear in this table. Alias updates take 1 confirmation to appear in this table.&lt;br&gt;&lt;br&gt;Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
+        <translation type="obsolete">这是您注册的Syscoin别名。新Syscoin别名取120确认出现在这个表中。别名更新需要1确认出现在这个表中。&lt;br&gt;&lt;br&gt;别名传输需要点击刷新1确认后的表进行更新。</translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating, updateing or transferring an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. New Syscoin Aliases take 120 confirmations to appear in this table. Alias updates take 1 confirmation to appear in this table.&lt;br&gt;&lt;br&gt;Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要以与Syscoin别名交互输入您的密码。因为你的钱包被锁定创建，更新或转移的别名后，必须手动刷新此表。 &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息&lt;/a&gt;&lt;br&gt;&lt;br&gt;这是您注册的Syscoin别名。新Syscoin别名取120确认出现在这个表中。别名更新需要1确认出现在这个表中。&lt;br&gt;&lt;br&gt;别名传输需要点击刷新1确认后的表进行更新。</translation>
+    </message>
+    <message>
+        <location line="-7"/>
+        <source>These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table. Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
+        <translation>这是您注册的Syscoin别名。别名更新需要1确认出现在这个表中。别名传输需要点击刷新1确认后的表进行更新。</translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating, updateing or transferring an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table. Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
+        <translation>&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要以与Syscoin别名交互输入您的密码。 因为你的钱包被锁定创建，updateing或转移的别名后，必须手动刷新此表。 &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息&lt;/a&gt;&lt;br&gt;&lt;br&gt;这是您注册的Syscoin别名。别名更新需要1确认出现在这个表中。别名传输需要点击刷新1确认后的表进行更新。</translation>
     </message>
     <message>
         <location line="+167"/>
@@ -2061,7 +2087,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+4"/>
         <source>Copy Va&amp;lue</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;复制值</translation>
     </message>
     <message>
         <location line="+1"/>
