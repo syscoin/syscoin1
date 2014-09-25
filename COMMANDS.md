@@ -33,13 +33,12 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
   - *$ syscoind aliasactivate /d/microsoft.bit 1150cd188f74c8df00 RESERVED*
   - *8aba3631593aeb622d07900bad4c30d91d79377a2dd8cd3e5db6e972cca54282*
 
-###aliasupdate *Update(or transfer) alias with new data(also resets expiration height)*
+###aliasupdate *Update alias with new data(also resets expiration height)*
 
-####**aliasupdate** < alias > < value > [ < toaddress > ] 
+####**aliasupdate** < alias > < value > 
 - **parameters:**
   - < alias > alias name.
   - < value > alias value, 1023 chars max.
-  - < toaddress > receiver syscoin address, if transferring alias.
 - **returns:**
   - txid
 - **example:**

@@ -1469,15 +1469,23 @@ Value aliasactivate(const Array& params, bool fHelp) {
 }
 
 Value aliasupdate(const Array& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 3 < params.size())
+    //---Disabling transfer capability of aliasupdate until we fix the issues with encrypted wallets.
+    /*if (fHelp || 2 > params.size() || 3 < params.size())
 		throw runtime_error(
 				"aliasupdate <alias> <value> [<toaddress>]\n"
 						"Update and possibly transfer an alias.\n"
 						"<alias> alias name.\n"
 						"<value> alias value, 1023 chars max.\n"
-						"<toaddress> receiver syscoin address, if transferring alias.\n"
+                        "<toaddress> receiver syscoin address, if transferring alias.\n"
 						+ HelpRequiringPassphrase());
-
+    */
+    if (fHelp || 2 > params.size() || 2 < params.size())
+            throw runtime_error(
+                    "aliasupdate <alias> <value>\n"
+                            "Update an alias.\n"
+                            "<alias> alias name.\n"
+                            "<value> alias value, 1023 chars max.\n"
+                            + HelpRequiringPassphrase());
 	vector<unsigned char> vchName = vchFromValue(params[0]);
 	vector<unsigned char> vchValue = vchFromValue(params[1]);
 	if (vchValue.size() > 1023)
@@ -1485,7 +1493,8 @@ Value aliasupdate(const Array& params, bool fHelp) {
 	CWalletTx wtx;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 	CScript scriptPubKeyOrig;
-	if (params.size() == 3) {
+    //---Disabling transfer capability of aliasupdate until we fix the issues with encrypted wallets, only want the else{} contents.
+    /*if (params.size() == 3) {
 		string strAddress = params[2].get_str();
 		CBitcoinAddress myAddress = CBitcoinAddress(strAddress);
 		if (!myAddress.IsValid())
@@ -1496,7 +1505,10 @@ Value aliasupdate(const Array& params, bool fHelp) {
 		CPubKey newDefaultKey;
 		pwalletMain->GetKeyFromPool(newDefaultKey, false);
 		scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
-	}
+    }*/
+    CPubKey newDefaultKey;
+    pwalletMain->GetKeyFromPool(newDefaultKey, false);
+    scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
 
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchName << vchValue
@@ -1531,10 +1543,11 @@ Value aliasupdate(const Array& params, bool fHelp) {
 					wtxInHash.GetHex().c_str());
 			throw runtime_error("this alias is not in your wallet");
 		}
-		if(!IsAliasMine(tx))
+        //---Disabling transfer capability of aliasupdate until we fix the issues with encrypted wallets.
+        /*if(!IsAliasMine(tx))
 		{
 			throw runtime_error("Cannot modify a transferred alias");
-		}
+        }*/
 		int64 nNetFee = GetAliasNetworkFee(2, pindexBest->nHeight);
 		// Round up to CENT
 		nNetFee += CENT - 1;
