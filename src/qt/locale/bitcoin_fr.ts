@@ -408,7 +408,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Impossible d&apos;écrire dans le fichier %1.</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+32"/>
         <source>Error Searching Alias</source>
         <translation>Erreur Recherche Alias</translation>
     </message>
@@ -436,7 +436,7 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>AliasTableModel</name>
     <message>
-        <location filename="../aliastablemodel.cpp" line="+251"/>
+        <location filename="../aliastablemodel.cpp" line="+248"/>
         <source>Alias</source>
         <translation>Alias</translation>
     </message>
@@ -1635,7 +1635,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Nouvel alias créé avec succès! Alias ​​sera actif après 120 confirmations. GUID pour la nouvelle Alias ​​est: &quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+50"/>
         <source>Alias updated successfully! Update will take effect after 1 confirmation. Transaction Id for the update is: &quot;%1&quot;</source>
         <translation>Alias ​​mis à jour avec succès! Mise à jour prendra effet à compter du 1er confirmation. Id de transaction pour la mise à jour: &quot;%1&quot;</translation>
     </message>
@@ -1992,9 +1992,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>&amp;Éditer</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>&amp;Transfer Alias</source>
-        <translation>&amp;Transférez Alias</translation>
+        <translation type="obsolete">&amp;Transférez Alias</translation>
     </message>
     <message>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Click refresh to load aliases securely. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. NOTE: New Syscoin Aliases take 120 blocks to appear in this list and alias updates or transfers can take up to 6 blocks to appear in this list.</source>
@@ -2009,17 +2008,25 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation type="obsolete">&lt;font color=&apos;red&apos;&gt; &lt;/font&gt;ATTENTION: Votre portefeuille est actuellement verrouillé. Pour des raisons de sécurité, vous devrez entrer votre mot de passe afin d&apos;interagir avec Alias ​​Syscoin. Parce que votre portefeuille est verrouillé, vous devez actualiser manuellement cette table après la création, la mise à jour ou le transfert d&apos;un alias. &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;plus d&apos;info&lt;/a&gt;&lt;br&gt;&lt;br&gt;Ce sont vos Alias ​​Syscoin enregistrés. Nouveaux Alias ​​Syscoin prendre 120 confirmations à apparaître dans ce tableau. Mises à jour alias prennent une confirmation à apparaître dans ce tableau.&lt;br&gt;&lt;br&gt;Transferts alias exigent rafraîchissement clic après une confirmation pour la table à mettre à jour.</translation>
     </message>
     <message>
-        <location line="-7"/>
         <source>These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table. Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
-        <translation>Ce sont vos Alias ​​Syscoin enregistrés. Mises à jour alias prennent une confirmation à apparaître dans ce tableau. Transferts alias exigent rafraîchissement clic après une confirmation pour la table à mettre à jour.</translation>
+        <translation type="obsolete">Ce sont vos Alias ​​Syscoin enregistrés. Mises à jour alias prennent une confirmation à apparaître dans ce tableau. Transferts alias exigent rafraîchissement clic après une confirmation pour la table à mettre à jour.</translation>
     </message>
     <message>
-        <location line="+38"/>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating, updating or transferring an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table. Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
-        <translation>&lt;font color=&apos;red&apos;&gt;ATTENTION: Votre portefeuille est actuellement verrouillé. Pour des raisons de sécurité, vous devrez entrer votre mot de passe afin d&apos;interagir avec Alias ​​Syscoin. Parce que votre portefeuille est verrouillé, vous devez actualiser manuellement cette table après la création, updating ou le transfert d&apos;un alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;plus d&apos;info&lt;/a&gt;&lt;br&gt;&lt;br&gt;Ce sont vos Alias ​​Syscoin enregistrés. Mises à jour alias prennent une confirmation à apparaître dans ce tableau. Transferts alias exigent rafraîchissement clic après une confirmation pour la table à mettre à jour.</translation>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;ATTENTION: Votre portefeuille est actuellement verrouillé. Pour des raisons de sécurité, vous devrez entrer votre mot de passe afin d&apos;interagir avec Alias ​​Syscoin. Parce que votre portefeuille est verrouillé, vous devez actualiser manuellement cette table après la création, updating ou le transfert d&apos;un alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;plus d&apos;info&lt;/a&gt;&lt;br&gt;&lt;br&gt;Ce sont vos Alias ​​Syscoin enregistrés. Mises à jour alias prennent une confirmation à apparaître dans ce tableau. Transferts alias exigent rafraîchissement clic après une confirmation pour la table à mettre à jour.</translation>
     </message>
     <message>
-        <location line="+167"/>
+        <location line="-6"/>
+        <source>These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table.</source>
+        <translation>Ce sont vos Alias ​​Syscoin enregistrés. Les mises à jour prennent Alias ​​1 Pour paraître dans cette table de confirmation.</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating or updating an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table.</source>
+        <translation>&lt;font color=&apos;red&apos;&gt;ATTENTION: Votre portefeuille est actuellement verrouillé. Pour des raisons de sécurité, vous devrez entrer votre mot de passe afin d&apos;interagir avec Alias ​​Syscoin. Parce que votre portefeuille est verrouillé, vous devez actualiser manuellement Ce tableau après la création ou la mise à jour d&apos;un alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;plus d&apos;info.&lt;/a&gt;&lt;br&gt;&lt;br&gt;Ce sont vos Alias ​​Syscoin enregistrés. Les mises à jour prennent Alias ​​1 Pour paraître dans cette table de confirmation.</translation>
+    </message>
+    <message>
+        <location line="+162"/>
         <source>Export Alias Data</source>
         <translation>Exporter Alias ​​données</translation>
     </message>

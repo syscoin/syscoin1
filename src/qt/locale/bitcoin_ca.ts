@@ -11,12 +11,12 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
         <source>About SysCoin</source>
-        <translation type="unfinished"></translation>
+        <translation>Sobre SysCoin</translation>
     </message>
     <message>
         <location line="+24"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Syscoin &lt;/span&gt;0.1.5 RC1&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Syscoin &lt;/span&gt;0.1.5 RC2&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;SysCoin &lt;/span&gt;0.1.5 RC2&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location line="+61"/>
@@ -38,17 +38,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="-3"/>
         <source>The Bitcoin developers</source>
-        <translation type="unfinished"></translation>
+        <translation>Els programadors de Bitcoin</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>2011-%1 The Litecoin developers</source>
-        <translation type="unfinished"></translation>
+        <translation>2011-%1 Els programadors de Bitcoin</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>2014 The Syscoin developers</source>
-        <translation type="unfinished"></translation>
+        <translation>2014 Els programadors de SysCoin</translation>
     </message>
 </context>
 <context>
@@ -144,7 +144,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+3"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Exportar</translation>
     </message>
     <message>
         <location filename="../acceptedofferlistpage.cpp" line="+31"/>
@@ -154,7 +154,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+4"/>
         <source>Copy Va&amp;lue</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Copiar Va&amp;lor</translation>
     </message>
     <message>
         <location line="+101"/>
@@ -169,7 +169,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+17"/>
         <source>Error exporting</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Error exportant</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -242,7 +242,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+3"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Exportar</translation>
     </message>
     <message>
         <location line="-44"/>
@@ -272,7 +272,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+1"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Editar</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -292,7 +292,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+13"/>
         <source>Error exporting</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Error exportant</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -366,9 +366,13 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Introdueix un terme per cercar, expressions regular acceptades (ie: ^nom retorna tots els àlies que comencin per &apos;nom&apos;)</translation>
     </message>
     <message>
-        <location line="+12"/>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;</source>
-        <translation>&lt;font color=&apos;red&apos;&gt;AVÍS: El teu moneder està bloquejat. Per raons de seguretat, has d&apos;introduir la teva paraula de pas per interaccionar amb els Àlies de SysCoin. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;més info.&lt;/a&gt;</translation>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;AVÍS: El teu moneder està bloquejat. Per raons de seguretat, has d&apos;introduir la teva paraula de pas per interaccionar amb els Àlies de SysCoin. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;més info.&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to search Syscoin Aliases.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;</source>
+        <translation>&lt;font color=&apos;red&apos;&gt;AVÍS: El teu moneder està bloquejat. Per raons de seguretat, has d&apos;introduir la teva paraula de pas per cercar per Àlies de SysCoin. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;més info.&lt;/a&gt;</translation>
     </message>
     <message>
         <location line="+111"/>
@@ -391,7 +395,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>No s&apos;ha pogut escriure al fitxer %1.</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+32"/>
         <source>Error Searching Alias</source>
         <translation>Error cercant Àlies</translation>
     </message>
@@ -419,7 +423,7 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>AliasTableModel</name>
     <message>
-        <location filename="../aliastablemodel.cpp" line="+251"/>
+        <location filename="../aliastablemodel.cpp" line="+248"/>
         <source>Alias</source>
         <translation>Àlies</translation>
     </message>
@@ -492,7 +496,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+3"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Exportar</translation>
     </message>
     <message>
         <location filename="../allofferlistpage.cpp" line="+32"/>
@@ -502,7 +506,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+4"/>
         <source>Copy Va&amp;lue</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Copiar Va&amp;lor</translation>
     </message>
     <message>
         <location line="+99"/>
@@ -517,7 +521,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+17"/>
         <source>Error exporting</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Error exportant</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1126,7 +1130,7 @@ Adreça: %4</translation>
     <message>
         <location line="+3"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Exportar</translation>
     </message>
     <message>
         <location filename="../certlistpage.cpp" line="+47"/>
@@ -1141,12 +1145,12 @@ Adreça: %4</translation>
     <message>
         <location line="+6"/>
         <source>Copy Va&amp;lue</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Copiar Va&amp;lor</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Editar</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1166,7 +1170,7 @@ Adreça: %4</translation>
     <message>
         <location line="+13"/>
         <source>Error exporting</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Error exportant</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1276,17 +1280,17 @@ Adreça: %4</translation>
     <message>
         <location line="+45"/>
         <source>Amount</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Quantitat</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Address</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Adreça</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Date</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Data</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1296,7 +1300,7 @@ Adreça: %4</translation>
     <message>
         <location line="+3"/>
         <source>Confirmed</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Confirmat</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1306,23 +1310,23 @@ Adreça: %4</translation>
     <message>
         <location filename="../coincontroldialog.cpp" line="-555"/>
         <source>Copy address</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Copiar adreça</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Copy label</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Copiar Etiqueta</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+26"/>
         <source>Copy amount</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Copiar quantitat</translation>
     </message>
     <message>
         <location line="-25"/>
         <source>Copy transaction ID</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Copiar identificador de transacció</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1457,7 +1461,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+37"/>
         <location line="+66"/>
         <source>(no label)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">(sense etiqueta)</translation>
     </message>
     <message>
         <location line="-9"/>
@@ -1530,7 +1534,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+10"/>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">No s&apos;ha pogut desbloquejar el moneder.</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1544,162 +1548,167 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location filename="../forms/editaliasdialog.ui" line="+14"/>
         <location filename="../editaliasdialog.cpp" line="+41"/>
         <source>Edit Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Ediar Àlies</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>&amp;Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Àlies</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>The alias name.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nom de l&apos;Àlies.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Valor</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>The value associated with this alias.</source>
-        <translation type="unfinished"></translation>
+        <translation>Valor associat amb aquest Àlies.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>Transfer Address</source>
-        <translation type="unfinished"></translation>
+        <translation>Adreça de transferència</translation>
     </message>
     <message>
         <location filename="../editaliasdialog.cpp" line="-11"/>
         <source>New Data Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Nou Àlies de Dades</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>New Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Nou Àlies</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Edit Data Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Editar Àlies de Dades</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>Transfer Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Transferir Àlies</translation>
     </message>
     <message>
         <location line="+59"/>
         <source>Confirm new Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Confirma nou Àlies</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: Creating new Alias will cost </source>
-        <translation type="unfinished"></translation>
+        <translation>AVÍS: Crear un nou Àlies costarà </translation>
     </message>
     <message>
         <location line="+0"/>
         <source> SYS, and activating will cost </source>
-        <translation type="unfinished"></translation>
+        <translation> SYS, i activar-lo costarà </translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Are you sure you wish to create an Alias?</source>
-        <translation type="unfinished"></translation>
+        <translation>Estàs segur de voler crear un Àlies?</translation>
     </message>
     <message>
         <location line="+25"/>
-        <source>New Alias created successfully! Alias will be active after 120 blocks. GUID for the new Alias is: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <source>New Alias created successfully! Alias will be active after 120 confirmations. GUID for the new Alias is: &quot;%1&quot;</source>
+        <translation>Nou Àlies creat amb èxit! l&apos;Àlies estarà actiu després de 120 confirmacions. El GUID per al nou Àlies és: &quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+50"/>
+        <source>Alias updated successfully! Update will take effect after 1 confirmation. Transaction Id for the update is: &quot;%1&quot;</source>
+        <translation>Àlies editat amb èxit! La edició serà vigent després de 1 confirmació. El Id de la transacció d&apos;edició es: &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Alias transferred successfully! Transaction Id for the update is: &quot;%1&quot; &lt;br&gt;&lt;br&gt;</source>
+        <translation>Àlies transferit amb èxit! El Id de la transacció és: &quot;%1&quot; &lt;br&gt;&lt;br&gt;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Please click refresh after 1 confirmation to update the Alias table.</source>
+        <translation>Si us plau, clica Actualitzar deprés de 1 confirmació per actualitzar la taula d&apos;Àlies.</translation>
+    </message>
+    <message>
+        <location line="-88"/>
         <source>Error creating new Alias: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>Error en la creació d&apos;Àlies: &quot;%1&quot;</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>General exception creating new Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Excepció general en la creació d&apos;Àlies</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Confirm Alias Update</source>
-        <translation type="unfinished"></translation>
+        <translation>Confirma Edició d&apos;Àlies</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: Updating Alias will cost </source>
-        <translation type="unfinished"></translation>
+        <translation>Avís: Editar l&apos;Àlies costarà </translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Are you sure you wish update this Alias?</source>
-        <translation type="unfinished"></translation>
+        <translation>Estàs segur de voler editar aquest Àlies?</translation>
     </message>
     <message>
-        <location line="+19"/>
-        <source>Alias updated successfully! Update will take effect after 1 block. Transaction Id for the update is: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+9"/>
+        <location line="+28"/>
         <source>Error updating Alias: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>Error en l&apos;edició d&apos;Àlies: &quot;%1&quot;</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>General exception updating Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Excepció general en l&apos;edició d&apos;Àlies</translation>
     </message>
     <message>
         <location line="+11"/>
         <source>Confirm Alias Transfer</source>
-        <translation type="unfinished"></translation>
+        <translation>Confirma Transferència d&apos;Àlies</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: Transfering Alias will cost </source>
-        <translation type="unfinished"></translation>
+        <translation>Avís: Transferir l&apos;Àlies costarà </translation>
     </message>
     <message>
         <location line="+0"/>
         <source>Are you sure you wish transfer this Alias?</source>
-        <translation type="unfinished"></translation>
+        <translation>Estàs segur de voler transferir aquest Àlies?</translation>
     </message>
     <message>
-        <location line="+20"/>
-        <source>Alias transferred successfully! Please refresh after at least 6 blocks to update your Aliases. Transaction Id for the update is: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+9"/>
+        <location line="+30"/>
         <source>Error transferring Alias: &quot;%1&quot;</source>
-        <translation type="unfinished"></translation>
+        <translation>Error en la transferència d&apos;Àlies: &quot;%1&quot;</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>General exception transferring Alias</source>
-        <translation type="unfinished"></translation>
+        <translation>Excepció general en la trasnferència d&apos;Àlies</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>The entered alias &quot;%1&quot; is not a valid Syscoin Alias.</source>
-        <translation type="unfinished"></translation>
+        <translation>L&apos;Àlies introduït &quot;%1&quot; no és un Àlies de SysCoin vàlid.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>The entered alias &quot;%1&quot; is already taken.</source>
-        <translation type="unfinished"></translation>
+        <translation>L&apos;Àlies introduït &quot;%1&quot; ja està en ús.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished"></translation>
+        <translation>No s&apos;ha pogut desbloquejar el moneder.</translation>
     </message>
 </context>
 <context>
@@ -1707,7 +1716,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location filename="../forms/editcertdialog.ui" line="+14"/>
         <source>Edit Cert</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location line="+11"/>
@@ -1762,7 +1771,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+5"/>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">No s&apos;ha pogut desbloquejar el moneder.</translation>
     </message>
 </context>
 <context>
@@ -1865,7 +1874,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+5"/>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">No s&apos;ha pogut desbloquejar el moneder.</translation>
     </message>
 </context>
 <context>
@@ -1955,12 +1964,11 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>&amp;Exportar</translation>
     </message>
     <message>
-        <location filename="../myaliaslistpage.cpp" line="+36"/>
         <source>These are your registered Syscoin Aliases. NOTE: New Syscoin Aliases take 120 blocks to appear in this list and alias updates or transfers can take up to 6 blocks to appear in this list.</source>
-        <translation>Aquests són els teus Àlies de SysCoin registrats. NOTA: Els Àlies de SysCoin nous triguen 120 blocs en aparèixer en aquesta llista, i els àlies editats o tranferits poden trigar fins a 6 blocs en aparèixer.</translation>
+        <translation type="obsolete">Aquests són els teus Àlies de SysCoin registrats. NOTA: Els Àlies de SysCoin nous triguen 120 blocs en aparèixer en aquesta llista, i els àlies editats o tranferits poden trigar fins a 6 blocs en aparèixer.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location filename="../myaliaslistpage.cpp" line="+41"/>
         <source>Copy Va&amp;lue</source>
         <translation>Copiar Va&amp;lor</translation>
     </message>
@@ -1970,17 +1978,29 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>&amp;Editar</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>&amp;Transfer Alias</source>
-        <translation>&amp;Transferir Àlies</translation>
+        <translation type="obsolete">&amp;Transferir Àlies</translation>
     </message>
     <message>
-        <location line="+31"/>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Click refresh to load aliases securely. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. NOTE: New Syscoin Aliases take 120 blocks to appear in this list and alias updates or transfers can take up to 6 blocks to appear in this list.</source>
-        <translation>&lt;font color=&apos;red&apos;&gt;AVÍS: El teu moneder està bloquejat. Per raons de seguretat, has d&apos;introduir la teva paraula de pas per interaccionar amb els Àlies de SysCoin. Clica Actualitzar per carregar els Àlies amb seguretat. &lt;/font&gt;&lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;més info.&lt;/a&gt;&lt;br&gt;&lt;br&gt;Aquests són els teus Àlies de SysCoin registrats. NOTA: Els Àlies de SysCoin nous triguen 120 blocs en aparèixer en aquesta llista, i els àlies editats o tranferits poden trigar fins a 6 blocs en aparèixer.</translation>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;AVÍS: El teu moneder està bloquejat. Per raons de seguretat, has d&apos;introduir la teva paraula de pas per interaccionar amb els Àlies de SysCoin. Clica Actualitzar per carregar els Àlies amb seguretat. &lt;/font&gt;&lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;més info.&lt;/a&gt;&lt;br&gt;&lt;br&gt;Aquests són els teus Àlies de SysCoin registrats. NOTA: Els Àlies de SysCoin nous triguen 120 blocs en aparèixer en aquesta llista, i els àlies editats o tranferits poden trigar fins a 6 blocs en aparèixer.</translation>
     </message>
     <message>
-        <location line="+167"/>
+        <source>These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table. Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
+        <translation type="obsolete">Aquests són els teus Àlies de SysCoin registrats. Les edicions d&apos;Àlies necessiten d&apos;una confirmació per aparèixer en aquesta taula. Les transferències dÀlies</translation>
+    </message>
+    <message>
+        <location line="-6"/>
+        <source>These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table.</source>
+        <translation>Aquests són els teus Àlies de SysCoin registrats. Les edicions d&apos;Àlies necessiten d&apos;una confirmació per aparèixer en aquesta taula.</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating or updating an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table.</source>
+        <translation>&lt;font color=&apos;red&apos;&gt;AVÍS: El teu moneder està bloquejat. Per raons de seguretat, has d&apos;introduir la teva paraula de pas per interaccionar amb els Àlies de SysCoin. Com que el teu moneder està bloquejat, has clicar en Actualitzar després de crear o editar un Àlies per actualitzar aquesta taula.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;&lt;/a&gt;més info.&lt;br&gt;&lt;br&gt;Aquests són els teus Àlies de SysCoin registrats. Les edicions d&apos;Àlies necessiten 1 confirmació per aparèixer en aquesta taula.</translation>
+    </message>
+    <message>
+        <location line="+162"/>
         <source>Export Alias Data</source>
         <translation>Exportar dades de Àlies</translation>
     </message>
@@ -1997,7 +2017,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+0"/>
         <source>Could not write to file %1.</source>
-        <translation>No s&apos;ha pogut escriure al fitxer %1</translation>
+        <translation>No s&apos;ha pogut escriure al fitxer %1.</translation>
     </message>
 </context>
 <context>
@@ -2040,7 +2060,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+3"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Exportar</translation>
     </message>
     <message>
         <location filename="../myofferlistpage.cpp" line="+31"/>
@@ -2050,12 +2070,12 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+4"/>
         <source>Copy Va&amp;lue</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Copiar Va&amp;lor</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Editar</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2075,7 +2095,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+17"/>
         <source>Error exporting</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Error exportant</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -2350,7 +2370,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+42"/>
         <location line="+9"/>
         <source>Warning</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Avís</translation>
     </message>
     <message>
         <location line="-9"/>
@@ -2769,7 +2789,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+22"/>
         <source>Balance:</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Saldo:</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -2799,7 +2819,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+1"/>
         <source>Copy amount</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Copiar quantitat</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2895,7 +2915,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+13"/>
         <source>(no label)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">(sense etiqueta)</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -2908,7 +2928,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="+14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Des de</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -3165,7 +3185,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location filename="../splashscreen.cpp" line="+25"/>
         <source>The Bitcoin developers</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Els programadors de Bitcoin</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3183,7 +3203,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location filename="../transactiondesc.cpp" line="+20"/>
         <source>Open until %1</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Obert fins %1</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -3215,7 +3235,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+4"/>
         <source>Date</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Data</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -3328,7 +3348,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+23"/>
         <source>Amount</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Quantitat</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3349,6 +3369,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="-35"/>
         <source>Open for %n more block(s)</source>
         <translation type="unfinished">
+            <numerusform>Obert per %n blocs més</numerusform>
+            <numerusform></numerusform>
             <numerusform></numerusform>
         </translation>
     </message>
@@ -3727,7 +3749,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location filename="../walletview.cpp" line="+56"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">&amp;Exportar</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4145,7 +4167,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Syscoin Alert&quot; admin@foo.
     <message>
         <location line="+77"/>
         <source>Information</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Informació</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -4290,7 +4312,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Syscoin Alert&quot; admin@foo.
     <message>
         <location line="+4"/>
         <source>Warning</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Avís</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4495,7 +4517,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Syscoin Alert&quot; admin@foo.
     <message>
         <location line="-74"/>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Error</translation>
     </message>
     <message>
         <location line="-31"/>

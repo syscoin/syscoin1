@@ -411,7 +411,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <translation>No se pudo escribir en el archivo %1.</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+32"/>
         <source>Error Searching Alias</source>
         <translation>Error buscando Alias</translation>
     </message>
@@ -439,7 +439,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
 <context>
     <name>AliasTableModel</name>
     <message>
-        <location filename="../aliastablemodel.cpp" line="+251"/>
+        <location filename="../aliastablemodel.cpp" line="+248"/>
         <source>Alias</source>
         <translation>Alias</translation>
     </message>
@@ -1609,7 +1609,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation type="obsolete">Nuevo Alias creado con éxito! Por favor, haz click en Actualizar. GUID para el nuevo Alias es:&quot;%1&quot; </translation>
     </message>
     <message>
-        <location filename="../editaliasdialog.cpp" line="+99"/>
+        <location filename="../editaliasdialog.cpp" line="+100"/>
         <source>Error creating new Alias: &quot;%1&quot;</source>
         <translation>Error creando nuevo Alias: &quot;%1&quot;</translation>
     </message>
@@ -1646,7 +1646,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation type="obsolete">El Alias introducido &quot;%1&quot; no es un Alias de Syscoin válido.</translation>
     </message>
     <message>
-        <location line="-110"/>
+        <location line="-111"/>
         <source>New Data Alias</source>
         <translation>Nuevo Alias de Datos</translation>
     </message>
@@ -1673,7 +1673,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+1"/>
         <source>Warning: Creating new Alias will cost </source>
-        <translation>Aviso: Crear un nuevo Alies costará </translation>
+        <translation>Aviso: Crear un nuevo Alias costará </translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1691,7 +1691,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Nuevo Alias creado con éxito! El Alias estará activo tras 120 confirmaciones. El GUID del nuevo Alias es: &quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+50"/>
         <source>Alias updated successfully! Update will take effect after 1 confirmation. Transaction Id for the update is: &quot;%1&quot;</source>
         <translation>Alias editado con éxito! La edición será efectiva tras 1 confirmación. El Id de la transacción de edición es: &quot;%1&quot;</translation>
     </message>
@@ -2043,9 +2043,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>&amp;Editar</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>&amp;Transfer Alias</source>
-        <translation>&amp;Transferir Alias</translation>
+        <translation type="obsolete">&amp;Transferir Alias</translation>
     </message>
     <message>
         <source>The blockchain must be fully synchronized before loading Aliases. Please try again later.</source>
@@ -2060,17 +2059,25 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;AVISO: Tu monedero está bloqueado. Por razones de seguridad, debes introducir tu contraseña para interaccionar con los Alias de SysCoin. Haz clic en Actualizar para cargar los Alias con seguridad. &lt;/font&gt;&lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;más info.&lt;/a&gt;&lt;br&gt;&lt;br&gt;Éstos son tus Alias de SysCoin registrados. NOTA: Los Alias de SysCoin nuevos tardan 120 bloques en aparecer en esta lista, y los alias editados o transferidos pueden tardar hasta 6 bloques en aparecer.</translation>
     </message>
     <message>
-        <location line="-7"/>
         <source>These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table. Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
-        <translation>Éstos son sus Alias de SysCoin registrados. Las ediciones de Alias necesitan 1 confirmación para aparecer en esta tabla. Las transferencias de Alias requieren hacer clic en Actualizar después de 1 confirmación para que la tabla se actualice.</translation>
+        <translation type="obsolete">Éstos son sus Alias de SysCoin registrados. Las ediciones de Alias necesitan 1 confirmación para aparecer en esta tabla. Las transferencias de Alias requieren hacer clic en Actualizar después de 1 confirmación para que la tabla se actualice.</translation>
     </message>
     <message>
-        <location line="+38"/>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating, updating or transferring an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table. Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
-        <translation>&lt;font color=&apos;red&apos;&gt;AVISO: Su monedero está bloqueado actualmente. Por motivos de seguridad, debe introducir su contraseña para interactuar con los Alias de SysCoin. Dado que el monedero está bloqueado, debe actualizar manualmente esta tabla tras crear, editar o trasferir Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;más info.&lt;/a&gt;&lt;br&gt;&lt;br&gt;Éstos son sus Alias de SysCoin registrados. Las ediciones de Alias necesitan 1 confirmación para aparecer en esta tabla. Las transferencias de Alias requieren hacer clic en Actualizar después de 1 confirmación para que la tabla se actualice.</translation>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;AVISO: Su monedero está bloqueado actualmente. Por motivos de seguridad, debe introducir su contraseña para interactuar con los Alias de SysCoin. Dado que el monedero está bloqueado, debe actualizar manualmente esta tabla tras crear, editar o trasferir Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;más info.&lt;/a&gt;&lt;br&gt;&lt;br&gt;Éstos son sus Alias de SysCoin registrados. Las ediciones de Alias necesitan 1 confirmación para aparecer en esta tabla. Las transferencias de Alias requieren hacer clic en Actualizar después de 1 confirmación para que la tabla se actualice.</translation>
     </message>
     <message>
-        <location line="+167"/>
+        <location line="-6"/>
+        <source>These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table.</source>
+        <translation>Éstos son sus Alias de SysCoin registrados. Las ediciones de Alias necesitan 1 confirmación para aparecer en esta tabla.</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating or updating an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table.</source>
+        <translation>&lt;font color=&apos;red&apos;&gt;AVISO: Tu monedero está bloqueado. Por razones de seguridad, debes introducir tu contraseña para interaccionar con los Alias de SysCoin. Dado que su monedero está bloqueado, debe hacer clic en Actualizar tras crear o editar un Alias para actualizar esta tabla&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;más info.&lt;/a&gt;&lt;br&gt;&lt;br&gt;Éstos son sus Alias de SysCoin registrados. Las ediciones de Alias necesitan 1 confirmación para aparecer en esta tabla.</translation>
+    </message>
+    <message>
+        <location line="+162"/>
         <source>Export Alias Data</source>
         <translation>Exportar datos de Alias</translation>
     </message>
@@ -3271,7 +3278,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location filename="../splashscreen.cpp" line="+25"/>
         <source>The Bitcoin developers</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Los desarrolladores de Bitcoin</translation>
     </message>
     <message>
         <location line="+1"/>

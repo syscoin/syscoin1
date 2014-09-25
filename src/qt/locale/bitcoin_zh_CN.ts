@@ -408,7 +408,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>无法写入文件 %1。</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+32"/>
         <source>Error Searching Alias</source>
         <translation>错误搜索别名</translation>
     </message>
@@ -436,7 +436,7 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>AliasTableModel</name>
     <message>
-        <location filename="../aliastablemodel.cpp" line="+251"/>
+        <location filename="../aliastablemodel.cpp" line="+248"/>
         <source>Alias</source>
         <translation>别名</translation>
     </message>
@@ -1631,7 +1631,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>新别名创建成功！经过120确认别名将被激活。 GUID为新的别名： &quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+50"/>
         <source>Alias updated successfully! Update will take effect after 1 confirmation. Transaction Id for the update is: &quot;%1&quot;</source>
         <translation>别名成功更新！ 1确认后更新才会生效。 交易ID的更新： &quot;%1&quot;</translation>
     </message>
@@ -1990,9 +1990,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>&amp;编辑</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>&amp;Transfer Alias</source>
-        <translation>&amp;转让别名</translation>
+        <translation type="obsolete">&amp;转让别名</translation>
     </message>
     <message>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Click refresh to load aliases securely. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. NOTE: New Syscoin Aliases take 120 blocks to appear in this list and alias updates or transfers can take up to 6 blocks to appear in this list.</source>
@@ -2007,17 +2006,25 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要以与Syscoin别名交互输入您的密码。因为你的钱包被锁定创建，更新或转移的别名后，必须手动刷新此表。 &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息&lt;/a&gt;&lt;br&gt;&lt;br&gt;这是您注册的Syscoin别名。新Syscoin别名取120确认出现在这个表中。别名更新需要1确认出现在这个表中。&lt;br&gt;&lt;br&gt;别名传输需要点击刷新1确认后的表进行更新。</translation>
     </message>
     <message>
-        <location line="-7"/>
         <source>These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table. Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
-        <translation>这是您注册的Syscoin别名。别名更新需要1确认出现在这个表中。别名传输需要点击刷新1确认后的表进行更新。</translation>
+        <translation type="obsolete">这是您注册的Syscoin别名。别名更新需要1确认出现在这个表中。别名传输需要点击刷新1确认后的表进行更新。</translation>
     </message>
     <message>
-        <location line="+38"/>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating, updating or transferring an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table. Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
-        <translation>&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要以与Syscoin别名交互输入您的密码。 因为你的钱包被锁定创建，updating或转移的别名后，必须手动刷新此表。 &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息&lt;/a&gt;&lt;br&gt;&lt;br&gt;这是您注册的Syscoin别名。别名更新需要1确认出现在这个表中。别名传输需要点击刷新1确认后的表进行更新。</translation>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要以与Syscoin别名交互输入您的密码。 因为你的钱包被锁定创建，updating或转移的别名后，必须手动刷新此表。 &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息&lt;/a&gt;&lt;br&gt;&lt;br&gt;这是您注册的Syscoin别名。别名更新需要1确认出现在这个表中。别名传输需要点击刷新1确认后的表进行更新。</translation>
     </message>
     <message>
-        <location line="+167"/>
+        <location line="-6"/>
+        <source>These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table.</source>
+        <translation>这是您注册的Syscoin别名。别名更新需要1至出现在此确认表。</translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating or updating an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table.</source>
+        <translation>&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要以与Syscoin别名交互输入您的密码。 因为你的钱包被锁定创建或更新别名后，必须手动刷新此表。 &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息。&lt;/a&gt;&lt;br&gt;&lt;br&gt;这是您注册的Syscoin别名。别名更新需要1至出现在此确认表。</translation>
+    </message>
+    <message>
+        <location line="+162"/>
         <source>Export Alias Data</source>
         <translation>出口别名数据</translation>
     </message>
