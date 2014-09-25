@@ -1577,12 +1577,19 @@ Value aliaslist(const Array& params, bool fHelp) {
 
 		vector<unsigned char> vchValue;
 		int nHeight;
-
+		bool hasMyTx;
 		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
 			// get txn hash, read txn index
 			hash = item.second.GetHash();
-			// only get aliases in your mempool (your aliases)
-			if (!GetTransaction(hash, tx, blockHash))
+			hasMyTx = false;
+			BOOST_FOREACH(const CTxIn& txin, item.second.vin)
+			{
+				if(pwalletMain->IsMine(txin))
+				{
+					hasMyTx = true;
+				}
+			}
+			if (!GetTransaction(hash, tx, blockHash, true))
 				continue;
 
 			// skip non-syscoin txns
@@ -1592,7 +1599,7 @@ Value aliaslist(const Array& params, bool fHelp) {
 			// decode txn, skip non-alias txns
 			vector<vector<unsigned char> > vvch;
 			int op, nOut;
-			if (!DecodeAliasTx(tx, op, nOut, vvch, -1) || !IsAliasOp(op))
+			if (!DecodeAliasTx(tx, op, nOut, vvch, -1) || !IsAliasOp(op) || (!IsAliasMine(tx) && !hasMyTx))
 				continue;
 
 			// get the txn height
