@@ -229,22 +229,10 @@ public:
     }
     bool IsMine(const CTransaction& tx) const
     {
-        BOOST_FOREACH(const CTxOut& txout, tx.vout) {
+        BOOST_FOREACH(const CTxOut& txout, tx.vout)
             if (IsMine(txout) && txout.nValue >= nMinimumInputValue)
                 return true;
-            
-            if (tx.nVersion != SYSCOIN_TX_VERSION)
-                continue;
-
-            CTxDestination address;
-            if (ExtractDestination(txout.scriptPubKey, address) && ::IsMine(*this, address))
-            {
-                LOCK(cs_wallet);
-                if (!mapAddressBook.count(address))
-                    return true;
-            }
-        }
-        if (IsAliasMine(tx) || IsOfferMine(tx) || IsCertMine(tx)) return true;
+        if (IsAliasMine(tx)||IsOfferMine(tx)||IsCertMine(tx)) return true;
         return false;
     }
     bool IsFromMe(const CTransaction& tx) const

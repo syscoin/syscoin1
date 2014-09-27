@@ -2225,8 +2225,8 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 	bool fStrictPayToScriptHash = (pindex->nTime >= nBIP16SwitchTime);
 
 	unsigned int flags =
-//			SCRIPT_VERIFY_NOCACHE |
-					(fStrictPayToScriptHash ?
+			SCRIPT_VERIFY_NOCACHE
+					| (fStrictPayToScriptHash ?
 							SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE);
 
 	CBlockUndo blockundo;
