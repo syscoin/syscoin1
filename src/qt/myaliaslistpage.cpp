@@ -40,8 +40,7 @@ MyAliasListPage::MyAliasListPage(QWidget *parent) :
     QAction *copyAliasAction = new QAction(ui->copyAlias->text(), this);
     QAction *copyAliasValueAction = new QAction(tr("Copy Va&lue"), this);
     QAction *editAction = new QAction(tr("&Edit"), this);
-    //---Alias transfer disabled until we fix the bugs on encrypted wallets
-    //QAction *transferAliasAction = new QAction(tr("&Transfer Alias"), this);
+    QAction *transferAliasAction = new QAction(tr("&Transfer Alias"), this);
 
     // Build context menu
     contextMenu = new QMenu();
@@ -49,15 +48,13 @@ MyAliasListPage::MyAliasListPage(QWidget *parent) :
     contextMenu->addAction(copyAliasValueAction);
     contextMenu->addAction(editAction);
     contextMenu->addSeparator();
-    //---Alias transfer disabled until we fix the bugs on encrypted wallets
-    //contextMenu->addAction(transferAliasAction);
+    contextMenu->addAction(transferAliasAction);
 
     // Connect signals for context menu actions
     connect(copyAliasAction, SIGNAL(triggered()), this, SLOT(on_copyAlias_clicked()));
     connect(copyAliasValueAction, SIGNAL(triggered()), this, SLOT(onCopyAliasValueAction()));
     connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
-    //---Alias transfer disabled until we fix the bugs on encrypted wallets
-    //connect(transferAliasAction, SIGNAL(triggered()), this, SLOT(onTransferAliasAction()));
+    connect(transferAliasAction, SIGNAL(triggered()), this, SLOT(onTransferAliasAction()));
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
