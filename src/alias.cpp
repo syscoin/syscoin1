@@ -21,11 +21,11 @@ using namespace json_spirit;
 
 extern CAliasDB *paliasdb;
 
+CCriticalSection cs_aliasmap;
+
 map<vector<unsigned char>, uint256> mapMyAliases;
 map<vector<unsigned char>, set<uint256> > mapAliasesPending;
 list<CAliasFee> lstAliasFees;
-
-CCriticalSection cs_aliasmap;
 
 #ifdef GUI
 extern std::map<uint160, std::vector<unsigned char> > mapMyNameHashes;
@@ -828,7 +828,7 @@ bool CreateTransactionWithInputTx(const vector<pair<CScript, int64> >& vecSend,
 	wtxNew.BindWallet(pwalletMain);
 
 	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
+		LOCK2(cs_aliasmap, pwalletMain->cs_wallet);
 
 		nFeeRet = nTransactionFee;
 		loop {
@@ -1327,7 +1327,7 @@ Value aliasnew(const Array& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_NEW) << hash << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	{
-		LOCK(cs_main);
+		LOCK(cs_aliasmap);
 		EnsureWalletIsUnlocked();
 		string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
 				false);
@@ -1373,7 +1373,7 @@ Value aliasactivate(const Array& params, bool fHelp) {
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 
 	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
+		LOCK2(cs_aliasmap, pwalletMain->cs_wallet);
 
 		if (mapAliasesPending.count(vchName)
 				&& mapAliasesPending[vchName].size()) {
@@ -1492,7 +1492,7 @@ Value aliasupdate(const Array& params, bool fHelp) {
 	scriptPubKey += scriptPubKeyOrig;
 
 	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
+		LOCK2(cs_aliasmap, pwalletMain->cs_wallet);
 
 		if (mapAliasesPending.count(vchName)
 				&& mapAliasesPending[vchName].size()) {
@@ -1520,10 +1520,9 @@ Value aliasupdate(const Array& params, bool fHelp) {
 			throw runtime_error("this alias is not in your wallet");
 		}
         //---Disabling transfer capability of aliasupdate until we fix the issues with encrypted wallets.
-        /*if(!IsAliasMine(tx))
-		{
+        if(!IsAliasMine(tx)) {
 			throw runtime_error("Cannot modify a transferred alias");
-        }*/
+        }
 		int64 nNetFee = GetAliasNetworkFee(2, pindexBest->nHeight);
 		// Round up to CENT
 		nNetFee += CENT - 1;
@@ -1949,7 +1948,7 @@ Value aliasclean(const Array& params, bool fHelp) {
 				"aliasclean\nClean unsatisfiable alias transactions from the wallet - including aliasactivate on an already taken alias\n");
 	{
 		EnsureWalletIsUnlocked();
-		LOCK2(cs_main, pwalletMain->cs_wallet);
+		LOCK2(cs_aliasmap, pwalletMain->cs_wallet);
 		map<uint256, CWalletTx> mapRemove;
 
 		printf("-----------------------------\n");
@@ -2095,7 +2094,7 @@ Value datanew(const Array& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_NEW) << hash << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	{
-		LOCK(cs_main);
+		LOCK(cs_aliasmap);
 		EnsureWalletIsUnlocked();
 		string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
 				false);
@@ -2168,7 +2167,7 @@ Value dataactivate(const Array& params, bool fHelp) {
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 
 	{
-		LOCK(cs_main);
+		LOCK(cs_aliasmap);
 		if (mapAliasesPending.count(vchName)
 				&& mapAliasesPending[vchName].size()) {
 			error(
@@ -2292,7 +2291,7 @@ Value dataupdate(const Array& params, bool fHelp) {
 	scriptPubKey += scriptPubKeyOrig;
 
 	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
+		LOCK2(cs_aliasmap, pwalletMain->cs_wallet);
 
 		if (mapAliasesPending.count(vchName)
 				&& mapAliasesPending[vchName].size()) {

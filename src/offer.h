@@ -65,6 +65,7 @@ public:
 	COfferAccept() {
         SetNull();
     }
+
     IMPLEMENT_SERIALIZE (
         READWRITE(vchRand);
         READWRITE(vchMessage);
@@ -139,6 +140,11 @@ public:
 	COffer() { 
         SetNull();
     }
+    COffer(const CTransaction &tx) {
+        SetNull();
+        UnserializeFromTx(tx);
+    }
+
 
     IMPLEMENT_SERIALIZE (
         READWRITE(vchRand);

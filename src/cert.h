@@ -122,6 +122,10 @@ public:
     CCertIssuer() {
         SetNull();
     }
+    CCertIssuer(const CTransaction &tx) {
+        SetNull();
+        UnserializeFromTx(tx);
+    }
 
     IMPLEMENT_SERIALIZE (
         READWRITE(vchRand);

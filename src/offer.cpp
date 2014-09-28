@@ -361,7 +361,7 @@ uint64 GetOfferFeeSubsidy(unsigned int nHeight) {
 }
 
 bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
-	unsigned int h12 = 3600 * 12;
+
 	list<COfferFee> txnDup;
 	COfferFee oFee;
 	oFee.nTime = pindex->nTime;
@@ -369,17 +369,6 @@ bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
 	oFee.nFee = nValue;
 	bool bFound = false;
 	
-	unsigned int tHeight =
-			pindex->nHeight - 2880 < 0 ? 0 : pindex->nHeight - 2880;
-	
-	// while (true) {
-	// 	if (lstOfferFees.size() > 0
-	// 			&& (lstOfferFees.back().nTime + h12 < pindex->nTime
-	// 					|| lstOfferFees.back().nHeight < tHeight))
-	// 		lstOfferFees.pop_back();
-	// 	else
-	// 		break;
-	// }
 	BOOST_FOREACH(COfferFee &nmFee, lstOfferFees) {
 		if (oFee.hash == nmFee.hash
 				&& oFee.nHeight == nmFee.nHeight) {
