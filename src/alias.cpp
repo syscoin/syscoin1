@@ -500,12 +500,6 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					if (!paliasdb->WriteAliasTxFees(vAliasFees))
 						return error( "CheckOfferInputs() : failed to write fees to alias DB");
 					
-					printf( "CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
-						stringFromVch(vvchArgs[0]).c_str(),
-						aliasFromOp(op).c_str(),
-						tx.GetHash().ToString().c_str(), nHeight);
-					
-					if(op != OP_ALIAS_NEW)
 					{
 						LOCK(cs_main);
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi =
