@@ -1001,7 +1001,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 	    int op, nOut;
 
 	    if(DecodeAliasTx(tx, op, nOut, vvch, -1)) {
-		    if(IsAliasOp(op) && op != OP_OFFER_NEW) {
+		    if(IsAliasOp(op)) {
 				LOCK(cs_main);
 	            mapAliasesPending[vvch[0]].insert(tx.GetHash());
 		        printf("AcceptToMemoryPool() : Added alias transaction '%s' to memory pool.\n",
