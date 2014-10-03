@@ -485,27 +485,26 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 
 					if (!paliasdb->WriteName(vvchArgs[0], vtxPos))
-						return error(
-								"CheckAliasInputs() :  failed to write to alias DB");
+						return error( "CheckAliasInputs() :  failed to write to alias DB");
 					mapTestPool[vvchArgs[0]] = tx.GetHash();
 
 					// write alias fees to db
 					int64 nTheFee = GetAliasNetFee(tx);
 					InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
 					if (nTheFee != 0)
-						printf(
-								"ALIAS FEES: Added %lf in fees to track for regeneration.\n",
+						printf( "ALIAS FEES: Added %lf in fees to track for regeneration.\n",
 								(double) nTheFee / COIN);
+
 					vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
 							lstAliasFees.end());
 					if (!paliasdb->WriteAliasTxFees(vAliasFees))
-						return error(
-								"CheckOfferInputs() : failed to write fees to alias DB");
-					printf(
-						"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
+						return error( "CheckOfferInputs() : failed to write fees to alias DB");
+					
+					printf( "CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
 						stringFromVch(vvchArgs[0]).c_str(),
 						aliasFromOp(op).c_str(),
 						tx.GetHash().ToString().c_str(), nHeight);
+					
 					if(op != OP_ALIAS_NEW)
 					{
 						LOCK(cs_main);

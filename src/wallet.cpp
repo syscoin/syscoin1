@@ -628,10 +628,10 @@ int64 CWallet::GetDebitInclName(const CTxIn &txin) const
             const CWalletTx& prev = (*mi).second;
             if (txin.prevout.n < prev.vout.size())
                 if (IsMine(prev.vout[txin.prevout.n]) 
-                    || IsAliasMine(prev, prev.vout[txin.prevout.n]) 
-                    || IsOfferMine(prev, prev.vout[txin.prevout.n])
-                    || IsCertMine(prev, prev.vout[txin.prevout.n]))
-                    return prev.vout[txin.prevout.n].nValue;
+                || IsAliasMine(prev, prev.vout[txin.prevout.n]) 
+                || IsOfferMine(prev, prev.vout[txin.prevout.n])
+                || IsCertMine(prev, prev.vout[txin.prevout.n]))
+                return prev.vout[txin.prevout.n].nValue;
         }
     }
     return 0;
@@ -744,11 +744,11 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
         string saddress;
         uint160 hash160;
         if(!ExtractDestination(txout.scriptPubKey, address)
-            && !ExtractAliasAddress(txout.scriptPubKey, saddress)
-            && !ExtractOfferAddress(txout.scriptPubKey, saddress)
-            && !ExtractCertIssuerAddress(txout.scriptPubKey, saddress)) {
+        && !ExtractAliasAddress(txout.scriptPubKey, saddress)
+        && !ExtractOfferAddress(txout.scriptPubKey, saddress)
+        && !ExtractCertIssuerAddress(txout.scriptPubKey, saddress)) {
             printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
-           this->GetHash().ToString().c_str());            
+               this->GetHash().ToString().c_str());            
         }
 
         vector<vector<unsigned char> > vvch;
@@ -766,7 +766,7 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
             }
             else if (IsCertOp(op)) {
                 nCarriedOverCoin -= txout.nValue;
-                if (op != OP_CERTISSUER_NEW)
+                if (op != OP_CERTISSUER_NEW && op != OP_CERT_NEW)
                     continue;
             }
         }

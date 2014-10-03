@@ -776,6 +776,7 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 	        }
         }        
     }
+    // TODO CB this is an artifact from namecoin. I need to understand and remove if not necessary
     return ret[0] || ret[1];
 }
 
@@ -1335,8 +1336,8 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
         || nHeight >= MM_FEEREGEN_HARDFORK
         || (fCakeNet || fTestNet)) s += b+c+d;
 
-  //   if (fDebug)
-		// printf ("GetBlockvalue of Block %d: subsidy=%"PRI64d", fees=%"PRI64d", aliasSubsidy=%"PRI64d", offerSubsidy=%"PRI64d", certSubidy=%"PRI64d", sum=%"PRI64d". \n", nHeight, a,e,b,c,d,s);
+    if (fDebug)
+		printf ("GetBlockvalue of Block %d: subsidy=%"PRI64d", fees=%"PRI64d", aliasSubsidy=%"PRI64d", offerSubsidy=%"PRI64d", certSubidy=%"PRI64d", sum=%"PRI64d". \n", nHeight, a,e,b,c,d,s);
     return s;
 }
 
