@@ -83,7 +83,7 @@ public:
 			int expired = 0;
 			int expires_in = 0;
 			int expires_on = 0;
-			int transferred = 0;
+			
 			int lastupdate_height = 0;
 			try {
 				result = tableRPC.execute(strMethod, params);
@@ -108,7 +108,7 @@ public:
 				expires_in = 0;
 				expires_on = 0;
 				lastupdate_height = 0;
-				transferred = 0;
+		
 				Array arr = result.get_array();
 				BOOST_FOREACH(Value& input, arr)
 				{
@@ -124,7 +124,7 @@ public:
 					expires_in = 0;
 					expires_on = 0;
 					lastupdate_height = 0;
-					transferred = 0;
+			
 					const Value& name_value = find_value(o, "name");
 					if (name_value.type() == str_type)
 						name_str = name_value.get_str();
