@@ -1589,14 +1589,15 @@ Value aliaslist(const Array& params, bool fHelp) {
 			// decode txn, skip non-alias txns
 			vector<vector<unsigned char> > vvch;
 			int op, nOut;
-			if (!DecodeAliasTx(tx, op, nOut, vvch, -1) || !IsAliasOp(op))
+			if (!DecodeAliasTx(tx, op, nOut, vvch, -1))
 				continue;
-
+			if(!IsAliasOp(op))
+				continue;
 			// get the txn height
 			nHeight = GetAliasTxHashHeight(hash);
 
 			// get the txn alias name
-			if (!GetAliasOfTx(tx, vchName))
+			if (op==OP_ALIAS_NEW || !GetAliasOfTx(tx, vchName))
 				continue;
 
 			// skip this alias if it doesn't match the given filter value

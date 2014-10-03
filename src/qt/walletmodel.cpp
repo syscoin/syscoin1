@@ -432,7 +432,7 @@ static void NotifyAliasListChanged(WalletModel *walletmodel, CWallet *wallet, co
     if (!DecodeAliasTx(*tx, op, nOut, vvchArgs, -1)) {
         return;
     }
-	if(!IsAliasOp(op))  return;
+	if(!IsAliasOp(op) || !IsAliasMine(*tx) || op == OP_ALIAS_NEW)  return;
 	
 	const std::vector<unsigned char> &vchName = vvchArgs[0];
 	const std::vector<unsigned char> &vchValue = vvchArgs[op == OP_ALIAS_ACTIVATE ? 2 : 1];
