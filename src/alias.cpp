@@ -1617,24 +1617,23 @@ Value aliaslist(const Array& params, bool fHelp) {
 				{
 					// get transaction pointed to by alias
 					uint256 txHash = vtxPos.back().txHash;
-					if(!GetTransaction(txHash, dbtx, blockHash, true))
+					if(GetTransaction(txHash, dbtx, blockHash, true))
 					{
-						continue;
-					}
 					
-					nHeight = GetAliasTxHashHeight(txHash);
-					// Is the latest alais in the db transferred?
-					if(!IsAliasMine(dbtx))
-					{	
-						// by setting this to -1, subsequent aliases with the same name won't be read from disk (optimization) 
-						// because the latest alias tx doesn't belong to us anymore
-						vNamesI[vchName] = -1;
-						continue;
-					}
-					else
-					{
-						// get the value of the alias txn of the latest alias (from db)
-						GetValueOfAliasTx(dbtx, vchValue);
+						nHeight = GetAliasTxHashHeight(txHash);
+						// Is the latest alais in the db transferred?
+						if(!IsAliasMine(dbtx))
+						{	
+							// by setting this to -1, subsequent aliases with the same name won't be read from disk (optimization) 
+							// because the latest alias tx doesn't belong to us anymore
+							vNamesI[vchName] = -1;
+							continue;
+						}
+						else
+						{
+							// get the value of the alias txn of the latest alias (from db)
+							GetValueOfAliasTx(dbtx, vchValue);
+						}
 					}
 					
 				}
