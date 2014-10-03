@@ -361,7 +361,6 @@ uint64 GetOfferFeeSubsidy(unsigned int nHeight) {
 }
 
 bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
-
 	list<COfferFee> txnDup;
 	COfferFee oFee;
 	oFee.nTime = pindex->nTime;
@@ -369,6 +368,7 @@ bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
 	oFee.nFee = nValue;
 	bool bFound = false;
 	
+
 	BOOST_FOREACH(COfferFee &nmFee, lstOfferFees) {
 		if (oFee.hash == nmFee.hash
 				&& oFee.nHeight == nmFee.nHeight) {

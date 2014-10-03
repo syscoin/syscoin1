@@ -108,7 +108,6 @@ bool IsAliasOp(int op) {
 }
 
 bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
-
 	list<CAliasFee> txnDup;
 	CAliasFee txnVal(hash, pindex->nTime, pindex->nHeight, vValue);
 	bool bFound = false;
@@ -259,10 +258,7 @@ bool IsAliasMine(const CTransaction& tx, const CTxOut& txout,
 
 	int op;
 
-	if (!DecodeAliasScript(txout.scriptPubKey, op, vvch))
-		return false;
-
-	if (!IsAliasOp(op))
+	if (!DecodeAliasScript(txout.scriptPubKey, op, vvch) || !IsAliasOp(op))
 		return false;
 
 	if (ignore_aliasnew && op == OP_ALIAS_NEW)
@@ -470,45 +466,39 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					
 					int nHeight = pindexBlock->nHeight;
 
-					vector<unsigned char> vchVal;
-					CAliasIndex txPos2;
-					uint256 hash;
-					GetValueOfAliasTxHash(tx.GetHash(), vchVal, hash, nHeight);
-					txPos2.nHeight = nHeight;
-					txPos2.vValue = vchVal;
-					txPos2.txHash = tx.GetHash();
-					txPos2.txPrevOut = *prevOutput;
+						vector<unsigned char> vchVal;
+						CAliasIndex txPos2;
+						uint256 hash;
+						GetValueOfAliasTxHash(tx.GetHash(), vchVal, hash, nHeight);
+						txPos2.nHeight = nHeight;
+						txPos2.vValue = vchVal;
+						txPos2.txHash = tx.GetHash();
+						txPos2.txPrevOut = *prevOutput;
 
-					if (vtxPos.size() > 0 && vtxPos.back().nHeight == nHeight)
-						vtxPos.pop_back();
-					vtxPos.push_back(txPos2); // fin add
+						if (vtxPos.size() > 0 && vtxPos.back().nHeight == nHeight)
+							vtxPos.pop_back();
+						vtxPos.push_back(txPos2); // fin add
 
+						if (!paliasdb->WriteAlias(vvchArgs[0], vtxPos))
+							return error(
+									"CheckAliasInputs() :  failed to write to alias DB");
+						mapTestPool[vvchArgs[0]] = tx.GetHash();
 
-					if (!paliasdb->WriteName(vvchArgs[0], vtxPos))
-						return error(
-								"CheckAliasInputs() :  failed to write to alias DB");
-					mapTestPool[vvchArgs[0]] = tx.GetHash();
+						// write alias fees to db
+						int64 nTheFee = GetAliasNetFee(tx);
+						InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
+						if (nTheFee != 0)
+							printf(
+									"ALIAS FEES: Added %lf in fees to track for regeneration.\n",
+									(double) nTheFee / COIN);
+						vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
+								lstAliasFees.end());
+						if (!paliasdb->WriteAliasTxFees(vAliasFees))
+							return error(
+									"CheckOfferInputs() : failed to write fees to alias DB");
 
-					// write alias fees to db
-					int64 nTheFee = GetAliasNetFee(tx);
-					InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
-					if (nTheFee != 0)
-						printf(
-								"ALIAS FEES: Added %lf in fees to track for regeneration.\n",
-								(double) nTheFee / COIN);
-					vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
-							lstAliasFees.end());
-					if (!paliasdb->WriteAliasTxFees(vAliasFees))
-						return error(
-								"CheckOfferInputs() : failed to write fees to alias DB");
-					printf(
-						"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
-						stringFromVch(vvchArgs[0]).c_str(),
-						aliasFromOp(op).c_str(),
-						tx.GetHash().ToString().c_str(), nHeight);
-					if(op != OP_ALIAS_NEW)
 					{
-						LOCK(cs_main);
+						LOCK(cs_aliasmap);
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi =
 								mapAliasesPending.find(vvchArgs[0]);
 						if (mi != mapAliasesPending.end())
@@ -689,7 +679,7 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 				txName.vValue = vchValue;
 				txName.txHash = tx.GetHash();
 				vtxPos.push_back(txName);
-				if (!WriteName(vchName, vtxPos))
+				if (!WriteAlias(vchName, vtxPos))
 					return error(
 							"ReconstructNameIndex() : failed to write to alias DB");
 
@@ -713,7 +703,7 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 			} /* TX */
 			pindex = pindex->pnext;
 		} /* BLOCK */
-		Flush();
+		//Flush();
 	} /* LOCK */
 	return true;
 }
@@ -1023,17 +1013,15 @@ int64 GetAliasTxHashHeight(const uint256 txHash) {
 	return GetNameTxPosHeight(postx);
 }
 
-bool GetValueOfAliasTxHash(const uint256 &txHash, vector<unsigned char>& vchValue, uint256& hash, int& nHeight) {
+bool GetValueOfAliasTxHash(const uint256 &txHash,
+		vector<unsigned char>& vchValue, uint256& hash, int& nHeight) {
 	nHeight = GetAliasTxHashHeight(txHash);
 	CTransaction tx;
 	uint256 blockHash;
-
 	if (!GetTransaction(txHash, tx, blockHash, true))
 		return error("GetValueOfAliasTxHash() : could not read tx from disk");
-
 	if (!GetValueOfAliasTx(tx, vchValue))
 		return error("GetValueOfAliasTxHash() : could not decode value from tx");
-
 	hash = tx.GetHash();
 	return true;
 }
@@ -1093,35 +1081,31 @@ bool GetAliasAddress(const CDiskTxPos& txPos, std::string& strAddress) {
 }
 void GetAliasValue(const std::string& strName, std::string& strAddress) {
 
-	{
-		TRY_LOCK(pwalletMain->cs_wallet, cs_trywallet);
-		TRY_LOCK(cs_main, cs_trymain);
-		vector<unsigned char> vchName = vchFromValue(strName);
-		if (!paliasdb->ExistsAlias(vchName))
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Alias not found");
+	vector<unsigned char> vchName = vchFromValue(strName);
+	if (!paliasdb->ExistsAlias(vchName))
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Alias not found");
 
-		// check for alias existence in DB
-		vector<CAliasIndex> vtxPos;
-		if (!paliasdb->ReadAlias(vchName, vtxPos))
-			throw JSONRPCError(RPC_WALLET_ERROR,
-					"failed to read from alias DB");
-		if (vtxPos.size() < 1)
-			throw JSONRPCError(RPC_WALLET_ERROR, "no alias result returned");
+	// check for alias existence in DB
+	vector<CAliasIndex> vtxPos;
+	if (!paliasdb->ReadAlias(vchName, vtxPos))
+		throw JSONRPCError(RPC_WALLET_ERROR,
+				"failed to read from alias DB");
+	if (vtxPos.size() < 1)
+		throw JSONRPCError(RPC_WALLET_ERROR, "no alias result returned");
 
-		// get transaction pointed to by alias
-		uint256 blockHash;
-		CTransaction tx;
-		uint256 txHash = vtxPos.back().txHash;
-		if (!GetTransaction(txHash, tx, blockHash, true))
-			throw JSONRPCError(RPC_WALLET_ERROR,
-					"failed to read transaction from disk");
+	// get transaction pointed to by alias
+	uint256 blockHash;
+	CTransaction tx;
+	uint256 txHash = vtxPos.back().txHash;
+	if (!GetTransaction(txHash, tx, blockHash, true))
+		throw JSONRPCError(RPC_WALLET_ERROR,
+				"failed to read transaction from disk");
 
-		vector<unsigned char> vchValue;
-		uint256 hash;
-		int nHeight;
-		if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
-			strAddress = stringFromVch(vchValue);
-		}
+	vector<unsigned char> vchValue;
+	uint256 hash;
+	int nHeight;
+	if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
+		strAddress = stringFromVch(vchValue);
 	}
 }
 
@@ -1471,7 +1455,8 @@ Value aliasactivate(const Array& params, bool fHelp) {
 }
 
 Value aliasupdate(const Array& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 3 < params.size())
+
+    if (fHelp || 2 > params.size() || 3 < params.size())
 		throw runtime_error(
 				"aliasupdate <alias> <value> [<toaddress>]\n"
 						"Update and possibly transfer an alias.\n"
@@ -1499,7 +1484,7 @@ Value aliasupdate(const Array& params, bool fHelp) {
 		CPubKey newDefaultKey;
 		pwalletMain->GetKeyFromPool(newDefaultKey, false);
 		scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
-	}
+    }
 
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchName << vchValue
@@ -1534,6 +1519,10 @@ Value aliasupdate(const Array& params, bool fHelp) {
 					wtxInHash.GetHex().c_str());
 			throw runtime_error("this alias is not in your wallet");
 		}
+        //---Disabling transfer capability of aliasupdate until we fix the issues with encrypted wallets.
+        if(!IsAliasMine(tx)) {
+			throw runtime_error("Cannot modify a transferred alias");
+        }
 		int64 nNetFee = GetAliasNetworkFee(2, pindexBest->nHeight);
 		// Round up to CENT
 		nNetFee += CENT - 1;
@@ -1576,7 +1565,6 @@ Value aliaslist(const Array& params, bool fHelp) {
 
 		vector<unsigned char> vchValue;
 		int nHeight;
-
 		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
 			// get txn hash, read txn index
 			hash = item.second.GetHash();

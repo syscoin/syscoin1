@@ -489,6 +489,7 @@ public:
                 memcpy(&nSize, &pc[0], 4);
                 pc += 4;
             }
+            // CB
             if (end() - pc < 0 || (unsigned int)(end() - pc) < nSize)
                 return false;
             if (pvchRet)

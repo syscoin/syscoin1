@@ -90,11 +90,11 @@ public:
     CAliasDB(size_t nCacheSize, bool fMemory, bool fWipe) : CLevelDB(GetDataDir() / "aliases", nCacheSize, fMemory, fWipe) {
     }
 
-	bool WriteAlias(const std::vector<unsigned char>& name, std::vector<CAliasIndex>& vtxPos) {
+	bool WriteName(const std::vector<unsigned char>& name, std::vector<CAliasIndex>& vtxPos) {
 		return Write(make_pair(std::string("namei"), name), vtxPos);
 	}
 
-	bool EraseAlias(const std::vector<unsigned char>& name) {
+	bool EraseName(const std::vector<unsigned char>& name) {
 	    return Erase(make_pair(std::string("namei"), name));
 	}
 	bool ReadAlias(const std::vector<unsigned char>& name, std::vector<CAliasIndex>& vtxPos) {
@@ -149,6 +149,7 @@ bool CheckAliasInputs(
     bool fBlock, bool fMiner, bool fJustCheck);
 bool ExtractAliasAddress(const CScript& script, std::string& address);
 bool IsAliasMine(const CTransaction& tx);
+bool IsAliasMine2(const CTransaction& tx);
 void RemoveAliasTxnFromMemoryPool(const CTransaction& tx);
 bool IsAliasMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasnew = false);
 bool IsAliasOp(int op);

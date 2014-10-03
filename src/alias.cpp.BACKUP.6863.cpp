@@ -108,7 +108,10 @@ bool IsAliasOp(int op) {
 }
 
 bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/devstaging-0.1.5
 	list<CAliasFee> txnDup;
 	CAliasFee txnVal(hash, pindex->nTime, pindex->nHeight, vValue);
 	bool bFound = false;
@@ -469,6 +472,44 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						&& pindexBlock->nHeight != pindexBest->nHeight) {
 					
 					int nHeight = pindexBlock->nHeight;
+<<<<<<< HEAD
+
+						vector<unsigned char> vchVal;
+						CAliasIndex txPos2;
+						uint256 hash;
+						GetValueOfAliasTxHash(tx.GetHash(), vchVal, hash, nHeight);
+						txPos2.nHeight = nHeight;
+						txPos2.vValue = vchVal;
+						txPos2.txHash = tx.GetHash();
+						txPos2.txPrevOut = *prevOutput;
+
+						if (vtxPos.size() > 0 && vtxPos.back().nHeight == nHeight)
+							vtxPos.pop_back();
+						vtxPos.push_back(txPos2); // fin add
+
+						if (!paliasdb->WriteAlias(vvchArgs[0], vtxPos))
+							return error(
+									"CheckAliasInputs() :  failed to write to alias DB");
+						mapTestPool[vvchArgs[0]] = tx.GetHash();
+
+						// write alias fees to db
+						int64 nTheFee = GetAliasNetFee(tx);
+						InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
+						if (nTheFee != 0)
+							printf(
+									"ALIAS FEES: Added %lf in fees to track for regeneration.\n",
+									(double) nTheFee / COIN);
+						vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
+								lstAliasFees.end());
+						if (!paliasdb->WriteAliasTxFees(vAliasFees))
+							return error(
+									"CheckOfferInputs() : failed to write fees to alias DB");
+
+					{
+						LOCK(cs_aliasmap);
+=======
+					
+						
 
 					vector<unsigned char> vchVal;
 					CAliasIndex txPos2;
@@ -509,17 +550,15 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					if(op != OP_ALIAS_NEW)
 					{
 						LOCK(cs_main);
+>>>>>>> origin/devstaging-0.1.5
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi =
 								mapAliasesPending.find(vvchArgs[0]);
 						if (mi != mapAliasesPending.end())
 							mi->second.erase(tx.GetHash());
 					}
+					
 
-					printf(
-							"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
-							stringFromVch(vvchArgs[0]).c_str(),
-							aliasFromOp(op).c_str(),
-							tx.GetHash().ToString().c_str(), nHeight);
+
 				}
 			}
 		}
@@ -713,7 +752,7 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 			} /* TX */
 			pindex = pindex->pnext;
 		} /* BLOCK */
-		Flush();
+		//Flush();
 	} /* LOCK */
 	return true;
 }
@@ -1093,35 +1132,31 @@ bool GetAliasAddress(const CDiskTxPos& txPos, std::string& strAddress) {
 }
 void GetAliasValue(const std::string& strName, std::string& strAddress) {
 
-	{
-		TRY_LOCK(pwalletMain->cs_wallet, cs_trywallet);
-		TRY_LOCK(cs_main, cs_trymain);
-		vector<unsigned char> vchName = vchFromValue(strName);
-		if (!paliasdb->ExistsAlias(vchName))
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Alias not found");
+	vector<unsigned char> vchName = vchFromValue(strName);
+	if (!paliasdb->ExistsAlias(vchName))
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Alias not found");
 
-		// check for alias existence in DB
-		vector<CAliasIndex> vtxPos;
-		if (!paliasdb->ReadAlias(vchName, vtxPos))
-			throw JSONRPCError(RPC_WALLET_ERROR,
-					"failed to read from alias DB");
-		if (vtxPos.size() < 1)
-			throw JSONRPCError(RPC_WALLET_ERROR, "no alias result returned");
+	// check for alias existence in DB
+	vector<CAliasIndex> vtxPos;
+	if (!paliasdb->ReadAlias(vchName, vtxPos))
+		throw JSONRPCError(RPC_WALLET_ERROR,
+				"failed to read from alias DB");
+	if (vtxPos.size() < 1)
+		throw JSONRPCError(RPC_WALLET_ERROR, "no alias result returned");
 
-		// get transaction pointed to by alias
-		uint256 blockHash;
-		CTransaction tx;
-		uint256 txHash = vtxPos.back().txHash;
-		if (!GetTransaction(txHash, tx, blockHash, true))
-			throw JSONRPCError(RPC_WALLET_ERROR,
-					"failed to read transaction from disk");
+	// get transaction pointed to by alias
+	uint256 blockHash;
+	CTransaction tx;
+	uint256 txHash = vtxPos.back().txHash;
+	if (!GetTransaction(txHash, tx, blockHash, true))
+		throw JSONRPCError(RPC_WALLET_ERROR,
+				"failed to read transaction from disk");
 
-		vector<unsigned char> vchValue;
-		uint256 hash;
-		int nHeight;
-		if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
-			strAddress = stringFromVch(vchValue);
-		}
+	vector<unsigned char> vchValue;
+	uint256 hash;
+	int nHeight;
+	if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
+		strAddress = stringFromVch(vchValue);
 	}
 }
 
@@ -1471,15 +1506,28 @@ Value aliasactivate(const Array& params, bool fHelp) {
 }
 
 Value aliasupdate(const Array& params, bool fHelp) {
+<<<<<<< HEAD
+
+    if (fHelp || 2 > params.size() || 3 < params.size())
+=======
 	if (fHelp || 2 > params.size() || 3 < params.size())
+>>>>>>> origin/devstaging-0.1.5
 		throw runtime_error(
 				"aliasupdate <alias> <value> [<toaddress>]\n"
 						"Update and possibly transfer an alias.\n"
 						"<alias> alias name.\n"
 						"<value> alias value, 1023 chars max.\n"
-                        "<toaddress> receiver syscoin address, if transferring alias.\n"
+						"<toaddress> receiver syscoin address, if transferring alias (temporarily disabled in version 0.1.5).\n"
 						+ HelpRequiringPassphrase());
 
+<<<<<<< HEAD
+=======
+	if (2 != params.size())
+		throw runtime_error(
+				"alias transfer is temporarily disabled.\n");
+
+
+>>>>>>> origin/devstaging-0.1.5
 	vector<unsigned char> vchName = vchFromValue(params[0]);
 	vector<unsigned char> vchValue = vchFromValue(params[1]);
 	if (vchValue.size() > 519)
@@ -1487,8 +1535,12 @@ Value aliasupdate(const Array& params, bool fHelp) {
 	CWalletTx wtx;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 	CScript scriptPubKeyOrig;
+<<<<<<< HEAD
 
     if (params.size() == 3) {
+=======
+	if (params.size() == 3) {
+>>>>>>> origin/devstaging-0.1.5
 		string strAddress = params[2].get_str();
 		CBitcoinAddress myAddress = CBitcoinAddress(strAddress);
 		if (!myAddress.IsValid())
@@ -1499,7 +1551,11 @@ Value aliasupdate(const Array& params, bool fHelp) {
 		CPubKey newDefaultKey;
 		pwalletMain->GetKeyFromPool(newDefaultKey, false);
 		scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
+<<<<<<< HEAD
+    }
+=======
 	}
+>>>>>>> origin/devstaging-0.1.5
 
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchName << vchValue
@@ -1534,6 +1590,13 @@ Value aliasupdate(const Array& params, bool fHelp) {
 					wtxInHash.GetHex().c_str());
 			throw runtime_error("this alias is not in your wallet");
 		}
+<<<<<<< HEAD
+        //---Disabling transfer capability of aliasupdate until we fix the issues with encrypted wallets.
+        if(!IsAliasMine(tx)) {
+			throw runtime_error("Cannot modify a transferred alias");
+        }
+=======
+>>>>>>> origin/devstaging-0.1.5
 		int64 nNetFee = GetAliasNetworkFee(2, pindexBest->nHeight);
 		// Round up to CENT
 		nNetFee += CENT - 1;
@@ -1576,7 +1639,10 @@ Value aliaslist(const Array& params, bool fHelp) {
 
 		vector<unsigned char> vchValue;
 		int nHeight;
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/devstaging-0.1.5
 		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
 			// get txn hash, read txn index
 			hash = item.second.GetHash();

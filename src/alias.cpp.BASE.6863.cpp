@@ -21,8 +21,6 @@ using namespace json_spirit;
 
 extern CAliasDB *paliasdb;
 
-CCriticalSection cs_aliasmap;
-
 map<vector<unsigned char>, uint256> mapMyAliases;
 map<vector<unsigned char>, set<uint256> > mapAliasesPending;
 list<CAliasFee> lstAliasFees;
@@ -86,7 +84,7 @@ void RemoveAliasTxnFromMemoryPool(const CTransaction& tx) {
 
 	if (op != OP_ALIAS_NEW) {
 		{
-			LOCK(cs_aliasmap);
+			LOCK(cs_main);
 			std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi =
 					mapAliasesPending.find(vvch[0]);
 			if (mi != mapAliasesPending.end())
@@ -108,11 +106,20 @@ bool IsAliasOp(int op) {
 }
 
 bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
-
+	unsigned int h12 = 3600 * 12;
 	list<CAliasFee> txnDup;
 	CAliasFee txnVal(hash, pindex->nTime, pindex->nHeight, vValue);
 	bool bFound = false;
-
+	unsigned int tHeight =
+			pindex->nHeight - 2880 < 0 ? 0 : pindex->nHeight - 2880;
+	// while (true) {
+	// 	if (lstAliasFees.size() > 0
+	// 			&& (lstAliasFees.back().nBlockTime + h12 < pindex->nTime
+	// 					|| lstAliasFees.back().nHeight < tHeight))
+	// 		lstAliasFees.pop_back();
+	// 	else
+	// 		break;
+	// }
 	BOOST_FOREACH(CAliasFee &nmTxnValue, lstAliasFees) {
 		if (txnVal.hash == nmTxnValue.hash
 				&& txnVal.nHeight == nmTxnValue.nHeight) {
@@ -259,10 +266,7 @@ bool IsAliasMine(const CTransaction& tx, const CTxOut& txout,
 
 	int op;
 
-	if (!DecodeAliasScript(txout.scriptPubKey, op, vvch))
-		return false;
-
-	if (!IsAliasOp(op))
+	if (!DecodeAliasScript(txout.scriptPubKey, op, vvch) || !IsAliasOp(op))
 		return false;
 
 	if (ignore_aliasnew && op == OP_ALIAS_NEW)
@@ -469,46 +473,41 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						&& pindexBlock->nHeight != pindexBest->nHeight) {
 					
 					int nHeight = pindexBlock->nHeight;
-
-					vector<unsigned char> vchVal;
-					CAliasIndex txPos2;
-					uint256 hash;
-					GetValueOfAliasTxHash(tx.GetHash(), vchVal, hash, nHeight);
-					txPos2.nHeight = nHeight;
-					txPos2.vValue = vchVal;
-					txPos2.txHash = tx.GetHash();
-					txPos2.txPrevOut = *prevOutput;
-
-					if (vtxPos.size() > 0 && vtxPos.back().nHeight == nHeight)
-						vtxPos.pop_back();
-					vtxPos.push_back(txPos2); // fin add
-
-
-					if (!paliasdb->WriteName(vvchArgs[0], vtxPos))
-						return error(
-								"CheckAliasInputs() :  failed to write to alias DB");
-					mapTestPool[vvchArgs[0]] = tx.GetHash();
-
-					// write alias fees to db
-					int64 nTheFee = GetAliasNetFee(tx);
-					InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
-					if (nTheFee != 0)
-						printf(
-								"ALIAS FEES: Added %lf in fees to track for regeneration.\n",
-								(double) nTheFee / COIN);
-					vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
-							lstAliasFees.end());
-					if (!paliasdb->WriteAliasTxFees(vAliasFees))
-						return error(
-								"CheckOfferInputs() : failed to write fees to alias DB");
-					printf(
-						"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
-						stringFromVch(vvchArgs[0]).c_str(),
-						aliasFromOp(op).c_str(),
-						tx.GetHash().ToString().c_str(), nHeight);
-					if(op != OP_ALIAS_NEW)
 					{
 						LOCK(cs_main);
+
+						vector<unsigned char> vchVal;
+						CAliasIndex txPos2;
+						uint256 hash;
+						GetValueOfAliasTxHash(tx.GetHash(), vchVal, hash, nHeight);
+						txPos2.nHeight = nHeight;
+						txPos2.vValue = vchVal;
+						txPos2.txHash = tx.GetHash();
+						txPos2.txPrevOut = *prevOutput;
+
+						if (vtxPos.size() > 0 && vtxPos.back().nHeight == nHeight)
+							vtxPos.pop_back();
+						vtxPos.push_back(txPos2); // fin add
+
+
+						if (!paliasdb->WriteAlias(vvchArgs[0], vtxPos))
+							return error(
+									"CheckAliasInputs() :  failed to write to alias DB");
+						mapTestPool[vvchArgs[0]] = tx.GetHash();
+
+						// write alias fees to db
+						int64 nTheFee = GetAliasNetFee(tx);
+						InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
+						if (nTheFee != 0)
+							printf(
+									"ALIAS FEES: Added %lf in fees to track for regeneration.\n",
+									(double) nTheFee / COIN);
+						vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
+								lstAliasFees.end());
+						if (!paliasdb->WriteAliasTxFees(vAliasFees))
+							return error(
+									"CheckOfferInputs() : failed to write fees to alias DB");
+
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi =
 								mapAliasesPending.find(vvchArgs[0]);
 						if (mi != mapAliasesPending.end())
@@ -541,7 +540,7 @@ bool ExtractAliasAddress(const CScript& script, string& address) {
 	string strName;
 	if (op == OP_ALIAS_NEW) {
 #ifdef GUI
-		LOCK(cs_aliasmap);
+		LOCK(cs_main);
 
 		std::map<uint160, std::vector<unsigned char> >::const_iterator mi = mapMyNameHashes.find(uint160(vvch[0]));
 		if (mi != mapMyNameHashes.end())
@@ -689,7 +688,7 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 				txName.vValue = vchValue;
 				txName.txHash = tx.GetHash();
 				vtxPos.push_back(txName);
-				if (!WriteName(vchName, vtxPos))
+				if (!WriteAlias(vchName, vtxPos))
 					return error(
 							"ReconstructNameIndex() : failed to write to alias DB");
 
@@ -838,7 +837,7 @@ bool CreateTransactionWithInputTx(const vector<pair<CScript, int64> >& vecSend,
 	wtxNew.BindWallet(pwalletMain);
 
 	{
-		LOCK2(cs_aliasmap, pwalletMain->cs_wallet);
+		LOCK2(cs_main, pwalletMain->cs_wallet);
 
 		nFeeRet = nTransactionFee;
 		loop {
@@ -1023,17 +1022,15 @@ int64 GetAliasTxHashHeight(const uint256 txHash) {
 	return GetNameTxPosHeight(postx);
 }
 
-bool GetValueOfAliasTxHash(const uint256 &txHash, vector<unsigned char>& vchValue, uint256& hash, int& nHeight) {
+bool GetValueOfAliasTxHash(const uint256 &txHash,
+		vector<unsigned char>& vchValue, uint256& hash, int& nHeight) {
 	nHeight = GetAliasTxHashHeight(txHash);
 	CTransaction tx;
 	uint256 blockHash;
-
 	if (!GetTransaction(txHash, tx, blockHash, true))
 		return error("GetValueOfAliasTxHash() : could not read tx from disk");
-
 	if (!GetValueOfAliasTx(tx, vchValue))
 		return error("GetValueOfAliasTxHash() : could not decode value from tx");
-
 	hash = tx.GetHash();
 	return true;
 }
@@ -1123,6 +1120,7 @@ void GetAliasValue(const std::string& strName, std::string& strAddress) {
 			strAddress = stringFromVch(vchValue);
 		}
 	}
+
 }
 
 int IndexOfNameOutput(const CTransaction& tx) {
@@ -1343,7 +1341,7 @@ Value aliasnew(const Array& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_NEW) << hash << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	{
-		LOCK(cs_aliasmap);
+		LOCK(cs_main);
 		EnsureWalletIsUnlocked();
 		string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
 				false);
@@ -1389,7 +1387,7 @@ Value aliasactivate(const Array& params, bool fHelp) {
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 
 	{
-		LOCK2(cs_aliasmap, pwalletMain->cs_wallet);
+		LOCK2(cs_main, pwalletMain->cs_wallet);
 
 		if (mapAliasesPending.count(vchName)
 				&& mapAliasesPending[vchName].size()) {
@@ -1471,7 +1469,8 @@ Value aliasactivate(const Array& params, bool fHelp) {
 }
 
 Value aliasupdate(const Array& params, bool fHelp) {
-	if (fHelp || 2 > params.size() || 3 < params.size())
+    //---Disabling transfer capability of aliasupdate until we fix the issues with encrypted wallets.
+    /*if (fHelp || 2 > params.size() || 3 < params.size())
 		throw runtime_error(
 				"aliasupdate <alias> <value> [<toaddress>]\n"
 						"Update and possibly transfer an alias.\n"
@@ -1479,16 +1478,23 @@ Value aliasupdate(const Array& params, bool fHelp) {
 						"<value> alias value, 1023 chars max.\n"
                         "<toaddress> receiver syscoin address, if transferring alias.\n"
 						+ HelpRequiringPassphrase());
-
+    */
+    if (fHelp || 2 > params.size() || 2 < params.size())
+            throw runtime_error(
+                    "aliasupdate <alias> <value>\n"
+                            "Update an alias.\n"
+                            "<alias> alias name.\n"
+                            "<value> alias value, 1023 chars max.\n"
+                            + HelpRequiringPassphrase());
 	vector<unsigned char> vchName = vchFromValue(params[0]);
 	vector<unsigned char> vchValue = vchFromValue(params[1]);
-	if (vchValue.size() > 519)
+	if (vchValue.size() > 1023)
 		throw runtime_error("alias value > 1023 bytes!\n");
 	CWalletTx wtx;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 	CScript scriptPubKeyOrig;
-
-    if (params.size() == 3) {
+    //---Disabling transfer capability of aliasupdate until we fix the issues with encrypted wallets, only want the else{} contents.
+    /*if (params.size() == 3) {
 		string strAddress = params[2].get_str();
 		CBitcoinAddress myAddress = CBitcoinAddress(strAddress);
 		if (!myAddress.IsValid())
@@ -1499,7 +1505,10 @@ Value aliasupdate(const Array& params, bool fHelp) {
 		CPubKey newDefaultKey;
 		pwalletMain->GetKeyFromPool(newDefaultKey, false);
 		scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
-	}
+    }*/
+    CPubKey newDefaultKey;
+    pwalletMain->GetKeyFromPool(newDefaultKey, false);
+    scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
 
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchName << vchValue
@@ -1507,7 +1516,7 @@ Value aliasupdate(const Array& params, bool fHelp) {
 	scriptPubKey += scriptPubKeyOrig;
 
 	{
-		LOCK2(cs_aliasmap, pwalletMain->cs_wallet);
+		LOCK2(cs_main, pwalletMain->cs_wallet);
 
 		if (mapAliasesPending.count(vchName)
 				&& mapAliasesPending[vchName].size()) {
@@ -1534,6 +1543,11 @@ Value aliasupdate(const Array& params, bool fHelp) {
 					wtxInHash.GetHex().c_str());
 			throw runtime_error("this alias is not in your wallet");
 		}
+        //---Disabling transfer capability of aliasupdate until we fix the issues with encrypted wallets.
+        /*if(!IsAliasMine(tx))
+		{
+			throw runtime_error("Cannot modify a transferred alias");
+        }*/
 		int64 nNetFee = GetAliasNetworkFee(2, pindexBest->nHeight);
 		// Round up to CENT
 		nNetFee += CENT - 1;
@@ -1576,7 +1590,7 @@ Value aliaslist(const Array& params, bool fHelp) {
 
 		vector<unsigned char> vchValue;
 		int nHeight;
-
+		bool hasMyTx;
 		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
 			// get txn hash, read txn index
 			hash = item.second.GetHash();
@@ -1960,7 +1974,7 @@ Value aliasclean(const Array& params, bool fHelp) {
 				"aliasclean\nClean unsatisfiable alias transactions from the wallet - including aliasactivate on an already taken alias\n");
 	{
 		EnsureWalletIsUnlocked();
-		LOCK2(cs_aliasmap, pwalletMain->cs_wallet);
+		LOCK2(cs_main, pwalletMain->cs_wallet);
 		map<uint256, CWalletTx> mapRemove;
 
 		printf("-----------------------------\n");
@@ -2106,7 +2120,7 @@ Value datanew(const Array& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_NEW) << hash << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	{
-		LOCK(cs_aliasmap);
+		LOCK(cs_main);
 		EnsureWalletIsUnlocked();
 		string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
 				false);
@@ -2179,7 +2193,7 @@ Value dataactivate(const Array& params, bool fHelp) {
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 
 	{
-		LOCK(cs_aliasmap);
+		LOCK(cs_main);
 		if (mapAliasesPending.count(vchName)
 				&& mapAliasesPending[vchName].size()) {
 			error(
@@ -2303,7 +2317,7 @@ Value dataupdate(const Array& params, bool fHelp) {
 	scriptPubKey += scriptPubKeyOrig;
 
 	{
-		LOCK2(cs_aliasmap, pwalletMain->cs_wallet);
+		LOCK2(cs_main, pwalletMain->cs_wallet);
 
 		if (mapAliasesPending.count(vchName)
 				&& mapAliasesPending[vchName].size()) {

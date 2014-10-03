@@ -364,7 +364,6 @@ uint64 GetCertFeeSubsidy(unsigned int nHeight) {
 }
 
 bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
-
     list<CCertFee> txnDup;
     CCertFee oFee;
     oFee.nTime = pindex->nTime;
@@ -520,8 +519,6 @@ bool IsCertMine(const CTransaction& tx, const CTxOut& txout,
 
     bool good = DecodeCertTx(tx, op, nOut, vvch, -1);
     if (!good) {
-        error( "IsCertMine() : no output out script in cert tx %s\n",
-                tx.ToString().c_str());
         return false;
     }
     if(!IsCertOp(op))
