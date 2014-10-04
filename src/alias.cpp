@@ -1519,9 +1519,9 @@ Value aliasupdate(const Array& params, bool fHelp) {
 		if (tx.GetData().size())
 			throw runtime_error("cannot modify this data alias."
 					" use dataupdate");
-      /*  if(!IsAliasMine(tx)) {
+        if(!IsAliasMine(tx)) {
 			throw runtime_error("Cannot modify a transferred alias");
-        }*/
+        }
 		uint256 wtxInHash = tx.GetHash();
 
 		if (!pwalletMain->mapWallet.count(wtxInHash)) {
