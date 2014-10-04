@@ -1582,9 +1582,9 @@ Value aliaslist(const Array& params, bool fHelp) {
 				continue;
 
 			// don't show aliases that are transferred. Sanity check, wallet tx's are always "yours" by definition anyways.
-			/*if(!IsAliasMine(tx)) {
+			if(!IsAliasMine(tx)) {
 				continue;
-			}*/
+			}
 
 			// decode txn, skip non-alias txns
 			vector<vector<unsigned char> > vvch;
@@ -1611,7 +1611,7 @@ Value aliaslist(const Array& params, bool fHelp) {
 			// if it IS transferred then skip over this alias whenever it is found(above vNamesI check) in your mapwallet
 			// check for alias existence in DB
 			// will only read the alias from the db once per name to ensure that it is not mine.
-			/*vector<CAliasIndex> vtxPos;
+			vector<CAliasIndex> vtxPos;
 			if (vNamesI.find(vchName) == vNamesI.end() && paliasdb->ReadAlias(vchName, vtxPos))
 			{
 				if (vtxPos.size() > 0)
@@ -1640,9 +1640,9 @@ Value aliaslist(const Array& params, bool fHelp) {
 				}
 			}
 			else
-			{*/
+			{
 				GetValueOfAliasTx(tx, vchValue);
-			//}
+			}
 			// build the output object
 			Object oName;
 			oName.push_back(Pair("name", stringFromVch(vchName)));
