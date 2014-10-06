@@ -516,12 +516,6 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					if (!paliasdb->WriteAliasTxFees(vAliasFees))
 						return error( "CheckOfferInputs() : failed to write fees to alias DB");
 					
-					printf( "CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
-						stringFromVch(vvchArgs[0]).c_str(),
-						aliasFromOp(op).c_str(),
-						tx.GetHash().ToString().c_str(), nHeight);
-					
-					if(op != OP_ALIAS_NEW)
 					{
 						LOCK(cs_main);
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi =
@@ -1613,14 +1607,15 @@ Value aliaslist(const Array& params, bool fHelp) {
 			// decode txn, skip non-alias txns
 			vector<vector<unsigned char> > vvch;
 			int op, nOut;
-			if (!DecodeAliasTx(tx, op, nOut, vvch, -1) || !IsAliasOp(op))
+			if (!DecodeAliasTx(tx, op, nOut, vvch, -1))
 				continue;
-
+			if(!IsAliasOp(op))
+				continue;
 			// get the txn height
 			nHeight = GetAliasTxHashHeight(hash);
 
 			// get the txn alias name
-			if (!GetAliasOfTx(tx, vchName))
+			if (op==OP_ALIAS_NEW || !GetAliasOfTx(tx, vchName))
 				continue;
 
 			// skip this alias if it doesn't match the given filter value
@@ -1641,24 +1636,23 @@ Value aliaslist(const Array& params, bool fHelp) {
 				{
 					// get transaction pointed to by alias
 					uint256 txHash = vtxPos.back().txHash;
-					if(!GetTransaction(txHash, dbtx, blockHash, true))
+					if(GetTransaction(txHash, dbtx, blockHash, true))
 					{
-						continue;
-					}
 					
-					nHeight = GetAliasTxHashHeight(txHash);
-					// Is the latest alais in the db transferred?
-					if(!IsAliasMine(dbtx))
-					{	
-						// by setting this to -1, subsequent aliases with the same name won't be read from disk (optimization) 
-						// because the latest alias tx doesn't belong to us anymore
-						vNamesI[vchName] = -1;
-						continue;
-					}
-					else
-					{
-						// get the value of the alias txn of the latest alias (from db)
-						GetValueOfAliasTx(dbtx, vchValue);
+						nHeight = GetAliasTxHashHeight(txHash);
+						// Is the latest alais in the db transferred?
+						if(!IsAliasMine(dbtx))
+						{	
+							// by setting this to -1, subsequent aliases with the same name won't be read from disk (optimization) 
+							// because the latest alias tx doesn't belong to us anymore
+							vNamesI[vchName] = -1;
+							continue;
+						}
+						else
+						{
+							// get the value of the alias txn of the latest alias (from db)
+							GetValueOfAliasTx(dbtx, vchValue);
+						}
 					}
 					
 				}

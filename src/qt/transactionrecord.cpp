@@ -71,11 +71,16 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     else
     {   
         //Check if tx is a valid alias (name alias for the moment).
-        bool isValidAlias = false;
         vector<vector<unsigned char> > vvchArgs;
         int op, nOut;
-        bool o = DecodeAliasTx(wtx, op, nOut, vvchArgs, -1);
-        if (o && IsAliasOp(op)) isValidAlias = true;
+        if (wtx.nVersion == SYSCOIN_TX_VERSION) {
+            bool o = DecodeAliasTx(wtx, op, nOut, vvchArgs, -1);
+            if (IsOfferOp(op)) {
+                DecodeOfferTx(wtx, op, nOut, vvchArgs, -1);
+            } else if (IsCertOp(op)) {
+                DecodeCertTx(wtx, op, nOut, vvchArgs, -1);
+            }
+        }
 
         bool fAllFromMe = true;
         BOOST_FOREACH(const CTxIn& txin, wtx.vin)
@@ -122,16 +127,41 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 }
                 else
                 {
-                    //Check if tx is a valid aliasnew (name alias for the moment).
-                    if (isValidAlias) {
-                        /*DecodeAliasTx does not return a decode name for aliasnew txs,
-                        so the line below and the next commented sub.address are pointless*/
-                        //const vector<unsigned char> &vchName = vvchArgs[0];
-                        if (op == OP_ALIAS_NEW) {
+                    if (op) {
+                        vector<unsigned char> vchName;
+                        switch(op)
+                        {
+                        case OP_ALIAS_NEW:
                             sub.type = TransactionRecord::AliasNew;
-                            //sub.address = stringFromVch(vchName);
+                            sub.address = mapValue["to"];
+                            break;
+                        case OP_OFFER_NEW:
+                            sub.type = TransactionRecord::OfferNew;
+                            sub.address = mapValue["to"];
+                            break;
+                        case OP_OFFER_ACCEPT:
+                            sub.type = TransactionRecord::OfferAccept;
+                            vchName = vvchArgs[0];
+                            sub.address = stringFromVch(vchName);
+                            break;
+                        case OP_CERTISSUER_NEW:
+                            sub.type = TransactionRecord::CertIssuerNew;
+                            sub.address = mapValue["to"];
+                            break;
+                        case OP_CERT_NEW:
+                            sub.type = TransactionRecord::CertNew;
+                            vchName = vvchArgs[0];
+                            sub.address = stringFromVch(vchName);
+                            break;
+                        default:
+                            sub.type = TransactionRecord::SendToOther;
                             sub.address = mapValue["to"];
                         }
+                        //if (op == OP_ALIAS_NEW) {
+                        //    sub.type = TransactionRecord::AliasNew;
+                            //sub.address = stringFromVch(vchName);
+                        //    sub.address = mapValue["to"];
+                        //}
                     } else {
                         // Sent to IP, or other non-address transaction like OP_EVAL
                         sub.type = TransactionRecord::SendToOther;
@@ -157,21 +187,54 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             // Mixed debit transaction, can't break down payees
             //
 
-            //Check if tx is a valid aliasactivate or aliasupdate (name alias for the moment).
-            if (isValidAlias){
+            if (op){
                 TransactionRecord sub(hash, nTime);
-                const vector<unsigned char> &vchName = vvchArgs[0];
-                if (op == OP_ALIAS_ACTIVATE) {
-                    sub.type = TransactionRecord::AliasActivate;
-                } else if (op == OP_ALIAS_UPDATE) {
-                    if (!wallet->IsCrypted()) {
+                //vector<unsigned char> &vchName = vvchArgs[0];
+                vector<unsigned char> vchName;
+                std::string strGUID;
+                switch(op)
+                {
+                case OP_ALIAS_ACTIVATE:
+                    sub.type = (!wtx.data.size()) ? TransactionRecord::AliasActivate : TransactionRecord::DataActivate;
+                    vchName = vvchArgs[0];
+                    break;
+                case OP_ALIAS_UPDATE:
+                    vchName = vvchArgs[0];
+                    if (!wtx.data.size()) {
                         sub.type = (IsAliasMine(wtx)) ? TransactionRecord::AliasUpdate : TransactionRecord::AliasTransfer;
                     }
                     else {
-                        sub.type = TransactionRecord::AliasUpdate;
+                        sub.type = (IsAliasMine(wtx)) ? TransactionRecord::DataUpdate : TransactionRecord::DataTransfer;
                     }
+                    break;
+                case OP_OFFER_ACTIVATE:
+                    vchName = vvchArgs[0];
+                    sub.type = TransactionRecord::OfferActivate;
+                    break;
+                case OP_OFFER_UPDATE:
+                    vchName = vvchArgs[0];
+                    sub.type = TransactionRecord::OfferUpdate;
+                    break;
+                case OP_OFFER_PAY:
+                    vchName = vvchArgs[0];
+                    sub.type = TransactionRecord::OfferPay;
+                    break;
+                case OP_CERTISSUER_ACTIVATE:
+                    strGUID += " ("; strGUID += stringFromVch(vvchArgs[0]); strGUID += ")";
+                    vchName = vvchArgs[2];
+                    sub.type = TransactionRecord::CertIssuerActivate;
+                    break;
+                case OP_CERTISSUER_UPDATE:
+                    strGUID += " ("; strGUID += stringFromVch(vvchArgs[0]); strGUID += ")";
+                    vchName = vvchArgs[1];
+                    sub.type = TransactionRecord::CertIssuerUpdate;
+                    break;
+                case OP_CERT_TRANSFER:
+                    vchName = vvchArgs[0];
+                    sub.type = TransactionRecord::CertTransfer;
+                    break;
                 }
-                sub.address = stringFromVch(vchName);
+                sub.address = stringFromVch(vchName) + strGUID;
                 sub.debit = nNet;
                 parts.append(sub);
             } else {

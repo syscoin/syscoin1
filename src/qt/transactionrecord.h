@@ -74,7 +74,22 @@ public:
         AliasNew,
         AliasActivate,
         AliasUpdate,
-        AliasTransfer
+        AliasTransfer,
+        DataNew,
+        DataActivate,
+        DataUpdate,
+        DataTransfer,
+        OfferNew,
+        OfferActivate,
+        OfferUpdate,
+        OfferAccept,
+        OfferPay,
+        CertIssuerNew,
+        CertIssuerActivate,
+        CertIssuerUpdate,
+        CertNew,
+        CertTransfer
+
     };
 
     /** Number of confirmation needed for transaction */
