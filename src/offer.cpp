@@ -367,8 +367,6 @@ bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
 	oFee.nHeight = pindex->nHeight;
 	oFee.nFee = nValue;
 	bool bFound = false;
-	
-
 	BOOST_FOREACH(COfferFee &nmFee, lstOfferFees) {
 		if (oFee.hash == nmFee.hash
 				&& oFee.nHeight == nmFee.nHeight) {

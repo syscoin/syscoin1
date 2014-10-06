@@ -95,6 +95,23 @@ void RemoveAliasTxnFromMemoryPool(const CTransaction& tx) {
 	}
 }
 
+void PutToAliasList(std::vector<CAliasIndex> &aliasList, CAliasIndex& index) {
+    for(unsigned int i=0;i<aliasList.size();i++) {
+    	CAliasIndex o = aliasList[i];
+        if(o.nHeight == index.nHeight) {
+        	aliasList[i] = index;
+            return;
+        }
+        else if(o.txHash != 0 && o.txHash == index.txHash) {
+        	aliasList[i] = index;
+            return;
+        }
+    }
+    aliasList.push_back(index);
+}
+
+
+
 int GetMinActivateDepth() {
 	if (fCakeNet)
 		return MIN_ACTIVATE_DEPTH_CAKENET;
@@ -473,16 +490,15 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					vector<unsigned char> vchVal;
 					CAliasIndex txPos2;
 					uint256 hash;
+
 					GetValueOfAliasTxHash(tx.GetHash(), vchVal, hash, nHeight);
+
 					txPos2.nHeight = nHeight;
 					txPos2.vValue = vchVal;
 					txPos2.txHash = tx.GetHash();
 					txPos2.txPrevOut = *prevOutput;
 
-					if (vtxPos.size() > 0 && vtxPos.back().nHeight == nHeight)
-						vtxPos.pop_back();
-					vtxPos.push_back(txPos2); // fin add
-
+					PutToAliasList(vtxPos, txPos2);
 
 					if (!paliasdb->WriteName(vvchArgs[0], vtxPos))
 						return error( "CheckAliasInputs() :  failed to write to alias DB");
@@ -687,7 +703,9 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 				txName.nHeight = nHeight;
 				txName.vValue = vchValue;
 				txName.txHash = tx.GetHash();
-				vtxPos.push_back(txName);
+
+				PutToAliasList(vtxPos, txName);
+
 				if (!WriteName(vchName, vtxPos))
 					return error(
 							"ReconstructNameIndex() : failed to write to alias DB");
