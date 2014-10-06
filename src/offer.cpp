@@ -199,6 +199,19 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
     
     {
 	LOCK(pwalletMain->cs_wallet);
+
+	uint64 startHeight = pindexRescan->nHeight;
+	while(pindex->pnext != NULL) pindex = pindex->pnext;
+	uint64 endHeight = pindex->nHeight;
+
+	BOOST_FOREACH(COfferFee &oFee, lstOfferFees) {
+		if (oFee.nHeight >= startHeight && oFee.nHeight < endHeight) {
+			oFee.nFee = 0;
+			break;
+		}
+	}
+
+    CBlockIndex* pindex = pindexRescan;
     while (pindex) {  
 
         int nHeight = pindex->nHeight;
