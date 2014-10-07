@@ -322,7 +322,7 @@ int CheckOfferTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
 int GetOfferTxHashHeight(const uint256 txHash) {
 	CDiskTxPos postx;
 	pblocktree->ReadTxIndex(txHash, postx);
-	return GetNameTxPosHeight(postx);
+	return GetOfferTxPosHeight(postx);
 }
 
 uint64 GetOfferFeeSubsidy(unsigned int nHeight) {
@@ -1005,9 +1005,8 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		int64 nNetFee;
 
 		// unserialize offer object from txn, check for valid
-		COffer theOffer;
+		COffer theOffer(tx);
 		COfferAccept theOfferAccept;
-		theOffer.UnserializeFromTx(tx);
 		if (theOffer.IsNull())
 			error("CheckOfferInputs() : null offer object");
 
@@ -1357,10 +1356,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							tx.GetHash().ToString().c_str(), 
 							nHeight, nTheFee / COIN);
 				}
-			}
-
-			if (pindexBlock->nHeight != pindexBest->nHeight) {
-
 			}
 		}
 	}
