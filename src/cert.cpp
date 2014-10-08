@@ -325,7 +325,7 @@ int CheckCertIssuerTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
 int GetCertTxHashHeight(const uint256 txHash) {
 	CDiskTxPos postx;
 	pblocktree->ReadTxIndex(txHash, postx);
-	return GetNameTxPosHeight(postx);
+	return GetCertTxPosHeight(postx);
 }
 
 uint64 GetCertFeeSubsidy(unsigned int nHeight) {
@@ -361,6 +361,17 @@ uint64 GetCertFeeSubsidy(unsigned int nHeight) {
     hr1 /= (nHeight - blk1hrht) + 1;
     uint64 nSubsidyOut = hr1 > hr12 ? hr1 : hr12;
     return nSubsidyOut;
+}
+
+bool RemoveCertFeesAbove(int nHeight) {
+/*    while (true) {
+        if (lstCertIssuerFees.size() > 0
+                && (lstCertIssuerFees.back().nTime + h12 < pindex->nTime
+                        || lstCertIssuerFees.back().nHeight < tHeight))
+            lstCertIssuerFees.pop_back();
+        else
+            break;
+    } */ return true;
 }
 
 bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {

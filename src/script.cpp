@@ -1303,7 +1303,6 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
               CTxDestination add;
               ExtractDestination(scriptPubKey, add);
               bool bIsMine = IsMine(keystore, add);
-              printf("CUSTOM TX_PUBKEY Solver: %s\n", bIsMine ? "true" : "false");
               return bIsMine;
         }
 
@@ -1314,7 +1313,6 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
               CTxDestination add;
               ExtractDestination(scriptPubKey, add);
               bool bIsMine = IsMine(keystore, add);
-              printf("CUSTOM TX_PUBKEYHASH Solver: %s\n", bIsMine ? "true" : "false");
               return bIsMine;
         }
 
@@ -1428,7 +1426,6 @@ bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
      case TX_PUBKEY:
            ExtractDestination(scriptPubKey, add);
            bIsMine = IsMine(keystore, add);
-           printf("CUSTOM TX_PUBKEY Sign1: %s\n", bIsMine ? "true" : "false");
            return bIsMine;
 
            //keyID = CPubKey(vSolutions[0]).GetID();
@@ -1438,7 +1435,6 @@ bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
 
           ExtractDestination(scriptPubKey, add);
           bIsMine = IsMine(keystore, add);
-          printf("CUSTOM TX_PUBKEYHASH Sign1: %s\n", bIsMine ? "true" : "false");
           return bIsMine;
 
           //keyID = CKeyID(uint160(vSolutions[0]));

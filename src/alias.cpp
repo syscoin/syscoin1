@@ -1600,9 +1600,9 @@ Value aliaslist(const Array& params, bool fHelp) {
 				continue;
 
 			// don't show aliases that are transferred. Sanity check, wallet tx's are always "yours" by definition anyways.
-			if(!IsAliasMine(tx)) {
-				continue;
-			}
+//			if(!IsAliasMine(tx)) {
+//				continue;
+//			}
 
 			// decode txn, skip non-alias txns
 			vector<vector<unsigned char> > vvch;

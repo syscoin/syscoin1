@@ -766,7 +766,7 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
             }
             else if (IsCertOp(op)) {
                 nCarriedOverCoin -= txout.nValue;
-                if (op != OP_CERTISSUER_NEW && op != OP_CERT_NEW)
+                if (op != OP_CERTISSUER_NEW)
                     continue;
             }
         }

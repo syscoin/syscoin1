@@ -240,7 +240,7 @@ public:
             if (ExtractDestination(txout.scriptPubKey, address) && ::IsMine(*this, address))
             {
                 LOCK(cs_wallet);
-                if (!mapAddressBook.count(address))
+                if (mapAddressBook.count(address)) // 100714  was ! 
                     return true;
             }
         }
