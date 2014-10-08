@@ -339,41 +339,64 @@ int GetOfferTxHashHeight(const uint256 txHash) {
 }
 
 uint64 GetOfferFeeSubsidy(unsigned int nHeight) {
-	
-	unsigned int h12 = 360 * 12;
-	unsigned int nTargetTime = 0;
-	unsigned int nTarget1hrTime = 0;
-	unsigned int blk1hrht = nHeight - 1;
-	unsigned int blk12hrht = nHeight - 1;
-	bool bFound = false;
 	uint64 hr1 = 1, hr12 = 1;
+	{
+		LOCK(cs_main);
+		unsigned int h12 = 360 * 12;
+		unsigned int nTargetTime = 0;
+		unsigned int nTarget1hrTime = 0;
+		unsigned int blk1hrht = nHeight - 1;
+		unsigned int blk12hrht = nHeight - 1;
+		bool bFound = false;
 
-	BOOST_FOREACH(COfferFee &nmFee, lstOfferFees) {
-		if(nmFee.nHeight <= nHeight)
-			bFound = true;
-		if(bFound) {
-			if(nTargetTime==0) {
-				hr1 = hr12 = 0;
-				nTargetTime = nmFee.nTime - h12;
-				nTarget1hrTime = nmFee.nTime - (h12/12);
-			}
-			if(nmFee.nTime > nTargetTime) {
-				hr12 += nmFee.nFee;
-				blk12hrht = nmFee.nHeight;
-				if(nmFee.nTime > nTarget1hrTime) {
-					hr1 += nmFee.nFee;
-					blk1hrht = nmFee.nHeight;
+		BOOST_FOREACH(COfferFee &nmFee, lstOfferFees) {
+			if(nmFee.nHeight <= nHeight)
+				bFound = true;
+			if(bFound) {
+				if(nTargetTime==0) {
+					hr1 = hr12 = 0;
+					nTargetTime = nmFee.nTime - h12;
+					nTarget1hrTime = nmFee.nTime - (h12/12);
+				}
+				if(nmFee.nTime > nTargetTime) {
+					hr12 += nmFee.nFee;
+					blk12hrht = nmFee.nHeight;
+					if(nmFee.nTime > nTarget1hrTime) {
+						hr1 += nmFee.nFee;
+						blk1hrht = nmFee.nHeight;
+					}
 				}
 			}
 		}
+		hr12 /= (nHeight - blk12hrht) + 1;
+		hr1 /= (nHeight - blk1hrht) + 1;
 	}
-	hr12 /= (nHeight - blk12hrht) + 1;
-	hr1 /= (nHeight - blk1hrht) + 1;
 	uint64 nSubsidyOut = hr1 > hr12 ? hr1 : hr12;
 	return nSubsidyOut;
 }
 
+bool RemoveOfferFee(COfferFee &txnVal) {
+	{
+		LOCK(cs_main);
+
+		COfferFee *theval = NULL;
+
+		BOOST_FOREACH(COfferFee &nmTxnValue, lstOfferFees) {
+			if (txnVal.hash == nmTxnValue.hash
+			 && txnVal.nHeight == nmTxnValue.nHeight) {
+				theval = &nmTxnValue;
+				break;
+			}
+		}
+		if(theval)
+			lstOfferFees.remove(*theval);
+
+		return theval != NULL;
+	}
+}
+
 bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
+	LOCK(cs_main);
 	list<COfferFee> txnDup;
 	COfferFee oFee;
 	oFee.nTime = pindex->nTime;

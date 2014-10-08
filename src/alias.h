@@ -180,5 +180,6 @@ std::string aliasFromOp(int op);
 bool IsAliasOp(int op);
 int GetAliasDisplayExpirationDepth(int nHeight);
 void UnspendInputs(CWalletTx& wtx);
+bool RemoveAliasFee(CAliasFee &txnVal);
 
 #endif // NAMEDB_H

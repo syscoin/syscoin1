@@ -1875,16 +1875,15 @@ bool DisconnectAlias( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
 
 		if(!paliasdb->WriteName(vvchArgs[0], vtxPos))
 			return error("DisconnectBlock() : failed to write to alias DB");
+	}
 
-		// write alias fees to db
-		int64 nTheFee = GetAliasNetFee(tx);
-		InsertAliasFee(pindex, tx.GetHash(), 0);
-		if( nTheFee != 0) printf("DisconnectBlock: Removed %lf in alias fees from regeneration.\n",
-			(double) nTheFee / COIN);
+	CAliasFee theFeeObject;
+	theFeeObject.hash =  tx.GetHash();
+	theFeeObject.nHeight = pindex->nHeight;
+	if(RemoveAliasFee(theFeeObject)) {
 		vector<CAliasFee> vAliasFees(lstAliasFees.begin(), lstAliasFees.end());
 		if (!paliasdb->WriteAliasTxFees(vAliasFees))
 			return error( "DisconnectBlock() : failed to write fees to alias DB");
-
 	}
 
 	printf("DISCONNECTED ALIAS TXN: alias=%s op=%s hash=%s  height=%d\n",
@@ -1939,11 +1938,12 @@ bool DisconnectOffer( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
         // write new offer state to db
 		if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 			return error("DisconnectBlock() : failed to write to offer DB");
+	}
 
-		// compute verify and write fee data to DB
-        int64 nTheFee = GetOfferNetFee(tx);
-		InsertOfferFee(pindex, tx.GetHash(), 0);
-		if(nTheFee > 0) printf("DisconnectBlock(): Removed %lf in offer fees from regeneration.\n", (double) nTheFee / COIN);
+	COfferFee theFeeObject;
+	theFeeObject.hash =  tx.GetHash();
+	theFeeObject.nHeight = pindex->nHeight;
+	if(RemoveOfferFee(theFeeObject)) {
 		vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
 		if (!pofferdb->WriteOfferTxFees(vOfferFees))
 			return error( "DisconnectBlock() : failed to write fees to offer DB");
@@ -2001,11 +2001,12 @@ bool DisconnectCertificate( CBlockIndex *pindex, const CTransaction &tx, int op,
 		// write new offer state to db
 		if(!pcertdb->WriteCertIssuer(vvchArgs[0], vtxPos))
 			return error("DisconnectBlock() : failed to write to offer DB");
+	}
 
-		// compute verify and write fee data to DB
-		int64 nTheFee = GetCertNetFee(tx);
-		InsertCertFee(pindex, tx.GetHash(), 0);
-		if(nTheFee > 0) printf("DisconnectBlock(): Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
+	CCertFee theFeeObject;
+	theFeeObject.hash =  tx.GetHash();
+	theFeeObject.nHeight = pindex->nHeight;
+	if(RemoveCertFee(theFeeObject)) {
 		vector<CCertFee> vCertIssuerFees(lstCertIssuerFees.begin(), lstCertIssuerFees.end());
 		if (!pcertdb->WriteCertFees(vCertIssuerFees))
 			return error( "DisconnectBlock() : failed to write fees to certissuer DB");

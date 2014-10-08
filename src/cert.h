@@ -266,6 +266,7 @@ public:
     void SetNull() { hash = nTime = nHeight = nFee = 0;}
     bool IsNull() const { return (nTime == 0 && nFee == 0 && hash == 0 && nHeight == 0); }
 };
+bool RemoveCertFee(CCertFee &txnVal);
 
 class CCertDB : public CLevelDB {
 public:

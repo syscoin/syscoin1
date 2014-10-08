@@ -363,18 +363,27 @@ uint64 GetCertFeeSubsidy(unsigned int nHeight) {
     return nSubsidyOut;
 }
 
-bool RemoveCertFeesAbove(int nHeight) {
-/*    while (true) {
-        if (lstCertIssuerFees.size() > 0
-                && (lstCertIssuerFees.back().nTime + h12 < pindex->nTime
-                        || lstCertIssuerFees.back().nHeight < tHeight))
-            lstCertIssuerFees.pop_back();
-        else
-            break;
-    } */ return true;
+bool RemoveCertFee(CCertFee &txnVal) {
+	LOCK(cs_main);
+	bool bFound = false;
+	CCertFee *theval = NULL;
+
+	BOOST_FOREACH(CCertFee &nmTxnValue, lstCertIssuerFees) {
+		if (txnVal.hash == nmTxnValue.hash
+		 && txnVal.nHeight == nmTxnValue.nHeight) {
+			theval = &nmTxnValue;
+			break;
+		}
+	}
+
+	if(theval)
+		lstCertIssuerFees.remove(*theval);
+
+	return theval != NULL;
 }
 
 bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
+	LOCK(cs_main);
     list<CCertFee> txnDup;
     CCertFee oFee;
     oFee.nTime = pindex->nTime;

@@ -125,7 +125,7 @@ bool IsAliasOp(int op) {
 }
 
 bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
-
+	LOCK(cs_main);
 	list<CAliasFee> txnDup;
 	CAliasFee txnVal(hash, pindex->nTime, pindex->nHeight, vValue);
 	bool bFound = false;
@@ -143,36 +143,57 @@ bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
 	return true;
 }
 
-uint64 GetAliasFeeSubsidy(unsigned int nHeight) {
-	unsigned int h12 = 60 * 60 * 12;
-	unsigned int nTargetTime = 0;
-	unsigned int nTarget1hrTime = 0;
-	unsigned int blk1hrht = nHeight - 1, blk12hrht = nHeight - 1;
-	bool bFound = false;
-	uint64 hr1 = 1, hr12 = 1;
+bool RemoveAliasFee(CAliasFee &txnVal) {
+	CAliasFee *theval = NULL;
+	if(lstAliasFees.size()==0) return false;
 
 	BOOST_FOREACH(CAliasFee &nmTxnValue, lstAliasFees) {
-		if (nmTxnValue.nHeight <= nHeight)
-			bFound = true;
-		if (bFound) {
-			if (nTargetTime == 0) {
-				hr1 = hr12 = 0;
-				nTargetTime = nmTxnValue.nBlockTime - h12;
-				nTarget1hrTime = nmTxnValue.nBlockTime - (h12 / 12);
-			}
-			if (nmTxnValue.nBlockTime > nTargetTime) {
-				hr12 += nmTxnValue.nValue;
-				blk12hrht = nmTxnValue.nHeight;
-				if (nmTxnValue.nBlockTime > nTarget1hrTime) {
-					hr1 += nmTxnValue.nValue;
-					blk1hrht = nmTxnValue.nHeight;
+		if (txnVal.hash == nmTxnValue.hash
+		 && txnVal.nHeight == nmTxnValue.nHeight) {
+			theval = &nmTxnValue;
+			break;
+		}
+	}
+
+	if(theval)
+		lstAliasFees.remove(*theval);
+	return theval != NULL;
+}
+
+uint64 GetAliasFeeSubsidy(unsigned int nHeight) {
+	uint64 hr1 = 1, hr12 = 1;
+	{
+		LOCK(cs_main);
+
+		unsigned int h12 = 60 * 60 * 12;
+		unsigned int nTargetTime = 0;
+		unsigned int nTarget1hrTime = 0;
+		unsigned int blk1hrht = nHeight - 1, blk12hrht = nHeight - 1;
+		bool bFound = false;
+
+		BOOST_FOREACH(CAliasFee &nmTxnValue, lstAliasFees) {
+			if (nmTxnValue.nHeight <= nHeight)
+				bFound = true;
+			if (bFound) {
+				if (nTargetTime == 0) {
+					hr1 = hr12 = 0;
+					nTargetTime = nmTxnValue.nBlockTime - h12;
+					nTarget1hrTime = nmTxnValue.nBlockTime - (h12 / 12);
+				}
+				if (nmTxnValue.nBlockTime > nTargetTime) {
+					hr12 += nmTxnValue.nValue;
+					blk12hrht = nmTxnValue.nHeight;
+					if (nmTxnValue.nBlockTime > nTarget1hrTime) {
+						hr1 += nmTxnValue.nValue;
+						blk1hrht = nmTxnValue.nHeight;
+					}
 				}
 			}
 		}
+		hr12 /= (nHeight - blk12hrht) + 1;
+		hr1 /= (nHeight - blk1hrht) + 1;
+	//	printf("GetAliasFeeSubsidy() : Alias fee mining reward for height %d: %llu\n", nHeight, nSubsidyOut);
 	}
-	hr12 /= (nHeight - blk12hrht) + 1;
-	hr1 /= (nHeight - blk1hrht) + 1;
-//	printf("GetAliasFeeSubsidy() : Alias fee mining reward for height %d: %llu\n", nHeight, nSubsidyOut);
 	return (hr12 + hr1) / 2;
 }
 
@@ -500,6 +521,9 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 					PutToAliasList(vtxPos, txPos2);
 
+					{
+					LOCK(cs_main);
+
 					if (!paliasdb->WriteName(vvchArgs[0], vtxPos))
 						return error( "CheckAliasInputs() :  failed to write to alias DB");
 					mapTestPool[vvchArgs[0]] = tx.GetHash();
@@ -516,8 +540,6 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					if (!paliasdb->WriteAliasTxFees(vAliasFees))
 						return error( "CheckOfferInputs() : failed to write fees to alias DB");
 					
-					{
-						LOCK(cs_main);
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi =
 								mapAliasesPending.find(vvchArgs[0]);
 						if (mi != mapAliasesPending.end())

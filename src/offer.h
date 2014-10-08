@@ -303,6 +303,7 @@ public:
 	void SetNull() { hash = nTime = nHeight = nFee = 0;}
     bool IsNull() const { return (nTime == 0 && nFee == 0 && hash == 0 && nHeight == 0); }
 };
+bool RemoveOfferFee(COfferFee &txnVal);
 
 class COfferDB : public CLevelDB {
 public:
