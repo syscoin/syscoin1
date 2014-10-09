@@ -1192,39 +1192,39 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
 				return true;
 			}
 		}
-	}
 
-	if (fTxIndex) {
-		CDiskTxPos postx;
-		if (pblocktree->ReadTxIndex(hash, postx)) {
-			CAutoFile file(OpenBlockFile(postx, true), SER_DISK,
-					CLIENT_VERSION);
-			CBlockHeader header;
-			try {
-				file >> header;
-				fseek(file, postx.nTxOffset, SEEK_CUR);
-				file >> txOut;
-			} catch (std::exception &e) {
-				return error("%s() : deserialize or I/O error",
-						__PRETTY_FUNCTION__);
+//		if (fTxIndex) {
+//			CDiskTxPos postx;
+//			if (pblocktree->ReadTxIndex(hash, postx)) {
+//				CAutoFile file(OpenBlockFile(postx, true), SER_DISK,
+//						CLIENT_VERSION);
+//				CBlockHeader header;
+//				try {
+//					file >> header;
+//					fseek(file, postx.nTxOffset, SEEK_CUR);
+//					file >> txOut;
+//				} catch (std::exception &e) {
+//					return error("%s() : deserialize or I/O error",
+//							__PRETTY_FUNCTION__);
+//				}
+//				hashBlock = header.GetHash();
+//				if (txOut.GetHash() != hash)
+//					return error("%s() : txid mismatch", __PRETTY_FUNCTION__);
+//				return true;
+//			}
+//		}
+
+		if (fAllowSlow) { // use coin database to locate block that contains transaction, and scan it
+			int nHeight = -1;
+			{
+				CCoinsViewCache &view = *pcoinsTip;
+				CCoins coins;
+				if (view.GetCoins(hash, coins))
+					nHeight = coins.nHeight;
 			}
-			hashBlock = header.GetHash();
-			if (txOut.GetHash() != hash)
-				return error("%s() : txid mismatch", __PRETTY_FUNCTION__);
-			return true;
+			if (nHeight > 0)
+				pindexSlow = FindBlockByHeight(nHeight);
 		}
-	}
-
-	if (fAllowSlow) { // use coin database to locate block that contains transaction, and scan it
-		int nHeight = -1;
-		{
-			CCoinsViewCache &view = *pcoinsTip;
-			CCoins coins;
-			if (view.GetCoins(hash, coins))
-				nHeight = coins.nHeight;
-		}
-		if (nHeight > 0)
-			pindexSlow = FindBlockByHeight(nHeight);
 	}
 
 	if (pindexSlow) {
