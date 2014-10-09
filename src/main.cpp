@@ -1542,6 +1542,7 @@ void static InvalidBlockFound(CBlockIndex *pindex) {
 }
 
 bool LoadSyscoinFees() {
+	LOCK(cs_main);
     // read alias and offer indexes
 
     // read alias network fees
@@ -1875,16 +1876,18 @@ bool DisconnectAlias( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
 
 		if(!paliasdb->WriteName(vvchArgs[0], vtxPos))
 			return error("DisconnectBlock() : failed to write to alias DB");
-	}
 
-	CAliasFee theFeeObject;
-	theFeeObject.hash =  tx.GetHash();
-	theFeeObject.nHeight = pindex->nHeight;
-	if(RemoveAliasFee(theFeeObject)) {
+		CAliasFee theFeeObject;
+		theFeeObject.hash =  tx.GetHash();
+		theFeeObject.nHeight = pindex->nHeight;
+		theFeeObject.nValue = 0;
+		//RemoveAliasFee(theFeeObject);
+		InsertAliasFee(pindex, tx.GetHash(), 0);
 		vector<CAliasFee> vAliasFees(lstAliasFees.begin(), lstAliasFees.end());
 		if (!paliasdb->WriteAliasTxFees(vAliasFees))
 			return error( "DisconnectBlock() : failed to write fees to alias DB");
 	}
+
 
 	printf("DISCONNECTED ALIAS TXN: alias=%s op=%s hash=%s  height=%d\n",
 		stringFromVch(vvchArgs[0]).c_str(),
@@ -1938,16 +1941,17 @@ bool DisconnectOffer( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
         // write new offer state to db
 		if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 			return error("DisconnectBlock() : failed to write to offer DB");
-	}
 
-	COfferFee theFeeObject;
-	theFeeObject.hash =  tx.GetHash();
-	theFeeObject.nHeight = pindex->nHeight;
-	if(RemoveOfferFee(theFeeObject)) {
+		COfferFee theFeeObject;
+		theFeeObject.hash =  tx.GetHash();
+		theFeeObject.nHeight = pindex->nHeight;
+		//RemoveOfferFee(theFeeObject);
+		InsertOfferFee(pindex, tx.GetHash(), 0);
 		vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
 		if (!pofferdb->WriteOfferTxFees(vOfferFees))
 			return error( "DisconnectBlock() : failed to write fees to offer DB");
 	}
+
 
 	printf("DISCONNECTED offer TXN: offer=%s op=%s hash=%s  height=%d\n",
 		stringFromVch(vvchArgs[0]).c_str(),
@@ -2001,12 +2005,13 @@ bool DisconnectCertificate( CBlockIndex *pindex, const CTransaction &tx, int op,
 		// write new offer state to db
 		if(!pcertdb->WriteCertIssuer(vvchArgs[0], vtxPos))
 			return error("DisconnectBlock() : failed to write to offer DB");
-	}
 
-	CCertFee theFeeObject;
-	theFeeObject.hash =  tx.GetHash();
-	theFeeObject.nHeight = pindex->nHeight;
-	if(RemoveCertFee(theFeeObject)) {
+		CCertFee theFeeObject;
+		theFeeObject.hash =  tx.GetHash();
+		theFeeObject.nHeight = pindex->nHeight;
+		theFeeObject.nFee = 0;
+		//RemoveCertFee(theFeeObject);
+		InsertCertFee(pindex, tx.GetHash(), 0);
 		vector<CCertFee> vCertIssuerFees(lstCertIssuerFees.begin(), lstCertIssuerFees.end());
 		if (!pcertdb->WriteCertFees(vCertIssuerFees))
 			return error( "DisconnectBlock() : failed to write fees to certissuer DB");

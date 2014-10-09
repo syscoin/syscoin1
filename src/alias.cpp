@@ -21,7 +21,7 @@ using namespace json_spirit;
 
 extern CAliasDB *paliasdb;
 
-CCriticalSection cs_aliasmap;
+CCriticalSection &cs_aliasmap = cs_main;
 
 map<vector<unsigned char>, uint256> mapMyAliases;
 map<vector<unsigned char>, set<uint256> > mapAliasesPending;
@@ -126,10 +126,10 @@ bool IsAliasOp(int op) {
 }
 
 bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
+	LOCK(cs_main);
 	list<CAliasFee> txnDup;
 	CAliasFee txnVal(hash, pindex->nTime, pindex->nHeight, vValue);
 	bool bFound = false;
-
 	BOOST_FOREACH(CAliasFee &nmTxnValue, lstAliasFees) {
 		if (txnVal.hash == nmTxnValue.hash
 				&& txnVal.nHeight == nmTxnValue.nHeight) {
@@ -144,9 +144,9 @@ bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
 }
 
 bool RemoveAliasFee(CAliasFee &txnVal) {
+	LOCK(cs_main);
 	CAliasFee *theval = NULL;
 	if(lstAliasFees.size()==0) return false;
-
 	BOOST_FOREACH(CAliasFee &nmTxnValue, lstAliasFees) {
 		if (txnVal.hash == nmTxnValue.hash
 		 && txnVal.nHeight == nmTxnValue.nHeight) {
@@ -154,13 +154,13 @@ bool RemoveAliasFee(CAliasFee &txnVal) {
 			break;
 		}
 	}
-
 	if(theval)
 		lstAliasFees.remove(*theval);
 	return theval != NULL;
 }
 
 uint64 GetAliasFeeSubsidy(unsigned int nHeight) {
+	LOCK(cs_main);
 	uint64 hr1 = 1, hr12 = 1;
 
 		unsigned int h12 = 60 * 60 * 12;
@@ -532,8 +532,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
 						lstAliasFees.end());
 					if (!paliasdb->WriteAliasTxFees(vAliasFees))
-						return error(
-								"CheckOfferInputs() : failed to write fees to alias DB");
+						return error("CheckOfferInputs() : failed to write fees to alias DB");
 
 					{
 					LOCK(cs_aliasmap);

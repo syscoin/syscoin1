@@ -294,6 +294,11 @@ bool CCertDB::ReconstructCertIndex(CBlockIndex *pindexRescan) {
             // master index
             int64 nTheFee = GetCertNetFee(tx);
             InsertCertFee(pindex, tx.GetHash(), nTheFee);
+			vector<CCertFee> vCertFees(lstCertIssuerFees.begin(),
+				lstCertIssuerFees.end());
+			if (!pcertdb->WriteCertFees(vCertFees))
+				return error("CheckOfferInputs() : failed to write fees to alias DB");
+
 
             printf( "RECONSTRUCT CERT: op=%s certissuer=%s title=%s hash=%s height=%d fees=%llu\n",
                     certissuerFromOp(op).c_str(),
@@ -329,7 +334,6 @@ int GetCertTxHashHeight(const uint256 txHash) {
 }
 
 uint64 GetCertFeeSubsidy(unsigned int nHeight) {
-
     unsigned int h12 = 360 * 12;
     unsigned int nTargetTime = 0;
     unsigned int nTarget1hrTime = 0;
@@ -337,7 +341,6 @@ uint64 GetCertFeeSubsidy(unsigned int nHeight) {
     unsigned int blk12hrht = nHeight - 1;
     bool bFound = false;
     uint64 hr1 = 1, hr12 = 1;
-
     BOOST_FOREACH(CCertFee &nmFee, lstCertIssuerFees) {
         if(nmFee.nHeight <= nHeight)
             bFound = true;
@@ -365,9 +368,7 @@ uint64 GetCertFeeSubsidy(unsigned int nHeight) {
 
 bool RemoveCertFee(CCertFee &txnVal) {
 	LOCK(cs_main);
-	bool bFound = false;
 	CCertFee *theval = NULL;
-
 	BOOST_FOREACH(CCertFee &nmTxnValue, lstCertIssuerFees) {
 		if (txnVal.hash == nmTxnValue.hash
 		 && txnVal.nHeight == nmTxnValue.nHeight) {
@@ -375,10 +376,8 @@ bool RemoveCertFee(CCertFee &txnVal) {
 			break;
 		}
 	}
-
 	if(theval)
 		lstCertIssuerFees.remove(*theval);
-
 	return theval != NULL;
 }
 
@@ -390,7 +389,6 @@ bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
     oFee.nHeight = pindex->nHeight;
     oFee.nFee = nValue;
     bool bFound = false;
-
     BOOST_FOREACH(CCertFee &nmFee, lstCertIssuerFees) {
         if (oFee.hash == nmFee.hash
                 && oFee.nHeight == nmFee.nHeight) {
@@ -400,7 +398,6 @@ bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
     }
     if (!bFound)
         lstCertIssuerFees.push_front(oFee);
-
     return true;
 }
 
@@ -1322,23 +1319,24 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
                     // remove certissuer from pendings
 
-                    // activate or update - seller txn
-                    if (op == OP_CERTISSUER_NEW || op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE) {
-                        vector<unsigned char> vchCertIssuer = op == OP_CERTISSUER_NEW ?
-                                    vchFromString(HexStr(vvchArgs[0])) : vvchArgs[0];
-                        LOCK(cs_main);
-                        std::map<std::vector<unsigned char>, std::set<uint256> >::iterator
-                                mi = mapCertIssuerPending.find(vchCertIssuer);
-                        if (mi != mapCertIssuerPending.end())
-                            mi->second.erase(tx.GetHash());
-                    }
+                    {
+						LOCK(cs_main);
+						// activate or update - seller txn
+						if (op == OP_CERTISSUER_NEW || op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE) {
+							vector<unsigned char> vchCertIssuer = op == OP_CERTISSUER_NEW ?
+										vchFromString(HexStr(vvchArgs[0])) : vvchArgs[0];
+							std::map<std::vector<unsigned char>, std::set<uint256> >::iterator
+									mi = mapCertIssuerPending.find(vchCertIssuer);
+							if (mi != mapCertIssuerPending.end())
+								mi->second.erase(tx.GetHash());
+						}
 
-                    // certitem or pay - buyer txn
-                    else {
-                        LOCK(cs_main);
-                        std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapCertItemPending.find(vvchArgs[1]);
-                        if (mi != mapCertItemPending.end())
-                            mi->second.erase(tx.GetHash());
+						// certitem or pay - buyer txn
+						else {
+							std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapCertItemPending.find(vvchArgs[1]);
+							if (mi != mapCertItemPending.end())
+								mi->second.erase(tx.GetHash());
+						}
                     }
 
                     // debug
