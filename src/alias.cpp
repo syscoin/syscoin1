@@ -96,9 +96,9 @@ void RemoveAliasTxnFromMemoryPool(const CTransaction& tx) {
 }
 
 void PutToAliasList(std::vector<CAliasIndex> &aliasList, CAliasIndex& index) {
-    for(unsigned int i=0;i<aliasList.size();i++) {
-    	CAliasIndex o = aliasList[i];
-        if(o.nHeight == index.nHeight) {
+	int i = aliasList.size() - 1;
+	BOOST_REVERSE_FOREACH(CAliasIndex &o, aliasList) {
+        if(index.nHeight != 0 && o.nHeight == index.nHeight) {
         	aliasList[i] = index;
             return;
         }
@@ -106,7 +106,8 @@ void PutToAliasList(std::vector<CAliasIndex> &aliasList, CAliasIndex& index) {
         	aliasList[i] = index;
             return;
         }
-    }
+        i--;
+	}
     aliasList.push_back(index);
 }
 
@@ -125,7 +126,6 @@ bool IsAliasOp(int op) {
 }
 
 bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
-	LOCK(cs_main);
 	list<CAliasFee> txnDup;
 	CAliasFee txnVal(hash, pindex->nTime, pindex->nHeight, vValue);
 	bool bFound = false;
@@ -140,7 +140,7 @@ bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
 	}
 	if (!bFound)
 		lstAliasFees.push_front(txnVal);
-	return true;
+	return bFound;
 }
 
 bool RemoveAliasFee(CAliasFee &txnVal) {
@@ -162,8 +162,6 @@ bool RemoveAliasFee(CAliasFee &txnVal) {
 
 uint64 GetAliasFeeSubsidy(unsigned int nHeight) {
 	uint64 hr1 = 1, hr12 = 1;
-	{
-		LOCK(cs_main);
 
 		unsigned int h12 = 60 * 60 * 12;
 		unsigned int nTargetTime = 0;
@@ -193,7 +191,7 @@ uint64 GetAliasFeeSubsidy(unsigned int nHeight) {
 		hr12 /= (nHeight - blk12hrht) + 1;
 		hr1 /= (nHeight - blk1hrht) + 1;
 	//	printf("GetAliasFeeSubsidy() : Alias fee mining reward for height %d: %llu\n", nHeight, nSubsidyOut);
-	}
+
 	return (hr12 + hr1) / 2;
 }
 
@@ -521,29 +519,28 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 					PutToAliasList(vtxPos, txPos2);
 
-					{
-					LOCK(cs_main);
-
 					if (!paliasdb->WriteName(vvchArgs[0], vtxPos))
 						return error( "CheckAliasInputs() :  failed to write to alias DB");
-					mapTestPool[vvchArgs[0]] = tx.GetHash();
+						mapTestPool[vvchArgs[0]] = tx.GetHash();
 
-					// write alias fees to db
+					// get fees for txn and add them to regenerate list
 					int64 nTheFee = GetAliasNetFee(tx);
-					InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
 					if (nTheFee != 0)
 						printf( "ALIAS FEES: Added %lf in fees to track for regeneration.\n",
 								(double) nTheFee / COIN);
-
+					InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
 					vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
-							lstAliasFees.end());
+						lstAliasFees.end());
 					if (!paliasdb->WriteAliasTxFees(vAliasFees))
-						return error( "CheckOfferInputs() : failed to write fees to alias DB");
-					
-						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi =
-								mapAliasesPending.find(vvchArgs[0]);
-						if (mi != mapAliasesPending.end())
-							mi->second.erase(tx.GetHash());
+						return error(
+								"CheckOfferInputs() : failed to write fees to alias DB");
+
+					{
+					LOCK(cs_aliasmap);
+					std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi =
+							mapAliasesPending.find(vvchArgs[0]);
+					if (mi != mapAliasesPending.end())
+						mi->second.erase(tx.GetHash());
 					}
 
 					printf(
@@ -1126,9 +1123,9 @@ bool GetAliasAddress(const CDiskTxPos& txPos, std::string& strAddress) {
 }
 void GetAliasValue(const std::string& strName, std::string& strAddress) {
 
-	{
-		TRY_LOCK(pwalletMain->cs_wallet, cs_trywallet);
-		TRY_LOCK(cs_main, cs_trymain);
+//	{
+//		TRY_LOCK(pwalletMain->cs_wallet, cs_trywallet);
+//		TRY_LOCK(cs_main, cs_trymain);
 		vector<unsigned char> vchName = vchFromValue(strName);
 		if (!paliasdb->ExistsAlias(vchName))
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Alias not found");
@@ -1155,7 +1152,7 @@ void GetAliasValue(const std::string& strName, std::string& strAddress) {
 		if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
 			strAddress = stringFromVch(vchValue);
 		}
-	}
+//	}
 }
 
 int IndexOfNameOutput(const CTransaction& tx) {
