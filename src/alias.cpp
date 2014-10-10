@@ -1112,7 +1112,10 @@ bool GetAliasAddress(const CTransaction& tx, std::string& strAddress) {
 	const CTxOut& txout = tx.vout[nOut];
 
 	const CScript& scriptPubKey = RemoveAliasScriptPrefix(txout.scriptPubKey);
-	strAddress = CBitcoinAddress(scriptPubKey.GetID()).ToString();
+
+	CTxDestination dest;
+	ExtractDestination(scriptPubKey, dest);
+	strAddress = CBitcoinAddress(dest).ToString();
 	return true;
 }
 
