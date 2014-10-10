@@ -1147,12 +1147,7 @@ void GetAliasValue(const std::string& strName, std::string& strAddress) {
 			throw JSONRPCError(RPC_WALLET_ERROR,
 					"failed to read transaction from disk");
 
-		vector<unsigned char> vchValue;
-		uint256 hash;
-		int nHeight;
-		if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
-			strAddress = stringFromVch(vchValue);
-		}
+		GetAliasAddress(tx, strAddress);
 	}
 }
 
