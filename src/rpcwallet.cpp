@@ -376,7 +376,7 @@ Value listaddressgroupings(const Array& params, bool fHelp)
             addressInfo.push_back(myaddress.ToString());
             addressInfo.push_back(ValueFromAmount(balances[address]));
             {
-                LOCK(pwalletMain->cs_wallet);
+                TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
                 if (pwalletMain->mapAddressBook.find(myaddress.Get()) != pwalletMain->mapAddressBook.end())
                     addressInfo.push_back(pwalletMain->mapAddressBook.find(myaddress.Get())->second);
             }

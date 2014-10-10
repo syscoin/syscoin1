@@ -200,7 +200,7 @@ bool CCertDB::ReconstructCertIndex(CBlockIndex *pindexRescan) {
     CBlockIndex* pindex = pindexRescan;
 
     {
-    LOCK(pwalletMain->cs_wallet);
+    TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
     while (pindex) {
 
         int nHeight = pindex->nHeight;
@@ -334,6 +334,7 @@ int GetCertTxHashHeight(const uint256 txHash) {
 }
 
 uint64 GetCertFeeSubsidy(unsigned int nHeight) {
+
     unsigned int h12 = 360 * 12;
     unsigned int nTargetTime = 0;
     unsigned int nTarget1hrTime = 0;
@@ -341,6 +342,7 @@ uint64 GetCertFeeSubsidy(unsigned int nHeight) {
     unsigned int blk12hrht = nHeight - 1;
     bool bFound = false;
     uint64 hr1 = 1, hr12 = 1;
+
     BOOST_FOREACH(CCertFee &nmFee, lstCertIssuerFees) {
         if(nmFee.nHeight <= nHeight)
             bFound = true;
@@ -367,8 +369,10 @@ uint64 GetCertFeeSubsidy(unsigned int nHeight) {
 }
 
 bool RemoveCertFee(CCertFee &txnVal) {
-	LOCK(cs_main);
+	TRY_LOCK(cs_main, cs_trymain);
+
 	CCertFee *theval = NULL;
+
 	BOOST_FOREACH(CCertFee &nmTxnValue, lstCertIssuerFees) {
 		if (txnVal.hash == nmTxnValue.hash
 		 && txnVal.nHeight == nmTxnValue.nHeight) {
@@ -376,19 +380,22 @@ bool RemoveCertFee(CCertFee &txnVal) {
 			break;
 		}
 	}
+
 	if(theval)
 		lstCertIssuerFees.remove(*theval);
+
 	return theval != NULL;
 }
 
 bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
-	LOCK(cs_main);
+	TRY_LOCK(cs_main, cs_trymain);
     list<CCertFee> txnDup;
     CCertFee oFee;
     oFee.nTime = pindex->nTime;
     oFee.nHeight = pindex->nHeight;
     oFee.nFee = nValue;
     bool bFound = false;
+
     BOOST_FOREACH(CCertFee &nmFee, lstCertIssuerFees) {
         if (oFee.hash == nmFee.hash
                 && oFee.nHeight == nmFee.nHeight) {
@@ -398,7 +405,8 @@ bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
     }
     if (!bFound)
         lstCertIssuerFees.push_front(oFee);
-    return true;
+
+    return bFound;
 }
 
 int64 GetCertNetFee(const CTransaction& tx) {
@@ -624,8 +632,6 @@ bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut,
         vector<vector<unsigned char> >& vvch, int nHeight) {
     bool found = false;
 
-    if (nHeight < 0)
-        nHeight = pindexBest->nHeight;
 
     // Strict check - bug disallowed
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
@@ -668,8 +674,6 @@ bool DecodeCertTx(const CCoins& tx, int& op, int& nOut,
         vector<vector<unsigned char> >& vvch, int nHeight) {
     bool found = false;
 
-    if (nHeight < 0)
-        nHeight = pindexBest->nHeight;
 
     // Strict check - bug disallowed
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
@@ -1319,24 +1323,23 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
                     // remove certissuer from pendings
 
-                    {
-						LOCK(cs_main);
-						// activate or update - seller txn
-						if (op == OP_CERTISSUER_NEW || op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE) {
-							vector<unsigned char> vchCertIssuer = op == OP_CERTISSUER_NEW ?
-										vchFromString(HexStr(vvchArgs[0])) : vvchArgs[0];
-							std::map<std::vector<unsigned char>, std::set<uint256> >::iterator
-									mi = mapCertIssuerPending.find(vchCertIssuer);
-							if (mi != mapCertIssuerPending.end())
-								mi->second.erase(tx.GetHash());
-						}
+                    // activate or update - seller txn
+                    if (op == OP_CERTISSUER_NEW || op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE) {
+                        vector<unsigned char> vchCertIssuer = op == OP_CERTISSUER_NEW ?
+                                    vchFromString(HexStr(vvchArgs[0])) : vvchArgs[0];
+                        TRY_LOCK(cs_main, cs_trymain);
+                        std::map<std::vector<unsigned char>, std::set<uint256> >::iterator
+                                mi = mapCertIssuerPending.find(vchCertIssuer);
+                        if (mi != mapCertIssuerPending.end())
+                            mi->second.erase(tx.GetHash());
+                    }
 
-						// certitem or pay - buyer txn
-						else {
-							std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapCertItemPending.find(vvchArgs[1]);
-							if (mi != mapCertItemPending.end())
-								mi->second.erase(tx.GetHash());
-						}
+                    // certitem or pay - buyer txn
+                    else {
+                        TRY_LOCK(cs_main, cs_trymain);
+                        std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapCertItemPending.find(vvchArgs[1]);
+                        if (mi != mapCertItemPending.end())
+                            mi->second.erase(tx.GetHash());
                     }
 
                     // debug
@@ -1367,7 +1370,6 @@ bool ExtractCertIssuerAddress(const CScript& script, string& address) {
     string strCertIssuer;
     if (op == OP_CERTISSUER_NEW) {
 #ifdef GUI
-        LOCK(cs_main);
 
         std::map<uint160, std::vector<unsigned char> >::const_iterator mi = mapMyCertIssuerHashes.find(uint160(vvch[0]));
         if (mi != mapMyCertIssuerHashes.end())
@@ -1480,7 +1482,6 @@ Value certissuernew(const Array& params, bool fHelp) {
 
     // send transaction
     {
-        LOCK(cs_main);
         EnsureWalletIsUnlocked();
         string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
                 false, bdata);
@@ -1918,8 +1919,6 @@ Value certissuerinfo(const Array& params, bool fHelp) {
     vector<unsigned char> vchCertIssuer = vchFromValue(params[0]);
     string certissuer = stringFromVch(vchCertIssuer);
     {
-        LOCK(pwalletMain->cs_wallet);
-
         vector<CCertIssuer> vtxPos;
         if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos))
             throw JSONRPCError(RPC_WALLET_ERROR,
@@ -1999,8 +1998,6 @@ Value certinfo(const Array& params, bool fHelp) {
     uint256 txHash = tx.GetHash();
 
     {
-        LOCK(pwalletMain->cs_wallet);
-
         if(!theCertIssuer.GetCertItemByHash(vchCertRand, theCertItem))
             throw runtime_error("could not find a certificate with this hash in DB");
 
@@ -2062,8 +2059,6 @@ Value certissuerlist(const Array& params, bool fHelp) {
     map< vector<unsigned char>, Object > vNamesO;
 
     {
-        LOCK(pwalletMain->cs_wallet);
-
         uint256 blockHash;
         uint256 hash;
         CTransaction tx;
@@ -2145,8 +2140,6 @@ Value certissuerhistory(const Array& params, bool fHelp) {
     string certissuer = stringFromVch(vchCertIssuer);
 
     {
-        LOCK(pwalletMain->cs_wallet);
-
         vector<CCertIssuer> vtxPos;
         if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos))
             throw JSONRPCError(RPC_WALLET_ERROR,

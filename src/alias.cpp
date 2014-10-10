@@ -21,7 +21,6 @@ using namespace json_spirit;
 
 extern CAliasDB *paliasdb;
 
-CCriticalSection &cs_aliasmap = cs_main;
 
 map<vector<unsigned char>, uint256> mapMyAliases;
 map<vector<unsigned char>, set<uint256> > mapAliasesPending;
@@ -86,7 +85,7 @@ void RemoveAliasTxnFromMemoryPool(const CTransaction& tx) {
 
 	if (op != OP_ALIAS_NEW) {
 		{
-			LOCK(cs_aliasmap);
+			TRY_LOCK(cs_main, cs_trymain);
 			std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi =
 					mapAliasesPending.find(vvch[0]);
 			if (mi != mapAliasesPending.end())
@@ -126,10 +125,11 @@ bool IsAliasOp(int op) {
 }
 
 bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
-	LOCK(cs_main);
+	TRY_LOCK(cs_main, cs_trymain);
 	list<CAliasFee> txnDup;
 	CAliasFee txnVal(hash, pindex->nTime, pindex->nHeight, vValue);
 	bool bFound = false;
+
 	BOOST_FOREACH(CAliasFee &nmTxnValue, lstAliasFees) {
 		if (txnVal.hash == nmTxnValue.hash
 				&& txnVal.nHeight == nmTxnValue.nHeight) {
@@ -144,9 +144,10 @@ bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
 }
 
 bool RemoveAliasFee(CAliasFee &txnVal) {
-	LOCK(cs_main);
+	TRY_LOCK(cs_main, cs_trymain);
 	CAliasFee *theval = NULL;
 	if(lstAliasFees.size()==0) return false;
+
 	BOOST_FOREACH(CAliasFee &nmTxnValue, lstAliasFees) {
 		if (txnVal.hash == nmTxnValue.hash
 		 && txnVal.nHeight == nmTxnValue.nHeight) {
@@ -154,14 +155,16 @@ bool RemoveAliasFee(CAliasFee &txnVal) {
 			break;
 		}
 	}
+
 	if(theval)
 		lstAliasFees.remove(*theval);
 	return theval != NULL;
 }
 
 uint64 GetAliasFeeSubsidy(unsigned int nHeight) {
-	LOCK(cs_main);
 	uint64 hr1 = 1, hr12 = 1;
+	{
+		TRY_LOCK(cs_main, cs_trymain);
 
 		unsigned int h12 = 60 * 60 * 12;
 		unsigned int nTargetTime = 0;
@@ -191,7 +194,7 @@ uint64 GetAliasFeeSubsidy(unsigned int nHeight) {
 		hr12 /= (nHeight - blk12hrht) + 1;
 		hr1 /= (nHeight - blk1hrht) + 1;
 	//	printf("GetAliasFeeSubsidy() : Alias fee mining reward for height %d: %llu\n", nHeight, nSubsidyOut);
-
+	}
 	return (hr12 + hr1) / 2;
 }
 
@@ -519,27 +522,29 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 					PutToAliasList(vtxPos, txPos2);
 
+					{
+					TRY_LOCK(cs_main, cs_trymain);
+
 					if (!paliasdb->WriteName(vvchArgs[0], vtxPos))
 						return error( "CheckAliasInputs() :  failed to write to alias DB");
-						mapTestPool[vvchArgs[0]] = tx.GetHash();
+					mapTestPool[vvchArgs[0]] = tx.GetHash();
 
-					// get fees for txn and add them to regenerate list
+					// write alias fees to db
 					int64 nTheFee = GetAliasNetFee(tx);
+					InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
 					if (nTheFee != 0)
 						printf( "ALIAS FEES: Added %lf in fees to track for regeneration.\n",
 								(double) nTheFee / COIN);
-					InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
-					vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
-						lstAliasFees.end());
-					if (!paliasdb->WriteAliasTxFees(vAliasFees))
-						return error("CheckOfferInputs() : failed to write fees to alias DB");
 
-					{
-					LOCK(cs_aliasmap);
-					std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi =
-							mapAliasesPending.find(vvchArgs[0]);
-					if (mi != mapAliasesPending.end())
-						mi->second.erase(tx.GetHash());
+					vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
+							lstAliasFees.end());
+					if (!paliasdb->WriteAliasTxFees(vAliasFees))
+						return error( "CheckOfferInputs() : failed to write fees to alias DB");
+					
+						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi =
+								mapAliasesPending.find(vvchArgs[0]);
+						if (mi != mapAliasesPending.end())
+							mi->second.erase(tx.GetHash());
 					}
 
 					printf(
@@ -568,7 +573,6 @@ bool ExtractAliasAddress(const CScript& script, string& address) {
 	string strName;
 	if (op == OP_ALIAS_NEW) {
 #ifdef GUI
-		LOCK(cs_aliasmap);
 
 		std::map<uint160, std::vector<unsigned char> >::const_iterator mi = mapMyNameHashes.find(uint160(vvch[0]));
 		if (mi != mapMyNameHashes.end())
@@ -673,7 +677,7 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 	CBlockIndex* pindex = pindexRescan;
 
 	{
-		LOCK(pwalletMain->cs_wallet);
+		TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
 		while (pindex) {
 			CBlock block;
 			block.ReadFromDisk(pindex);
@@ -867,8 +871,6 @@ bool CreateTransactionWithInputTx(const vector<pair<CScript, int64> >& vecSend,
 	wtxNew.BindWallet(pwalletMain);
 
 	{
-		LOCK2(cs_aliasmap, pwalletMain->cs_wallet);
-
 		nFeeRet = nTransactionFee;
 		loop {
 			wtxNew.vin.clear();
@@ -1122,9 +1124,9 @@ bool GetAliasAddress(const CDiskTxPos& txPos, std::string& strAddress) {
 }
 void GetAliasValue(const std::string& strName, std::string& strAddress) {
 
-//	{
-//		TRY_LOCK(pwalletMain->cs_wallet, cs_trywallet);
-//		TRY_LOCK(cs_main, cs_trymain);
+	{
+		TRY_LOCK(pwalletMain->cs_wallet, cs_trywallet);
+		TRY_LOCK(cs_main, cs_trymain);
 		vector<unsigned char> vchName = vchFromValue(strName);
 		if (!paliasdb->ExistsAlias(vchName))
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Alias not found");
@@ -1151,7 +1153,7 @@ void GetAliasValue(const std::string& strName, std::string& strAddress) {
 		if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
 			strAddress = stringFromVch(vchValue);
 		}
-//	}
+	}
 }
 
 int IndexOfNameOutput(const CTransaction& tx) {
@@ -1238,8 +1240,6 @@ bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut,
 		vector<vector<unsigned char> >& vvch, int nHeight) {
 	bool found = false;
 
-	if (nHeight < 0)
-		nHeight = pindexBest->nHeight;
 
 	// Strict check - bug disallowed
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
@@ -1284,9 +1284,6 @@ bool GetValueOfAliasTx(const CCoins& tx, vector<unsigned char>& value) {
 bool DecodeAliasTx(const CCoins& tx, int& op, int& nOut,
 		vector<vector<unsigned char> >& vvch, int nHeight) {
 	bool found = false;
-
-	if (nHeight < 0)
-		nHeight = pindexBest->nHeight;
 
 	// Strict check - bug disallowed
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
@@ -1372,7 +1369,6 @@ Value aliasnew(const Array& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_NEW) << hash << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	{
-		LOCK(cs_aliasmap);
 		EnsureWalletIsUnlocked();
 		string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
 				false);
@@ -1418,7 +1414,6 @@ Value aliasactivate(const Array& params, bool fHelp) {
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 
 	{
-		LOCK2(cs_aliasmap, pwalletMain->cs_wallet);
 
 		if (mapAliasesPending.count(vchName)
 				&& mapAliasesPending[vchName].size()) {
@@ -1536,7 +1531,6 @@ Value aliasupdate(const Array& params, bool fHelp) {
 	scriptPubKey += scriptPubKeyOrig;
 
 	{
-		LOCK2(cs_aliasmap, pwalletMain->cs_wallet);
 
 		if (mapAliasesPending.count(vchName)
 				&& mapAliasesPending[vchName].size()) {
@@ -1599,8 +1593,6 @@ Value aliaslist(const Array& params, bool fHelp) {
 	map<vector<unsigned char>, Object> vNamesO;
 
 	{
-		LOCK(pwalletMain->cs_wallet);
-
 		uint256 blockHash;
 		uint256 hash;
 		CTransaction tx, dbtx;
@@ -1717,7 +1709,6 @@ Value aliasinfo(const Array& params, bool fHelp) {
 	Object oShowResult;
 
 	{
-		LOCK(pwalletMain->cs_wallet);
 
 		// check for alias existence in DB
 		vector<CAliasIndex> vtxPos;
@@ -1782,8 +1773,6 @@ Value aliashistory(const Array& params, bool fHelp) {
 	string name = stringFromVch(vchName);
 
 	{
-		LOCK(pwalletMain->cs_wallet);
-
 		vector<CAliasIndex> vtxPos;
 		if (!paliasdb->ReadAlias(vchName, vtxPos))
 			throw JSONRPCError(RPC_WALLET_ERROR,
@@ -2030,7 +2019,6 @@ Value aliasclean(const Array& params, bool fHelp) {
 				"aliasclean\nClean unsatisfiable alias transactions from the wallet - including aliasactivate on an already taken alias\n");
 	{
 		EnsureWalletIsUnlocked();
-		LOCK2(cs_aliasmap, pwalletMain->cs_wallet);
 		map<uint256, CWalletTx> mapRemove;
 
 		printf("-----------------------------\n");
@@ -2175,7 +2163,6 @@ Value datanew(const Array& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_ALIAS_NEW) << hash << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	{
-		LOCK(cs_aliasmap);
 		EnsureWalletIsUnlocked();
 		string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
 				false);
@@ -2248,7 +2235,6 @@ Value dataactivate(const Array& params, bool fHelp) {
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 
 	{
-		LOCK(cs_aliasmap);
 		if (mapAliasesPending.count(vchName)
 				&& mapAliasesPending[vchName].size()) {
 			error(
@@ -2372,7 +2358,6 @@ Value dataupdate(const Array& params, bool fHelp) {
 	scriptPubKey += scriptPubKeyOrig;
 
 	{
-		LOCK2(cs_aliasmap, pwalletMain->cs_wallet);
 
 		if (mapAliasesPending.count(vchName)
 				&& mapAliasesPending[vchName].size()) {

@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
+﻿// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -1002,13 +1002,13 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 	    int op, nOut;
 		if(DecodeAliasTx(tx, op, nOut, vvch, -1)) {
 			if(IsAliasOp(op)) {
-				LOCK(cs_main);
+				TRY_LOCK(cs_main, cs_maintry);
 	            mapAliasesPending[vvch[0]].insert(tx.GetHash());
 		        printf("AcceptToMemoryPool() : Added alias transaction '%s' to memory pool.\n",
 	                stringFromVch(vvch[0]).c_str());
 		    } 
 			else if(IsOfferOp(op)) {
-				LOCK(cs_main);
+				TRY_LOCK(cs_main, cs_maintry);
 	            if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY)
 					mapOfferAcceptPending[vvch[1]].insert(tx.GetHash());
 				else
@@ -1018,7 +1018,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 	                stringFromVch(vvch[0]).c_str());
 			} 
 			else if(IsCertOp(op)) {
-				LOCK(cs_main);
+				TRY_LOCK(cs_main, cs_maintry);
 				if(op == OP_CERT_TRANSFER)
 					mapCertItemPending[vvch[1]].insert(tx.GetHash());
 				else
@@ -1192,6 +1192,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
 				return true;
 			}
 		}
+	}
 
 //		if (fTxIndex) {
 //			CDiskTxPos postx;
@@ -1224,7 +1225,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
 			}
 			if (nHeight > 0)
 				pindexSlow = FindBlockByHeight(nHeight);
-		}
+
 	}
 
 	if (pindexSlow) {
@@ -1542,7 +1543,7 @@ void static InvalidBlockFound(CBlockIndex *pindex) {
 }
 
 bool LoadSyscoinFees() {
-	LOCK(cs_main);
+	TRY_LOCK(cs_main, cs_maintry);
     // read alias and offer indexes
 
     // read alias network fees
@@ -1886,8 +1887,8 @@ bool DisconnectAlias( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
 		vector<CAliasFee> vAliasFees(lstAliasFees.begin(), lstAliasFees.end());
 		if (!paliasdb->WriteAliasTxFees(vAliasFees))
 			return error( "DisconnectBlock() : failed to write fees to alias DB");
-	}
 
+	}
 
 	printf("DISCONNECTED ALIAS TXN: alias=%s op=%s hash=%s  height=%d\n",
 		stringFromVch(vvchArgs[0]).c_str(),
@@ -1951,7 +1952,6 @@ bool DisconnectOffer( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
 		if (!pofferdb->WriteOfferTxFees(vOfferFees))
 			return error( "DisconnectBlock() : failed to write fees to offer DB");
 	}
-
 
 	printf("DISCONNECTED offer TXN: offer=%s op=%s hash=%s  height=%d\n",
 		stringFromVch(vvchArgs[0]).c_str(),
