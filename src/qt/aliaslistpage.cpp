@@ -38,7 +38,7 @@ AliasListPage::AliasListPage(QWidget *parent) :
     ui->exportButton->setIcon(QIcon());
 #endif
 
-    ui->labelExplanation->setText(tr("Search for any Syscoin Aliases"));
+    ui->labelExplanation->setText(tr("Search for Syscoin Aliases"));
 	
     // Context menu actions
     QAction *copyAliasAction = new QAction(ui->copyAlias->text(), this);
@@ -67,13 +67,13 @@ AliasListPage::~AliasListPage()
 void AliasListPage::showEvent ( QShowEvent * event )
 {
     if(!walletModel) return;
-	if(walletModel->getEncryptionStatus() == WalletModel::Locked)
+    /*if(walletModel->getEncryptionStatus() == WalletModel::Locked)
 	{
         ui->labelExplanation->setText(tr("<font color='red'>WARNING: Your wallet is currently locked. For security purposes you'll need to enter your passphrase in order to search Syscoin Aliases.</font> <a href=\"http://lockedwallet.syscoin.org\">more info</a>"));
 		ui->labelExplanation->setTextFormat(Qt::RichText);
 		ui->labelExplanation->setTextInteractionFlags(Qt::TextBrowserInteraction);
 		ui->labelExplanation->setOpenExternalLinks(true);
-	}
+    }*/
 }
 void AliasListPage::setModel(WalletModel* walletModel, AliasTableModel *model)
 {
