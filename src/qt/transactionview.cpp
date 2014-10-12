@@ -92,7 +92,7 @@ TransactionView::TransactionView(QWidget *parent) :
     typeWidget->addItem(tr("Cert. Issuer Activated"), TransactionFilterProxy::TYPE(TransactionRecord::CertIssuerActivate));
     typeWidget->addItem(tr("Cert. Issuer updated"), TransactionFilterProxy::TYPE(TransactionRecord::CertIssuerUpdate));
     typeWidget->addItem(tr("New Certificate"), TransactionFilterProxy::TYPE(TransactionRecord::CertNew));
-    typeWidget->addItem(tr("Certificate Tranfer"), TransactionFilterProxy::TYPE(TransactionRecord::CertTransfer));
+    typeWidget->addItem(tr("Certificate Transfer"), TransactionFilterProxy::TYPE(TransactionRecord::CertTransfer));
 
 
     hlayout->addWidget(typeWidget);
