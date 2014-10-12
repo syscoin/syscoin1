@@ -96,6 +96,13 @@ bool EditAliasDialog::saveCurrentRow()
     {
     case NewDataAlias:
     case NewAlias:
+        if (ui->aliasEdit->text().trimmed().isEmpty()) {
+            ui->aliasEdit->setText("");
+            QMessageBox::information(this, windowTitle(),
+            tr("Empty name for Alias not allowed. Please try again"),
+                QMessageBox::Ok, QMessageBox::Ok);
+            return false;
+        }
 		newFee = 1;
 		QMessageBox::StandardButton retval;
 		updateFee = GetAliasNetworkFee(1, nBestHeight)/COIN;
@@ -110,7 +117,7 @@ bool EditAliasDialog::saveCurrentRow()
 			return false;
 		}
 		strMethod = string("aliasnew");
-		params.push_back(ui->aliasEdit->text().toStdString());
+        params.push_back(ui->aliasEdit->text().trimmed().toStdString());
 		try {
             Value result = tableRPC.execute(strMethod, params);
 			if (result.type() == array_type)
@@ -119,7 +126,7 @@ bool EditAliasDialog::saveCurrentRow()
 								
 				strMethod = string("aliasactivate");
 				params.clear();
-				params.push_back(ui->aliasEdit->text().toStdString());
+                params.push_back(ui->aliasEdit->text().trimmed().toStdString());
 				params.push_back(arr[1].get_str());
 				params.push_back(ui->nameEdit->text().toStdString());
 				result = tableRPC.execute(strMethod, params);
