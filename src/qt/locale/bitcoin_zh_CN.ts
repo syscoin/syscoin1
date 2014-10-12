@@ -364,12 +364,11 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;导出</translation>
     </message>
     <message>
-        <location filename="../aliaslistpage.cpp" line="+41"/>
         <source>Search for any Syscoin Aliases</source>
-        <translation>搜索任何Syscoin别名</translation>
+        <translation type="obsolete">搜索任何Syscoin别名</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location filename="../aliaslistpage.cpp" line="+45"/>
         <source>Copy Va&amp;lue</source>
         <translation>&amp;复制值</translation>
     </message>
@@ -383,12 +382,16 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要以与Syscoin别名交互输入您的密码。&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息&lt;/a&gt;</translation>
     </message>
     <message>
-        <location line="+12"/>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to search Syscoin Aliases.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;</source>
-        <translation>&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要为了寻找Syscoin别名输入您的密码。 &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息&lt;/a&gt;</translation>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要为了寻找Syscoin别名输入您的密码。 &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息&lt;/a&gt;</translation>
     </message>
     <message>
-        <location line="+111"/>
+        <location line="-19"/>
+        <source>Search for Syscoin Aliases</source>
+        <translation>搜索Syscoin别名</translation>
+    </message>
+    <message>
+        <location line="+142"/>
         <source>Export Alias Data</source>
         <translation>出口别名数据</translation>
     </message>
@@ -1606,7 +1609,12 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>转让别名</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+57"/>
+        <source>Empty name for Alias not allowed. Please try again</source>
+        <translation>不允许别名空的名字。请再试一次</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Confirm new Alias</source>
         <translation>确认新别名</translation>
     </message>
@@ -1631,22 +1639,20 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>新别名创建成功！经过120确认别名将被激活。 GUID为新的别名： &quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="+50"/>
         <source>Alias updated successfully! Update will take effect after 1 confirmation. Transaction Id for the update is: &quot;%1&quot;</source>
-        <translation>别名成功更新！ 1确认后更新才会生效。 交易ID的更新： &quot;%1&quot;</translation>
+        <translation type="obsolete">别名成功更新！ 1确认后更新才会生效。 交易ID的更新： &quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+97"/>
         <source>Alias transferred successfully! Transaction Id for the update is: &quot;%1&quot; &lt;br&gt;&lt;br&gt;</source>
         <translation>别名成功转移！交易ID的更新： &quot;%1&quot; &lt;br&gt;&lt;br&gt;</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>Please click refresh after 1 confirmation to update the Alias table.</source>
-        <translation>1，请确认后点击刷新，更新表的别名。</translation>
+        <translation type="obsolete">1，请确认后点击刷新，更新表的别名。</translation>
     </message>
     <message>
-        <location line="-88"/>
+        <location line="-87"/>
         <source>Error creating new Alias: &quot;%1&quot;</source>
         <translation>错误创建新的别名： &quot;%1&quot;</translation>
     </message>
@@ -1671,7 +1677,12 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>您确定要更新这个别名？</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+19"/>
+        <source>Alias updated successfully! Transaction Id for the update is: &quot;%1&quot;</source>
+        <translation>别名成功更新！ 交易ID的更新： &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Error updating Alias: &quot;%1&quot;</source>
         <translation>更新时出错别名： &quot;%1&quot;</translation>
     </message>
@@ -1686,17 +1697,21 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>确认别名转让</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>Warning: Transfering Alias will cost </source>
-        <translation>警告：Transfering别名将花费 </translation>
+        <translation type="obsolete">警告：Transfering别名将花费 </translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+1"/>
         <source>Are you sure you wish transfer this Alias?</source>
         <translation>你确定你想转让此别名？</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+0"/>
+        <source>Warning: Transferring Alias will cost </source>
+        <translation>警告：传输别名将花费</translation>
+    </message>
+    <message>
+        <location line="+29"/>
         <source>Error transferring Alias: &quot;%1&quot;</source>
         <translation>错误转移别名： &quot;%1&quot;</translation>
     </message>
@@ -1990,8 +2005,9 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>&amp;编辑</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>&amp;Transfer Alias</source>
-        <translation type="obsolete">&amp;转让别名</translation>
+        <translation>&amp;转让别名</translation>
     </message>
     <message>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Click refresh to load aliases securely. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. NOTE: New Syscoin Aliases take 120 blocks to appear in this list and alias updates or transfers can take up to 6 blocks to appear in this list.</source>
@@ -2014,17 +2030,20 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要以与Syscoin别名交互输入您的密码。 因为你的钱包被锁定创建，updating或转移的别名后，必须手动刷新此表。 &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息&lt;/a&gt;&lt;br&gt;&lt;br&gt;这是您注册的Syscoin别名。别名更新需要1确认出现在这个表中。别名传输需要点击刷新1确认后的表进行更新。</translation>
     </message>
     <message>
-        <location line="-6"/>
         <source>These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table.</source>
-        <translation>这是您注册的Syscoin别名。别名更新需要1至出现在此确认表。</translation>
+        <translation type="obsolete">这是您注册的Syscoin别名。别名更新需要1至出现在此确认表。</translation>
     </message>
     <message>
-        <location line="+41"/>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating or updating an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table.</source>
-        <translation>&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要以与Syscoin别名交互输入您的密码。 因为你的钱包被锁定创建或更新别名后，必须手动刷新此表。 &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息。&lt;/a&gt;&lt;br&gt;&lt;br&gt;这是您注册的Syscoin别名。别名更新需要1至出现在此确认表。</translation>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;警告：您的钱包目前被锁定。为了安全起见，你需要以与Syscoin别名交互输入您的密码。 因为你的钱包被锁定创建或更新别名后，必须手动刷新此表。 &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;更多信息。&lt;/a&gt;&lt;br&gt;&lt;br&gt;这是您注册的Syscoin别名。别名更新需要1至出现在此确认表。</translation>
     </message>
     <message>
-        <location line="+162"/>
+        <location line="-7"/>
+        <source>These are your registered Syscoin Aliases. Alias operations (create, update, transfer) take 1 confirmation to appear in this table.</source>
+        <translation>这是您注册的Syscoin别名。别名操作（创建，更新，传输）取1确认出现在这个表中。</translation>
+    </message>
+    <message>
+        <location line="+200"/>
         <source>Export Alias Data</source>
         <translation>出口别名数据</translation>
     </message>
@@ -3547,7 +3566,77 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>别名更新（转）</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+2"/>
+        <source>New Data Alias</source>
+        <translation>新数据别名</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data Alias Activated</source>
+        <translation>数据别名激活</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data Alias Updated</source>
+        <translation>数据别名修改</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data Alias Updated (Tranfer)</source>
+        <translation>数据别名修改（转）</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>New Offer</source>
+        <translation>新品推荐</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Offer Activated</source>
+        <translation>供应活性炭</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Offer Updated</source>
+        <translation>供应改性</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Offer Accepted</source>
+        <translation>发售接受</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Offer Paid</source>
+        <translation>提供付费</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>New Cert. Issuer</source>
+        <translation>新证书颁发</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cert. Issuer Activated</source>
+        <translation>证书颁发者激活</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cert. Issuer Updated</source>
+        <translation>证书颁发者修改</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>New Certificate</source>
+        <translation>新证书</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Certificate Transfer</source>
+        <translation>证书转换</translation>
+    </message>
+    <message>
+        <location line="+62"/>
         <source>(n/a)</source>
         <translation>(n/a)</translation>
     </message>
@@ -3559,7 +3648,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+2"/>
         <source>Date and time that the transaction was received.</source>
-        <translation>接收系统币的时间</translation>
+        <translation>接收系统币的时间。</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3661,7 +3750,77 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>别名更新（转）</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+1"/>
+        <source>New Data Alias</source>
+        <translation>新数据别名</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data Alias Activated</source>
+        <translation>数据别名激活</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data Alias Updated</source>
+        <translation>数据别名修改</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data Alias Updated (Transfer)</source>
+        <translation>数据别名修改（转）</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New Offer</source>
+        <translation>新品推荐</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offer Activated</source>
+        <translation>供应活性炭</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offer Updated</source>
+        <translation>供应改性</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offer Accepted</source>
+        <translation>发售接受</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offer Paid</source>
+        <translation>提供付费</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New Cert. Issuer</source>
+        <translation>新证书颁发</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cert. Issuer Activated</source>
+        <translation>证书颁发者激活</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cert. Issuer updated</source>
+        <translation>证书颁发者修改</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New Certificate</source>
+        <translation>新证书</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Certificate Transfer</source>
+        <translation>证书转换</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Enter address or label to search</source>
         <translation>输入地址或标签进行搜索</translation>
     </message>
