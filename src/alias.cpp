@@ -2006,6 +2006,15 @@ void UnspendInputs(CWalletTx& wtx) {
 #ifdef GUI
 		//pwalletMain->vWalletUpdated.push_back(prev.GetHash());
 		pwalletMain->NotifyTransactionChanged(pwalletMain, prev.GetHash(), CT_DELETED);
+		vector<vector<unsigned char> > vvchArgs;
+        int op, nOut;
+
+        if(DecodeAliasTx(wtx, op, nOut, vvchArgs, -1)) {
+            if(IsAliasOp(op)) {
+                NotifyAliasListChanged(pwalletMain, &wtx, CT_UPDATED);                       
+            }
+		}
+
 
 #endif
 	}

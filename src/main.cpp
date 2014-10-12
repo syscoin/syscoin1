@@ -1192,8 +1192,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
 				return true;
 			}
 		}
-	}
-
+	
 //		if (fTxIndex) {
 //			CDiskTxPos postx;
 //			if (pblocktree->ReadTxIndex(hash, postx)) {
@@ -1214,7 +1213,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
 //				return true;
 //			}
 //		}
-
+	
 		if (fAllowSlow) { // use coin database to locate block that contains transaction, and scan it
 			int nHeight = -1;
 			{
@@ -1225,7 +1224,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
 			}
 			if (nHeight > 0)
 				pindexSlow = FindBlockByHeight(nHeight);
-
+		}
 	}
 
 	if (pindexSlow) {

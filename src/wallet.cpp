@@ -580,6 +580,7 @@ bool CWallet::EraseFromWallet(uint256 hash)
         if (mapWallet.erase(hash))
             CWalletDB(strWalletFile).EraseTx(hash);
     }
+    
     return true;
 }
 
