@@ -164,7 +164,7 @@ bool EditAliasDialog::saveCurrentRow()
 			updateFee = GetAliasNetworkFee(2, nBestHeight)/COIN;
 			updateFeeStr = strprintf("%"PRI64d, updateFee);
             retval = QMessageBox::question(this, tr("Confirm Alias Update"),
-				tr("Warning: Updating Alias will cost ") + QString::fromStdString(updateFeeStr) + "<br><br>" + tr("Are you sure you wish update this Alias?"),
+                tr("Warning: Updating Alias will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish update this Alias?"),
 					 QMessageBox::Yes|QMessageBox::Cancel,
 					 QMessageBox::Cancel);
 			if(retval != QMessageBox::Yes)
@@ -183,7 +183,7 @@ bool EditAliasDialog::saveCurrentRow()
 					alias = ui->nameEdit->text() + ui->aliasEdit->text();
 
 					QMessageBox::information(this, windowTitle(),
-                    tr("Alias updated successfully! Update will take effect after 1 confirmation. Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
+                    tr("Alias updated successfully! Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
 						QMessageBox::Ok, QMessageBox::Ok);
 						
 				}
@@ -211,7 +211,7 @@ bool EditAliasDialog::saveCurrentRow()
 			updateFee = GetAliasNetworkFee(2, nBestHeight)/COIN;
 			updateFeeStr = strprintf("%"PRI64d, updateFee);
             retval = QMessageBox::question(this, tr("Confirm Alias Transfer"),
-				tr("Warning: Transfering Alias will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish transfer this Alias?"),
+                tr("Warning: Transferring Alias will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish transfer this Alias?"),
 					 QMessageBox::Yes|QMessageBox::Cancel,
 					 QMessageBox::Cancel);
 			if(retval != QMessageBox::Yes)
@@ -231,8 +231,7 @@ bool EditAliasDialog::saveCurrentRow()
 					alias = ui->nameEdit->text() + ui->aliasEdit->text()+ui->transferEdit->text();
 
 					QMessageBox::information(this, windowTitle(),
-                    tr("Alias transferred successfully! Transaction Id for the update is: \"%1\" <br><br>").arg(QString::fromStdString(strResult)) +
-                    tr("Please click refresh after 1 confirmation to update the Alias table."),
+                    tr("Alias transferred successfully! Transaction Id for the update is: \"%1\" <br><br>").arg(QString::fromStdString(strResult)),
 						QMessageBox::Ok, QMessageBox::Ok);
 						
 				}
