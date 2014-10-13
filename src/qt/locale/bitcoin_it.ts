@@ -365,12 +365,11 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
         <translation>&amp;Esporta</translation>
     </message>
     <message>
-        <location filename="../aliaslistpage.cpp" line="+41"/>
         <source>Search for any Syscoin Aliases</source>
-        <translation>Cerca per ogni alias Syscoin</translation>
+        <translation type="obsolete">Cerca per ogni alias Syscoin</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location filename="../aliaslistpage.cpp" line="+45"/>
         <source>Copy Va&amp;lue</source>
         <translation>Copia Va&amp;lore</translation>
     </message>
@@ -384,12 +383,16 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
         <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;ATTENZIONE: Il vostro portafoglio è attualmente bloccato. Per motivi di sicurezza è necessario inserire una password al fine di interagire con Syscoin alias.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;più informazioni&lt;/a&gt;</translation>
     </message>
     <message>
-        <location line="+12"/>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to search Syscoin Aliases.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;</source>
-        <translation>&lt;font color=&apos;red&apos;&gt; &lt;/font&gt;ATTENZIONE: Il vostro portafoglio è attualmente bloccato. Per motivi di sicurezza è necessario inserire la passphrase per cercare Syscoin Alias​​. &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;più informazioni&lt;/a&gt;</translation>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt; &lt;/font&gt;ATTENZIONE: Il vostro portafoglio è attualmente bloccato. Per motivi di sicurezza è necessario inserire la passphrase per cercare Syscoin Alias​​. &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;più informazioni&lt;/a&gt;</translation>
     </message>
     <message>
-        <location line="+111"/>
+        <location line="-19"/>
+        <source>Search for Syscoin Aliases</source>
+        <translation>Cerca Syscoin Alias</translation>
+    </message>
+    <message>
+        <location line="+142"/>
         <source>Export Alias Data</source>
         <translation>Export Alias ​​dei dati</translation>
     </message>
@@ -1612,7 +1615,12 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Trasferimento Alias</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+57"/>
+        <source>Empty name for Alias not allowed. Please try again</source>
+        <translation>Nome vuoto per Alias ​​non consentito. Riprova</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Confirm new Alias</source>
         <translation>Conferma nuova Alias</translation>
     </message>
@@ -1637,22 +1645,20 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Nuovo alias creato con successo! Alias ​​sarà attivo dopo 120 conferme. GUID per il nuovo Alias ​​è: &quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="+50"/>
         <source>Alias updated successfully! Update will take effect after 1 confirmation. Transaction Id for the update is: &quot;%1&quot;</source>
-        <translation>Alias ​​aggiornato con successo! Aggiorna avrà effetto dopo 1 conferma. ID di transazione per l&apos;aggiornamento è: &quot;%1&quot;</translation>
+        <translation type="obsolete">Alias ​​aggiornato con successo! Aggiorna avrà effetto dopo 1 conferma. ID di transazione per l&apos;aggiornamento è: &quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+97"/>
         <source>Alias transferred successfully! Transaction Id for the update is: &quot;%1&quot; &lt;br&gt;&lt;br&gt;</source>
         <translation>Alias ​​transféré avec succès! Id de transaction pour la mise à jour: &quot;%1&quot; &lt;br&gt;&lt;br&gt;</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>Please click refresh after 1 confirmation to update the Alias table.</source>
-        <translation>Clicca su Aggiorna dopo 1 conferma per aggiornare la tabella Alias​​.</translation>
+        <translation type="obsolete">Clicca su Aggiorna dopo 1 conferma per aggiornare la tabella Alias​​.</translation>
     </message>
     <message>
-        <location line="-88"/>
+        <location line="-87"/>
         <source>Error creating new Alias: &quot;%1&quot;</source>
         <translation>Errore durante la creazione nuovo Alias​​: &quot;%1&quot;</translation>
     </message>
@@ -1677,7 +1683,12 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Sei sicuro di voler aggiornare questa Alias​​?</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+19"/>
+        <source>Alias updated successfully! Transaction Id for the update is: &quot;%1&quot;</source>
+        <translation>Alias ​​aggiornato con successo! ID di transazione per l&apos;aggiornamento è: &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Error updating Alias: &quot;%1&quot;</source>
         <translation>Errore aggiornamento Alias​​: &quot;%1&quot;</translation>
     </message>
@@ -1692,17 +1703,21 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Conferma Alias ​​Trasferimento</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>Warning: Transfering Alias will cost </source>
-        <translation>Attenzione: Transfering Alias ​​costerà </translation>
+        <translation type="obsolete">Attenzione: Transfering Alias ​​costerà </translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+1"/>
         <source>Are you sure you wish transfer this Alias?</source>
         <translation>Sei sicuro di voler trasferire questo Alias​​?</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+0"/>
+        <source>Warning: Transferring Alias will cost </source>
+        <translation>Attenzione: Trasferimento di Alias ​​costerà</translation>
+    </message>
+    <message>
+        <location line="+29"/>
         <source>Error transferring Alias: &quot;%1&quot;</source>
         <translation>Errore di trasferimento Alias​​: &quot;%1&quot;</translation>
     </message>
@@ -1995,8 +2010,9 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>&amp;Modifica</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>&amp;Transfer Alias</source>
-        <translation type="obsolete">&amp;Trasferimento Alias</translation>
+        <translation>&amp;Trasferimento Alias</translation>
     </message>
     <message>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Click refresh to load aliases securely. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. NOTE: New Syscoin Aliases take 120 blocks to appear in this list and alias updates or transfers can take up to 6 blocks to appear in this list.</source>
@@ -2019,17 +2035,20 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;ATTENZIONE: Il vostro portafoglio è attualmente bloccato. Per motivi di sicurezza è necessario inserire una password al fine di interagire con Syscoin alias. Perché il vostro portafoglio è bloccato è necessario aggiornare manualmente la tabella dopo la creazione, updating o il trasferimento di un alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;più informazioni&lt;/a&gt;&lt;br&gt;&lt;br&gt;Questi sono i tuoi Syscoin Alias ​​registrati. Aggiornamenti Alias ​​prendere 1 conferma per apparire in questa tabella. Trasferimenti Alias ​​richiedono l&apos;aggiornamento facendo clic dopo 1 conferma per la tabella da aggiornare.</translation>
     </message>
     <message>
-        <location line="-6"/>
         <source>These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table.</source>
-        <translation>Questi sono i tuoi Syscoin Alias ​​registrati. Aggiornamenti Alias ​​prendono 1 a comparire in questa tabella conferma.</translation>
+        <translation type="obsolete">Questi sono i tuoi Syscoin Alias ​​registrati. Aggiornamenti Alias ​​prendono 1 a comparire in questa tabella conferma.</translation>
     </message>
     <message>
-        <location line="+41"/>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating or updating an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table.</source>
-        <translation>&lt;font color=&apos;red&apos;&gt;ATTENZIONE: Il vostro portafoglio è attualmente bloccato. Per motivi di sicurezza è necessario inserire una password al fine di interagire con Syscoin alias. Perché il vostro portafoglio è bloccato è necessario aggiornare manualmente Questa tabella dopo la creazione o l&apos;aggiornamento di un alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;più informazioni.&lt;/a&gt;&lt;br&gt;&lt;br&gt;Questi sono i tuoi Syscoin Alias ​​registrati. Aggiornamenti Alias ​​prendono 1 a comparire in questa tabella conferma.</translation>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;ATTENZIONE: Il vostro portafoglio è attualmente bloccato. Per motivi di sicurezza è necessario inserire una password al fine di interagire con Syscoin alias. Perché il vostro portafoglio è bloccato è necessario aggiornare manualmente Questa tabella dopo la creazione o l&apos;aggiornamento di un alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;più informazioni.&lt;/a&gt;&lt;br&gt;&lt;br&gt;Questi sono i tuoi Syscoin Alias ​​registrati. Aggiornamenti Alias ​​prendono 1 a comparire in questa tabella conferma.</translation>
     </message>
     <message>
-        <location line="+162"/>
+        <location line="-7"/>
+        <source>These are your registered Syscoin Aliases. Alias operations (create, update, transfer) take 1 confirmation to appear in this table.</source>
+        <translation>Questi sono i tuoi Syscoin Alias ​​registrati. Operazioni di Alias ​​(creare, aggiornare, trasferimento) prendere 1 conferma per apparire in questa tabella.</translation>
+    </message>
+    <message>
+        <location line="+200"/>
         <source>Export Alias Data</source>
         <translation>Export Alias ​​dei dati</translation>
     </message>
@@ -3557,7 +3576,77 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Alias Modificato (Transfer)</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+2"/>
+        <source>New Data Alias</source>
+        <translation>Nuovi dati alias</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data Alias Activated</source>
+        <translation>Dati Alias ​​Attivato</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data Alias Updated</source>
+        <translation>Dati Alias ​​Modificato</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data Alias Updated (Tranfer)</source>
+        <translation>Dati Alias ​​Modificato (Transfer)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>New Offer</source>
+        <translation>Nuova offerta</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Offer Activated</source>
+        <translation>Offerta attivato</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Offer Updated</source>
+        <translation>Offerta Modificato</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Offer Accepted</source>
+        <translation>Offerta accettata</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Offer Paid</source>
+        <translation>Offerta di pagamento</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>New Cert. Issuer</source>
+        <translation>Nuovo Emittente Cert.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cert. Issuer Activated</source>
+        <translation>Cert. Emittente Attivato</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cert. Issuer Updated</source>
+        <translation>Cert. Emittente Modificato</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>New Certificate</source>
+        <translation>Nuovo certificato</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Certificate Transfer</source>
+        <translation>Transfer Certificate</translation>
+    </message>
+    <message>
+        <location line="+62"/>
         <source>(n/a)</source>
         <translation>(N / a)</translation>
     </message>
@@ -3671,7 +3760,77 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Alias Modificato (Transfer)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+1"/>
+        <source>New Data Alias</source>
+        <translation>Nuovi dati alias</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data Alias Activated</source>
+        <translation>Dati Alias ​​Attivato</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data Alias Updated</source>
+        <translation>Dati Alias ​​Modificato</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data Alias Updated (Transfer)</source>
+        <translation>Dati Alias ​​Modificato (Transfer)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New Offer</source>
+        <translation>Nuova offerta</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offer Activated</source>
+        <translation>Offerta attivato</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offer Updated</source>
+        <translation>Offerta Modificato</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offer Accepted</source>
+        <translation>Offerta accettata</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offer Paid</source>
+        <translation>Offerta di pagamento</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New Cert. Issuer</source>
+        <translation>Nuovo Emittente Cert.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cert. Issuer Activated</source>
+        <translation>Cert. Emittente Attivato</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cert. Issuer updated</source>
+        <translation>Cert. Emittente Modificato</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New Certificate</source>
+        <translation>Nuovo certificato</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Certificate Transfer</source>
+        <translation>Transfer Certificate</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Enter address or label to search</source>
         <translation>Inserisci un indirizzo o un&apos;etichetta da cercare</translation>
     </message>

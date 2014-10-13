@@ -351,12 +351,11 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>&amp;Exportar</translation>
     </message>
     <message>
-        <location filename="../aliaslistpage.cpp" line="+41"/>
         <source>Search for any Syscoin Aliases</source>
-        <translation>Cercar Àlies de SysCoin</translation>
+        <translation type="obsolete">Cercar Àlies de SysCoin</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location filename="../aliaslistpage.cpp" line="+45"/>
         <source>Copy Va&amp;lue</source>
         <translation>Copiar Va&amp;lor</translation>
     </message>
@@ -370,12 +369,16 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;AVÍS: El teu moneder està bloquejat. Per raons de seguretat, has d&apos;introduir la teva paraula de pas per interaccionar amb els Àlies de SysCoin. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;més info.&lt;/a&gt;</translation>
     </message>
     <message>
-        <location line="+12"/>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to search Syscoin Aliases.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;</source>
-        <translation>&lt;font color=&apos;red&apos;&gt;AVÍS: El teu moneder està bloquejat. Per raons de seguretat, has d&apos;introduir la teva paraula de pas per cercar per Àlies de SysCoin. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;més info.&lt;/a&gt;</translation>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;AVÍS: El teu moneder està bloquejat. Per raons de seguretat, has d&apos;introduir la teva paraula de pas per cercar per Àlies de SysCoin. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;més info.&lt;/a&gt;</translation>
     </message>
     <message>
-        <location line="+111"/>
+        <location line="-19"/>
+        <source>Search for Syscoin Aliases</source>
+        <translation>Cercar Àlies de SysCoin</translation>
+    </message>
+    <message>
+        <location line="+142"/>
         <source>Export Alias Data</source>
         <translation>Exportar dades d&apos;Àlies</translation>
     </message>
@@ -1596,7 +1599,12 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Transferir Àlies</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+57"/>
+        <source>Empty name for Alias not allowed. Please try again</source>
+        <translation>No es permet un Àlies sense nom, Si us plau, intenta-ho de nou</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Confirm new Alias</source>
         <translation>Confirma nou Àlies</translation>
     </message>
@@ -1621,22 +1629,20 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Nou Àlies creat amb èxit! l&apos;Àlies estarà actiu després de 120 confirmacions. El GUID per al nou Àlies és: &quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="+50"/>
         <source>Alias updated successfully! Update will take effect after 1 confirmation. Transaction Id for the update is: &quot;%1&quot;</source>
-        <translation>Àlies editat amb èxit! La edició serà vigent després de 1 confirmació. El Id de la transacció d&apos;edició es: &quot;%1&quot;</translation>
+        <translation type="obsolete">Àlies editat amb èxit! La edició serà vigent després de 1 confirmació. El Id de la transacció d&apos;edició es: &quot;%1&quot;</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+97"/>
         <source>Alias transferred successfully! Transaction Id for the update is: &quot;%1&quot; &lt;br&gt;&lt;br&gt;</source>
         <translation>Àlies transferit amb èxit! El Id de la transacció és: &quot;%1&quot; &lt;br&gt;&lt;br&gt;</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>Please click refresh after 1 confirmation to update the Alias table.</source>
-        <translation>Si us plau, clica Actualitzar deprés de 1 confirmació per actualitzar la taula d&apos;Àlies.</translation>
+        <translation type="obsolete">Si us plau, clica Actualitzar deprés de 1 confirmació per actualitzar la taula d&apos;Àlies.</translation>
     </message>
     <message>
-        <location line="-88"/>
+        <location line="-87"/>
         <source>Error creating new Alias: &quot;%1&quot;</source>
         <translation>Error en la creació d&apos;Àlies: &quot;%1&quot;</translation>
     </message>
@@ -1661,7 +1667,12 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Estàs segur de voler editar aquest Àlies?</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+19"/>
+        <source>Alias updated successfully! Transaction Id for the update is: &quot;%1&quot;</source>
+        <translation>Àlies editat amb èxit! El Id de la transacció d&apos;edició es: &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>Error updating Alias: &quot;%1&quot;</source>
         <translation>Error en l&apos;edició d&apos;Àlies: &quot;%1&quot;</translation>
     </message>
@@ -1676,17 +1687,21 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Confirma Transferència d&apos;Àlies</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>Warning: Transfering Alias will cost </source>
-        <translation>Avís: Transferir l&apos;Àlies costarà </translation>
+        <translation type="obsolete">Avís: Transferir l&apos;Àlies costarà </translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+1"/>
         <source>Are you sure you wish transfer this Alias?</source>
         <translation>Estàs segur de voler transferir aquest Àlies?</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+0"/>
+        <source>Warning: Transferring Alias will cost </source>
+        <translation>Avís: Transferir l&apos;Àlies costarà  </translation>
+    </message>
+    <message>
+        <location line="+29"/>
         <source>Error transferring Alias: &quot;%1&quot;</source>
         <translation>Error en la transferència d&apos;Àlies: &quot;%1&quot;</translation>
     </message>
@@ -1978,8 +1993,9 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>&amp;Editar</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>&amp;Transfer Alias</source>
-        <translation type="obsolete">&amp;Transferir Àlies</translation>
+        <translation>&amp;Transferir Àlies</translation>
     </message>
     <message>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Click refresh to load aliases securely. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. NOTE: New Syscoin Aliases take 120 blocks to appear in this list and alias updates or transfers can take up to 6 blocks to appear in this list.</source>
@@ -1990,17 +2006,20 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation type="obsolete">Aquests són els teus Àlies de SysCoin registrats. Les edicions d&apos;Àlies necessiten d&apos;una confirmació per aparèixer en aquesta taula. Les transferències dÀlies</translation>
     </message>
     <message>
-        <location line="-6"/>
         <source>These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table.</source>
-        <translation>Aquests són els teus Àlies de SysCoin registrats. Les edicions d&apos;Àlies necessiten d&apos;una confirmació per aparèixer en aquesta taula.</translation>
+        <translation type="obsolete">Aquests són els teus Àlies de SysCoin registrats. Les edicions d&apos;Àlies necessiten d&apos;una confirmació per aparèixer en aquesta taula.</translation>
     </message>
     <message>
-        <location line="+41"/>
         <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating or updating an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table.</source>
-        <translation>&lt;font color=&apos;red&apos;&gt;AVÍS: El teu moneder està bloquejat. Per raons de seguretat, has d&apos;introduir la teva paraula de pas per interaccionar amb els Àlies de SysCoin. Com que el teu moneder està bloquejat, has clicar en Actualitzar després de crear o editar un Àlies per actualitzar aquesta taula.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;&lt;/a&gt;més info.&lt;br&gt;&lt;br&gt;Aquests són els teus Àlies de SysCoin registrats. Les edicions d&apos;Àlies necessiten 1 confirmació per aparèixer en aquesta taula.</translation>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;AVÍS: El teu moneder està bloquejat. Per raons de seguretat, has d&apos;introduir la teva paraula de pas per interaccionar amb els Àlies de SysCoin. Com que el teu moneder està bloquejat, has clicar en Actualitzar després de crear o editar un Àlies per actualitzar aquesta taula.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;&lt;/a&gt;més info.&lt;br&gt;&lt;br&gt;Aquests són els teus Àlies de SysCoin registrats. Les edicions d&apos;Àlies necessiten 1 confirmació per aparèixer en aquesta taula.</translation>
     </message>
     <message>
-        <location line="+162"/>
+        <location line="-7"/>
+        <source>These are your registered Syscoin Aliases. Alias operations (create, update, transfer) take 1 confirmation to appear in this table.</source>
+        <translation>Aquests són els teus Àlies de SysCoin registrats. Les operacions amb Àlies (crear, editar, transferir) necessiten d&apos;una confirmació per aparèixer en aquesta taula.</translation>
+    </message>
+    <message>
+        <location line="+200"/>
         <source>Export Alias Data</source>
         <translation>Exportar dades de Àlies</translation>
     </message>
@@ -3419,9 +3438,9 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+57"/>
         <source>Open for %n more block(s)</source>
         <translation>
+            <numerusform>Obert per %n bloc més</numerusform>
+            <numerusform></numerusform>
             <numerusform>Obert per %n blocs més</numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
         </translation>
     </message>
     <message>
@@ -3509,34 +3528,104 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Àlies Editat (Transferit)</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+2"/>
+        <source>New Data Alias</source>
+        <translation>Nou Àlies de Dades</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data Alias Activated</source>
+        <translation>Àlies de Dades Activat</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data Alias Updated</source>
+        <translation>Àlies de Dades Editat</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data Alias Updated (Tranfer)</source>
+        <translation>Àlies de Dades Editat (Transferit)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>New Offer</source>
+        <translation>Nova Oferta</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Offer Activated</source>
+        <translation>Oferta Activada</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Offer Updated</source>
+        <translation>Oferta Editada</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Offer Accepted</source>
+        <translation>Oferta Acceptada</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Offer Paid</source>
+        <translation>Oferta Pagada</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>New Cert. Issuer</source>
+        <translation>Nou Emissor de Cert.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cert. Issuer Activated</source>
+        <translation>Emissor de Cert. Activat</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cert. Issuer Updated</source>
+        <translation>Emissor de Cert. Editat</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>New Certificate</source>
+        <translation>Nou Certificat</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Certificate Transfer</source>
+        <translation>Certificat Transferit</translation>
+    </message>
+    <message>
+        <location line="+62"/>
         <source>(n/a)</source>
         <translation>(nd)</translation>
     </message>
     <message>
         <location line="+199"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Estat de la transacció. Mou el ratolí per sobre d&apos;aquest camp per veure el nombre de confirmacions</translation>
+        <translation>Estat de la transacció. Mou el ratolí per sobre d&apos;aquest camp per veure el nombre de confirmacions.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Date and time that the transaction was received.</source>
-        <translation>Data i hora en que es va rebre la transacció</translation>
+        <translation>Data i hora en que es va rebre la transacció.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Type of transaction.</source>
-        <translation>Tipus de transacció</translation>
+        <translation>Tipus de transacció.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Destination address of transaction.</source>
-        <translation>Direcció de destí de la transacció</translation>
+        <translation>Direcció de destí de la transacció.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Amount removed from or added to balance.</source>
-        <translation>Quantitat retirada o afegida al saldo</translation>
+        <translation>Quantitat retirada o afegida al saldo.</translation>
     </message>
 </context>
 <context>
@@ -3575,7 +3664,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+1"/>
         <source>Range...</source>
-        <translation>Rang</translation>
+        <translation>Rang...</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -3620,12 +3709,82 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+1"/>
         <source>Alias Updated (Transfer)</source>
-        <translation>Àlies Editat (Tranferit)</translation>
+        <translation>Àlies Editat (Transferit)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+1"/>
+        <source>New Data Alias</source>
+        <translation>Nou Àlies de Dades</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data Alias Activated</source>
+        <translation>Àlies de Dades Activat</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data Alias Updated</source>
+        <translation>Àlies de Dades Editat</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data Alias Updated (Transfer)</source>
+        <translation>Àlies de Dades Editat (Transferit)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New Offer</source>
+        <translation>Nova Oferta</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offer Activated</source>
+        <translation>Oferta Activada</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offer Updated</source>
+        <translation>Oferta Editada</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offer Accepted</source>
+        <translation>Oferta Acceptada</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offer Paid</source>
+        <translation>Oferta Pagada</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New Cert. Issuer</source>
+        <translation>Nou Emissor de Certif.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cert. Issuer Activated</source>
+        <translation>Emissor de Certif. Activat</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cert. Issuer updated</source>
+        <translation>Emissor de Certif. Editat</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New Certificate</source>
+        <translation>Nou Certificat</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Certificate Tranfer</source>
+        <translation>Certificat Transferit</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Enter address or label to search</source>
-        <translation>Introdueix una adreça o etiqueta per cercar.</translation>
+        <translation>Introdueix una adreça o etiqueta per cercar</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -3715,7 +3874,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+0"/>
         <source>Could not write to file %1.</source>
-        <translation>No es pot escriure al fitxer %1</translation>
+        <translation>No es pot escriure al fitxer %1.</translation>
     </message>
     <message>
         <location line="+100"/>
