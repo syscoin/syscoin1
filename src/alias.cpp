@@ -353,7 +353,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		vector<vector<unsigned char> > vvchArgs;
 		int op, nOut, nPrevHeight;
 		int64 nDepth;
-		if (!DecodeAliasTx(tx, op, nOut, vvchArgs, pindexBlock->nHeight))
+		if (!DecodeAliasTx(tx, op, nOut, vvchArgs, -1))
 			return error(
 					"CheckAliasInputs() : could not decode syscoin alias info from tx %s",
 					tx.GetHash().GetHex().c_str());
@@ -509,12 +509,9 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					
 					int nHeight = pindexBlock->nHeight;
 
-					vector<unsigned char> vchVal;
-					CAliasIndex txPos2;
-					uint256 hash;
-
-					GetValueOfAliasTxHash(tx.GetHash(), vchVal, hash, nHeight);
-
+					CAliasIndex txPos2;		
+					const vector<unsigned char> &vchVal = vvchArgs[
+						op == OP_ALIAS_ACTIVATE ? 2 : 1];
 					txPos2.nHeight = nHeight;
 					txPos2.vValue = vchVal;
 					txPos2.txHash = tx.GetHash();
@@ -693,7 +690,7 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 				int op, nOut;
 
 				// decode the alias op
-				bool o = DecodeAliasTx(tx, op, nOut, vvchArgs, nHeight);
+				bool o = DecodeAliasTx(tx, op, nOut, vvchArgs, -1);
 				if (!o || !IsAliasOp(op))
 					continue;
 				if (op == OP_ALIAS_NEW)
@@ -1194,7 +1191,7 @@ bool IsConflictedAliasTx(CBlockTreeDB& txdb, const CTransaction& tx,
 	int op;
 	int nOut;
 
-	bool good = DecodeAliasTx(tx, op, nOut, vvchArgs, pindexBest->nHeight);
+	bool good = DecodeAliasTx(tx, op, nOut, vvchArgs, -1);
 	if (!good)
 		return error("IsConflictedAliasTx() : could not decode a syscoin tx");
 	int nPrevHeight;
@@ -2006,15 +2003,6 @@ void UnspendInputs(CWalletTx& wtx) {
 #ifdef GUI
 		//pwalletMain->vWalletUpdated.push_back(prev.GetHash());
 		pwalletMain->NotifyTransactionChanged(pwalletMain, prev.GetHash(), CT_DELETED);
-		vector<vector<unsigned char> > vvchArgs;
-        int op, nOut;
-
-        if(DecodeAliasTx(wtx, op, nOut, vvchArgs, -1)) {
-            if(IsAliasOp(op)) {
-                NotifyAliasListChanged(pwalletMain, &wtx, CT_UPDATED);                       
-            }
-		}
-
 
 #endif
 	}

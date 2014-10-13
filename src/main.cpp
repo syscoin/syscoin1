@@ -1773,7 +1773,7 @@ bool CTransaction::CheckInputs(CBlockIndex *pindex, CValidationState &state, CCo
 		int op;
 		int nOut;
 
-		bool bGood = DecodeAliasTx(*this, op, nOut, vvchArgs, pindex->nHeight);
+		bool bGood = DecodeAliasTx(*this, op, nOut, vvchArgs, -1);
 		if(bGood && IsAliasOp(op)) {
 			if (!CheckAliasInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
 				return false;
@@ -2075,7 +2075,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 		    int op, nOut;
 			// TODO CB refactor into apropriate files
 
-			if(DecodeAliasTx(tx, op, nOut, vvchArgs, pindex->nHeight)) {
+			if(DecodeAliasTx(tx, op, nOut, vvchArgs, -1)) {
 				if (IsAliasOp(op)) DisconnectAlias(pindex, tx, op, vvchArgs);
 				else if (IsOfferOp(op)) DisconnectOffer(pindex, tx, op, vvchArgs);
 				else if (IsCertOp(op)) DisconnectCertificate(pindex, tx, op, vvchArgs);
