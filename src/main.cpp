@@ -972,33 +972,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 						dFreeCount + nSize);
 			dFreeCount += nSize;
 		}
-
-		// Check against previous transactions
-		// This is done last to help prevent CPU exhaustion denial-of-service attacks.
-		if (!tx.CheckInputs(pindexBest, state, view, true, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC,
-				dummyTestPool, NULL, true, false, false)) {
-			return error("CTxMemPool::accept() : CheckInputs failed %s",
-					hash.ToString().c_str());
-		}
-	}
-
-	// Store transaction in memory
-	{
-		LOCK(cs);
-		if (ptxOld) {
-			printf("CTxMemPool::accept() : replacing tx %s with new version\n",
-					ptxOld->GetHash().ToString().c_str());
-			remove(*ptxOld);
-		}
-		addUnchecked(hash, tx);
-	}
-
-	if (tx.nVersion == SYSCOIN_TX_VERSION) {
-	    if (tx.vout.size() < 1) {
-	        error("AcceptToMemoryPool() : no output in syscoin tx %s\n", tx.ToString().c_str());
-	    }
-
-        vector<vector<unsigned char> > vvch;
+      vector<vector<unsigned char> > vvch;
 	    int op, nOut;
 		if(DecodeAliasTx(tx, op, nOut, vvch, -1)) {
 			if(IsAliasOp(op)) {
@@ -1029,6 +1003,32 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 		    }
 		}
 
+		// Check against previous transactions
+		// This is done last to help prevent CPU exhaustion denial-of-service attacks.
+		if (!tx.CheckInputs(pindexBest, state, view, true, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC,
+				dummyTestPool, NULL, true, false, false)) {
+			return error("CTxMemPool::accept() : CheckInputs failed %s",
+					hash.ToString().c_str());
+		}
+	}
+
+	// Store transaction in memory
+	{
+		LOCK(cs);
+		if (ptxOld) {
+			printf("CTxMemPool::accept() : replacing tx %s with new version\n",
+					ptxOld->GetHash().ToString().c_str());
+			remove(*ptxOld);
+		}
+		addUnchecked(hash, tx);
+	}
+
+	if (tx.nVersion == SYSCOIN_TX_VERSION) {
+	    if (tx.vout.size() < 1) {
+	        error("AcceptToMemoryPool() : no output in syscoin tx %s\n", tx.ToString().c_str());
+	    }
+
+ 
 	}
 
 	///// are we sure this is ok when loading transactions or restoring block txes
@@ -1184,15 +1184,15 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
 
 	CBlockIndex *pindexSlow = NULL;
 	{
-		LOCK(cs_main);
+		TRY_LOCK(cs_main, cs_trymain);
 		{
-			LOCK(mempool.cs);
+			TRY_LOCK(mempool.cs, cs_trymempool);
 			if (mempool.exists(hash)) {
 				txOut = mempool.lookup(hash);
 				return true;
 			}
 		}
-
+	
 		if (fTxIndex) {
 			CDiskTxPos postx;
 			if (pblocktree->ReadTxIndex(hash, postx)) {
@@ -1213,7 +1213,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
 				return true;
 			}
 		}
-
+	
 		if (fAllowSlow) { // use coin database to locate block that contains transaction, and scan it
 			int nHeight = -1;
 			{
