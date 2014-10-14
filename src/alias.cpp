@@ -344,8 +344,8 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
     				if (uint160(vchHash) != hash)
     					return error("CheckAliasInputs() : aliasactivate hash mismatch");
 
-    				nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins, MIN_ACTIVATE_DEPTH);
-    				if ((fBlock || fMiner) && nDepth >= 0 && (unsigned int) nDepth < MIN_ACTIVATE_DEPTH)
+    				nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins, (fCakeNet ? MIN_ACTIVATE_DEPTH_CAKENET : MIN_ACTIVATE_DEPTH ) );
+    				if ((fBlock || fMiner) && nDepth >= 0 && (unsigned int) nDepth < (fCakeNet ? MIN_ACTIVATE_DEPTH_CAKENET : MIN_ACTIVATE_DEPTH ) )
     					return false;
                     nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins,
                                                              GetAliasExpirationDepth(pindexBlock->nHeight));
