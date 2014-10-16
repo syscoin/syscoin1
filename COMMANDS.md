@@ -7,22 +7,22 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 ## Alias commands - these commands deal with standard aliases.
 
 ###aliasnew *Create a new alias*
-####**aliasnew** < name >
+####**aliasnew** < aliasName >
 - **parameters:**
-  - < name > alias name, 255 chars max.
+  - < aliasName > alias name, 255 chars max.
 - **returns:**
   - txid
-  - rand
+  - guid
 - **example:** 
   - *$ syscoind aliasnew /d/microsoft.bit* 
   - *[ "577b0f85da4744cbbe7ce763fe58bd4e3fc9817271fbc3785c6178217246ba94", "1150cd188f74c8df00" ]*
 
 ###aliasactivate *Activate the alias*
 
-####**aliasactivate** < alias > < rand > [ < txid > ] < value >
+####**aliasactivate** < aliasName > < guid > [ < txid > ] < value >
 - **parameters:**
-  - < alias > alias name.
-  - < rand > alias rand .
+  - < aliasName > alias name.
+  - < guid > alias guid .
   - < txid > txid of aliasnew for this alias, required if daemon restarted.
   - < value > alias value, 1023 chars max.
   - May be called directly after aliasnew; however, the transaction isn’t actually posted to the network until 120 blocks after the aliasnew. 
@@ -35,9 +35,9 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###aliasupdate *Update(or transfer) alias with new data(also resets expiration height)*
 
-####**aliasupdate** < alias > < value > [ < toaddress > ] 
+####**aliasupdate** < aliasName > < value > [ < toaddress > ] 
 - **parameters:**
-  - < alias > alias name.
+  - < aliasName > alias name.
   - < value > alias value, 1023 chars max.
   - < toaddress > receiver syscoin address, if transferring alias.
 - **returns:**
@@ -48,11 +48,11 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###aliasinfo *Show the values of an alias*
 
-####**aliasinfo** < alias >
+####**aliasinfo** < aliasName >
 - **parameters:**
-  -< alias > alias name.
+  -< aliasName > alias name.
 - **returns:**
-  - name
+  - aliasName
   - value
   - txid
   - address
@@ -62,11 +62,11 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###aliashistory *List all stored values of an alias*
 
-####**aliashistory** < name >
+####**aliashistory** < aliasName >
 - **parameters:**
-  - < name > alias name.
+  - < aliasName > alias name.
 - **returns:**
-  - name
+  - aliasName
   - value
   - txid
   - address
@@ -76,11 +76,11 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###aliasfilter *Scan and filter aliases*
 
-####**aliasfilter** < keyword >
+####**aliasfilter** < regexp >
 - **parameters:**
   - < keyword > keyword used to filter results(can be left blank to show all)
 - **returns:**
-  - name
+  - aliasName
   - value
   - txid
   - address
@@ -92,22 +92,22 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###datanew *Create a new data alias*
 
-####**datanew** < alias >
+####**datanew** < dataName >
 - **parameters:**
-  - < alias > data name alias, 255 chars max. 
+  - < dataName > data name , 255 chars max. 
 - **returns:**
   - txid
-  - rand
+  - guid
 - **example:** 
   - *$ syscoind datanew /dat/mycompany/readme*
   - *[ "a42f21f1502fa6078b62cc6500f31815bbc97fb4f12a91e95e5f242d9d467728", "40738ea3fbd88d5c" ]*
 
-###dataactivate *Activate an alias*
+###dataactivate *Activate an data alias*
 
-####**dataactivate** < name > < rand > [ < txid > ] < filename > < data >
+####**dataactivate** < dataName  > < guid > [ < txid > ] < filename > < data >
 - **parameters:**
-  - < alias > data alias name.
-  - < rand > alias rand .
+  - < dataName  > data name.
+  - < guid > alias guid.
   - < txid > txid of datanew for this data alias, required if daemon restarted.
   - < filename > filename, 1023 chars max.
   - < data >  data base64-encoded. Max 256kB.
@@ -121,9 +121,9 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###dataupdate *Update data alias with new data(also resets expiration height)*
 
-####**dataupdate** < name > < filename > < data > [ < toaddress > ]
+####**dataupdate** < dataName > < filename > < data > [ < toaddress > ]
 - **parameters:**
-  - < name > data alias name.
+  - < dataName > data name.
   - < filename > name for file, 1023 chars max.
   - < data > new data to update
   - < toaddress > 
@@ -135,12 +135,12 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ###datainfo *Show the values of an data alias*
 
-####datainfo < name >
+####datainfo < dataName >
 
 - **parameters:**
-  - < name > data alias name.
+  - < dataName > data name.
 - **returns:**
-  - name
+  - dataName
   - filename
   - txid
   - address
@@ -172,16 +172,16 @@ Same functionality as aliasscan (Use aliasscan for now)
   - < offerdescription > description of offer, 16000 chars max.
 - **returns:**
   - txtid
-  - rand
+  - guid
 - **example:**
   - *$ syscoind offernew "General/Widgets" "Model T Widget Manifolds" 25 249 "One brand new model T widget manifold, still in original packaging."* 
   - *[ "7c6f5d153f2b8f7b1e38772c45370ab647335eea30ece99740ebeb3e43c18652", "8d0dabf5e7f2a4a300" ]*
 
 ###offeractivate *Activate the offer*
 
-####**offeractivate** < rand > [ < txid > ]
+####**offeractivate** < guid > [ < txid > ]
 - **parameters:**
-  - < rand > rand provided at offernew.
+  - < guid > guid provided at offernew.
   - < txid > txid provided at offernew, required if daemon restarted.
   - May be called directly after offernew; 
   - If the client is restarted before offeractivate is called, then offer txid parameter is required.
@@ -192,12 +192,12 @@ Same functionality as aliasscan (Use aliasscan for now)
 
 ###offerupdate *Update an offer(also resets expiration height)*
 
-####**offerupdate** < rand > < category > < title > < quantity > < price > [ < description > ]
+####**offerupdate** < guid > < category > < title > < quantity > < price > [ < description > ]
 - **parameters:**
-  - < rand > offerkey
+  - < guid > offerkey
   - < category > category of offer, 255 chars max.
   - < offertitle > title of offer 255 chars max.
-  - < quantity > Quantity available.
+  - < quantity > Quantity available. NOTE : this is a summed value for offerupdate. 5 will add 5 more to the current value. -1 will subtract one. Use 0 to not change.
   - < price > Price per item/unit.
 - **returns:**
   - txid
@@ -207,22 +207,22 @@ Same functionality as aliasscan (Use aliasscan for now)
 
 ###offeraccept  *Accept an offer*
 
-####**offeraccept** < rand > < quantity >
+####**offeraccept** < guid > < quantity >
 - **parameters:**
-  - < rand > rand provided at offernew.
+  - < guid > guid provided at offernew.
   - < quantity > quantity to accept (optional, default set to 1)
 - **returns:**
   - txid
-  - rand
+  - guid
 - **example:**
   - $ syscoind offeraccept 8d0dabf5e7f2a4a300 5 
   - [ "e229b2ef75807a4d5ceaa46b92677647de6363e45a5374670e500522bf1f2e71", "24579dbfc4b4c3eb00" ]
 
 ###offerpay  *Sends seller payment in Syscoin, and also pays all syscoin service fees and marks the offer as ‘paid’*
 
-####**offerpay** < rand > [ < accept txid > ]  < message >
+####**offerpay** < guid > [ < accept txid > ]  < message >
 - **parameters:**
-  - < rand > rand provided at offeraccept.
+  - < guid > guid provided at offeraccept.
   - < txid > accept txid provided at offeraccept (only required if client is restarted)
   - < message > message to seller, accept-specific. ie: buyer’s shipping address. 
 - **returns:**
@@ -234,11 +234,11 @@ Same functionality as aliasscan (Use aliasscan for now)
 
 ###offerinfo *Show the values of an offer*
 
-####**offerinfo** < rand >
+####**offerinfo** < guid >
 - **parameters:**
-  - < rand > offer rand provided at offernew.
+  - < guid > offer guid provided at offernew.
 - **returns:**
-  - rand
+  - guid
   - txid
   - address
   - expires_in
@@ -282,9 +282,9 @@ Same functionality as aliasscan
 
 ###certissueractivate *Activate the certificate issuance*
 
-####**certissueractivate**  < rand > [ < txid > ]
+####**certissueractivate**  < guid > [ < txid > ]
 - **parameters:**
-  - < rand > rand provided at certissuernew.
+  - < guid > guid provided at certissuernew.
   - < txid > certissuer txid provided at certissuernew.
 - **returns:**
   - txid 
@@ -293,49 +293,49 @@ Same functionality as aliasscan
 
 ###certissuerupdate *Update a certificate issuer that you control(also resets expiration height)*
 
-####**certissuerupdate** < rand > < title > < data >
+####**certissuerupdate** < guid > < title > < data >
 - **parameters:**
-  - < rand > rand from certissuernew 
+  - < guid > guid from certissuernew 
   - < title > Title of certificate, 255 chars max.
   - < data > Data contained in certificate 64 KB
 - **returns:**
   - txid
-  - rand
+  - guid
 - **example:**
   - *$ syscoind certissuerupdate d9d333abf5d9714f "Nerd Academy - We Teach you the Art of Nerd" "This certificate issuer is used to generate certificate of accreditations for our students. These are lifetime certificate and not honored if transferred or stolen."*
   - *[ "76ac8fc00b06c722918e6702837077bb27cf56a384f12935f5b3d40c7b3efc62", "d9d333abf5d9714f" ]*
 
 ###certnew *Issue a new cert*
 
-####**certnew** < rand > < destaddress > < title > < data >
+####**certnew** < guid > < destaddress > < title > < data >
 - **parameters:**
-	- <rand> rand from certissuernew 
+	- <guid> guid from certissuernew 
 	- <destaddress> destination Syscoin address
 	- <title>: certificate title. max 255 chars.
 	- <data>: certificate data, max 64 kB
 - **returns**
   - txid,
-  - rand
+  - guid
 - **example:**
   - *$ syscoind certnew d9d333abf5d9714f Scq4eMRi8aRZxJXWas5MW8uxYCtZZgkcT1 "Certificate of Nerd Master" "Owner has achieved Nerd Mastery."
   - *[ "6b79eaf9c171fb92a5873f86e0b1069dbd79359b0f0cce14c201fc8fd2863587", "d532408da773032a" ]*
 
 ###certnew *Transfer a cert to another Syscoin address*
 
-####**certtransfer** < cert rand > < destaddress >
+####**certtransfer** < cert guid > < destaddress >
 - **parameters:**
-	- <rand> rand of certificate
+	- <guid> guid of certificate
 	- <destaddress> destination Syscoin address
 - **returns:**
   - txid 
 
 ###certissuerinfo *List all details about a specific certissuer*
 
-####**certissuerinfo** < rand >
+####**certissuerinfo** < guid >
 - **parameters:**
-	- <rand> certissuer rand
+	- <guid> certissuer guid
 - **returns:**
-  - rand
+  - guid
   - txid
   - address
   - expires_in
@@ -367,9 +367,9 @@ Same functionality as aliasscan
 
 ###certinfo *List all details about a specific cert*
 
-####**certinfo** < rand >
+####**certinfo** < guid >
 - **parameters:**
-	- <rand> cert rand
+	- <guid> cert guid
 - **returns:**
   - id
   - txid

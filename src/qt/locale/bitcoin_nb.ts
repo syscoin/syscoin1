@@ -2229,7 +2229,7 @@ Adresse: %4
     <message>
         <location line="-1"/>
         <source>Specify data directory</source>
-        <translation>Angi mappe for datafiler</translation>
+        <translation>Angi mappe for datafilter</translation>
     </message>
     <message>
         <location line="-9"/>

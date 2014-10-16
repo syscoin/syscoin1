@@ -1034,7 +1034,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
             error("CheckCertInputs() : null certissuer object");
 
         if (vvchArgs[0].size() > MAX_NAME_LENGTH)
-            return error("certissuer hex rand too long");
+            return error("certissuer hex guid too long");
 
         switch (op) {
         case OP_CERTISSUER_NEW:
@@ -1063,7 +1063,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 return error("CheckCertInputs() : certissueractivate tx without previous certissuernew tx");
 
             if (vvchArgs[1].size() > 20)
-                return error("certissueractivate tx with rand too big");
+                return error("certissueractivate tx with guid too big");
 
             if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
                 return error("certissueractivate tx with value too long");
@@ -1152,7 +1152,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         case OP_CERT_NEW:
 
             if (vvchArgs[1].size() > 20)
-                return error("certitem tx with rand too big");
+                return error("certitem tx with guid too big");
 
             if (vvchArgs[2].size() > 20)
                 return error("certitem tx with value too long");
@@ -1489,7 +1489,7 @@ Value certissuernew(const Array& params, bool fHelp) {
             throw JSONRPCError(RPC_WALLET_ERROR, strError);
         mapMyCertIssuers[vchCertIssuer] = wtx.GetHash();
     }
-    printf("SENT:CERTNEW : title=%s, rand=%s, tx=%s, data:\n%s\n",
+    printf("SENT:CERTNEW : title=%s, guid=%s, tx=%s, data:\n%s\n",
             stringFromVch(vchTitle).c_str(), stringFromVch(vchCertIssuer).c_str(),
             wtx.GetHash().GetHex().c_str(), bdata.c_str());
 
@@ -1504,9 +1504,9 @@ Value certissuernew(const Array& params, bool fHelp) {
 Value certissueractivate(const Array& params, bool fHelp) {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-                "certissueractivate <rand> [<tx>]\n"
+                "certissueractivate <guid> [<tx>]\n"
                         "Activate a certificate issuer after creating one with certissuernew.\n"
-                        "<rand> certificate issuer randkey.\n"
+                        "<guid> certificate issuer guidkey.\n"
                         + HelpRequiringPassphrase());
 
     // gather inputs
@@ -1606,7 +1606,7 @@ Value certissueractivate(const Array& params, bool fHelp) {
         if (strError != "")
             throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
-        printf("SENT:CERTACTIVATE: title=%s, rand=%s, tx=%s, data:\n%s\n",
+        printf("SENT:CERTACTIVATE: title=%s, guid=%s, tx=%s, data:\n%s\n",
                 stringFromVch(newCertIssuer.vchTitle).c_str(),
                 stringFromVch(vchCertIssuer).c_str(), wtx.GetHash().GetHex().c_str(),
                 stringFromVch(vchbdata).c_str() );
@@ -1617,9 +1617,9 @@ Value certissueractivate(const Array& params, bool fHelp) {
 Value certissuerupdate(const Array& params, bool fHelp) {
     if (fHelp || params.size() != 3)
         throw runtime_error(
-                "certissuerupdate <rand> <title> <data>\n"
+                "certissuerupdate <guid> <title> <data>\n"
                         "Perform an update on an certificate issuer you control.\n"
-                        "<rand> certificate issuer randkey.\n"
+                        "<guid> certificate issuer guidkey.\n"
                         "<title> certificate issuer title, 255 bytes max.\n"
                         "<data> certificate issuer data, 64 KB max.\n"
                         + HelpRequiringPassphrase());
@@ -1712,7 +1712,7 @@ Value certnew(const Array& params, bool fHelp) {
     if (fHelp || params.size() != 4)
         throw runtime_error("certnew <issuerkey> <address> <title> <data>\n"
                 "Issue a new certificate.\n" 
-                "<issuerkey> certificate issuer randkey.\n"
+                "<issuerkey> certificate issuer guidkey.\n"
                 "<title> certificate title, 255 bytes max.\n"
                 "<data> certificate data, 64 KB max.\n"
                 + HelpRequiringPassphrase());
@@ -1812,7 +1812,7 @@ Value certtransfer(const Array& params, bool fHelp) {
     if (fHelp || 2 != params.size())
         throw runtime_error("certtransfer <certkey> <address>\n"
                 "Transfer a certificate to a syscoin address.\n"
-                "<certkey> certificate randkey.\n"
+                "<certkey> certificate guidkey.\n"
                 "<address> receiver syscoin address.\n"
                 + HelpRequiringPassphrase());
 
@@ -1912,7 +1912,7 @@ Value certtransfer(const Array& params, bool fHelp) {
 
 Value certissuerinfo(const Array& params, bool fHelp) {
     if (fHelp || 1 != params.size())
-        throw runtime_error("certissuerinfo <rand>\n"
+        throw runtime_error("certissuerinfo <guid>\n"
                 "Show stored values of an certificate issuer.\n");
 
     Object oLastCertIssuer;
@@ -1982,7 +1982,7 @@ Value certissuerinfo(const Array& params, bool fHelp) {
 
 Value certinfo(const Array& params, bool fHelp) {
     if (fHelp || 1 != params.size())
-        throw runtime_error("certissuerinfo <rand>\n"
+        throw runtime_error("certissuerinfo <guid>\n"
                 "Show stored values of a single certificate and its issuer.\n");
 
     vector<unsigned char> vchCertRand = ParseHex(params[0].get_str());

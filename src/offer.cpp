@@ -1043,7 +1043,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			error("CheckOfferInputs() : null offer object");
 
 		if (vvchArgs[0].size() > MAX_NAME_LENGTH)
-			return error("offer hex rand too long");
+			return error("offer hex guid too long");
 
 		switch (op) {
 		case OP_OFFER_NEW:
@@ -1072,7 +1072,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				return error("CheckOfferInputs() : offeractivate tx without previous offernew tx");
 
 			if (vvchArgs[1].size() > 20)
-				return error("offeractivate tx with rand too big");
+				return error("offeractivate tx with guid too big");
 
 			if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
 				return error("offeractivate tx with value too long");
@@ -1161,7 +1161,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		case OP_OFFER_ACCEPT:
 
 			if (vvchArgs[1].size() > 20)
-				return error("offeraccept tx with rand too big");
+				return error("offeraccept tx with guid too big");
 
 			if (vvchArgs[2].size() > 20)
 				return error("offeraccept tx with value too long");
@@ -1558,7 +1558,7 @@ Value offernew(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, strError);
 		mapMyOffers[vchOffer] = wtx.GetHash();
 	}
-	printf("SENT:OFFERNEW : title=%s, rand=%s, tx=%s, data:\n%s\n",
+	printf("SENT:OFFERNEW : title=%s, guid=%s, tx=%s, data:\n%s\n",
 			stringFromVch(vchTitle).c_str(), stringFromVch(vchOffer).c_str(),
 			wtx.GetHash().GetHex().c_str(), bdata.c_str());
 
@@ -1573,7 +1573,7 @@ Value offernew(const Array& params, bool fHelp) {
 Value offeractivate(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 1 || params.size() > 2)
 		throw runtime_error(
-				"offeractivate <rand> [<tx>]\n"
+				"offeractivate <guid> [<tx>]\n"
 						"Activate an offer after creating it with offernew.\n"
 						+ HelpRequiringPassphrase());
 
@@ -1674,7 +1674,7 @@ Value offeractivate(const Array& params, bool fHelp) {
 		if (strError != "")
 			throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
-		printf("SENT:OFFERACTIVATE: title=%s, rand=%s, tx=%s, data:\n%s\n",
+		printf("SENT:OFFERACTIVATE: title=%s, guid=%s, tx=%s, data:\n%s\n",
 				stringFromVch(newOffer.sTitle).c_str(),
 				stringFromVch(vchOffer).c_str(), wtx.GetHash().GetHex().c_str(),
 				stringFromVch(vchbdata).c_str() );
@@ -1685,7 +1685,7 @@ Value offeractivate(const Array& params, bool fHelp) {
 Value offerupdate(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 5 || params.size() > 6)
 		throw runtime_error(
-				"offerupdate <rand> <category> <title> <quantity> <price> [<description>]\n"
+				"offerupdate <guid> <category> <title> <quantity> <price> [<description>]\n"
 						"Perform an update on an offer you control.\n"
 						+ HelpRequiringPassphrase());
 
@@ -1789,7 +1789,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 
 Value offeraccept(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 1 || params.size() > 2)
-		throw runtime_error("offeraccept <rand> [<quantity]>\n"
+		throw runtime_error("offeraccept <guid> [<quantity]>\n"
 				"Accept an offer.\n" + HelpRequiringPassphrase());
 
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
@@ -1886,9 +1886,9 @@ Value offeraccept(const Array& params, bool fHelp) {
 
 Value offerpay(const Array& params, bool fHelp) {
 	if (fHelp || 2 > params.size() || params.size() > 3)
-		throw runtime_error("offerpay <rand> [<accepttxid>] <message>\n"
+		throw runtime_error("offerpay <guid> [<accepttxid>] <message>\n"
 				"Pay for a confirmed accepted offer.\n"
-				"<rand> randkey from offeraccept txn.\n"
+				"<guid> guidkey from offeraccept txn.\n"
 				"<accepttxid> offeraccept txn id, if daemon restarted.\n"
 				"<message> payment message to seller, 16 KB max.\n"
 				+ HelpRequiringPassphrase());
@@ -2005,7 +2005,7 @@ Value offerpay(const Array& params, bool fHelp) {
 
 Value offerinfo(const Array& params, bool fHelp) {
 	if (fHelp || 1 != params.size())
-		throw runtime_error("offerinfo <rand>\n"
+		throw runtime_error("offerinfo <guid>\n"
 				"Show values of an offer.\n");
 
 	Object oLastOffer;

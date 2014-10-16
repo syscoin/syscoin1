@@ -295,7 +295,7 @@ static const CRPCCommand vRPCCommands[] =
     { "datalist",         &datalist,        false,      false,      true },
     { "datainfo",         &datainfo,        false,      false,      true },
     { "datahistory",      &datahistory,     false,      false,      true },
-    { "datafiler",        &datafilter,      false,      false,      true },
+    { "datafilter",        &datafilter,      false,      false,      true },
 
     // use the blockchain as a distributed marketplace
     { "offernew",         &offernew,       false,      false,      true },
