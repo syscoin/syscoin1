@@ -1192,17 +1192,20 @@ void MapPort(bool)
 // The first name is used as information source for addrman.
 // The second name should resolve to a list of seed addresses.
 static const char *strMainNetDNSSeed[][2] = {
+    {"seed.syscoin.tk", "seed.syscoin.tk"}, //sys team seeder [jon]
+    {"seed.syscoinseed.tk", "syscoinseed.tk"}, //sys team seeder [jon]
+    {"107.170.159.167", "107.170.159.167"}, //sys team seeder [dan]
+    {"104.131.228.46", "104.131.228.46"}, //sys team seeder [dan]
     {"stella.hopto.org", "stella.hopto.org"}, //sys team supernode [seb]
     {"syscoin.selfip.com", "syscoin.selfip.com"}, //sys team supernode [dw]
     {"dnsseed.syscoin.org", "dnsseed.syscoin.org"}, //sys team supernode DNS Seed [jon]
-    {"node.syscoin.me", "node.syscoin.me"}, //supernode
-    {"dnsseed.syscoin.me", "dnsseed.syscoin.me"}, //supernode direct ip
     {NULL, NULL}
 };
 
 static const char *strTestNetDNSSeed[][2] = {
     {"stella.hopto.org", "stella.hopto.org"}, //sys team supernode [seb]
     {"syscoin.selfip.com", "syscoin.selfip.com"}, //sys team supernode [dw]
+    {"testnet-seed.syscoin.tk", "testnet-seed.syscoin.tk"}, //sys team supernode [seb]
     {NULL, NULL}
 };
 
