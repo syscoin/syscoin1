@@ -251,8 +251,8 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     </message>
     <message>
         <location line="+1"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR LITECOINS&lt;/b&gt;!</source>
-        <translation>Atención: ¡Si codificas tu billetera y pierdes la contraseña perderás &lt;b&gt;TODOS TUS LITECOINS&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR Syscoins&lt;/b&gt;!</source>
+        <translation>Atención: ¡Si codificas tu billetera y pierdes la contraseña perderás &lt;b&gt;TODOS TUS Syscoins&lt;/b&gt;!</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1451,7 +1451,7 @@ Dirección: %4</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Syscoin address (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
+        <source>Enter a Syscoin address or alias (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
         <translation>Introduce una dirección Syscoin (ej. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</translation>
     </message>
 </context>
@@ -1568,7 +1568,7 @@ Dirección: %4</translation>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a Syscoin address (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
+        <source>Enter a Syscoin address or alias (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
         <translation>Introduce una dirección Syscoin (ej. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</translation>
     </message>
     <message>

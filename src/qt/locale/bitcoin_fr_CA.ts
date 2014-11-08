@@ -248,7 +248,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     </message>
     <message>
         <location line="+1"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR LITECOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR Syscoins&lt;/b&gt;!</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1444,7 +1444,7 @@ Address: %4
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Syscoin address (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
+        <source>Enter a Syscoin address or alias (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
         <translation type="unfinished"/>
     </message>
 </context>
@@ -1561,7 +1561,7 @@ Address: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a Syscoin address (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
+        <source>Enter a Syscoin address or alias (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
         <translation type="unfinished"/>
     </message>
     <message>

@@ -372,12 +372,13 @@ Value listaddressgroupings(const Array& params, bool fHelp)
         BOOST_FOREACH(CTxDestination address, grouping)
         {
             Array addressInfo;
-            addressInfo.push_back(CBitcoinAddress(address).ToString());
+			CBitcoinAddress myaddress = CBitcoinAddress(address);
+            addressInfo.push_back(myaddress.ToString());
             addressInfo.push_back(ValueFromAmount(balances[address]));
             {
-                LOCK(pwalletMain->cs_wallet);
-                if (pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get()) != pwalletMain->mapAddressBook.end())
-                    addressInfo.push_back(pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get())->second);
+                TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
+                if (pwalletMain->mapAddressBook.find(myaddress.Get()) != pwalletMain->mapAddressBook.end())
+                    addressInfo.push_back(pwalletMain->mapAddressBook.find(myaddress.Get())->second);
             }
             jsonGrouping.push_back(addressInfo);
         }
@@ -1070,21 +1071,20 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             if (fNameTx) {
                 vector<vector<unsigned char> > vvchArgs;
                 int op,nOut, nTxOut;
-                bool good = DecodeAliasTx(wtx, op, nOut, vvchArgs, -1);
-                if(good && IsAliasOp(op)) {
-                    nTxOut = IndexOfNameOutput(wtx);
-                    ExtractAliasAddress(wtx.vout[nTxOut].scriptPubKey, strAddress);
-                } 
-                good = DecodeOfferTx(wtx, op, nOut, vvchArgs, -1);
-                if(good && IsOfferOp(op)) {
-                    nTxOut = IndexOfOfferOutput(wtx);
-                    ExtractOfferAddress(wtx.vout[nTxOut].scriptPubKey, strAddress);
-                } 
-                good = DecodeCertTx(wtx, op, nOut, vvchArgs, -1);
-                if(good && IsCertOp(op)) {
-                    nTxOut = IndexOfCertIssuerOutput(wtx);
-                    ExtractCertIssuerAddress(wtx.vout[nTxOut].scriptPubKey, strAddress);
-                } 
+                if(DecodeAliasTx(wtx, op, nOut, vvchArgs, -1)) {
+                    if(IsAliasOp(op)) {
+                        nTxOut = IndexOfNameOutput(wtx);
+                        ExtractAliasAddress(wtx.vout[nTxOut].scriptPubKey, strAddress);
+                    } 
+                    else if(IsOfferOp(op)) {
+                        nTxOut = IndexOfOfferOutput(wtx);
+                        ExtractOfferAddress(wtx.vout[nTxOut].scriptPubKey, strAddress);
+                    } 
+                    else if(IsCertOp(op)) {
+                        nTxOut = IndexOfCertIssuerOutput(wtx);
+                        ExtractCertIssuerAddress(wtx.vout[nTxOut].scriptPubKey, strAddress);
+                    } 
+                }
             }
             entry.push_back(Pair("address", strAddress));
             entry.push_back(Pair("category", "send"));

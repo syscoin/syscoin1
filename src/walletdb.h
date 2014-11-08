@@ -34,9 +34,9 @@ private:
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
 public:
-    bool WriteAlias(const std::string& strAddress, const std::string& strName);
+    bool WriteName(const std::string& strAddress, const std::string& strName);
 
-    bool EraseAlias(const std::string& strAddress);
+    bool EraseName(const std::string& strAddress);
 
     bool WriteAliasFirstUpdate(const std::vector<unsigned char>& vchName,
                              const uint256& hex,

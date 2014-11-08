@@ -382,6 +382,7 @@ std::string HelpMessage()
         "  -keypool=<n>           " + _("Set key pool size to <n> (default: 100)") + "\n" +
         "  -rescan                " + _("Rescan the block chain for missing wallet transactions") + "\n" +
         "  -salvagewallet         " + _("Attempt to recover private keys from a corrupt wallet.dat") + "\n" +
+        "  -walletpassword=<pw>   " + _("Unlock the wallet on startup.") + "\n" +
         "  -checkblocks=<n>       " + _("How many blocks to check at startup (default: 288, 0 = all)") + "\n" +
         "  -checklevel=<n>        " + _("How thorough the block verification is (0-4, default: 3)") + "\n" +
         "  -txindex               " + _("Maintain a full transaction index (default: 1)") + "\n" +
@@ -908,8 +909,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 pofferdb = new COfferDB(nNameDBCache*2, false, fReindex);
                 pcertdb = new CCertDB(nNameDBCache*2, false, fReindex);
 
-                if (fReindex)
-                    pblocktree->WriteReindexing(true);
+                if (fReindex) pblocktree->WriteReindexing(true);
 
                 if (!LoadBlockIndex()) {
                     strLoadError = _("Error loading block database");
@@ -934,7 +934,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 }
 
                 uiInterface.InitMessage(_("Verifying blocks..."));
-                if (!VerifyDB(GetArg("-checklevel", 3),
+                if (!VerifyDB(GetArg("-checklevel", 4),
                               GetArg( "-checkblocks", 288))) {
                     strLoadError = _("Corrupted block database detected");
                     break;
@@ -1073,6 +1073,19 @@ bool AppInit2(boost::thread_group& threadGroup)
         printf(" wallet      %15"PRI64d"ms\n", GetTimeMillis() - nStart);
 
         RegisterWallet(pwalletMain);
+
+        if(mapArgs["-walletpassword"] != "") {
+            SecureString strWalletPass;
+            strWalletPass.reserve(100);
+            strWalletPass = mapArgs["-walletpassword"].c_str();
+            if (strWalletPass.length() > 0)
+            {
+                if (!pwalletMain->Unlock(strWalletPass))
+                    strErrors << _("unable to unlock wallet") << "\n";
+            }
+            printf("Unencrypted wallet on startup\n");
+        }
+
 
         CBlockIndex *pindexRescan = pindexBest;
         if (GetBoolArg("-rescan"))

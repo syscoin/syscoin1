@@ -286,7 +286,7 @@ static const CRPCCommand vRPCCommands[] =
     { "aliasfilter",       &aliasfilter,       false,      false,      true },
     { "aliasscan",         &aliasscan,         false,      false,      true },
     { "aliasclean",        &aliasclean,         false,      false,      true },
-    { "sendtoalias",       &sendtoalias,       false,      false,      true },
+    { "getaliasfees",      &getaliasfees,         false,      false,      true },
 
 	// use the blockchain to store provably-ownable data
     { "datanew",          &datanew,         false,      false,      true },
@@ -295,20 +295,22 @@ static const CRPCCommand vRPCCommands[] =
     { "datalist",         &datalist,        false,      false,      true },
     { "datainfo",         &datainfo,        false,      false,      true },
     { "datahistory",      &datahistory,     false,      false,      true },
-    { "datafiler",        &datafilter,      false,      false,      true },
+    { "datafilter",        &datafilter,      false,      false,      true },
 
     // use the blockchain as a distributed marketplace
-    { "offernew",         &offernew,     false,      false,      true },
-    { "offeractivate",    &offeractivate,false,      false,      true },
-    { "offerupdate",      &offerupdate,  false,      false,      true },
-    { "offeraccept",      &offeraccept,  false,      false,      true },
-    { "offerpay",         &offerpay,     false,      false,      true },
-    { "offerlist",        &offerlist,    false,      false,      true },
-    { "offerinfo",        &offerinfo,    false,      false,      true },
-    { "offerhistory",     &offerhistory, false,      false,      true },
-    { "offerscan",        &offerscan,    false,      false,      true },
-    { "offerclean",       &offerclean,    false,      false,      true },
-    { "offerfilter",      &offerfilter,  false,      false,      true },
+    { "offernew",         &offernew,       false,      false,      true },
+    { "offeractivate",    &offeractivate,  false,      false,      true },
+    { "offerupdate",      &offerupdate,    false,      false,      true },
+    { "offeraccept",      &offeraccept,    false,      false,      true },
+    { "offerpay",         &offerpay,       false,      false,      true },
+    { "offerlist",        &offerlist,      false,      false,      true },
+    { "offeracceptlist",  &offeracceptlist,false,      false,      true },
+    { "offerinfo",        &offerinfo,      false,      false,      true },
+    { "offerhistory",     &offerhistory,   false,      false,      true },
+    { "offerscan",        &offerscan,      false,      false,      true },
+    { "offerclean",       &offerclean,     false,      false,      true },
+    { "offerfilter",      &offerfilter,    false,      false,      true },
+    { "getofferfees",      &getofferfees,         false,      false,      true },
 
   // use the blockchain as a certificate issuance platform
   { "certissuernew",         &certissuernew,     false,      false,      true },
@@ -323,20 +325,7 @@ static const CRPCCommand vRPCCommands[] =
   { "certissuerscan",        &certissuerscan,    false,      false,      true },
   { "certissuerclean",       &certissuerclean,   false,      false,      true },
   { "certissuerfilter",      &certissuerfilter,  false,      false,      true },
-
-  // use the blockchain as a platform for escrow transactions
-  { "escrownew",       &phrpcfunc,     false,      false,      true },
-  { "escrowcancel",    &phrpcfunc,false,      false,      true },
-  { "escrowaccept",    &phrpcfunc,  false,      false,      true },
-  { "escrowreject",    &phrpcfunc,           false,      false,      true },
-  { "escrowrelease",   &phrpcfunc,      false,      false,      true },
-  { "escrowextend",    &phrpcfunc,      false,      false,      true },
-  { "escrowburn",      &phrpcfunc,      false,      false,      true },
-  { "escrowlist",      &phrpcfunc,    false,      false,      true },
-  { "escrowinfo",      &phrpcfunc,    false,      false,      true },
-  { "escrowhistory",   &phrpcfunc, false,      false,      true },
-  { "escrowscan",      &phrpcfunc,    false,      false,      true },
-  { "escrowfilter",    &phrpcfunc,  false,      false,      true },
+  { "getcertfees",           &getcertfees,        false,      false,      true },
 
 };
 
@@ -959,7 +948,7 @@ void JSONRequest::parse(const Value& valRequest)
     if (valMethod.type() != str_type)
         throw JSONRPCError(RPC_INVALID_REQUEST, "Method must be a string");
     strMethod = valMethod.get_str();
-    if (strMethod != "getwork" && strMethod != "getworkex" && strMethod != "getblocktemplate")
+    if (strMethod != "getwork" && strMethod != "getworkex" && strMethod != "getblocktemplate" && strMethod != "getinfo")
         printf("ThreadRPCServer method=%s\n", strMethod.c_str());
 
     // Parse params
@@ -1269,7 +1258,6 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "verifychain"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
 
     /* special commands added in syscoin, list incomplete. */
-    if (strMethod == "sendtoalias"            && n > 1) ConvertTo<double>(params[1]);
     if (strMethod == "aliasfilter"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "aliasfilter"            && n > 2) ConvertTo<boost::int64_t>(params[2]);
     if (strMethod == "aliasfilter"            && n > 3) ConvertTo<boost::int64_t>(params[3]);

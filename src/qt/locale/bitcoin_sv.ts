@@ -249,7 +249,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     </message>
     <message>
         <location line="+1"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR LITECOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR Syscoins&lt;/b&gt;!</source>
         <translation>VARNING: Om du krypterar din plånbok och glömmer ditt lösenord, kommer du att &lt;b&gt;FÖRLORA ALLA DINA TILLGÅNGAR&lt;/b&gt;!</translation>
     </message>
     <message>
@@ -1449,7 +1449,7 @@ Adress: %4
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Syscoin address (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
+        <source>Enter a Syscoin address or alias (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
         <translation>Ange en Syscoin-adress (t.ex. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</translation>
     </message>
 </context>
@@ -1566,7 +1566,7 @@ Adress: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a Syscoin address (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
+        <source>Enter a Syscoin address or alias (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
         <translation>Ange en Syscoin-adress (t.ex. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</translation>
     </message>
     <message>

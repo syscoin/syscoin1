@@ -198,7 +198,20 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
     CBlockIndex* pindex = pindexRescan;
     
     {
-	LOCK(pwalletMain->cs_wallet);
+	TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
+
+	uint64 startHeight = pindexRescan->nHeight;
+	while(pindex->pnext != NULL) pindex = pindex->pnext;
+	uint64 endHeight = pindex->nHeight;
+
+	BOOST_FOREACH(COfferFee &oFee, lstOfferFees) {
+		if (oFee.nHeight >= startHeight && oFee.nHeight < endHeight) {
+			oFee.nFee = 0;
+			break;
+		}
+	}
+
+    CBlockIndex* pindex = pindexRescan;
     while (pindex) {  
 
         int nHeight = pindex->nHeight;
@@ -322,64 +335,74 @@ int CheckOfferTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
 int GetOfferTxHashHeight(const uint256 txHash) {
 	CDiskTxPos postx;
 	pblocktree->ReadTxIndex(txHash, postx);
-	return postx.nPos;
+	return GetOfferTxPosHeight(postx);
 }
 
 uint64 GetOfferFeeSubsidy(unsigned int nHeight) {
-	
-	unsigned int h12 = 360 * 12;
-	unsigned int nTargetTime = 0;
-	unsigned int nTarget1hrTime = 0;
-	unsigned int blk1hrht = nHeight - 1;
-	unsigned int blk12hrht = nHeight - 1;
-	bool bFound = false;
 	uint64 hr1 = 1, hr12 = 1;
+	{
+		TRY_LOCK(cs_main, cs_trymain);
+		unsigned int h12 = 360 * 12;
+		unsigned int nTargetTime = 0;
+		unsigned int nTarget1hrTime = 0;
+		unsigned int blk1hrht = nHeight - 1;
+		unsigned int blk12hrht = nHeight - 1;
+		bool bFound = false;
 
-	BOOST_FOREACH(COfferFee &nmFee, lstOfferFees) {
-		if(nmFee.nHeight <= nHeight)
-			bFound = true;
-		if(bFound) {
-			if(nTargetTime==0) {
-				hr1 = hr12 = 0;
-				nTargetTime = nmFee.nTime - h12;
-				nTarget1hrTime = nmFee.nTime - (h12/12);
-			}
-			if(nmFee.nTime > nTargetTime) {
-				hr12 += nmFee.nFee;
-				blk12hrht = nmFee.nHeight;
-				if(nmFee.nTime > nTarget1hrTime) {
-					hr1 += nmFee.nFee;
-					blk1hrht = nmFee.nHeight;
+		BOOST_FOREACH(COfferFee &nmFee, lstOfferFees) {
+			if(nmFee.nHeight <= nHeight)
+				bFound = true;
+			if(bFound) {
+				if(nTargetTime==0) {
+					hr1 = hr12 = 0;
+					nTargetTime = nmFee.nTime - h12;
+					nTarget1hrTime = nmFee.nTime - (h12/12);
+				}
+				if(nmFee.nTime > nTargetTime) {
+					hr12 += nmFee.nFee;
+					blk12hrht = nmFee.nHeight;
+					if(nmFee.nTime > nTarget1hrTime) {
+						hr1 += nmFee.nFee;
+						blk1hrht = nmFee.nHeight;
+					}
 				}
 			}
 		}
+		hr12 /= (nHeight - blk12hrht) + 1;
+		hr1 /= (nHeight - blk1hrht) + 1;
 	}
-	hr12 /= (nHeight - blk12hrht) + 1;
-	hr1 /= (nHeight - blk1hrht) + 1;
 	uint64 nSubsidyOut = hr1 > hr12 ? hr1 : hr12;
 	return nSubsidyOut;
 }
 
+bool RemoveOfferFee(COfferFee &txnVal) {
+	{
+		TRY_LOCK(cs_main, cs_trymain);
+
+		COfferFee *theval = NULL;
+
+		BOOST_FOREACH(COfferFee &nmTxnValue, lstOfferFees) {
+			if (txnVal.hash == nmTxnValue.hash
+			 && txnVal.nHeight == nmTxnValue.nHeight) {
+				theval = &nmTxnValue;
+				break;
+			}
+		}
+		if(theval)
+			lstOfferFees.remove(*theval);
+
+		return theval != NULL;
+	}
+}
+
 bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
-	unsigned int h12 = 3600 * 12;
+	TRY_LOCK(cs_main, cs_trymain);
 	list<COfferFee> txnDup;
 	COfferFee oFee;
 	oFee.nTime = pindex->nTime;
 	oFee.nHeight = pindex->nHeight;
 	oFee.nFee = nValue;
 	bool bFound = false;
-	
-	unsigned int tHeight =
-			pindex->nHeight - 2880 < 0 ? 0 : pindex->nHeight - 2880;
-	
-	while (true) {
-		if (lstOfferFees.size() > 0
-				&& (lstOfferFees.back().nTime + h12 < pindex->nTime
-						|| lstOfferFees.back().nHeight < tHeight))
-			lstOfferFees.pop_back();
-		else
-			break;
-	}
 	BOOST_FOREACH(COfferFee &nmFee, lstOfferFees) {
 		if (oFee.hash == nmFee.hash
 				&& oFee.nHeight == nmFee.nHeight) {
@@ -390,7 +413,7 @@ bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
 	if (!bFound)
 		lstOfferFees.push_front(oFee);
 
-	return true;
+	return bFound;
 }
 
 int64 GetOfferNetFee(const CTransaction& tx) {
@@ -615,8 +638,6 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 		vector<vector<unsigned char> >& vvch, int nHeight) {
 	bool found = false;
 
-	if (nHeight < 0)
-		nHeight = pindexBest->nHeight;
 
 	// Strict check - bug disallowed
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
@@ -659,8 +680,6 @@ bool DecodeOfferTx(const CCoins& tx, int& op, int& nOut,
 		vector<vector<unsigned char> >& vvch, int nHeight) {
 	bool found = false;
 
-	if (nHeight < 0)
-		nHeight = pindexBest->nHeight;
 
 	// Strict check - bug disallowed
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
@@ -1018,14 +1037,13 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		int64 nNetFee;
 
 		// unserialize offer object from txn, check for valid
-		COffer theOffer;
+		COffer theOffer(tx);
 		COfferAccept theOfferAccept;
-		theOffer.UnserializeFromTx(tx);
 		if (theOffer.IsNull())
 			error("CheckOfferInputs() : null offer object");
 
 		if (vvchArgs[0].size() > MAX_NAME_LENGTH)
-			return error("offer hex rand too long");
+			return error("offer hex guid too long");
 
 		switch (op) {
 		case OP_OFFER_NEW:
@@ -1054,7 +1072,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				return error("CheckOfferInputs() : offeractivate tx without previous offernew tx");
 
 			if (vvchArgs[1].size() > 20)
-				return error("offeractivate tx with rand too big");
+				return error("offeractivate tx with guid too big");
 
 			if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
 				return error("offeractivate tx with value too long");
@@ -1143,7 +1161,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		case OP_OFFER_ACCEPT:
 
 			if (vvchArgs[1].size() > 20)
-				return error("offeraccept tx with rand too big");
+				return error("offeraccept tx with guid too big");
 
 			if (vvchArgs[2].size() > 20)
 				return error("offeraccept tx with value too long");
@@ -1285,7 +1303,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 									theOffer.GetRemQty(), 
 									stringFromVch(theOfferAccept.vchRand).c_str());
 								{
-									LOCK(cs_main);
+									TRY_LOCK(cs_main, cs_trymain);
 									std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = 
 										mapOfferAcceptPending.find(vvchArgs[1]);
 									if (mi != mapOfferAcceptPending.end())
@@ -1348,14 +1366,14 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					// activate or update - seller txn
                     if (op == OP_OFFER_ACTIVATE || op == OP_OFFER_UPDATE) {
 						vector<unsigned char> vchOffer = op == OP_OFFER_NEW ? vchFromString(HexStr(vvchArgs[0])) : vvchArgs[0];
-						LOCK(cs_main);
+						TRY_LOCK(cs_main, cs_trymain);
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferPending.find(vchOffer);
 						if (mi != mapOfferPending.end())
 							mi->second.erase(tx.GetHash());
 					}
 					// accept or pay - buyer txn
 					else {
-						LOCK(cs_main);
+						TRY_LOCK(cs_main, cs_trymain);
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferAcceptPending.find(vvchArgs[1]);
 						if (mi != mapOfferAcceptPending.end())
 							mi->second.erase(tx.GetHash());
@@ -1370,10 +1388,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							tx.GetHash().ToString().c_str(), 
 							nHeight, nTheFee / COIN);
 				}
-			}
-
-			if (pindexBlock->nHeight != pindexBest->nHeight) {
-
 			}
 		}
 	}
@@ -1394,7 +1408,6 @@ bool ExtractOfferAddress(const CScript& script, string& address) {
 	string strOffer;
 	if (op == OP_OFFER_NEW) {
 #ifdef GUI
-		LOCK(cs_main);
 
 		std::map<uint160, std::vector<unsigned char> >::const_iterator mi = mapMyOfferHashes.find(uint160(vvch[0]));
 		if (mi != mapMyOfferHashes.end())
@@ -1430,6 +1443,22 @@ int GetOfferTxPosHeight(const CDiskTxPos& txPos) {
 int GetOfferTxPosHeight2(const CDiskTxPos& txPos, int nHeight) {
     nHeight = GetOfferTxPosHeight(txPos);
     return nHeight;
+}
+
+Value getofferfees(const Array& params, bool fHelp) {
+	if (fHelp || 0 != params.size())
+		throw runtime_error(
+				"getaliasfees\n"
+						"get current service fees for alias transactions\n");
+	Object oRes;
+	oRes.push_back(Pair("height", nBestHeight ));
+	oRes.push_back(Pair("subsidy", ValueFromAmount(GetOfferFeeSubsidy(nBestHeight) )));
+	oRes.push_back(Pair("new_fee", (double)1.0));
+	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetOfferNetworkFee(1, nBestHeight) )));
+	oRes.push_back(Pair("update_fee", ValueFromAmount(GetOfferNetworkFee(2, nBestHeight) )));
+	oRes.push_back(Pair("pay_fee", ValueFromAmount(GetOfferNetworkFee(3, nBestHeight) )));
+	return oRes;
+
 }
 
 Value offernew(const Array& params, bool fHelp) {
@@ -1522,7 +1551,6 @@ Value offernew(const Array& params, bool fHelp) {
 
 	// send transaction
 	{
-		LOCK(cs_main);
 		EnsureWalletIsUnlocked();
 		string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
 				false, bdata);
@@ -1530,7 +1558,7 @@ Value offernew(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, strError);
 		mapMyOffers[vchOffer] = wtx.GetHash();
 	}
-	printf("SENT:OFFERNEW : title=%s, rand=%s, tx=%s, data:\n%s\n",
+	printf("SENT:OFFERNEW : title=%s, guid=%s, tx=%s, data:\n%s\n",
 			stringFromVch(vchTitle).c_str(), stringFromVch(vchOffer).c_str(),
 			wtx.GetHash().GetHex().c_str(), bdata.c_str());
 
@@ -1545,7 +1573,7 @@ Value offernew(const Array& params, bool fHelp) {
 Value offeractivate(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 1 || params.size() > 2)
 		throw runtime_error(
-				"offeractivate <rand> [<tx>]\n"
+				"offeractivate <guid> [<tx>]\n"
 						"Activate an offer after creating it with offernew.\n"
 						+ HelpRequiringPassphrase());
 
@@ -1646,7 +1674,7 @@ Value offeractivate(const Array& params, bool fHelp) {
 		if (strError != "")
 			throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
-		printf("SENT:OFFERACTIVATE: title=%s, rand=%s, tx=%s, data:\n%s\n",
+		printf("SENT:OFFERACTIVATE: title=%s, guid=%s, tx=%s, data:\n%s\n",
 				stringFromVch(newOffer.sTitle).c_str(),
 				stringFromVch(vchOffer).c_str(), wtx.GetHash().GetHex().c_str(),
 				stringFromVch(vchbdata).c_str() );
@@ -1657,7 +1685,7 @@ Value offeractivate(const Array& params, bool fHelp) {
 Value offerupdate(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 5 || params.size() > 6)
 		throw runtime_error(
-				"offerupdate <rand> <category> <title> <quantity> <price> [<description>]\n"
+				"offerupdate <guid> <category> <title> <quantity> <price> [<description>]\n"
 						"Perform an update on an offer you control.\n"
 						+ HelpRequiringPassphrase());
 
@@ -1761,7 +1789,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 
 Value offeraccept(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 1 || params.size() > 2)
-		throw runtime_error("offeraccept <rand> [<quantity]>\n"
+		throw runtime_error("offeraccept <guid> [<quantity]>\n"
 				"Accept an offer.\n" + HelpRequiringPassphrase());
 
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
@@ -1858,9 +1886,9 @@ Value offeraccept(const Array& params, bool fHelp) {
 
 Value offerpay(const Array& params, bool fHelp) {
 	if (fHelp || 2 > params.size() || params.size() > 3)
-		throw runtime_error("offerpay <rand> [<accepttxid>] <message>\n"
+		throw runtime_error("offerpay <guid> [<accepttxid>] <message>\n"
 				"Pay for a confirmed accepted offer.\n"
-				"<rand> randkey from offeraccept txn.\n"
+				"<guid> guidkey from offeraccept txn.\n"
 				"<accepttxid> offeraccept txn id, if daemon restarted.\n"
 				"<message> payment message to seller, 16 KB max.\n"
 				+ HelpRequiringPassphrase());
@@ -1977,14 +2005,13 @@ Value offerpay(const Array& params, bool fHelp) {
 
 Value offerinfo(const Array& params, bool fHelp) {
 	if (fHelp || 1 != params.size())
-		throw runtime_error("offerinfo <rand>\n"
+		throw runtime_error("offerinfo <guid>\n"
 				"Show values of an offer.\n");
 
 	Object oLastOffer;
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	string offer = stringFromVch(vchOffer);
 	{
-		LOCK(pwalletMain->cs_wallet);
 		vector<COffer> vtxPos;
 		if (!pofferdb->ReadOffer(vchOffer, vtxPos))
 			throw JSONRPCError(RPC_WALLET_ERROR,
@@ -2014,10 +2041,10 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("height", sHeight));
 			oOfferAccept.push_back(Pair("time", sTime));
 			oOfferAccept.push_back(Pair("quantity", strprintf("%llu", ca.nQty)));
-			oOfferAccept.push_back(Pair("price", (double)ca.nPrice / COIN));
+			oOfferAccept.push_back(Pair("price", ValueFromAmount(ca.nPrice)));
 			oOfferAccept.push_back(Pair("paid", ca.bPaid ? "true" : "false"));
 			if(ca.bPaid) {
-				oOfferAccept.push_back(Pair("fee", (double)ca.nFee / COIN));
+				oOfferAccept.push_back(Pair("service_fee", ValueFromAmount(ca.nFee)));
 				oOfferAccept.push_back(Pair("paytxid", ca.txPayId.GetHex() ));
 				oOfferAccept.push_back(Pair("message", stringFromVch(ca.vchMessage)));
 			}
@@ -2028,6 +2055,7 @@ Value offerinfo(const Array& params, bool fHelp) {
         if (GetValueOfOfferTxHash(txHash, vchValue, offerHash, nHeight)) {
 			oOffer.push_back(Pair("id", offer));
 			oOffer.push_back(Pair("txid", tx.GetHash().GetHex()));
+			oOffer.push_back(Pair("service_fee", ValueFromAmount(theOffer.nFee)));
 			string strAddress = "";
 			GetOfferAddress(tx, strAddress);
 			oOffer.push_back(Pair("address", strAddress));
@@ -2043,8 +2071,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
 			oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
 			oOffer.push_back(Pair("quantity", strprintf("%llu", theOffer.GetRemQty())));
-			oOffer.push_back(Pair("price", (double)theOffer.nPrice / COIN));
-			oOffer.push_back(Pair("fee", (double)theOffer.nFee / COIN));
+			oOffer.push_back(Pair("price", ValueFromAmount(theOffer.nFee) ) );
 			oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 			oOffer.push_back(Pair("accepts", aoOfferAccepts));
 			oLastOffer = oOffer;
@@ -2073,7 +2100,6 @@ Value offerlist(const Array& params, bool fHelp) {
     map< vector<unsigned char>, Object > vNamesO;
 
     {
-        LOCK(pwalletMain->cs_wallet);
 
         uint256 blockHash;
         uint256 hash;
@@ -2097,7 +2123,9 @@ Value offerlist(const Array& params, bool fHelp) {
             // decode txn, skip non-alias txns
             vector<vector<unsigned char> > vvch;
             int op, nOut;
-            if (!DecodeOfferTx(tx, op, nOut, vvch, -1) || !IsOfferOp(op))
+            if (!DecodeOfferTx(tx, op, nOut, vvch, -1) 
+            	|| !IsOfferOp(op) 
+            	|| (op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY))
                 continue;
 
             // get the txn height
@@ -2144,6 +2172,102 @@ Value offerlist(const Array& params, bool fHelp) {
     return oRes;
 }
 
+Value offeracceptlist(const Array& params, bool fHelp) {
+    if (fHelp || 1 < params.size())
+		throw runtime_error("offeracceptlist [<offer>]\n"
+				"list my accepted offers");
+
+    vector<unsigned char> vchName;
+
+    if (params.size() == 1)
+        vchName = vchFromValue(params[0]);
+
+    vector<unsigned char> vchNameUniq;
+    if (params.size() == 1)
+        vchNameUniq = vchFromValue(params[0]);
+
+    Array oRes;
+    map< vector<unsigned char>, int > vNamesI;
+    map< vector<unsigned char>, Object > vNamesO;
+
+    {
+
+        uint256 blockHash;
+        uint256 hash;
+        CTransaction tx;
+
+        vector<unsigned char> vchValue;
+        int nHeight;
+
+        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+        {
+            // get txn hash, read txn index
+            hash = item.second.GetHash();
+
+            if (!GetTransaction(hash, tx, blockHash, true))
+                continue;
+
+            // skip non-syscoin txns
+            if (tx.nVersion != SYSCOIN_TX_VERSION)
+                continue;
+
+            // decode txn, skip non-alias txns
+            vector<vector<unsigned char> > vvch;
+            int op, nOut;
+            if (!DecodeOfferTx(tx, op, nOut, vvch, -1) 
+            	|| !IsOfferOp(op) 
+            	|| !(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY))
+                continue;
+
+            // get the txn height
+            nHeight = GetOfferTxHashHeight(hash);
+
+            // get the txn alias name
+            if(!GetNameOfOfferTx(tx, vchName))
+                continue;
+
+            // skip this alias if it doesn't match the given filter value
+            if(vchNameUniq.size() > 0 && vchNameUniq != vchName)
+                continue;
+
+            // get the value of the alias txn
+            if(!GetValueOfOfferTx(tx, vchValue))
+                continue;
+
+            // build the output object
+            Object oName;
+            oName.push_back(Pair("name", stringFromVch(vchName)));
+            oName.push_back(Pair("value", stringFromVch(vchValue)));
+            if(op == OP_OFFER_ACCEPT)
+            	oName.push_back(Pair("status", "accepted"));
+           	else if(op == OP_OFFER_PAY)
+            	oName.push_back(Pair("status", "paid"));           	        
+
+            string strAddress = "";
+            GetOfferAddress(tx, strAddress);
+            oName.push_back(Pair("address", strAddress));
+
+            oName.push_back(Pair("expires_in", nHeight
+                                 + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
+            if(nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+                oName.push_back(Pair("expired", 1));
+
+            // get last active name only
+            if(vNamesI.find(vchName) != vNamesI.end() && vNamesI[vchName] > nHeight)
+                continue;
+
+            vNamesI[vchName] = nHeight;
+            vNamesO[vchName] = oName;
+        }
+    }
+
+    BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, Object)& item, vNamesO)
+        oRes.push_back(item.second);
+
+    return oRes;
+}
+
+
 Value offerhistory(const Array& params, bool fHelp) {
 	if (fHelp || 1 != params.size())
 		throw runtime_error("offerhistory <offer>\n"
@@ -2154,7 +2278,6 @@ Value offerhistory(const Array& params, bool fHelp) {
 	string offer = stringFromVch(vchOffer);
 
 	{
-		LOCK(pwalletMain->cs_wallet);
 
 		//vector<CDiskTxPos> vtxPos;
 		vector<COffer> vtxPos;

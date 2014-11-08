@@ -90,11 +90,11 @@ public:
     CAliasDB(size_t nCacheSize, bool fMemory, bool fWipe) : CLevelDB(GetDataDir() / "aliases", nCacheSize, fMemory, fWipe) {
     }
 
-	bool WriteAlias(const std::vector<unsigned char>& name, std::vector<CAliasIndex>& vtxPos) {
+	bool WriteName(const std::vector<unsigned char>& name, std::vector<CAliasIndex>& vtxPos) {
 		return Write(make_pair(std::string("namei"), name), vtxPos);
 	}
 
-	bool EraseAlias(const std::vector<unsigned char>& name) {
+	bool EraseName(const std::vector<unsigned char>& name) {
 	    return Erase(make_pair(std::string("namei"), name));
 	}
 	bool ReadAlias(const std::vector<unsigned char>& name, std::vector<CAliasIndex>& vtxPos) {
@@ -149,6 +149,7 @@ bool CheckAliasInputs(
     bool fBlock, bool fMiner, bool fJustCheck);
 bool ExtractAliasAddress(const CScript& script, std::string& address);
 bool IsAliasMine(const CTransaction& tx);
+bool IsAliasMine2(const CTransaction& tx);
 void RemoveAliasTxnFromMemoryPool(const CTransaction& tx);
 bool IsAliasMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasnew = false);
 bool IsAliasOp(int op);
@@ -156,6 +157,7 @@ bool IsAliasOp(int op);
 int GetNameTxPosHeight(const CAliasIndex& txPos);
 int GetNameTxPosHeight(const CDiskTxPos& txPos);
 int GetNameTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
+
 bool GetTxOfAlias(CAliasDB& dbName, const std::vector<unsigned char> &vchName, CTransaction& tx);
 int IndexOfNameOutput(const CTransaction& tx);
 bool GetValueOfNameTxHash(const uint256& txHash, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
@@ -167,6 +169,7 @@ bool DecodeAliasTx(const CCoins& tx, int& op, int& nOut, std::vector<std::vector
 bool DecodeAliasScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 bool GetAliasAddress(const CTransaction& tx, std::string& strAddress);
 bool GetAliasAddress(const CDiskTxPos& txPos, std::string& strAddress);
+extern void GetAliasValue(const std::string& strName, std::string& strAddress);
 std::string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, bool fAskFee, const std::string& txData = "");
 bool CreateTransactionWithInputTx(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxIn, int nTxOut, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, const std::string& txData = "");
 int64 GetAliasNetworkFee(int nType, int nHeight);
@@ -177,5 +180,6 @@ std::string aliasFromOp(int op);
 bool IsAliasOp(int op);
 int GetAliasDisplayExpirationDepth(int nHeight);
 void UnspendInputs(CWalletTx& wtx);
+bool RemoveAliasFee(CAliasFee &txnVal);
 
 #endif // NAMEDB_H

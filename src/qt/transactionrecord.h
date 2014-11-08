@@ -70,7 +70,26 @@ public:
         SendToOther,
         RecvWithAddress,
         RecvFromOther,
-        SendToSelf
+        SendToSelf,
+        AliasNew,
+        AliasActivate,
+        AliasUpdate,
+        AliasTransfer,
+        DataNew,
+        DataActivate,
+        DataUpdate,
+        DataTransfer,
+        OfferNew,
+        OfferActivate,
+        OfferUpdate,
+        OfferAccept,
+        OfferPay,
+        CertIssuerNew,
+        CertIssuerActivate,
+        CertIssuerUpdate,
+        CertNew,
+        CertTransfer
+
     };
 
     /** Number of confirmation needed for transaction */

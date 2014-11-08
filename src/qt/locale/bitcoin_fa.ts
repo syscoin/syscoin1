@@ -244,7 +244,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+1"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR LITECOINS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR Syscoins&lt;/b&gt;!</source>
         <translation>هشدار: اگر wallet رمزگذاری شود و شما passphrase را گم کنید شما همه اطلاعات syscoin را از دست خواهید داد.</translation>
     </message>
     <message>
@@ -652,7 +652,7 @@ Address: %4
         <location line="-23"/>
         <location line="+23"/>
         <source>URI can not be parsed! This can be caused by an invalid Syscoin address or malformed URI parameters.</source>
-        <translation>URI قابل تحلیل نیست. این خطا ممکن است به دلیل ادرس LITECOIN اشتباه یا پارامترهای اشتباه URI رخ داده باشد</translation>
+        <translation>URI قابل تحلیل نیست. این خطا ممکن است به دلیل ادرس Syscoin اشتباه یا پارامترهای اشتباه URI رخ داده باشد</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -850,7 +850,7 @@ Address: %4
     <message>
         <location line="+7"/>
         <source>Connect to the Syscoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
-        <translation>اتصال به شبکه LITECOIN از طریق پراکسی ساکس (برای مثال وقتی از طریق نرم افزار TOR متصل می شوید)</translation>
+        <translation>اتصال به شبکه Syscoin از طریق پراکسی ساکس (برای مثال وقتی از طریق نرم افزار TOR متصل می شوید)</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -925,7 +925,7 @@ Address: %4
     <message>
         <location line="+13"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Syscoin.</source>
-        <translation>زبان میانجی کاربر می تواند در اینجا تنظیم شود. این تنظیمات بعد از شروع دوباره RESTART در LITECOIN اجرایی خواهند بود.</translation>
+        <translation>زبان میانجی کاربر می تواند در اینجا تنظیم شود. این تنظیمات بعد از شروع دوباره RESTART در Syscoin اجرایی خواهند بود.</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -1443,7 +1443,7 @@ Address: %4
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Syscoin address (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
+        <source>Enter a Syscoin address or alias (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
         <translation>آدرس بیتکویین وارد کنید  (bijvoorbeeld: SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</translation>
     </message>
 </context>
@@ -1509,7 +1509,7 @@ Address: %4
     <message>
         <location line="+21"/>
         <source>Sign the message to prove you own this Syscoin address</source>
-        <translation>پیام را برای اثبات آدرس LITECOIN خود امضا کنید</translation>
+        <translation>پیام را برای اثبات آدرس Syscoin خود امضا کنید</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1545,7 +1545,7 @@ Address: %4
     <message>
         <location line="+40"/>
         <source>Verify the message to ensure it was signed with the specified Syscoin address</source>
-        <translation>پیام را برای اطمنان از ورود به سیستم با آدرس LITECOIN مشخص خود،تایید کنید</translation>
+        <translation>پیام را برای اطمنان از ورود به سیستم با آدرس Syscoin مشخص خود،تایید کنید</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1560,7 +1560,7 @@ Address: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a Syscoin address (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
+        <source>Enter a Syscoin address or alias (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
         <translation>آدرس بیتکویین وارد کنید  (bijvoorbeeld: SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</translation>
     </message>
     <message>

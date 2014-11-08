@@ -360,6 +360,42 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
         return tr("Mined");
+    case TransactionRecord::AliasNew:
+        return tr("New Alias");
+    case TransactionRecord::AliasActivate:
+        return tr("Alias Activated");
+    case TransactionRecord::AliasUpdate:
+        return tr("Alias Updated");
+    case TransactionRecord::AliasTransfer:
+        return tr("Alias Updated (Transfer)");
+    case TransactionRecord::DataNew:
+        return tr("New Data Alias");
+    case TransactionRecord::DataActivate:
+        return tr("Data Alias Activated");
+    case TransactionRecord::DataUpdate:
+        return tr("Data Alias Updated");
+    case TransactionRecord::DataTransfer:
+        return tr("Data Alias Updated (Tranfer)");
+    case TransactionRecord::OfferNew:
+        return tr("New Offer");
+    case TransactionRecord::OfferActivate:
+        return tr("Offer Activated");
+    case TransactionRecord::OfferUpdate:
+        return tr("Offer Updated");
+    case TransactionRecord::OfferAccept:
+        return tr("Offer Accepted");
+    case TransactionRecord::OfferPay:
+        return tr("Offer Paid");
+    case TransactionRecord::CertIssuerNew:
+        return tr("New Cert. Issuer");
+    case TransactionRecord::CertIssuerActivate:
+        return tr("Cert. Issuer Activated");
+    case TransactionRecord::CertIssuerUpdate:
+        return tr("Cert. Issuer Updated");
+    case TransactionRecord::CertNew:
+        return tr("New Certificate");
+    case TransactionRecord::CertTransfer:
+        return tr("Certificate Transfer");
     default:
         return QString();
     }
@@ -376,6 +412,12 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
         return QIcon(":/icons/tx_input");
     case TransactionRecord::SendToAddress:
     case TransactionRecord::SendToOther:
+    case TransactionRecord::AliasNew:
+    case TransactionRecord::DataNew:
+    case TransactionRecord::OfferNew:
+    case TransactionRecord::OfferAccept:
+    case TransactionRecord::CertIssuerNew:
+    case TransactionRecord::CertNew:
         return QIcon(":/icons/tx_output");
     default:
         return QIcon(":/icons/tx_inout");
@@ -394,6 +436,24 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     case TransactionRecord::Generated:
         return lookupAddress(wtx->address, tooltip);
     case TransactionRecord::SendToOther:
+    case TransactionRecord::AliasNew:
+    case TransactionRecord::AliasActivate:
+    case TransactionRecord::AliasUpdate:
+    case TransactionRecord::AliasTransfer:
+    case TransactionRecord::DataNew:
+    case TransactionRecord::DataActivate:
+    case TransactionRecord::DataUpdate:
+    case TransactionRecord::DataTransfer:
+    case TransactionRecord::OfferNew:
+    case TransactionRecord::OfferActivate:
+    case TransactionRecord::OfferUpdate:
+    case TransactionRecord::OfferAccept:
+    case TransactionRecord::OfferPay:
+    case TransactionRecord::CertIssuerNew:
+    case TransactionRecord::CertIssuerActivate:
+    case TransactionRecord::CertIssuerUpdate:
+    case TransactionRecord::CertNew:
+    case TransactionRecord::CertTransfer:
         return QString::fromStdString(wtx->address);
     case TransactionRecord::SendToSelf:
     default:

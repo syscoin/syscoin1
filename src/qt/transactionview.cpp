@@ -3,6 +3,8 @@
 #include "transactionfilterproxy.h"
 #include "transactionrecord.h"
 #include "walletmodel.h"
+#include "wallet.h"
+#include "init.h"
 #include "addresstablemodel.h"
 #include "transactiontablemodel.h"
 #include "bitcoinunits.h"
@@ -73,6 +75,25 @@ TransactionView::TransactionView(QWidget *parent) :
     typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
     typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
+    typeWidget->addItem(tr("New Alias"), TransactionFilterProxy::TYPE(TransactionRecord::AliasNew));
+    typeWidget->addItem(tr("Alias Activated"), TransactionFilterProxy::TYPE(TransactionRecord::AliasActivate));
+    typeWidget->addItem(tr("Alias Updated"), TransactionFilterProxy::TYPE(TransactionRecord::AliasUpdate));
+    typeWidget->addItem(tr("Alias Updated (Transfer)"), TransactionFilterProxy::TYPE(TransactionRecord::AliasTransfer));
+    typeWidget->addItem(tr("New Data Alias"), TransactionFilterProxy::TYPE(TransactionRecord::DataNew));
+    typeWidget->addItem(tr("Data Alias Activated"), TransactionFilterProxy::TYPE(TransactionRecord::DataActivate));
+    typeWidget->addItem(tr("Data Alias Updated"), TransactionFilterProxy::TYPE(TransactionRecord::DataUpdate));
+    typeWidget->addItem(tr("Data Alias Updated (Transfer)"), TransactionFilterProxy::TYPE(TransactionRecord::DataTransfer));
+    typeWidget->addItem(tr("New Offer"), TransactionFilterProxy::TYPE(TransactionRecord::OfferNew));
+    typeWidget->addItem(tr("Offer Activated"), TransactionFilterProxy::TYPE(TransactionRecord::OfferActivate));
+    typeWidget->addItem(tr("Offer Updated"), TransactionFilterProxy::TYPE(TransactionRecord::OfferUpdate));
+    typeWidget->addItem(tr("Offer Accepted"), TransactionFilterProxy::TYPE(TransactionRecord::OfferAccept));
+    typeWidget->addItem(tr("Offer Paid"), TransactionFilterProxy::TYPE(TransactionRecord::OfferPay));
+    typeWidget->addItem(tr("New Cert. Issuer"), TransactionFilterProxy::TYPE(TransactionRecord::CertIssuerNew));
+    typeWidget->addItem(tr("Cert. Issuer Activated"), TransactionFilterProxy::TYPE(TransactionRecord::CertIssuerActivate));
+    typeWidget->addItem(tr("Cert. Issuer updated"), TransactionFilterProxy::TYPE(TransactionRecord::CertIssuerUpdate));
+    typeWidget->addItem(tr("New Certificate"), TransactionFilterProxy::TYPE(TransactionRecord::CertNew));
+    typeWidget->addItem(tr("Certificate Transfer"), TransactionFilterProxy::TYPE(TransactionRecord::CertTransfer));
+
 
     hlayout->addWidget(typeWidget);
 

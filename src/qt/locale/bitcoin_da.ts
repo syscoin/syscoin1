@@ -248,8 +248,8 @@ Produktet indeholder software som er udviklet af OpenSSL Project til brug i Open
     </message>
     <message>
         <location line="+1"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR LITECOINS&lt;/b&gt;!</source>
-        <translation>Advarsel: Hvis du krypterer din tegnebog og mister din adgangskode, vil du &lt;b&gt;MISTE ALLE DINE LITECOINS&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR Syscoins&lt;/b&gt;!</source>
+        <translation>Advarsel: Hvis du krypterer din tegnebog og mister din adgangskode, vil du &lt;b&gt;MISTE ALLE DINE Syscoins&lt;/b&gt;!</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1448,7 +1448,7 @@ Adresse: %4
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Syscoin address (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
+        <source>Enter a Syscoin address or alias (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
         <translation>Indtast en Syscoin-adresse (f.eks. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</translation>
     </message>
 </context>
@@ -1565,7 +1565,7 @@ Adresse: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a Syscoin address (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
+        <source>Enter a Syscoin address or alias (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
         <translation>Indtast en Syscoin-adresse (f.eks. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</translation>
     </message>
     <message>

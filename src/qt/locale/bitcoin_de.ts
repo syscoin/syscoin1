@@ -1,19 +1,29 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="de" version="2.0">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.0" language="de">
 <defaultcodec>UTF-8</defaultcodec>
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="../forms/aboutdialog.ui" line="+14"/>
         <source>About Syscoin</source>
-        <translation>Über Syscoin</translation>
+        <translation type="obsolete">Über Syscoin</translation>
     </message>
     <message>
-        <location line="+39"/>
         <source>&lt;b&gt;Syscoin&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Syscoin&lt;/b&gt;-Version</translation>
+        <translation type="obsolete">&lt;b&gt;Syscoin&lt;/b&gt;-Version</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location filename="../forms/aboutdialog.ui" line="+14"/>
+        <source>About SysCoin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Syscoin &lt;/span&gt;0.1.5 RC2&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+61"/>
         <source>
 This is experimental software.
 
@@ -28,14 +38,156 @@ Veröffentlicht unter der MIT/X11-Softwarelizenz, siehe beiligende Datei COPYING
 Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im OpenSSL-Toolkit (http://www.openssl.org/) entwickelt wurde, sowie kryptographische Software geschrieben von Eric Young (eay@cryptsoft.com) und UPnP-Software geschrieben von Thomas Bernard.</translation>
     </message>
     <message>
-        <location filename="../aboutdialog.cpp" line="+14"/>
+        <location filename="../aboutdialog.cpp" line="+18"/>
+        <location line="+3"/>
+        <location line="+2"/>
         <source>Copyright</source>
         <translation>Copyright</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-3"/>
+        <source>The Bitcoin developers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>2011-%1 The Litecoin developers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>2014 The Syscoin developers</source>
+        <translation type="unfinished">2014 Die Syscoin Entwickler</translation>
+    </message>
+    <message>
         <source>The Syscoin developers</source>
-        <translation>Die Syscoinentwickler</translation>
+        <translation type="obsolete">Die Syscoinentwickler</translation>
+    </message>
+</context>
+<context>
+    <name>AcceptandPayOfferListPage</name>
+    <message>
+        <location filename="../forms/acceptandpayofferlistpage.ui" line="+14"/>
+        <source>Edit Offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Offer Id (guid):</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>The value associated with this offer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Quantity:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Accept and Pay</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../acceptandpayofferlistpage.cpp" line="+33"/>
+        <source>Accept and purchase this offer, SysCoins will be used to complete the transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Error accepting offer: &quot;%1&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>General exception when accepting offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Error paying for offer: &quot;%1&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>General exception when trying to pay for offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Error: Invalid response from offeraccept command</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Offer transaction completed successfully!</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>AcceptedOfferListPage</name>
+    <message>
+        <location filename="../forms/acceptedofferlistpage.ui" line="+14"/>
+        <source>Accepted Offers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Double-click to edit certificate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Copy the currently selected certificate issuer to the system clipboard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Copy Offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">Daten der aktuellen Ansicht in eine Datei exportieren</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Export</source>
+        <translation type="unfinished">E&amp;xportieren</translation>
+    </message>
+    <message>
+        <location filename="../acceptedofferlistpage.cpp" line="+31"/>
+        <source>These are your accepted Syscoin offers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Copy Va&amp;lue</source>
+        <translation type="unfinished">&amp;Wert Kopieren</translation>
+    </message>
+    <message>
+        <location line="+101"/>
+        <source>Export Offer Data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Comma separated file (*.csv)</source>
+        <translation type="unfinished">Kommagetrennte-Datei (*.csv)</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Error exporting</source>
+        <translation type="unfinished">Fehler beim Exportieren</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Could not write to file %1.</source>
+        <translation type="unfinished">Konnte nicht in Datei %1 schreiben.</translation>
     </message>
 </context>
 <context>
@@ -141,7 +293,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Syscoins &amp;überweisen</translation>
     </message>
     <message>
-        <location line="+260"/>
+        <location line="+265"/>
         <source>Export Address Book Data</source>
         <translation>Adressbuch exportieren</translation>
     </message>
@@ -174,9 +326,223 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Adresse</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+41"/>
         <source>(no label)</source>
         <translation>(keine Bezeichnung)</translation>
+    </message>
+</context>
+<context>
+    <name>AliasListPage</name>
+    <message>
+        <location filename="../forms/aliaslistpage.ui" line="+14"/>
+        <source>Aliases</source>
+        <translation>Aliases</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Search</source>
+        <translation>Suche</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>Copy the currently selected alias to the system clipboard</source>
+        <translation>Kopieren Sie die aktuell ausgewählte Alias ​​in die Zwischenablage</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Copy Alias</source>
+        <translation>&amp;Kopieren Alias</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Daten der aktuellen Ansicht in eine Datei exportieren</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Export</source>
+        <translation>E&amp;xportieren</translation>
+    </message>
+    <message>
+        <source>Search for any Syscoin Aliases</source>
+        <translation type="obsolete">Suche nach einem beliebigen Syscoin Aliases</translation>
+    </message>
+    <message>
+        <location filename="../aliaslistpage.cpp" line="+45"/>
+        <source>Copy Va&amp;lue</source>
+        <translation>&amp;Wert Kopieren</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Enter search term, regex accepted (ie: ^name returns all Aliases starting with &apos;name&apos;)</source>
+        <translation>Suchbegriff eingeben, regex angenommen (dh: ^ Name gibt alle Aliase mit &apos;name&apos;)</translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;</source>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;WARNUNG: Die Geldbörse ist derzeit gesperrt. Aus Sicherheitsgründen müssen Sie Ihre Passphrase, um mit Syscoin Aliases interagieren eingeben.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;mehr Infos&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to search Syscoin Aliases.&lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;</source>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt; &lt;/font&gt;WARNUNG: Die Geldbörse ist derzeit gesperrt. Aus Sicherheitsgründen müssen Sie Ihre Passphrase, um zu suchen Syscoin Aliases eingeben. &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;mehr Infos&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <location line="-19"/>
+        <source>Search for Syscoin Aliases</source>
+        <translation>Suche nach Syscoin Aliases</translation>
+    </message>
+    <message>
+        <location line="+142"/>
+        <source>Export Alias Data</source>
+        <translation>Export Aliasdaten</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Kommagetrennte-Datei (*.csv)</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Error exporting</source>
+        <translation>Fehler beim Exportieren</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Could not write to file %1.</source>
+        <translation>Konnte nicht in Datei %1 schreiben.</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Error Searching Alias</source>
+        <translation>Fehlersuche Alias</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Please enter search term</source>
+        <translation>Bitte geben Sie das Suchwort</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Error searching Alias: &quot;%1&quot;</source>
+        <translation>Fehlersuche Alias​​: &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>General exception when searchig alias</source>
+        <translation>Allgemeine Ausnahme bei der Suche alias</translation>
+    </message>
+    <message>
+        <location line="+78"/>
+        <source>Error: Invalid response from aliasnew command</source>
+        <translation>Fehler: Ungültige Antwort vom aliasnew Befehl</translation>
+    </message>
+</context>
+<context>
+    <name>AliasTableModel</name>
+    <message>
+        <location filename="../aliastablemodel.cpp" line="+248"/>
+        <source>Alias</source>
+        <translation>Alias</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Value</source>
+        <translation>Wert</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Last Update</source>
+        <translation>Zuletzt Bearbeitet</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Expires On</source>
+        <translation>Läuft ab am</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Expires In</source>
+        <translation>Läuft im</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Alias Status</source>
+        <translation>Alias​​-Status</translation>
+    </message>
+</context>
+<context>
+    <name>AliasView</name>
+    <message>
+        <location filename="../aliasview.cpp" line="+34"/>
+        <source>&amp;My Aliases</source>
+        <translation>&amp;Meine Aliases</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Search</source>
+        <translation>&amp;Suche</translation>
+    </message>
+</context>
+<context>
+    <name>AllOfferListPage</name>
+    <message>
+        <location filename="../forms/allofferlistpage.ui" line="+14"/>
+        <source>All Syscoin Offers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Double-click to edit certificate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Copy the currently selected certificate issuer to the system clipboard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Copy Offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">Daten der aktuellen Ansicht in eine Datei exportieren</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Export</source>
+        <translation type="unfinished">E&amp;xportieren</translation>
+    </message>
+    <message>
+        <location filename="../allofferlistpage.cpp" line="+32"/>
+        <source>These are the first 500 registered Syscoin offers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Copy Va&amp;lue</source>
+        <translation type="unfinished">&amp;Wert Kopieren</translation>
+    </message>
+    <message>
+        <location line="+99"/>
+        <source>Export Offer Data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Comma separated file (*.csv)</source>
+        <translation type="unfinished">Kommagetrennte-Datei (*.csv)</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Error exporting</source>
+        <translation type="unfinished">Fehler beim Exportieren</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Could not write to file %1.</source>
+        <translation type="unfinished">Konnte nicht in Datei %1 schreiben.</translation>
     </message>
 </context>
 <context>
@@ -247,12 +613,11 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Verschlüsselung der Brieftasche bestätigen</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR LITECOINS&lt;/b&gt;!</source>
-        <translation>Warnung: Wenn Sie Ihre Brieftasche verschlüsseln und Ihre Passphrase verlieren, werden Sie &lt;b&gt;alle Ihre Syscoins verlieren&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR Syscoins&lt;/b&gt;!</source>
+        <translation type="obsolete">Warnung: Wenn Sie Ihre Brieftasche verschlüsseln und Ihre Passphrase verlieren, werden Sie &lt;b&gt;alle Ihre Syscoins verlieren&lt;/b&gt;!</translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="+1"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Sind Sie sich sicher, dass Sie Ihre Brieftasche verschlüsseln möchten?</translation>
     </message>
@@ -274,7 +639,12 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Brieftasche verschlüsselt</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-67"/>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR SYSCOINS&lt;/b&gt;!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>Syscoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
         <translation>Syscoin wird jetzt beendet, um den Verschlüsselungsprozess abzuschließen. Bitte beachten Sie, dass die Verschlüsselung Ihrer Brieftasche nicht vollständig vor Diebstahl Ihrer Syscoins durch Schadsoftware schützt, die Ihren Computer befällt.</translation>
     </message>
@@ -323,17 +693,17 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+233"/>
+        <location filename="../bitcoingui.cpp" line="+293"/>
         <source>Sign &amp;message...</source>
         <translation>Nachricht s&amp;ignieren...</translation>
     </message>
     <message>
-        <location line="+280"/>
+        <location line="+331"/>
         <source>Synchronizing with network...</source>
         <translation>Synchronisiere mit Netzwerk...</translation>
     </message>
     <message>
-        <location line="-349"/>
+        <location line="-453"/>
         <source>&amp;Overview</source>
         <translation>&amp;Übersicht</translation>
     </message>
@@ -363,7 +733,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Liste der Empfangsadressen anzeigen</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+84"/>
         <source>E&amp;xit</source>
         <translation>&amp;Beenden</translation>
     </message>
@@ -408,7 +778,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Passphrase &amp;ändern...</translation>
     </message>
     <message>
-        <location line="+285"/>
+        <location line="+336"/>
         <source>Importing blocks from disk...</source>
         <translation>Importiere Blöcke von Laufwerk...</translation>
     </message>
@@ -418,12 +788,12 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Reindiziere Blöcke auf Laufwerk...</translation>
     </message>
     <message>
-        <location line="-347"/>
+        <location line="-451"/>
         <source>Send coins to a Syscoin address</source>
         <translation>Syscoins an eine Syscoin-Adresse überweisen</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+102"/>
         <source>Modify configuration options for Syscoin</source>
         <translation>Die Konfiguration des Clients bearbeiten</translation>
     </message>
@@ -453,20 +823,20 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Nachricht &amp;verifizieren...</translation>
     </message>
     <message>
-        <location line="-165"/>
-        <location line="+530"/>
+        <location line="-223"/>
+        <location line="+639"/>
         <source>Syscoin</source>
         <translation>Syscoin</translation>
     </message>
     <message>
-        <location line="-530"/>
+        <location line="-639"/>
         <source>Wallet</source>
         <translation>Brieftasche</translation>
     </message>
     <message>
-        <location line="+101"/>
+        <location line="+106"/>
         <source>&amp;Send</source>
-        <translation>Überweisen</translation>
+        <translation>Ü&amp;berweisen</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -479,7 +849,57 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>&amp;Adressen</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+7"/>
+        <source>A&amp;liases</source>
+        <translation>A&amp;liases</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Manage aliases</source>
+        <translation>Aliase Verwalten</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&amp;Data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Manage data aliases</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>&amp;Marketplace</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Manage offers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Certificate &amp;Issuers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Manage certificate issuers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Cert&amp;ificates</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Manage certificates</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+38"/>
         <source>&amp;About Syscoin</source>
         <translation>&amp;Über Syscoin</translation>
     </message>
@@ -529,20 +949,23 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <translation>Registerkartenleiste</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+22"/>
         <location line="+10"/>
         <source>[testnet]</source>
         <translation>[Testnetz]</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+68"/>
         <source>Syscoin client</source>
         <translation>Syscoin-Client</translation>
     </message>
     <message numerus="yes">
-        <location line="+141"/>
+        <location line="+166"/>
         <source>%n active connection(s) to Syscoin network</source>
-        <translation><numerusform>%n aktive Verbindung zum Syscoin-Netzwerk</numerusform><numerusform>%n aktive Verbindungen zum Syscoin-Netzwerk</numerusform></translation>
+        <translation>
+            <numerusform>%n aktive Verbindung zum Syscoin-Netzwerk</numerusform>
+            <numerusform>%n aktive Verbindungen zum Syscoin-Netzwerk</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+22"/>
@@ -562,17 +985,26 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     <message numerus="yes">
         <location line="+20"/>
         <source>%n hour(s)</source>
-        <translation><numerusform>%n Stunde</numerusform><numerusform>%n Stunden</numerusform></translation>
+        <translation>
+            <numerusform>%n Stunde</numerusform>
+            <numerusform>%n Stunden</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n day(s)</source>
-        <translation><numerusform>%n Tag</numerusform><numerusform>%n Tage</numerusform></translation>
+        <translation>
+            <numerusform>%n Tag</numerusform>
+            <numerusform>%n Tage</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <location line="+4"/>
         <source>%n week(s)</source>
-        <translation><numerusform>%n Woche</numerusform><numerusform>%n Wochen</numerusform></translation>
+        <translation>
+            <numerusform>%n Woche</numerusform>
+            <numerusform>%n Wochen</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+4"/>
@@ -669,9 +1101,115 @@ Adresse: %4</translation>
         <translation>Brieftasche ist &lt;b&gt;verschlüsselt&lt;/b&gt; und aktuell &lt;b&gt;gesperrt&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="+111"/>
+        <location filename="../bitcoin.cpp" line="+113"/>
         <source>A fatal error occurred. Syscoin can no longer continue safely and will quit.</source>
         <translation>Ein schwerer Fehler ist aufgetreten. Syscoin kann nicht stabil weiter ausgeführt werden und wird beendet.</translation>
+    </message>
+</context>
+<context>
+    <name>CertIssuerListPage</name>
+    <message>
+        <location filename="../forms/certlistpage.ui" line="+14"/>
+        <source>Certificate Issuers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Double-click to edit certificate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Create a new certificate issuer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;New Certificate Issuer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Copy the currently selected certificate issuer to the system clipboard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Copy CertIssuer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">Daten der aktuellen Ansicht in eine Datei exportieren</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Export</source>
+        <translation type="unfinished">E&amp;xportieren</translation>
+    </message>
+    <message>
+        <location filename="../certlistpage.cpp" line="+47"/>
+        <source>These are your registered Syscoin certs. Remember to check the expiration depth of your certs regularly.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>These are your registered Syscoin certificates.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Copy Va&amp;lue</source>
+        <translation type="unfinished">&amp;Wert Kopieren</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Edit</source>
+        <translation type="unfinished">&amp;Editieren</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Transfer CertIssuer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+183"/>
+        <source>Export CertIssuer Data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Comma separated file (*.csv)</source>
+        <translation type="unfinished">Kommagetrennte-Datei (*.csv)</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Error exporting</source>
+        <translation type="unfinished">Fehler beim Exportieren</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Could not write to file %1.</source>
+        <translation type="unfinished">Konnte nicht in Datei %1 schreiben.</translation>
+    </message>
+</context>
+<context>
+    <name>CertIssuerTableModel</name>
+    <message>
+        <location filename="../certtablemodel.cpp" line="+197"/>
+        <source>CertIssuer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Title</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Expiration Height</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -680,6 +1218,276 @@ Adresse: %4</translation>
         <location filename="../clientmodel.cpp" line="+104"/>
         <source>Network Alert</source>
         <translation>Netzwerkalarm</translation>
+    </message>
+</context>
+<context>
+    <name>CoinControlDialog</name>
+    <message>
+        <location filename="../forms/coincontroldialog.ui" line="+14"/>
+        <source>Coin Control</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>Quantity:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Bytes:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Amount:</source>
+        <translation type="unfinished">Betrag:</translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Priority:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+48"/>
+        <source>Fee:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>Low Output:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <location filename="../coincontroldialog.cpp" line="+592"/>
+        <source>no</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>After Fee:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>Change:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+69"/>
+        <source>(un)select all</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Tree mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>List mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>(1 locked)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>Amount</source>
+        <translation type="unfinished">Betrag</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Address</source>
+        <translation type="unfinished">Adresse</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Date</source>
+        <translation type="unfinished">Datum</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Confirmations</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Confirmed</source>
+        <translation type="unfinished">Bestätigt</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Priority</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../coincontroldialog.cpp" line="-555"/>
+        <source>Copy address</source>
+        <translation type="unfinished">Adresse kopieren</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy label</source>
+        <translation type="unfinished">Bezeichnung kopieren</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+26"/>
+        <source>Copy amount</source>
+        <translation type="unfinished">Betrag kopieren</translation>
+    </message>
+    <message>
+        <location line="-25"/>
+        <source>Copy transaction ID</source>
+        <translation type="unfinished">Transaktions-ID kopieren</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Lock unspent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Unlock unspent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Copy quantity</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Copy fee</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy after fee</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy bytes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy priority</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy low output</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy change</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+323"/>
+        <source>highest</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>high</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>medium-high</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>medium</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>low-medium</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>low</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>lowest</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>(%1 locked)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+178"/>
+        <source>DUST</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>yes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>This label turns red, if the transaction size is bigger than 5000 bytes.
+
+ This means a fee of at least %1 per kb is required.
+
+ Can vary +/- 1 Byte per input.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Transactions with higher priority get more likely into a block.
+
+This label turns red, if the priority is smaller than &quot;medium&quot;.
+
+ This means a fee of at least %1 per kb is required.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This label turns red, if any recipient receives an amount smaller than %1.
+
+ This means a fee of at least %2 is required. 
+
+ Amounts below 0.546 times the minimum relay fee are shown as DUST.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>This label turns red, if the change is smaller than %1.
+
+ This means a fee of at least %2 is required.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+37"/>
+        <location line="+66"/>
+        <source>(no label)</source>
+        <translation type="unfinished">(keine Bezeichnung)</translation>
+    </message>
+    <message>
+        <location line="-9"/>
+        <source>change from %1 (%2)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>(change)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -751,9 +1559,356 @@ Adresse: %4</translation>
     </message>
 </context>
 <context>
+    <name>EditAliasDialog</name>
+    <message>
+        <location filename="../forms/editaliasdialog.ui" line="+14"/>
+        <location filename="../editaliasdialog.cpp" line="+41"/>
+        <source>Edit Alias</source>
+        <translation>Alias ​​bearbeiten</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>&amp;Alias</source>
+        <translation>&amp;Alias</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>The alias name.</source>
+        <translation>Der Alias-Name.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Value</source>
+        <translation>Wert</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>The value associated with this alias.</source>
+        <translation>Der Wert mit diesem Alias ​​verbunden.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Transfer Address</source>
+        <translation>Transfer-Adresse</translation>
+    </message>
+    <message>
+        <location filename="../editaliasdialog.cpp" line="-11"/>
+        <source>New Data Alias</source>
+        <translation>Neue Daten Alias</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>New Alias</source>
+        <translation>Neuer Alias</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Edit Data Alias</source>
+        <translation>Daten bearbeiten Alias</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Transfer Alias</source>
+        <translation>Alias ​​übertragen</translation>
+    </message>
+    <message>
+        <location line="+57"/>
+        <source>Empty name for Alias not allowed. Please try again</source>
+        <translation>Leere Namen für Alias ​​nicht erlaubt. Bitte versuchen Sie es erneut</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Confirm new Alias</source>
+        <translation>Bestätigen Sie das neue Alias</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Warning: Creating new Alias will cost </source>
+        <translation>Warnung: Erstellen von neuen Alias ​​kostet </translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source> SYS, and activating will cost </source>
+        <translation> SYS, und Aktivieren kostet </translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Are you sure you wish to create an Alias?</source>
+        <translation>Sind Sie sicher, dass Sie einen Alias ​​erstellen?</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>New Alias created successfully! Alias will be active after 120 confirmations. GUID for the new Alias is: &quot;%1&quot;</source>
+        <translation>Neuer Alias ​​erfolgreich erstellt! Alias ​​wird nach 120 Bestätigungen aktiv sein. Für die neue Alias​​-GUID ist: &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <source>Alias updated successfully! Update will take effect after 1 confirmation. Transaction Id for the update is: &quot;%1&quot;</source>
+        <translation type="obsolete">Alias ​​erfolgreich aktualisiert! Update wird die nach dem 1. Bestätigung zu nehmen. Transaktions-ID für das Update ist: &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <location line="+97"/>
+        <source>Alias transferred successfully! Transaction Id for the update is: &quot;%1&quot; &lt;br&gt;&lt;br&gt;</source>
+        <translation>Alias ​​erfolgreich übertragen! Transaktions-ID für das Update ist: &quot;%1&quot; &lt;br&gt;&lt;br&gt;</translation>
+    </message>
+    <message>
+        <source>Please click refresh after 1 confirmation to update the Alias table.</source>
+        <translation type="obsolete">Bitte klicken Sie auf Refresh nach dem 1. Bestätigung, um die Alias​​-Tabelle zu aktualisieren.</translation>
+    </message>
+    <message>
+        <location line="-87"/>
+        <source>Error creating new Alias: &quot;%1&quot;</source>
+        <translation>Fehler beim Erstellen des neuen Alias​​: &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>General exception creating new Alias</source>
+        <translation>Allgemeine Ausnahme Schaffung neuer Alias</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Confirm Alias Update</source>
+        <translation>Bestätigen Alias ​​aktualisieren</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Warning: Updating Alias will cost </source>
+        <translation>Warnung: Aktualisierung Alias ​​kostet </translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Are you sure you wish update this Alias?</source>
+        <translation>Sind Sie sicher, dass Sie diese aktualisieren möchten Alias​​?</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Alias updated successfully! Transaction Id for the update is: &quot;%1&quot;</source>
+        <translation>Alias ​​erfolgreich aktualisiert! Transaktions-ID für das Update ist: &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Error updating Alias: &quot;%1&quot;</source>
+        <translation>Fehler beim Aktualisieren der Alias​​: &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>General exception updating Alias</source>
+        <translation>Allgemeine Ausnahme Aktualisierung Alias</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Confirm Alias Transfer</source>
+        <translation>Bestätigen Alias ​​Überweisung</translation>
+    </message>
+    <message>
+        <source>Warning: Transfering Alias will cost </source>
+        <translation type="obsolete">Warnung: Fördern von Alias ​​kostet </translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Are you sure you wish transfer this Alias?</source>
+        <translation>Sind Sie sicher, dass Sie diesen Alias ​​übertragen wollen?</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Warning: Transferring Alias will cost </source>
+        <translation>Achtung: Übertragen von Alias ​​kostet</translation>
+    </message>
+    <message>
+        <location line="+29"/>
+        <source>Error transferring Alias: &quot;%1&quot;</source>
+        <translation>Fehler beim Übertragen Alias​​: &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>General exception transferring Alias</source>
+        <translation>Allgemeine Ausnahme Übertragung Alias</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>The entered alias &quot;%1&quot; is not a valid Syscoin Alias.</source>
+        <translation>Der eingegebene alias &quot;%1&quot; ist keine gültige Syscoin Alias.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>The entered alias &quot;%1&quot; is already taken.</source>
+        <translation>Der eingegebene alias &quot;%1&quot; ist bereits vergeben.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Could not unlock wallet.</source>
+        <translation>Die Brieftasche konnte nicht entsperrt werden.</translation>
+    </message>
+</context>
+<context>
+    <name>EditCertIssuerDialog</name>
+    <message>
+        <location filename="../forms/editcertdialog.ui" line="+14"/>
+        <source>Edit Cert</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>&amp;Label</source>
+        <translation type="unfinished">&amp;Bezeichnung</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>The value associated with this certificate.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>&amp;Cert</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>The certificate name.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../editcertdialog.cpp" line="+21"/>
+        <source>New certificate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>New cert</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Edit certificate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Edit cert</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+69"/>
+        <source>The entered cert &quot;%1&quot; is not a valid Syscoin cert.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>The entered cert &quot;%1&quot; is already taken.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Could not unlock wallet.</source>
+        <translation type="unfinished">Die Brieftasche konnte nicht entsperrt werden.</translation>
+    </message>
+</context>
+<context>
+    <name>EditOfferDialog</name>
+    <message>
+        <location filename="../forms/editofferdialog.ui" line="+14"/>
+        <source>Edit Offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Offer Id (guid)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>The value associated with this offer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Category</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Title</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Price</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>The offer name.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Description</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Quantity</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../editofferdialog.cpp" line="+27"/>
+        <source>New offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Edit offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+77"/>
+        <source>New offer created successfully! GUID for the new offer is: &quot;%1&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Error creating new offer: &quot;%1&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>General exception creating new offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Offer updated successfully! Transaction Id for the update is: &quot;%1&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Error updating offer: &quot;%1&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>General exception updating offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>The entered offer &quot;%1&quot; is not a valid Syscoin offer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>The entered offer &quot;%1&quot; is already taken.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Could not unlock wallet.</source>
+        <translation type="unfinished">Die Brieftasche konnte nicht entsperrt werden.</translation>
+    </message>
+</context>
+<context>
     <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <location filename="../guiutil.cpp" line="+424"/>
+        <location filename="../guiutil.cpp" line="+498"/>
         <location line="+12"/>
         <source>Syscoin-Qt</source>
         <translation>Syscoin-Qt</translation>
@@ -792,6 +1947,265 @@ Adresse: %4</translation>
         <location line="+1"/>
         <source>Show splash screen on startup (default: 1)</source>
         <translation>Startbildschirm beim Starten anzeigen (Standard: 1)</translation>
+    </message>
+</context>
+<context>
+    <name>MyAliasListPage</name>
+    <message>
+        <location filename="../forms/myaliaslistpage.ui" line="+14"/>
+        <source>My Aliases</source>
+        <translation>Meine Aliases</translation>
+    </message>
+    <message>
+        <location line="+52"/>
+        <source>&amp;Refresh</source>
+        <translation>Aktualisie&amp;ren</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Create a new alias&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Erstellen Sie eine neue Alias-&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;New Alias</source>
+        <translation>&amp;Neuer Alias</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Copy the currently selected alias to the system clipboard</source>
+        <translation>Kopieren Sie die aktuell ausgewählte Alias ​​in die Zwischenablage</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Copy Alias</source>
+        <translation>&amp;Kopieren Alias</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Daten der aktuellen Ansicht in eine Datei exportieren</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Export</source>
+        <translation>E&amp;xportieren</translation>
+    </message>
+    <message>
+        <source>These are your registered Syscoin Aliases. NOTE: New Syscoin Aliases take 120 blocks to appear in this list and alias updates or transfers can take up to 6 blocks to appear in this list.</source>
+        <translation type="obsolete">Dies sind Ihre registrierte Syscoin Aliases. HINWEIS: Neue Syscoin Aliases nehmen 120 Blöcke, um in dieser Liste und Alias-Updates oder Transfers erscheinen können bis zu 6 Blöcke zu ergreifen, um in dieser Liste angezeigt.</translation>
+    </message>
+    <message>
+        <location filename="../myaliaslistpage.cpp" line="+41"/>
+        <source>Copy Va&amp;lue</source>
+        <translation>&amp;Wert Kopieren</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Edit</source>
+        <translation>&amp;Editieren</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Transfer Alias</source>
+        <translation>Alias ​​über&amp;tragen</translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Click refresh to load aliases securely. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. NOTE: New Syscoin Aliases take 120 blocks to appear in this list and alias updates or transfers can take up to 6 blocks to appear in this list.</source>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;WARNUNG: Die Geldbörse ist derzeit gesperrt. Aus Sicherheitsgründen müssen Sie Ihre Passphrase, um mit Syscoin Aliases interagieren eingeben. Klicken Sie auf Aktualisieren, um Aliase sicher laden. &lt;/font&gt;&lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;mehr Infos&lt;/a&gt;&lt;br&gt;&lt;br&gt;Dies sind Ihre registrierte Syscoin Aliases. HINWEIS: Neue Syscoin Aliases nehmen 120 Blöcke, um in dieser Liste und Alias-Updates oder Transfers erscheinen können bis zu 6 Blöcke zu ergreifen, um in dieser Liste angezeigt.</translation>
+    </message>
+    <message>
+        <source>These are your registered Syscoin Aliases. New Syscoin Aliases take 120 confirmations to appear in this table. Alias updates take 1 confirmation to appear in this table.&lt;br&gt;&lt;br&gt;Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
+        <translation type="obsolete">Dies sind Ihre registrierte Syscoin Aliases. New Syscoin Aliases nehmen 120 Bestätigungen in dieser Tabelle angezeigt. Alias​​-Updates nehmen Sie 1 Bestätigung in dieser Tabelle angezeigt.&lt;br&gt;&lt;br&gt;Alias ​​Transfers benötigen Sie auf Aktualisieren klicken nach dem 1. Bestätigung für die Tabelle zu aktualisieren.</translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating, updating or transferring an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. New Syscoin Aliases take 120 confirmations to appear in this table. Alias updates take 1 confirmation to appear in this table.&lt;br&gt;&lt;br&gt;Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt; &lt;/font&gt;WARNUNG: Die Geldbörse ist derzeit gesperrt. Aus Sicherheitsgründen müssen Sie Ihre Passphrase, um mit Syscoin Aliases interagieren eingeben. Weil Ihre Geldbörse gesperrt ist, müssen Sie manuell diese Tabelle nach der Erstellung, Aktualisierung oder Übertragung eines Alias ​​zu aktualisieren. &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;mehr Infos&lt;/a&gt;&lt;br&gt;&lt;br&gt;Dies sind Ihre registrierte Syscoin Aliases. New Syscoin Aliases nehmen 120 Bestätigungen in dieser Tabelle angezeigt. Alias​​-Updates nehmen Sie 1 Bestätigung in dieser Tabelle angezeigt.&lt;br&gt;&lt;br&gt;Alias ​​Transfers benötigen Sie auf Aktualisieren klicken nach dem 1. Bestätigung für die Tabelle zu aktualisieren.</translation>
+    </message>
+    <message>
+        <source>These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table. Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
+        <translation type="obsolete">Dies sind Ihre registrierte Syscoin Aliases. Alias​​-Updates nehmen Sie 1 Bestätigung in dieser Tabelle angezeigt. Alias ​​Transfers benötigen Sie auf Aktualisieren klicken nach dem 1. Bestätigung für die Tabelle zu aktualisieren.</translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating, updating or transferring an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table. Alias transfers require clicking refresh after 1 confirmation for the table to update.</source>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;WARNUNG: Die Geldbörse ist derzeit gesperrt. Aus Sicherheitsgründen müssen Sie Ihre Passphrase, um mit Syscoin Aliases interagieren eingeben. Weil Ihre Geldbörse gesperrt ist, müssen Sie manuell diese Tabelle nach dem Erstellen, updating oder Übertragung eines Alias ​​zu aktualisieren. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;mehr Infos&lt;/a&gt;&lt;br&gt;&lt;br&gt;Dies sind Ihre registrierte Syscoin Aliases. Alias​​-Updates nehmen Sie 1 Bestätigung in dieser Tabelle angezeigt. Alias ​​Transfers benötigen Sie auf Aktualisieren klicken nach dem 1. Bestätigung für die Tabelle zu aktualisieren.</translation>
+    </message>
+    <message>
+        <source>These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table.</source>
+        <translation type="obsolete">Dies sind Ihre registrierte Syscoin Aliases. Alias​​-Updates 1. bis erscheinen in diesem Bestätigung Tisch.</translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;red&apos;&gt;WARNING: Your wallet is currently locked. For security purposes you&apos;ll need to enter your passphrase in order to interact with Syscoin Aliases. Because your wallet is locked you must manually refresh this table after creating or updating an Alias. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;more info&lt;/a&gt;&lt;br&gt;&lt;br&gt;These are your registered Syscoin Aliases. Alias updates take 1 confirmation to appear in this table.</source>
+        <translation type="obsolete">&lt;font color=&apos;red&apos;&gt;WARNUNG: Die Geldbörse ist derzeit gesperrt. Aus Sicherheitsgründen müssen Sie Ihre Passphrase, um mit Syscoin Aliases interagieren eingeben. Weil Ihre Brieftasche ist gesperrt, müssen Sie diese Tabelle manuell aktualisieren, nachdem die Erstellung oder Aktualisierung eines Pseudonyms gestattet. &lt;/font&gt; &lt;a href=&quot;http://lockedwallet.syscoin.org&quot;&gt;mehr Info.&lt;/a&gt;&lt;br&gt;&lt;br&gt;Dies sind Ihre registrierte Syscoin Aliases. Alias​​-Updates 1. bis erscheinen in diesem Bestätigung Tisch.</translation>
+    </message>
+    <message>
+        <location line="-7"/>
+        <source>These are your registered Syscoin Aliases. Alias operations (create, update, transfer) take 1 confirmation to appear in this table.</source>
+        <translation>Dies sind Ihre registrierte Syscoin Aliases. Alias ​​Operationen (erstellen, aktualisieren, Transfer) nehmen Sie 1 Bestätigung in dieser Tabelle angezeigt.</translation>
+    </message>
+    <message>
+        <location line="+200"/>
+        <source>Export Alias Data</source>
+        <translation>Export Aliasdaten</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Kommagetrennte-Datei (*.csv)</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Error exporting</source>
+        <translation>Fehler beim Exportieren</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Could not write to file %1.</source>
+        <translation>Konnte nicht in Datei %1 schreiben.</translation>
+    </message>
+</context>
+<context>
+    <name>MyOfferListPage</name>
+    <message>
+        <location filename="../forms/myofferlistpage.ui" line="+14"/>
+        <source>My Offers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Double-click to edit certificate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Create a new offer&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;New Offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Copy the currently selected offer to the system clipboard&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Copy Offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">Daten der aktuellen Ansicht in eine Datei exportieren</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Export</source>
+        <translation type="unfinished">E&amp;xportieren</translation>
+    </message>
+    <message>
+        <location filename="../myofferlistpage.cpp" line="+31"/>
+        <source>These all of your registered Syscoin offers. Remember to check the expiration depth of your offers regularly.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Copy Va&amp;lue</source>
+        <translation type="unfinished">&amp;Wert Kopieren</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Edit</source>
+        <translation type="unfinished">&amp;Editieren</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Transfer Offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+176"/>
+        <source>Export Offer Data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Comma separated file (*.csv)</source>
+        <translation type="unfinished">Kommagetrennte-Datei (*.csv)</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Error exporting</source>
+        <translation type="unfinished">Fehler beim Exportieren</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Could not write to file %1.</source>
+        <translation type="unfinished">Konnte nicht in Datei %1 schreiben.</translation>
+    </message>
+</context>
+<context>
+    <name>OfferTableModel</name>
+    <message>
+        <location filename="../offertablemodel.cpp" line="+220"/>
+        <source>Offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Category</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Title</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Price</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Quantity</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Expiration Height</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Description</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>OfferView</name>
+    <message>
+        <location filename="../offerview.cpp" line="+40"/>
+        <source>All &amp;Offers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;My Offers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Accept and &amp;Pay for Offer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Accepted Offers</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -952,6 +2366,16 @@ Adresse: %4</translation>
         <translation>Adressen in der Transaktionsliste &amp;anzeigen</translation>
     </message>
     <message>
+        <location line="+7"/>
+        <source>Whether to show coin control features or not.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Display coin &amp;control features (experts only!)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+71"/>
         <source>&amp;OK</source>
         <translation>&amp;OK</translation>
@@ -967,12 +2391,12 @@ Adresse: %4</translation>
         <translation>&amp;Übernehmen</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+53"/>
+        <location filename="../optionsdialog.cpp" line="+54"/>
         <source>default</source>
         <translation>Standard</translation>
     </message>
     <message>
-        <location line="+130"/>
+        <location line="+131"/>
         <source>Confirm options reset</source>
         <translation>Zurücksetzen der Konfiguration bestätigen</translation>
     </message>
@@ -1007,53 +2431,81 @@ Adresse: %4</translation>
 <context>
     <name>OverviewPage</name>
     <message>
-        <location filename="../forms/overviewpage.ui" line="+14"/>
+        <location filename="../forms/overviewpage.ui" line="+78"/>
         <source>Form</source>
         <translation>Formular</translation>
     </message>
     <message>
-        <location line="+50"/>
-        <location line="+166"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Syscoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Die angezeigten Informationen sind möglicherweise nicht mehr aktuell. Ihre Brieftasche wird automatisch synchronisiert, nachdem eine Verbindung zum Syscoin-Netzwerk hergestellt wurde. Dieser Prozess ist jedoch derzeit noch nicht abgeschlossen.</translation>
+        <translation type="obsolete">Die angezeigten Informationen sind möglicherweise nicht mehr aktuell. Ihre Brieftasche wird automatisch synchronisiert, nachdem eine Verbindung zum Syscoin-Netzwerk hergestellt wurde. Dieser Prozess ist jedoch derzeit noch nicht abgeschlossen.</translation>
     </message>
     <message>
-        <location line="-124"/>
+        <location line="+448"/>
         <source>Balance:</source>
         <translation>Kontostand:</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+38"/>
         <source>Unconfirmed:</source>
         <translation>Unbestätigt:</translation>
     </message>
     <message>
-        <location line="-78"/>
+        <location line="-93"/>
         <source>Wallet</source>
         <translation>Brieftasche</translation>
     </message>
     <message>
-        <location line="+107"/>
+        <location line="-267"/>
+        <source>Follow us on Twitter:</source>
+        <translation>Folgen Sie uns auf Twitter:</translation>
+    </message>
+    <message>
+        <location line="+88"/>
+        <source>&lt;a href=&quot;https://twitter.com/syscoin&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0093dd;&quot;&gt;@syscoin&lt;/span&gt;&lt;/a&gt;</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+94"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;http://www.facebook.com/syscoin&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0093dd;&quot;&gt;facebook.com/syscoin&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>Like us on Facebook:</source>
+        <translation>Wie Sie uns auf Facebook:</translation>
+    </message>
+    <message>
+        <location line="+58"/>
+        <location line="+173"/>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the SysCoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>Die angezeigten Informationen können veraltet sein. Ihre Geldbörse synchronisiert automatisch mit dem Netzwerk SysCoin, nachdem eine Verbindung hergestellt ist, aber dieser Prozess ist noch nicht abgeschlossen.</translation>
+    </message>
+    <message>
+        <location line="-49"/>
         <source>Immature:</source>
         <translation>Unreif:</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+16"/>
         <source>Mined balance that has not yet matured</source>
         <translation>Erarbeiteter Betrag der noch nicht gereift ist</translation>
     </message>
     <message>
-        <location line="+46"/>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Letzte Transaktionen&lt;/b&gt;</translation>
+        <location line="+26"/>
+        <source>Recent transactions</source>
+        <translation>Jüngsten Transaktionen</translation>
     </message>
     <message>
-        <location line="-101"/>
+        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
+        <translation type="obsolete">&lt;b&gt;Letzte Transaktionen&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location line="-99"/>
         <source>Your current balance</source>
         <translation>Ihr aktueller Kontostand</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+38"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
         <translation>Betrag aus unbestätigten Transaktionen, der noch nicht im aktuellen Kontostand enthalten ist</translation>
     </message>
@@ -1067,7 +2519,7 @@ Adresse: %4</translation>
 <context>
     <name>PaymentServer</name>
     <message>
-        <location filename="../paymentserver.cpp" line="+107"/>
+        <location filename="../paymentserver.cpp" line="+109"/>
         <source>Cannot start syscoin: click-to-pay handler</source>
         <translation>&quot;syscoin: Klicken-zum-Bezahlen&quot;-Handler konnte nicht gestartet werden</translation>
     </message>
@@ -1105,7 +2557,7 @@ Adresse: %4</translation>
         <translation>&amp;Speichern unter...</translation>
     </message>
     <message>
-        <location filename="../qrcodedialog.cpp" line="+62"/>
+        <location filename="../qrcodedialog.cpp" line="+64"/>
         <source>Error encoding URI into QR Code.</source>
         <translation>Fehler beim Kodieren der URI in den QR-Code.</translation>
     </message>
@@ -1147,7 +2599,7 @@ Adresse: %4</translation>
         <location line="+53"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location filename="../rpcconsole.cpp" line="+339"/>
+        <location filename="../rpcconsole.cpp" line="+341"/>
         <source>N/A</source>
         <translation>n.v.</translation>
     </message>
@@ -1281,7 +2733,7 @@ Adresse: %4</translation>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+124"/>
+        <location filename="../sendcoinsdialog.cpp" line="+180"/>
         <location line="+5"/>
         <location line="+5"/>
         <location line="+5"/>
@@ -1292,7 +2744,82 @@ Adresse: %4</translation>
         <translation>Syscoins überweisen</translation>
     </message>
     <message>
+        <location line="+76"/>
+        <source>Coin Control Features</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Inputs...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>automatically selected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Insufficient funds!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+77"/>
+        <source>Quantity:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>Bytes:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+51"/>
+        <source>Amount:</source>
+        <translation type="unfinished">Betrag:</translation>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>Priority:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>medium</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>Fee:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>Low Output:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>no</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+32"/>
+        <source>After Fee:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>Change:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+50"/>
+        <source>custom change address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+106"/>
         <source>Send to multiple recipients at once</source>
         <translation>In einer Transaktion an mehrere Empfänger auf einmal überweisen</translation>
     </message>
@@ -1318,8 +2845,12 @@ Adresse: %4</translation>
     </message>
     <message>
         <location line="+10"/>
+        <source>123.456 LTC</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>123.456 BTC</source>
-        <translation>123.456 BTC</translation>
+        <translation type="obsolete">123.456 BTC</translation>
     </message>
     <message>
         <location line="+31"/>
@@ -1332,12 +2863,58 @@ Adresse: %4</translation>
         <translation>&amp;Überweisen</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-59"/>
+        <location filename="../sendcoinsdialog.cpp" line="-176"/>
+        <source>Enter a Syscoin address or alias (e.g. UPMdB5j6XH61G6W3xiocGVHKHrLtbo3Pq8 or myaliasname)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Copy quantity</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy amount</source>
+        <translation type="unfinished">Betrag kopieren</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy fee</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy after fee</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy bytes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy priority</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy low output</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Copy change</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+88"/>
+        <location line="+2"/>
         <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
         <translation>&lt;b&gt;%1&lt;/b&gt; an %2 (%3)</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>Confirm send coins</source>
         <translation>Überweisung bestätigen</translation>
     </message>
@@ -1352,7 +2929,7 @@ Adresse: %4</translation>
         <translation> und </translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+27"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>Die Zahlungsadresse ist ungültig, bitte nochmals überprüfen.</translation>
     </message>
@@ -1386,6 +2963,21 @@ Adresse: %4</translation>
         <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Fehler: Die Transaktion wurde abgelehnt. Dies kann passieren, wenn einige Syscoins aus Ihrer Brieftasche bereits ausgegeben wurden. Beispielsweise weil Sie eine Kopie Ihrer wallet.dat genutzt, die Syscoins dort ausgegeben haben und dies daher in der derzeit aktiven Brieftasche nicht vermerkt ist.</translation>
     </message>
+    <message>
+        <location line="+272"/>
+        <source>Warning: Invalid Bitcoin address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>(no label)</source>
+        <translation type="unfinished">(keine Bezeichnung)</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Warning: Unknown change address</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SendCoinsEntry</name>
@@ -1405,12 +2997,11 @@ Adresse: %4</translation>
         <translation>&amp;Empfänger:</translation>
     </message>
     <message>
-        <location line="+34"/>
         <source>The address to send the payment to (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
-        <translation>Die Zahlungsadresse der Überweisung (z.B. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</translation>
+        <translation type="obsolete">Die Zahlungsadresse der Überweisung (z.B. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+94"/>
         <location filename="../sendcoinsentry.cpp" line="+26"/>
         <source>Enter a label for this address to add it to your address book</source>
         <translation>Adressbezeichnung eingeben (diese wird zusammen mit der Adresse dem Adressbuch hinzugefügt)</translation>
@@ -1421,7 +3012,12 @@ Adresse: %4</translation>
         <translation>&amp;Bezeichnung:</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+18"/>
+        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Choose address from address book</source>
         <translation>Adresse aus Adressbuch wählen</translation>
     </message>
@@ -1447,7 +3043,7 @@ Adresse: %4</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter a Syscoin address (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
+        <source>Enter a Syscoin address or alias (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
         <translation>Syscoin-Adresse eingeben (z.B. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</translation>
     </message>
 </context>
@@ -1564,7 +3160,7 @@ Adresse: %4</translation>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter a Syscoin address (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
+        <source>Enter a Syscoin address or alias (e.g. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</source>
         <translation>Syscoin-Adresse eingeben (z.B. SULHffDGwTf2sXyiXAPJ9qwf9FKQeWZ8FE)</translation>
     </message>
     <message>
@@ -1647,14 +3243,23 @@ Adresse: %4</translation>
 <context>
     <name>SplashScreen</name>
     <message>
-        <location filename="../splashscreen.cpp" line="+22"/>
+        <location filename="../splashscreen.cpp" line="+25"/>
+        <source>The Bitcoin developers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The Litecoin developers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>The Syscoin developers</source>
         <translation>Die Syscoinentwickler</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>[testnet]</source>
-        <translation>[Testnetz]</translation>
+        <translation type="obsolete">[Testnetz]</translation>
     </message>
 </context>
 <context>
@@ -1687,7 +3292,10 @@ Adresse: %4</translation>
     <message numerus="yes">
         <location line="+7"/>
         <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, über %n Knoten übertragen</numerusform><numerusform>, über %n Knoten übertragen</numerusform></translation>
+        <translation>
+            <numerusform>, über %n Knoten übertragen</numerusform>
+            <numerusform>, über %n Knoten übertragen</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1740,7 +3348,10 @@ Adresse: %4</translation>
     <message numerus="yes">
         <location line="-102"/>
         <source>matures in %n more block(s)</source>
-        <translation><numerusform>reift noch %n weiteren Block</numerusform><numerusform>reift noch %n weitere Blöcke</numerusform></translation>
+        <translation>
+            <numerusform>reift noch %n weiteren Block</numerusform>
+            <numerusform>reift noch %n weitere Blöcke</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1823,7 +3434,10 @@ Adresse: %4</translation>
     <message numerus="yes">
         <location line="-35"/>
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Offen für %n weiteren Block</numerusform><numerusform>Offen für %n weitere Blöcke</numerusform></translation>
+        <translation>
+            <numerusform>Offen für %n weiteren Block</numerusform>
+            <numerusform>Offen für %n weitere Blöcke</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+70"/>
@@ -1869,7 +3483,10 @@ Adresse: %4</translation>
     <message numerus="yes">
         <location line="+57"/>
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Offen für %n weiteren Block</numerusform><numerusform>Offen für %n weitere Blöcke</numerusform></translation>
+        <translation>
+            <numerusform>Offen für %n weiteren Block</numerusform>
+            <numerusform>Offen für %n weitere Blöcke</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+3"/>
@@ -1894,7 +3511,10 @@ Adresse: %4</translation>
     <message numerus="yes">
         <location line="+8"/>
         <source>Mined balance will be available when it matures in %n more block(s)</source>
-        <translation><numerusform>Erarbeiteter Betrag wird verfügbar sein, nachdem er noch %n weiteren Block reift</numerusform><numerusform>Erarbeiteter Betrag wird verfügbar sein, nachdem er noch %n weitere Blöcke reift</numerusform></translation>
+        <translation>
+            <numerusform>Erarbeiteter Betrag wird verfügbar sein, nachdem er noch %n weiteren Block reift</numerusform>
+            <numerusform>Erarbeiteter Betrag wird verfügbar sein, nachdem er noch %n weitere Blöcke reift</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1932,7 +3552,97 @@ Adresse: %4</translation>
         <translation>Erarbeitet</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+2"/>
+        <source>New Alias</source>
+        <translation>Neuer Alias</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Alias Activated</source>
+        <translation>Alias ​​Aktiv</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Alias Updated</source>
+        <translation>Alias ​​Aktualisiert</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Alias Updated (Transfer)</source>
+        <translation>Alias A​​ktualisiert (Transfer)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>New Data Alias</source>
+        <translation>Neue Daten Alias</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data Alias Activated</source>
+        <translation>Daten Alias ​​Aktiv</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data Alias Updated</source>
+        <translation>Daten Alias ​​aktualisiert</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Data Alias Updated (Tranfer)</source>
+        <translation>Daten Alias ​​aktualisiert (Transfer)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>New Offer</source>
+        <translation>Neu im Angebot</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Offer Activated</source>
+        <translation>Angebot Aktiv</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Offer Updated</source>
+        <translation>Angebot aktualisiert</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Offer Accepted</source>
+        <translation>Angebot angenommen</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Offer Paid</source>
+        <translation>Bezahlte Angebot</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>New Cert. Issuer</source>
+        <translation>Neues Zertifikat Emittent</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cert. Issuer Activated</source>
+        <translation>Zertifikat Emittent Aktiv</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Cert. Issuer Updated</source>
+        <translation>Zertifikat Emittent aktualisiert</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>New Certificate</source>
+        <translation>Neues Zertifikat</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Certificate Transfer</source>
+        <translation>Übertragung von Zertifikaten</translation>
+    </message>
+    <message>
+        <location line="+62"/>
         <source>(n/a)</source>
         <translation>(k.A.)</translation>
     </message>
@@ -1949,12 +3659,12 @@ Adresse: %4</translation>
     <message>
         <location line="+2"/>
         <source>Type of transaction.</source>
-        <translation>Art der Transaktion</translation>
+        <translation>Art der Transaktion.</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Destination address of transaction.</source>
-        <translation>Zieladresse der Transaktion</translation>
+        <translation>Zieladresse der Transaktion.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1965,7 +3675,7 @@ Adresse: %4</translation>
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="+52"/>
+        <location filename="../transactionview.cpp" line="+54"/>
         <location line="+16"/>
         <source>All</source>
         <translation>Alle</translation>
@@ -2026,7 +3736,97 @@ Adresse: %4</translation>
         <translation>Andere</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+1"/>
+        <source>New Alias</source>
+        <translation>Neuer Alias</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Alias Activated</source>
+        <translation>Alias ​​Aktiv</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Alias Updated</source>
+        <translation>Alias ​​Aktualisiert</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Alias Updated (Transfer)</source>
+        <translation>Alias A​​ktualisiert (Transfer)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New Data Alias</source>
+        <translation>Neue Daten Alias</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data Alias Activated</source>
+        <translation>Daten Alias ​​Aktiv</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data Alias Updated</source>
+        <translation>Daten Alias ​​aktualisiert</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Data Alias Updated (Transfer)</source>
+        <translation>Daten Alias ​​aktualisiert (Transfer)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New Offer</source>
+        <translation>Neu im Angebot</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offer Activated</source>
+        <translation>Angebot Aktiv</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offer Updated</source>
+        <translation>Angebot aktualisiert</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offer Accepted</source>
+        <translation>Angebot angenommen</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Offer Paid</source>
+        <translation>Bezahlte Angebot</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New Cert. Issuer</source>
+        <translation>Neues Zertifikat Emittent</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cert. Issuer Activated</source>
+        <translation>Zertifikat Emittent Aktiv</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Cert. Issuer updated</source>
+        <translation>Zertifikat Emittent aktualisiert</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>New Certificate</source>
+        <translation>Neues Zertifikat</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Certificate Transfer</source>
+        <translation>Übertragung von Zertifikaten</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Enter address or label to search</source>
         <translation>Zu suchende Adresse oder Bezeichnung eingeben</translation>
     </message>
@@ -2066,7 +3866,7 @@ Adresse: %4</translation>
         <translation>Transaktionsdetails anzeigen</translation>
     </message>
     <message>
-        <location line="+139"/>
+        <location line="+143"/>
         <source>Export Transaction Data</source>
         <translation>Transaktionen exportieren</translation>
     </message>
@@ -2132,9 +3932,17 @@ Adresse: %4</translation>
     </message>
 </context>
 <context>
+    <name>WalletFrame</name>
+    <message>
+        <location filename="../walletframe.cpp" line="+29"/>
+        <source>No wallet has been loaded.</source>
+        <translation></translation>
+    </message>
+</context>
+<context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+193"/>
+        <location filename="../walletmodel.cpp" line="+272"/>
         <source>Send Coins</source>
         <translation>Syscoins überweisen</translation>
     </message>
@@ -2142,7 +3950,7 @@ Adresse: %4</translation>
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+42"/>
+        <location filename="../walletview.cpp" line="+56"/>
         <source>&amp;Export</source>
         <translation>E&amp;xportieren</translation>
     </message>
@@ -2152,7 +3960,7 @@ Adresse: %4</translation>
         <translation>Daten der aktuellen Ansicht in eine Datei exportieren</translation>
     </message>
     <message>
-        <location line="+193"/>
+        <location line="+278"/>
         <source>Backup Wallet</source>
         <translation>Brieftasche sichern</translation>
     </message>
@@ -2555,7 +4363,12 @@ zum Beispiel: alertnotify=echo %%s | mail -s \&quot;Syscoin Alert\&quot; admin@f
         <translation>Verifiziere Brieftasche...</translation>
     </message>
     <message>
-        <location line="-69"/>
+        <location line="+4"/>
+        <source>You need to rebuild the database using -reindex to change -txindex</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-73"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Blöcke aus externer Datei blk000??.dat importieren</translation>
     </message>
@@ -2720,12 +4533,11 @@ zum Beispiel: alertnotify=echo %%s | mail -s \&quot;Syscoin Alert\&quot; admin@f
         <translation>Warnung: Diese Version is veraltet, Aktualisierung erforderlich!</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>You need to rebuild the databases using -reindex to change -txindex</source>
-        <translation>Sie müssen die Datenbank mit Hilfe von -reindex neu aufbauen, um -txindex zu verändern.</translation>
+        <translation type="obsolete">Sie müssen die Datenbank mit Hilfe von -reindex neu aufbauen, um -txindex zu verändern.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat beschädigt, Rettung fehlgeschlagen</translation>
     </message>

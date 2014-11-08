@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
+﻿// Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -670,9 +670,12 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
     for (int iter = 0; iter < 2; iter++) {
         ret[iter] = true;
 
+        // this is a  misnomer - this method decodes all Syscoin transactions
         bool good = DecodeAliasTx(*this, op, nOut, vvch, iter == 0 ? 0 : -1);
+        if(!good) continue;
+
         // alias
-        if(good && IsAliasOp(op)) {
+        if(IsAliasOp(op)) {
 	        if (vvch[0].size() > MAX_NAME_LENGTH) {
 	            ret[iter] = error("alias transaction with alias too long");
 	            continue;
@@ -696,10 +699,7 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 	                ret[iter] = error("alias transaction has unknown op");
 	        }
         }
-
-        // offer
-        good = DecodeOfferTx(*this, op, nOut, vvch, iter == 0 ? 0 : -1);
-        if(good && IsOfferOp(op)) {
+        else if(IsOfferOp(op)) {
 	        if (vvch[0].size() > MAX_NAME_LENGTH) {
 	            ret[iter] = error("offer transaction with offer title too long");
 	            continue;
@@ -737,10 +737,7 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 	                ret[iter] = error("offer transaction has unknown op");
 	        }
         }
-
-        // cert
-        good = DecodeCertTx(*this, op, nOut, vvch, iter == 0 ? 0 : -1);
-        if(good && IsCertOp(op)) {
+        else if(IsCertOp(op)) {
 	        if (vvch[0].size() > MAX_NAME_LENGTH) {
 	            ret[iter] = error("cert transaction with cert title too long");
 	            continue;
@@ -779,6 +776,7 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 	        }
         }        
     }
+    // TODO CB this is an artifact from namecoin. I need to understand and remove if not necessary
     return ret[0] || ret[1];
 }
 
@@ -838,7 +836,6 @@ void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins) {
 
 bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 		bool fCheckInputs, bool fLimitFree, bool* pfMissingInputs) {
-	printf( "*** ACCEPTTOMEMORYPOOL %s %s\n", fCheckInputs ? "CHECKINPUTS" : "", tx.GetHash().ToString().c_str() );
 
 	if (pfMissingInputs)
 		*pfMissingInputs = false;
@@ -975,6 +972,36 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 						dFreeCount + nSize);
 			dFreeCount += nSize;
 		}
+      vector<vector<unsigned char> > vvch;
+	    int op, nOut;
+		if(DecodeAliasTx(tx, op, nOut, vvch, -1)) {
+			if(IsAliasOp(op)) {
+				TRY_LOCK(cs_main, cs_maintry);
+	            mapAliasesPending[vvch[0]].insert(tx.GetHash());
+		        printf("AcceptToMemoryPool() : Added alias transaction '%s' to memory pool.\n",
+	                stringFromVch(vvch[0]).c_str());
+		    } 
+			else if(IsOfferOp(op)) {
+				TRY_LOCK(cs_main, cs_maintry);
+	            if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY)
+					mapOfferAcceptPending[vvch[1]].insert(tx.GetHash());
+				else
+	                mapOfferPending[op == OP_OFFER_NEW ? vchFromString(HexStr(vvch[0]))
+	                    : vvch[0]].insert(tx.GetHash());
+				printf("AcceptToMemoryPool() : Added offer transaction '%s' to memory pool.\n", 
+	                stringFromVch(vvch[0]).c_str());
+			} 
+			else if(IsCertOp(op)) {
+				TRY_LOCK(cs_main, cs_maintry);
+				if(op == OP_CERT_TRANSFER)
+					mapCertItemPending[vvch[1]].insert(tx.GetHash());
+				else
+	                mapCertIssuerPending[op == OP_CERTISSUER_NEW ? vchFromString(HexStr(vvch[0]))
+	                    : vvch[0]].insert(tx.GetHash());
+				printf("AcceptToMemoryPool() : Added cert transaction '%s' to memory pool.\n", 
+	                stringFromVch(vvch[0]).c_str());
+		    }
+		}
 
 		// Check against previous transactions
 		// This is done last to help prevent CPU exhaustion denial-of-service attacks.
@@ -1001,40 +1028,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 	        error("AcceptToMemoryPool() : no output in syscoin tx %s\n", tx.ToString().c_str());
 	    }
 
-        vector<vector<unsigned char> > vvch;
-	    int op, nOut;
-
-	    bool good = DecodeAliasTx(tx, op, nOut, vvch, -1);
-	    if(good && IsAliasOp(op)) {
-	        LOCK(cs_main);
-            mapAliasesPending[vvch[0]].insert(tx.GetHash());
-	        printf("AcceptToMemoryPool() : Added alias transaction '%s' to memory pool.\n",
-                stringFromVch(vvch[0]).c_str());
-	    }
-
-		good = DecodeOfferTx(tx, op, nOut, vvch, -1);
-	    if(good && IsOfferOp(op)) {
-	        LOCK(cs_main);
-            if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY)
-				mapOfferAcceptPending[vvch[1]].insert(tx.GetHash());
-			else
-                mapOfferPending[op == OP_OFFER_NEW ? vchFromString(HexStr(vvch[0]))
-                    : vvch[0]].insert(tx.GetHash());
-			printf("AcceptToMemoryPool() : Added offer transaction '%s' to memory pool.\n", 
-                stringFromVch(vvch[0]).c_str());
-	    }
-
-	    good = DecodeCertTx(tx, op, nOut, vvch, -1);
-		if(good && IsCertOp(op)) {
-	        LOCK(cs_main);
-			if(op == OP_CERT_TRANSFER)
-				mapCertItemPending[vvch[1]].insert(tx.GetHash());
-			else
-                mapCertIssuerPending[op == OP_CERTISSUER_NEW ? vchFromString(HexStr(vvch[0]))
-                    : vvch[0]].insert(tx.GetHash());
-			printf("AcceptToMemoryPool() : Added cert transaction '%s' to memory pool.\n", 
-                stringFromVch(vvch[0]).c_str());
-	    }
+ 
 	}
 
 	///// are we sure this is ok when loading transactions or restoring block txes
@@ -1186,19 +1180,19 @@ bool CWalletTx::AcceptWalletTransaction(bool fCheckInputs) {
 }
 
 // Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock
-bool GetTransaction(const uint256 &hash, CTransaction &txOut,
-		uint256 &hashBlock, bool fAllowSlow) {
+bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock, bool fAllowSlow) {
+
 	CBlockIndex *pindexSlow = NULL;
 	{
-		LOCK(cs_main);
+		TRY_LOCK(cs_main, cs_trymain);
 		{
-			LOCK(mempool.cs);
+			TRY_LOCK(mempool.cs, cs_trymempool);
 			if (mempool.exists(hash)) {
 				txOut = mempool.lookup(hash);
 				return true;
 			}
 		}
-
+	
 		if (fTxIndex) {
 			CDiskTxPos postx;
 			if (pblocktree->ReadTxIndex(hash, postx)) {
@@ -1219,7 +1213,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut,
 				return true;
 			}
 		}
-
+	
 		if (fAllowSlow) { // use coin database to locate block that contains transaction, and scan it
 			int nHeight = -1;
 			{
@@ -1339,7 +1333,7 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
         || (fCakeNet || fTestNet)) s += b+c+d;
 
     if (fDebug)
-	printf ("GetBlockvalue of Block %d: subsidy=%"PRI64d", fees=%"PRI64d", aliasSubsidy=%"PRI64d", offerSubsidy=%"PRI64d", certSubidy=%"PRI64d", sum=%"PRI64d". \n", nHeight, a,e,b,c,d,s);
+		printf ("GetBlockvalue of Block %d: subsidy=%"PRI64d", fees=%"PRI64d", aliasSubsidy=%"PRI64d", offerSubsidy=%"PRI64d", certSubidy=%"PRI64d", sum=%"PRI64d". \n", nHeight, a,e,b,c,d,s);
     return s;
 }
 
@@ -1548,6 +1542,7 @@ void static InvalidBlockFound(CBlockIndex *pindex) {
 }
 
 bool LoadSyscoinFees() {
+	TRY_LOCK(cs_main, cs_maintry);
     // read alias and offer indexes
 
     // read alias network fees
@@ -1778,7 +1773,7 @@ bool CTransaction::CheckInputs(CBlockIndex *pindex, CValidationState &state, CCo
 		int op;
 		int nOut;
 
-		bool bGood = DecodeAliasTx(*this, op, nOut, vvchArgs, pindex->nHeight);
+		bool bGood = DecodeAliasTx(*this, op, nOut, vvchArgs, -1);
 		if(bGood && IsAliasOp(op)) {
 			if (!CheckAliasInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
 				return false;
@@ -1857,12 +1852,183 @@ bool CTransaction::CheckInputs(CBlockIndex *pindex, CValidationState &state, CCo
 	return true;
 }
 
+bool DisconnectAlias( CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs ) {
+
+	if(op != OP_ALIAS_NEW) {
+
+		string opName = aliasFromOp(op);
+		vector<CAliasIndex> vtxPos;
+		if (!paliasdb->ReadAlias(vvchArgs[0], vtxPos))
+			return error("DisconnectBlock() : failed to read from alias DB for %s %s\n",
+					opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
+
+		// vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
+		// be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
+		if (vtxPos.size()) {
+			CDiskTxPos txindex;
+			if (!pblocktree->ReadTxIndex(tx.GetHash(), txindex))
+				return error("DisconnectBlock() : failed to read tx index for %s %s %s\n",
+						opName.c_str(), stringFromVch(vvchArgs[0]).c_str(), tx.GetHash().ToString().c_str());
+			if (vtxPos.back().txHash == tx.GetHash())
+				vtxPos.pop_back();
+			// TODO validate that the first pos is the current tx pos
+		}
+
+		if(!paliasdb->WriteName(vvchArgs[0], vtxPos))
+			return error("DisconnectBlock() : failed to write to alias DB");
+
+		CAliasFee theFeeObject;
+		theFeeObject.hash =  tx.GetHash();
+		theFeeObject.nHeight = pindex->nHeight;
+		theFeeObject.nValue = 0;
+		//RemoveAliasFee(theFeeObject);
+		InsertAliasFee(pindex, tx.GetHash(), 0);
+		vector<CAliasFee> vAliasFees(lstAliasFees.begin(), lstAliasFees.end());
+		if (!paliasdb->WriteAliasTxFees(vAliasFees))
+			return error( "DisconnectBlock() : failed to write fees to alias DB");
+
+	}
+
+	printf("DISCONNECTED ALIAS TXN: alias=%s op=%s hash=%s  height=%d\n",
+		stringFromVch(vvchArgs[0]).c_str(),
+		aliasFromOp(op).c_str(),
+		tx.GetHash().ToString().c_str(),
+		pindex->nHeight);
+
+	return true;
+}
+
+bool DisconnectOffer( CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs ) {
+    string opName = offerFromOp(op);
+
+	COffer theOffer(tx);
+	if (theOffer.IsNull())
+		error("CheckOfferInputs() : null offer object");
+
+    if(op != OP_OFFER_NEW) {
+        // make sure a DB record exists for this offer
+        vector<COffer> vtxPos;
+        if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos))
+            return error("DisconnectBlock() : failed to read from offer DB for %s %s\n",
+            		opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
+
+        if( op == OP_OFFER_PAY || op == OP_OFFER_ACCEPT ) {
+        	vector<unsigned char> vvchOfferAccept = vvchArgs[1];
+        	COfferAccept theOfferAccept;
+
+        	// make sure the offeraccept is also in the serialized offer in the txn
+        	if(!theOffer.GetAcceptByHash(vvchOfferAccept, theOfferAccept))
+	            return error("DisconnectBlock() : not found in offer for offer accept %s %s\n",
+	            		opName.c_str(), HexStr(vvchOfferAccept).c_str());
+
+	        // make sure offer accept db record already exists
+	        if (pofferdb->ExistsOfferAccept(vvchOfferAccept))
+	        	pofferdb->EraseOfferAccept(vvchOfferAccept);
+        }
+
+        // vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
+        // be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
+        if (vtxPos.size()) {
+            CDiskTxPos txindex;
+            if (!pblocktree->ReadTxIndex(tx.GetHash(), txindex))
+                return error("DisconnectBlock() : failed to read tx index for offer %s %s %s\n",
+                		opName.c_str(), stringFromVch(vvchArgs[0]).c_str(), tx.GetHash().ToString().c_str());
+
+            while(vtxPos.back().txHash == tx.GetHash())
+                vtxPos.pop_back();
+        }
+
+        // write new offer state to db
+		if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
+			return error("DisconnectBlock() : failed to write to offer DB");
+
+		COfferFee theFeeObject;
+		theFeeObject.hash =  tx.GetHash();
+		theFeeObject.nHeight = pindex->nHeight;
+		//RemoveOfferFee(theFeeObject);
+		InsertOfferFee(pindex, tx.GetHash(), 0);
+		vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
+		if (!pofferdb->WriteOfferTxFees(vOfferFees))
+			return error( "DisconnectBlock() : failed to write fees to offer DB");
+	}
+
+	printf("DISCONNECTED offer TXN: offer=%s op=%s hash=%s  height=%d\n",
+		stringFromVch(vvchArgs[0]).c_str(),
+		aliasFromOp(op).c_str(),
+		tx.GetHash().ToString().c_str(),
+		pindex->nHeight);
+
+	return true;
+}
+
+bool DisconnectCertificate( CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs ) {
+	string opName = certissuerFromOp(op);
+
+	CCertIssuer theIssuer(tx);
+	if (theIssuer.IsNull())
+		error("CheckOfferInputs() : null issuer object");
+
+	if(op != OP_CERTISSUER_NEW) {
+		// make sure a DB record exists for this cert
+		vector<CCertIssuer> vtxPos;
+		if (!pcertdb->ReadCertIssuer(vvchArgs[0], vtxPos))
+			return error("DisconnectBlock() : failed to read from certificate DB for %s %s\n",
+					opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
+
+		if( op == OP_CERT_NEW || op == OP_CERT_TRANSFER ) {
+			vector<unsigned char> vvchCert = vvchArgs[1];
+			CCertItem theCert;
+
+			// make sure the offeraccept is also in the serialized offer in the txn
+			if(!theIssuer.GetCertItemByHash(vvchCert, theCert))
+				return error("DisconnectBlock() : not found in offer for offer accept %s %s\n",
+						opName.c_str(), HexStr(vvchCert).c_str());
+
+			// make sure offer accept db record already exists
+			if (pcertdb->ExistsCertItem(vvchCert))
+				pcertdb->EraseCertItem(vvchCert);
+		}
+
+		// vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
+		// be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
+		if (vtxPos.size()) {
+			CDiskTxPos txindex;
+			if (!pblocktree->ReadTxIndex(tx.GetHash(), txindex))
+				return error("DisconnectBlock() : failed to read tx index for offer %s %s %s\n",
+						opName.c_str(), stringFromVch(vvchArgs[0]).c_str(), tx.GetHash().ToString().c_str());
+			while(vtxPos.back().txHash == tx.GetHash())
+				vtxPos.pop_back();
+			// TODO validate that the first pos is the current tx pos
+		}
+
+		// write new offer state to db
+		if(!pcertdb->WriteCertIssuer(vvchArgs[0], vtxPos))
+			return error("DisconnectBlock() : failed to write to offer DB");
+
+		CCertFee theFeeObject;
+		theFeeObject.hash =  tx.GetHash();
+		theFeeObject.nHeight = pindex->nHeight;
+		theFeeObject.nFee = 0;
+		//RemoveCertFee(theFeeObject);
+		InsertCertFee(pindex, tx.GetHash(), 0);
+		vector<CCertFee> vCertIssuerFees(lstCertIssuerFees.begin(), lstCertIssuerFees.end());
+		if (!pcertdb->WriteCertFees(vCertIssuerFees))
+			return error( "DisconnectBlock() : failed to write fees to certissuer DB");
+	}
+
+	printf("DISCONNECTED CERT TXN: title=%s hash=%s height=%d\n",
+		   op == OP_CERTISSUER_NEW ? HexStr(vvchArgs[0]).c_str() : stringFromVch(vvchArgs[0]).c_str(),
+			tx.GetHash().ToString().c_str(),
+			pindex->nHeight);
+
+	return true;
+}
+
 bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoinsViewCache &view, bool *pfClean) {
 	assert(pindex == view.GetBestBlock());
 
 	if (pfClean)
 		*pfClean = false;
-
 	bool fClean = true;
 
 	CBlockUndo blockUndo;
@@ -1901,189 +2067,19 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 					fClean
 							&& error(
 									"DisconnectBlock() : added transaction mismatch? database corrupted");
-
 		// remove outputs
 		outs = CCoins();
 
 	    if (tx.nVersion == SYSCOIN_TX_VERSION) {
 		    vector<vector<unsigned char> > vvchArgs;
 		    int op, nOut;
+			// TODO CB refactor into apropriate files
 
-		    // alias, data
-		    bool good = DecodeAliasTx(tx, op, nOut, vvchArgs, pindex->nHeight);
-
-            //*************************
-		    if (good && IsAliasOp(op) && op != OP_ALIAS_NEW) {
-                string opName = aliasFromOp(op);
-
-		        vector<CAliasIndex> vtxPos;
-		        if (!paliasdb->ReadAlias(vvchArgs[0], vtxPos))
-		            return error("DisconnectBlock() : failed to read from alias DB for %s %s\n",
-		            		opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
-
-		        // vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
-		        // be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
-		        if (vtxPos.size()) {
-		            CDiskTxPos txindex;
-		            if (!pblocktree->ReadTxIndex(tx.GetHash(), txindex))
-		                return error("DisconnectBlock() : failed to read tx index for %s %s %s\n",
-		                		opName.c_str(), stringFromVch(vvchArgs[0]).c_str(), tx.GetHash().ToString().c_str());
-
-		            if (vtxPos.back().txHash == tx.GetHash())
-		                vtxPos.pop_back();
-
-		            // TODO validate that the first pos is the current tx pos
-		        }
-
-				if(!paliasdb->WriteAlias(vvchArgs[0], vtxPos))
-					return error("DisconnectBlock() : failed to write to alias DB");
-                    
-                // write alias fees to db
-                int64 nTheFee = GetAliasNetFee(tx);
-                InsertAliasFee(pindex, tx.GetHash(), nTheFee);
-                if( nTheFee != 0) printf("DisconnectBlock: Added %lf in alias fees to track for regeneration.\n", 
-                    (double) nTheFee / COIN);
-                vector<CAliasFee> vAliasFees(lstAliasFees.begin(), lstAliasFees.end());
-                if (!paliasdb->WriteAliasTxFees(vAliasFees))
-                    return error( "DisconnectBlock() : failed to write fees to alias DB");
-
-		        printf("DISCONNECTED ALIAS TXN: alias=%s op=%s hash=%s  height=%d\n",
-		                stringFromVch(vvchArgs[0]).c_str(),
-                        aliasFromOp(op).c_str(),
-		                tx.GetHash().ToString().c_str(),
-		                pindex->nHeight);
-            } 
-            else if (IsAliasOp(op) && op == OP_ALIAS_NEW) {
-                paliasdb->EraseAlias(vvchArgs[0]);
-            }
-
-            //*************************
-            good = DecodeOfferTx(tx, op, nOut, vvchArgs, pindex->nHeight);
-            if (good && IsOfferOp(op) && op != OP_OFFER_NEW) {
-                string opName = offerFromOp(op);
-				
-				COffer theOffer;
-				theOffer.UnserializeFromTx(tx);
-				if (theOffer.IsNull())
-					error("CheckOfferInputs() : null offer object");
-
-                if(op != OP_OFFER_NEW) {
-			        // make sure a DB record exists for this offer
-			        vector<COffer> vtxPos;
-			        if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos))
-			            return error("DisconnectBlock() : failed to read from offer DB for %s %s\n",
-			            		opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
-
-                    if( op == OP_OFFER_PAY || op == OP_OFFER_ACCEPT ) {
-			        	vector<unsigned char> vvchOfferAccept = vvchArgs[1];
-			        	COfferAccept theOfferAccept;
-
-			        	// make sure the offeraccept is also in the serialized offer in the txn
-			        	if(!theOffer.GetAcceptByHash(vvchOfferAccept, theOfferAccept))
-				            return error("DisconnectBlock() : not found in offer for offer accept %s %s\n",
-				            		opName.c_str(), HexStr(vvchOfferAccept).c_str());
-
-				        // make sure offer accept db record already exists 
-				        if (pofferdb->ExistsOfferAccept(vvchOfferAccept))
-				        	pofferdb->EraseOfferAccept(vvchOfferAccept);
-			        }
-
-			        // vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
-			        // be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
-			        if (vtxPos.size()) {
-			            CDiskTxPos txindex;
-			            if (!pblocktree->ReadTxIndex(tx.GetHash(), txindex))
-			                return error("DisconnectBlock() : failed to read tx index for offer %s %s %s\n",
-			                		opName.c_str(), stringFromVch(vvchArgs[0]).c_str(), tx.GetHash().ToString().c_str());
-
-			            while(vtxPos.back().txHash == tx.GetHash())
-			                vtxPos.pop_back();
-			        }
-
-			        // write new offer state to db
-					if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
-						return error("DisconnectBlock() : failed to write to offer DB");
-
-					// compute verify and write fee data to DB
-                    int64 nTheFee = GetOfferNetFee(tx);
-					InsertOfferFee(pindex, tx.GetHash(), nTheFee);
-					if(nTheFee > 0) printf("DisconnectBlock(): Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
-					vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
-					if (!pofferdb->WriteOfferTxFees(vOfferFees))
-						return error( "DisconnectBlock() : failed to write fees to offer DB");
-
-				} 
-                else if (IsOfferOp(op) && op == OP_OFFER_NEW) {
-					pofferdb->EraseOffer(theOffer.vchRand);
-				}
-
-				good = DecodeCertTx(tx, op, nOut, vvchArgs, pindex->nHeight);
-                if (good && IsCertOp(op) && op != OP_CERTISSUER_NEW) {
-                    string opName = certissuerFromOp(op);
-
-                    CCertIssuer theIssuer;
-                    theIssuer.UnserializeFromTx(tx);
-                    if (theIssuer.IsNull())
-                        error("CheckOfferInputs() : null issuer object");
-
-                    if(op != OP_CERTISSUER_NEW) {
-                        // make sure a DB record exists for this cert
-                        vector<CCertIssuer> vtxPos;
-                        if (!pcertdb->ReadCertIssuer(vvchArgs[0], vtxPos))
-                            return error("DisconnectBlock() : failed to read from certificate DB for %s %s\n",
-                                    opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
-
-                        if( op == OP_CERT_NEW || op == OP_CERT_TRANSFER ) {
-                            vector<unsigned char> vvchCert = vvchArgs[1];
-                            CCertItem theCert;
-
-                            // make sure the offeraccept is also in the serialized offer in the txn
-                            if(!theIssuer.GetCertItemByHash(vvchCert, theCert))
-                                return error("DisconnectBlock() : not found in offer for offer accept %s %s\n",
-                                        opName.c_str(), HexStr(vvchCert).c_str());
-
-                            // make sure offer accept db record already exists
-                            if (pcertdb->ExistsCertItem(vvchCert))
-                                pcertdb->EraseCertItem(vvchCert);
-                        }
-
-                        // vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
-                        // be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
-                        if (vtxPos.size()) {
-                            CDiskTxPos txindex;
-                            if (!pblocktree->ReadTxIndex(tx.GetHash(), txindex))
-                                return error("DisconnectBlock() : failed to read tx index for offer %s %s %s\n",
-                                        opName.c_str(), stringFromVch(vvchArgs[0]).c_str(), tx.GetHash().ToString().c_str());
-
-                            while(vtxPos.back().txHash == tx.GetHash())
-                                vtxPos.pop_back();
-
-                            // TODO validate that the first pos is the current tx pos
-                        }
-
-                        // write new offer state to db
-                        if(!pcertdb->WriteCertIssuer(vvchArgs[0], vtxPos))
-                            return error("DisconnectBlock() : failed to write to offer DB");
-
-	                    // compute verify and write fee data to DB
-	                    int64 nTheFee = GetCertNetFee(tx);
-	                    InsertCertFee(pindex, tx.GetHash(), nTheFee);
-	                    if(nTheFee > 0) printf("DisconnectBlock(): Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
-	                    vector<CCertFee> vCertIssuerFees(lstCertIssuerFees.begin(), lstCertIssuerFees.end());
-	                    if (!pcertdb->WriteCertFees(vCertIssuerFees))
-	                        return error( "DisconnectBlock() : failed to write fees to certissuer DB");
-
-                    }
-                    else if (IsCertOp(op) && op == OP_CERTISSUER_NEW) {
-                        pcertdb->EraseCertIssuer(theOffer.vchRand);
-                    }
-                }
-
-		        printf("DISCONNECTED OFFER TXN: title=%s hash=%s height=%d\n",
-                       op == OP_CERTISSUER_NEW ? HexStr(vvchArgs[0]).c_str() : stringFromVch(vvchArgs[0]).c_str(),
-		                tx.GetHash().ToString().c_str(),
-		                pindex->nHeight);
-		    }
+			if(DecodeAliasTx(tx, op, nOut, vvchArgs, -1)) {
+				if (IsAliasOp(op)) DisconnectAlias(pindex, tx, op, vvchArgs);
+				else if (IsOfferOp(op)) DisconnectOffer(pindex, tx, op, vvchArgs);
+				else if (IsCertOp(op)) DisconnectCertificate(pindex, tx, op, vvchArgs);
+			}
 	    }
 
 		// restore inputs
@@ -3391,6 +3387,7 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth) {
 			} else
 				nGoodTransactions += block.vtx.size();
 		}
+
 	}
 	if (pindexFailure)
 		return error(
@@ -5251,7 +5248,7 @@ CBlockHeader CBlockIndex::GetBlockHeader() const {
 }
 
 void static ScryptMiner(CWallet *pwallet) {
-	printf("SyscoinScryptMiner started\n");
+	printf("SyscoinscryptMiner started\n");
 	SetThreadPriority(THREAD_PRIORITY_LOWEST);
 	RenameThread("syscoin-miner");
 
