@@ -7,11 +7,11 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleGetInfoString</key>
-	<string>0.1.5 RC4, Copyright © 2009-2014 The Bitcoin and Syscoin developers</string>
+	<string>0.1.5, Copyright © 2009-2014 The Bitcoin and Syscoin developers</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.1.5 RC4</string>
+	<string>0.1.5</string>
 	<key>CFBundleVersion</key>
-	<string>0.1.5 RC4</string>
+	<string>0.1.5</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleExecutable</key>
