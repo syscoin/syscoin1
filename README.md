@@ -3,8 +3,8 @@ Syscoin integration/staging tree
 
 http://www.syscoin.org
 
-Copyright (c) 2009-2013 Bitcoin Developers
-Copyright (c) 2011-2013 Syscoin Developers
+Copyright (c) 2009-2014 Bitcoin Developers
+Copyright (c) 2011-2014 Syscoin Developers
 
 What is Syscoin?
 ----------------
@@ -28,6 +28,7 @@ Services include:
 - Digital document storage, ownership & exchange
 - Distributed marketplate & exchange
 - Digital Services Provider marketplace & platform
+- Digital Asset Creation and Management (alpha)
 - (soon) Escrow
 - (soon) Distributed gaming
 - (soon) Distributed elections and polls
