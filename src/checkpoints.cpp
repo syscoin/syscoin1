@@ -87,11 +87,24 @@ namespace Checkpoints
         ( 77889, uint256("0x50cc5d37753e5c2e89dda224e1b93fac2df43971c7085e0052ab3a4380db0671"))
         ( 79001, uint256("0xfbca22dfc1e97aebc9717ce8b15e443a683bac60fa2503c0ca0788f43067eb53"))
         ( 80700, uint256("0x24e06f5775b755d91cd5cd264271662c2a94c9a7b1c6d63894a2bf7af1b14cc3"))
+        ( 82430, uint256("0xf66884638cee157e7d5225fb0064643ebf3ffe2c88451a3dc898cc7fe54a0cb7"))
+        ( 85132, uint256("0x3f8395e614fb722f50e72ccf7001f5d9e73d4573b4ea2f466e18da866336549e"))
+        ( 87115, uint256("0x9ec1504d00fdd9c0c049f5321cf055a651e090641f9656acc332ef2830fef39c"))
+        ( 92105, uint256("0x0405d50ec62f578f714b74a32140585fe8c2366dc4d7a7a8f4185d027aa2cc83"))
+        ( 95110, uint256("0xfd25cd418f6706246186ee94f8a09ce5fdbf8c700c56fdb72bd174bec46df152"))
+        ( 96890, uint256("0x9bed50e5fcbf2adc58bd6053b9abaccbccabfb56908e8785b840c55c95d7c94e"))
+        ( 98105, uint256("0x14ff4722b6891bbec768d4aa773c3a64e9a551b94f999adf6031a9babc67dc4d"))
+        ( 101901, uint256("0xb3d4b27af1b75db3009791f455acfff616ab4dff70c1258393a8a7586876a4a3"))
+        ( 106793, uint256("0x4666daa8b44616dca9aad6b413b296acff2933e666d795f4f286640f94f1abff"))
+        ( 110280, uint256("0xb28ab3a9db5849d84456d833755c9c01611a9c98b3da2daff6f4883e50f5c36c"))
+        ( 113151, uint256("0x5f0901cb9acb48d30426c359da9f9260b7c99ee5bca76a7e254283b73e2a734a"))
+        ( 116182, uint256("0x3b563424f766c83b7bd4f71cbfa55d36bd63e78e3203df316aa8955a208192e1"))
+        ( 119100, uint256("0xf1ae217c317865da6562ca62a469b3b64c089a04ca4d54925a96bf4b1cdf91b2"))
 	;
     static const CCheckpointData data = {
         &mapCheckpoints,
-        1413143176, // * UNIX timestamp of last checkpoint block
-        125023,      // * total number of transactions between genesis and last checkpoint
+        1415484096, // * UNIX timestamp of last checkpoint block
+        173927,      // * total number of transactions between genesis and last checkpoint
                     //   (the tx=... number in the SetBestChain debug.log lines)
         600.0       // * estimated number of transactions per day after checkpoint
     };
