@@ -33,19 +33,19 @@ using namespace json_spirit;
 static std::string strHTTPUserColonPass;
 
 static const CHTTPContentType vHTTPContentTypes[] = {
-    {"htm",  "text/html"},
-    {"html", "text/html"},
-    {"css",  "text/css"},
-    {"txt",  "text/plain"},
-    {"log",  "text/plain"},
-    {"png",  "image/png"},
-    {"jpg",  "image/jpeg"},
-    {"gif",  "image/gif"},
-    {"js",   "text/javascript"},
-	{"otf", "application/x-font-opentype"},
-	{"ttf", "application/x-font-ttf"},
-	{"eot", "application/vnd.ms-fontobject"},
-	{"woff", "application/font-woff"}
+    {".htm",  "text/html"},
+    {".html", "text/html"},
+    {".css",  "text/css"},
+    {".txt",  "text/plain"},
+    {".log",  "text/plain"},
+    {".png",  "image/png"},
+    {".jpg",  "image/jpeg"},
+    {".gif",  "image/gif"},
+    {".js",   "text/javascript"},
+	{".otf", "application/x-font-opentype"},
+	{".ttf", "application/x-font-ttf"},
+	{".eot", "application/vnd.ms-fontobject"},
+	{".woff", "application/font-woff"}
 };
 static const CHTTPContentType defaultContentType = vHTTPContentTypes[0];
 
@@ -61,14 +61,9 @@ static inline unsigned short GetDefaultHTTPPort()
 }
 
 static string GetContentType(const string& file) {
-    vector<string> vWords;
-    boost::split(vWords, file, boost::is_any_of("."));
-    if (vWords.size() < 2)
-        return defaultContentType.type;
-    string ext = vWords[vWords.size()-1];
-
+    string file_extension  = boost::filesystem::extension(file);
     BOOST_FOREACH(CHTTPContentType type, vHTTPContentTypes) {
-        if(type.ext == ext)
+		if(file_extension.find(type.ext) != string::npos)
             return type.type;
     }
     return defaultContentType.type;
@@ -506,7 +501,11 @@ void ServiceHTTPConnection(AcceptedConnection *conn)
     // Read HTTP request line
     if (!ReadHTTPRequestLine(conn->stream(), nProto, strMethod, strURI))
         return;
-
+	std::size_t quesPos = strURI.find('?');
+	if(quesPos != string::npos)
+	{
+		strURI = strURI.erase(quesPos);
+	}
     // Read HTTP message headers and body
     ReadHTTPMessage(conn->stream(), mapHeaders, strRequest, nProto);
 
