@@ -235,6 +235,8 @@ static const CRPCCommand vRPCCommands[] =
     { "encryptwallet",          &encryptwallet,          false,     false,      true },
     { "validateaddress",        &validateaddress,        true,      false,      false },
     { "getbalance",             &getbalance,             false,     false,      true },
+    { "getassetbalance",        &getassetbalance,        false,     false,      true },
+    { "getassetcontrolbalance", &getassetcontrolbalance, false,     false,      true },
     { "move",                   &movecmd,                false,     false,      true },
     { "sendfrom",               &sendfrom,               false,     false,      true },
     { "sendmany",               &sendmany,               false,     false,      true },
@@ -261,6 +263,8 @@ static const CRPCCommand vRPCCommands[] =
     { "dumpprivkey",            &dumpprivkey,            true,      false,      true },
     { "importprivkey",          &importprivkey,          false,     false,      true },
     { "listunspent",            &listunspent,            false,     false,      true },
+    { "listassetunspent",       &listassetunspent,       false,     false,      true },
+    { "listassetcontrolunspent",&listassetcontrolunspent,false,     false,      true },
     { "getrawtransaction",      &getrawtransaction,      false,     false,      false },
     { "createrawtransaction",   &createrawtransaction,   false,     false,      false },
     { "decoderawtransaction",   &decoderawtransaction,   false,     false,      false },
@@ -288,6 +292,7 @@ static const CRPCCommand vRPCCommands[] =
     { "aliasclean",        &aliasclean,         false,      false,      true },
     { "getaliasfees",      &getaliasfees,         false,      false,      true },
 
+
 	// use the blockchain to store provably-ownable data
     { "datanew",          &datanew,         false,      false,      true },
     { "dataactivate",     &dataactivate,    false,      false,      true },
@@ -295,7 +300,7 @@ static const CRPCCommand vRPCCommands[] =
     { "datalist",         &datalist,        false,      false,      true },
     { "datainfo",         &datainfo,        false,      false,      true },
     { "datahistory",      &datahistory,     false,      false,      true },
-    { "datafilter",        &datafilter,      false,      false,      true },
+    { "datafiler",        &datafilter,      false,      false,      true },
 
     // use the blockchain as a distributed marketplace
     { "offernew",         &offernew,       false,      false,      true },
@@ -326,6 +331,35 @@ static const CRPCCommand vRPCCommands[] =
   { "certissuerclean",       &certissuerclean,   false,      false,      true },
   { "certissuerfilter",      &certissuerfilter,  false,      false,      true },
   { "getcertfees",           &getcertfees,        false,      false,      true },
+
+  // use the blockchain as an asset issuance platform
+  { "assetnew",      &assetnew,      false,      false,      true },
+  { "assetsend",     &assetsend,     false,      false,      true },
+  { "assetpeg",      &assetpeg,      false,      false,      true },
+  { "assetupdate",   &assetupdate,   false,      false,      true },
+  { "assetgenerate", &assetgenerate, false,      false,      true },
+  { "assetdissolve", &assetdissolve, false,      false,      true },
+  { "assetlist",     &assetlist,     false,      false,      true },
+  { "assetinfo",     &assetinfo,     false,      false,      true },
+  { "assethistory",  &assethistory,  false,      false,      true },
+  { "assetscan",     &assetscan,     false,      false,      true },
+  { "assetclean",    &assetclean,    false,      false,      true },
+  { "assetfilter",   &assetfilter,   false,      false,      true },
+  { "listassettransactions",  &listassettransactions,       false,     false,      true },
+
+  // use the blockchain as a platform for escrow transactions
+  { "escrownew",       &phrpcfunc, false,      false,      true },
+  { "escrowcancel",    &phrpcfunc, false,      false,      true },
+  { "escrowaccept",    &phrpcfunc, false,      false,      true },
+  { "escrowreject",    &phrpcfunc, false,      false,      true },
+  { "escrowrelease",   &phrpcfunc, false,      false,      true },
+  { "escrowextend",    &phrpcfunc, false,      false,      true },
+  { "escrowburn",      &phrpcfunc, false,      false,      true },
+  { "escrowlist",      &phrpcfunc, false,      false,      true },
+  { "escrowinfo",      &phrpcfunc, false,      false,      true },
+  { "escrowhistory",   &phrpcfunc, false,      false,      true },
+  { "escrowscan",      &phrpcfunc, false,      false,      true },
+  { "escrowfilter",    &phrpcfunc, false,      false,      true },
 
 };
 
@@ -385,14 +419,27 @@ string rfc1123Time()
     setlocale(LC_TIME, locale.c_str());
     return string(buffer);
 }
-
-static string HTTPReply(int nStatus, const string& strMsg, bool keepalive)
+static string HTTPReplyCors()
+{
+    return "HTTP/1.1 200 OK\r\n"
+	"Content-Type: text/html; charset=utf-8\r\n"
+	"Content-Length: 0\r\n"
+	"Access-Control-Max-Age: 172800\r\n"
+	"Access-Control-Allow-Methods: HEAD, OPTIONS, GET, POST\r\n"
+	"Access-Control-Allow-Headers: Authorization, Content-Type, User-Agent, X-Requested-With, If-Modified-Since, Cache-Control, X-CK-Key, X-CK-Sign, X-CK-Timestamp\r\n"
+	"Strict-Transport-Security: max-age=31536000\r\n"
+	"Access-Control-Allow-Origin: *\r\n";
+    
+}
+string HTTPReply(int nStatus, const string& strMsg, bool keepalive)
 {
     if (nStatus == HTTP_UNAUTHORIZED)
         return strprintf("HTTP/1.0 401 Authorization Required\r\n"
             "Date: %s\r\n"
             "Server: syscoin-json-rpc/%s\r\n"
             "WWW-Authenticate: Basic realm=\"jsonrpc\"\r\n"
+			"Access-Control-Allow-Origin: *\r\n"
+            "Access-Control-Allow-Headers: Authorization, Content-Type\r\n"
             "Content-Type: text/html\r\n"
             "Content-Length: 296\r\n"
             "\r\n"
@@ -419,6 +466,8 @@ static string HTTPReply(int nStatus, const string& strMsg, bool keepalive)
             "Content-Length: %"PRIszu"\r\n"
             "Content-Type: application/json\r\n"
             "Server: syscoin-json-rpc/%s\r\n"
+			"Access-Control-Allow-Origin: *\r\n"
+			"Access-Control-Allow-Headers: Authorization, Content-Type\r\n"
             "\r\n"
             "%s",
         nStatus,
@@ -444,7 +493,7 @@ bool ReadHTTPRequestLine(std::basic_istream<char>& stream, int &proto,
 
     // HTTP methods permitted: GET, POST
     http_method = vWords[0];
-    if (http_method != "GET" && http_method != "POST")
+    if (http_method != "GET" && http_method != "POST" && http_method != "OPTIONS")
         return false;
 
     // HTTP URI must be an absolute path, relative to current host
@@ -948,7 +997,7 @@ void JSONRequest::parse(const Value& valRequest)
     if (valMethod.type() != str_type)
         throw JSONRPCError(RPC_INVALID_REQUEST, "Method must be a string");
     strMethod = valMethod.get_str();
-    if (strMethod != "getwork" && strMethod != "getworkex" && strMethod != "getblocktemplate" && strMethod != "getinfo")
+    if (strMethod != "getwork" && strMethod != "getworkex" && strMethod != "getblocktemplate" && strMethod != "getinfo" && strMethod != "getmininginfo")
         printf("ThreadRPCServer method=%s\n", strMethod.c_str());
 
     // Parse params
@@ -1006,7 +1055,11 @@ void ServiceConnection(AcceptedConnection *conn)
         // Read HTTP request line
         if (!ReadHTTPRequestLine(conn->stream(), nProto, strMethod, strURI))
             break;
-
+		if(strMethod == "OPTIONS")
+		{
+			conn->stream() << HTTPReplyCors() << std::flush;
+			break;
+		}
         // Read HTTP message headers and body
         ReadHTTPMessage(conn->stream(), mapHeaders, strRequest, nProto);
 
@@ -1014,7 +1067,6 @@ void ServiceConnection(AcceptedConnection *conn)
             conn->stream() << HTTPReply(HTTP_NOT_FOUND, "", false) << std::flush;
             break;
         }
-
         // Check authorization
         if (mapHeaders.count("authorization") == 0)
         {
@@ -1223,6 +1275,8 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "listreceivedbyaccount"  && n > 0) ConvertTo<boost::int64_t>(params[0]);
     if (strMethod == "listreceivedbyaccount"  && n > 1) ConvertTo<bool>(params[1]);
     if (strMethod == "getbalance"             && n > 1) ConvertTo<boost::int64_t>(params[1]);
+    if (strMethod == "getassetbalance"        && n > 1) ConvertTo<boost::int64_t>(params[1]);
+    if (strMethod == "getassetcontrolbalance" && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "getblockhash"           && n > 0) ConvertTo<boost::int64_t>(params[0]);
     if (strMethod == "move"                   && n > 2) ConvertTo<double>(params[2]);
     if (strMethod == "move"                   && n > 3) ConvertTo<boost::int64_t>(params[3]);
@@ -1244,6 +1298,12 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "listunspent"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "listunspent"            && n > 2) ConvertTo<Array>(params[2]);
     if (strMethod == "getblock"               && n > 1) ConvertTo<bool>(params[1]);
+    if (strMethod == "listassetunspent"       && n > 0) ConvertTo<boost::int64_t>(params[0]);
+    if (strMethod == "listassetunspent"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
+    if (strMethod == "listassetunspent"       && n > 2) ConvertTo<Array>(params[2]);    
+    if (strMethod == "listassetcontrolunspent"&& n > 0) ConvertTo<boost::int64_t>(params[0]);
+    if (strMethod == "listassetcontrolunspent"&& n > 1) ConvertTo<boost::int64_t>(params[1]);
+    if (strMethod == "listassetcontrolunspent"&& n > 2) ConvertTo<Array>(params[2]);
     if (strMethod == "getrawtransaction"      && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "createrawtransaction"   && n > 0) ConvertTo<Array>(params[0]);
     if (strMethod == "createrawtransaction"   && n > 1) ConvertTo<Object>(params[1]);
@@ -1261,6 +1321,10 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "aliasfilter"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "aliasfilter"            && n > 2) ConvertTo<boost::int64_t>(params[2]);
     if (strMethod == "aliasfilter"            && n > 3) ConvertTo<boost::int64_t>(params[3]);
+
+    if (strMethod == "assetpeg"               && n > 1) ConvertTo<double>(params[1]);
+    if (strMethod == "assetgenerate"          && n > 1) ConvertTo<double>(params[1]);
+    if (strMethod == "assetdissolve"          && n > 1) ConvertTo<double>(params[1]);
 
     return params;
 }
