@@ -153,39 +153,26 @@ static string HTTPReplyWithContentType(int nStatus, const string& strMsg, bool k
             "<BODY><H1>500 Internal Server Error.</H1></BODY>\r\n"
             "</HTML>\r\n", 500, "Internal Server Error");
     else cStatus = "";
-
-    if(strContentType == "image/png" || strContentType == "image/jpeg" || strContentType == "image/gif") {
-        return strprintf(
-                "HTTP/1.1 %d %s\r\n"
-                "Date: %s\r\n"
-                "Connection: %s\r\n"
-                "Server: syscoin-http/%s\r\n"
-                "\r\n"
-                "%s",
-            nStatus,
-            cStatus,
-            rfc1123Time().c_str(),
-            keepalive ? "keep-alive" : "close",
-            FormatFullVersion().c_str(),
-            strMsg.c_str());        
+	if(strContentType == "image/png" || strContentType == "image/jpeg" || strContentType == "image/gif") {
+        // deal with adding gzip to header here       
     }
-    return strprintf(
+    string headerAndDataStr = strprintf(
             "HTTP/1.1 %d %s\r\n"
             "Date: %s\r\n"
             "Connection: %s\r\n"
             "Content-Length: %"PRIszu"\r\n"
             "Content-Type: %s\r\n"
             "Server: syscoin-http/%s\r\n"
-            "\r\n"
-            "%s",
+            "\r\n",
         nStatus,
         cStatus,
         rfc1123Time().c_str(),
         keepalive ? "keep-alive" : "close",
         strMsg.size(),
         strContentType.c_str(),
-        FormatFullVersion().c_str(),
-        strMsg.c_str());
+        FormatFullVersion().c_str());
+    headerAndDataStr += strMsg;
+	return headerAndDataStr;
 }
 
 Object HTTPError(int code, const string& message)
@@ -499,7 +486,7 @@ void StopHTTPThreads()
 
 string readFile(const string &fileName)
 {
-    ifstream ifs(fileName.c_str(), ios::in | ios::binary | ios::ate);
+	ifstream ifs(fileName.c_str(), ios::in | ios::binary | ios::ate);
 
     ifstream::pos_type fileSize = ifs.tellg();
     ifs.seekg(0, ios::beg);
