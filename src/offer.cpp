@@ -2071,7 +2071,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
 			oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
 			oOffer.push_back(Pair("quantity", strprintf("%llu", theOffer.GetRemQty())));
-			oOffer.push_back(Pair("price", ValueFromAmount(theOffer.nFee) ) );
+			oOffer.push_back(Pair("price", ValueFromAmount(theOffer.nPrice) ) );
 			oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 			oOffer.push_back(Pair("accepts", aoOfferAccepts));
 			oLastOffer = oOffer;
