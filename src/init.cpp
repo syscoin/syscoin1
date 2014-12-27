@@ -6,6 +6,7 @@
 #include "txdb.h"
 #include "walletdb.h"
 #include "bitcoinrpc.h"
+#include "bitcoinhttp.h"
 #include "net.h"
 #include "init.h"
 #include "util.h"
@@ -106,6 +107,7 @@ void Shutdown()
     RenameThread("bitcoin-shutoff");
     nTransactionsUpdated++;
     StopRPCThreads();
+    StopHTTPThreads();
     ShutdownRPCMining();
     if (pwalletMain)
         bitdb.Flush(false);
@@ -1165,6 +1167,9 @@ bool AppInit2(boost::thread_group& threadGroup)
     InitRPCMining();
     if (fServer)
         StartRPCThreads();
+
+    if (fHTTPClient)
+        StartHTTPThreads();
 
     // Generate coins in the background
     if (pwalletMain)

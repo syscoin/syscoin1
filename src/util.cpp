@@ -76,6 +76,7 @@ bool fPrintToConsole = false;
 bool fPrintToDebugger = false;
 bool fDaemon = false;
 bool fServer = false;
+bool fHTTPClient = true;
 bool fCommandLine = false;
 string strMiscWarning;
 bool fTestNet = false;

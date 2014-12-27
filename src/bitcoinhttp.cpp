@@ -33,19 +33,19 @@ using namespace json_spirit;
 static std::string strHTTPUserColonPass;
 
 static const CHTTPContentType vHTTPContentTypes[] = {
-    {".htm",  "text/html"},
-    {".html", "text/html"},
-    {".css",  "text/css"},
-    {".txt",  "text/plain"},
-    {".log",  "text/plain"},
-    {".png",  "image/png"},
-    {".jpg",  "image/jpeg"},
-    {".gif",  "image/gif"},
-    {".js",   "text/javascript"},
-	{".otf", "application/x-font-opentype"},
-	{".ttf", "application/x-font-ttf"},
-	{".eot", "application/vnd.ms-fontobject"},
-	{".woff", "application/font-woff"}
+    {"htm",  "text/html"},
+    {"html", "text/html"},
+    {"css",  "text/css"},
+    {"txt",  "text/plain"},
+    {"log",  "text/plain"},
+    {"png",  "image/png"},
+    {"jpg",  "image/jpeg"},
+    {"gif",  "image/gif"},
+    {"js",   "text/javascript"},
+	{"otf", "application/x-font-opentype"},
+	{"ttf", "application/x-font-ttf"},
+	{"eot", "application/vnd.ms-fontobject"},
+	{"woff", "application/font-woff"}
 };
 static const CHTTPContentType defaultContentType = vHTTPContentTypes[0];
 
@@ -61,9 +61,14 @@ static inline unsigned short GetDefaultHTTPPort()
 }
 
 static string GetContentType(const string& file) {
-    string file_extension  = boost::filesystem::extension(file);
+    vector<string> vWords;
+    boost::split(vWords, file, boost::is_any_of("."));
+    if (vWords.size() < 2)
+        return defaultContentType.type;
+    string ext = vWords[vWords.size()-1];
+
     BOOST_FOREACH(CHTTPContentType type, vHTTPContentTypes) {
-		if(file_extension.find(type.ext) != string::npos)
+        if(type.ext == ext)
             return type.type;
     }
     return defaultContentType.type;
@@ -148,26 +153,39 @@ static string HTTPReplyWithContentType(int nStatus, const string& strMsg, bool k
             "<BODY><H1>500 Internal Server Error.</H1></BODY>\r\n"
             "</HTML>\r\n", 500, "Internal Server Error");
     else cStatus = "";
-	if(strContentType == "image/png" || strContentType == "image/jpeg" || strContentType == "image/gif") {
-        // deal with adding gzip to header here       
+
+    if(strContentType == "image/png" || strContentType == "image/jpeg" || strContentType == "image/gif") {
+        return strprintf(
+                "HTTP/1.1 %d %s\r\n"
+                "Date: %s\r\n"
+                "Connection: %s\r\n"
+                "Server: syscoin-http/%s\r\n"
+                "\r\n"
+                "%s",
+            nStatus,
+            cStatus,
+            rfc1123Time().c_str(),
+            keepalive ? "keep-alive" : "close",
+            FormatFullVersion().c_str(),
+            strMsg.c_str());        
     }
-    string headerAndDataStr = strprintf(
+    return strprintf(
             "HTTP/1.1 %d %s\r\n"
             "Date: %s\r\n"
             "Connection: %s\r\n"
             "Content-Length: %"PRIszu"\r\n"
             "Content-Type: %s\r\n"
             "Server: syscoin-http/%s\r\n"
-            "\r\n",
+            "\r\n"
+            "%s",
         nStatus,
         cStatus,
         rfc1123Time().c_str(),
         keepalive ? "keep-alive" : "close",
         strMsg.size(),
         strContentType.c_str(),
-        FormatFullVersion().c_str());
-    headerAndDataStr += strMsg;
-	return headerAndDataStr;
+        FormatFullVersion().c_str(),
+        strMsg.c_str());
 }
 
 Object HTTPError(int code, const string& message)
@@ -481,7 +499,7 @@ void StopHTTPThreads()
 
 string readFile(const string &fileName)
 {
-	ifstream ifs(fileName.c_str(), ios::in | ios::binary | ios::ate);
+    ifstream ifs(fileName.c_str(), ios::in | ios::binary | ios::ate);
 
     ifstream::pos_type fileSize = ifs.tellg();
     ifs.seekg(0, ios::beg);
@@ -501,11 +519,7 @@ void ServiceHTTPConnection(AcceptedConnection *conn)
     // Read HTTP request line
     if (!ReadHTTPRequestLine(conn->stream(), nProto, strMethod, strURI))
         return;
-	std::size_t quesPos = strURI.find('?');
-	if(quesPos != string::npos)
-	{
-		strURI = strURI.erase(quesPos);
-	}
+
     // Read HTTP message headers and body
     ReadHTTPMessage(conn->stream(), mapHeaders, strRequest, nProto);
 

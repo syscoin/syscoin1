@@ -19,6 +19,16 @@ class CReserveKey;
 
 #include "util.h"
 
+std::string HTTPPost(const std::string& strMsg, const std::map<std::string,std::string>& mapRequestHeaders);
+std::string rfc1123Time();
+std::string HTTPReply(int nStatus, const std::string& strMsg, bool keepalive);
+bool ReadHTTPRequestLine(std::basic_istream<char>& stream, int &proto, std::string& http_method, std::string& http_uri);
+int ReadHTTPStatus(std::basic_istream<char>& stream, int &proto);
+int ReadHTTPHeaders(std::basic_istream<char>& stream, std::map<std::string, std::string>& mapHeadersRet);
+int ReadHTTPMessage(std::basic_istream<char>& stream, std::map<std::string, std::string>& mapHeadersRet, std::string& strMessageRet, int nProto);
+bool HTTPAuthorized(std::map<std::string, std::string>& mapHeaders);
+
+
 // HTTP status codes
 enum HTTPStatusCode
 {

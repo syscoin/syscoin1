@@ -143,6 +143,7 @@ extern bool fPrintToConsole;
 extern bool fPrintToDebugger;
 extern bool fDaemon;
 extern bool fServer;
+extern bool fHTTPClient;
 extern bool fCommandLine;
 extern std::string strMiscWarning;
 extern bool fTestNet;

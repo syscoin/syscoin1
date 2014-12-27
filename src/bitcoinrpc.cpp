@@ -235,8 +235,6 @@ static const CRPCCommand vRPCCommands[] =
     { "encryptwallet",          &encryptwallet,          false,     false,      true },
     { "validateaddress",        &validateaddress,        true,      false,      false },
     { "getbalance",             &getbalance,             false,     false,      true },
-    { "getassetbalance",        &getassetbalance,        false,     false,      true },
-    { "getassetcontrolbalance", &getassetcontrolbalance, false,     false,      true },
     { "move",                   &movecmd,                false,     false,      true },
     { "sendfrom",               &sendfrom,               false,     false,      true },
     { "sendmany",               &sendmany,               false,     false,      true },
@@ -263,8 +261,6 @@ static const CRPCCommand vRPCCommands[] =
     { "dumpprivkey",            &dumpprivkey,            true,      false,      true },
     { "importprivkey",          &importprivkey,          false,     false,      true },
     { "listunspent",            &listunspent,            false,     false,      true },
-    { "listassetunspent",       &listassetunspent,       false,     false,      true },
-    { "listassetcontrolunspent",&listassetcontrolunspent,false,     false,      true },
     { "getrawtransaction",      &getrawtransaction,      false,     false,      false },
     { "createrawtransaction",   &createrawtransaction,   false,     false,      false },
     { "decoderawtransaction",   &decoderawtransaction,   false,     false,      false },
@@ -332,34 +328,6 @@ static const CRPCCommand vRPCCommands[] =
   { "certissuerfilter",      &certissuerfilter,  false,      false,      true },
   { "getcertfees",           &getcertfees,        false,      false,      true },
 
-  // use the blockchain as an asset issuance platform
-  { "assetnew",      &assetnew,      false,      false,      true },
-  { "assetsend",     &assetsend,     false,      false,      true },
-  { "assetpeg",      &assetpeg,      false,      false,      true },
-  { "assetupdate",   &assetupdate,   false,      false,      true },
-  { "assetgenerate", &assetgenerate, false,      false,      true },
-  { "assetdissolve", &assetdissolve, false,      false,      true },
-  { "assetlist",     &assetlist,     false,      false,      true },
-  { "assetinfo",     &assetinfo,     false,      false,      true },
-  { "assethistory",  &assethistory,  false,      false,      true },
-  { "assetscan",     &assetscan,     false,      false,      true },
-  { "assetclean",    &assetclean,    false,      false,      true },
-  { "assetfilter",   &assetfilter,   false,      false,      true },
-  { "listassettransactions",  &listassettransactions,       false,     false,      true },
-
-  // use the blockchain as a platform for escrow transactions
-  { "escrownew",       &phrpcfunc, false,      false,      true },
-  { "escrowcancel",    &phrpcfunc, false,      false,      true },
-  { "escrowaccept",    &phrpcfunc, false,      false,      true },
-  { "escrowreject",    &phrpcfunc, false,      false,      true },
-  { "escrowrelease",   &phrpcfunc, false,      false,      true },
-  { "escrowextend",    &phrpcfunc, false,      false,      true },
-  { "escrowburn",      &phrpcfunc, false,      false,      true },
-  { "escrowlist",      &phrpcfunc, false,      false,      true },
-  { "escrowinfo",      &phrpcfunc, false,      false,      true },
-  { "escrowhistory",   &phrpcfunc, false,      false,      true },
-  { "escrowscan",      &phrpcfunc, false,      false,      true },
-  { "escrowfilter",    &phrpcfunc, false,      false,      true },
 
 };
 
@@ -1298,12 +1266,6 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "listunspent"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "listunspent"            && n > 2) ConvertTo<Array>(params[2]);
     if (strMethod == "getblock"               && n > 1) ConvertTo<bool>(params[1]);
-    if (strMethod == "listassetunspent"       && n > 0) ConvertTo<boost::int64_t>(params[0]);
-    if (strMethod == "listassetunspent"       && n > 1) ConvertTo<boost::int64_t>(params[1]);
-    if (strMethod == "listassetunspent"       && n > 2) ConvertTo<Array>(params[2]);    
-    if (strMethod == "listassetcontrolunspent"&& n > 0) ConvertTo<boost::int64_t>(params[0]);
-    if (strMethod == "listassetcontrolunspent"&& n > 1) ConvertTo<boost::int64_t>(params[1]);
-    if (strMethod == "listassetcontrolunspent"&& n > 2) ConvertTo<Array>(params[2]);
     if (strMethod == "getrawtransaction"      && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "createrawtransaction"   && n > 0) ConvertTo<Array>(params[0]);
     if (strMethod == "createrawtransaction"   && n > 1) ConvertTo<Object>(params[1]);
@@ -1321,10 +1283,6 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "aliasfilter"            && n > 1) ConvertTo<boost::int64_t>(params[1]);
     if (strMethod == "aliasfilter"            && n > 2) ConvertTo<boost::int64_t>(params[2]);
     if (strMethod == "aliasfilter"            && n > 3) ConvertTo<boost::int64_t>(params[3]);
-
-    if (strMethod == "assetpeg"               && n > 1) ConvertTo<double>(params[1]);
-    if (strMethod == "assetgenerate"          && n > 1) ConvertTo<double>(params[1]);
-    if (strMethod == "assetdissolve"          && n > 1) ConvertTo<double>(params[1]);
 
     return params;
 }
