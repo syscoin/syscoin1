@@ -1462,10 +1462,10 @@ Value getofferfees(const Array& params, bool fHelp) {
 }
 
 Value offernew(const Array& params, bool fHelp) {
-	if (fHelp || params.size() < 5 || params.size() > 6)
+	if (fHelp || params.size() != 6)
 		throw runtime_error(
-				"offernew [<address>] <category> <title> <quantity> <price> [<description>]\n"
-						"<address> offerpay receive address, wallet default address if not specified.\n"
+				"offernew <address> <category> <title> <quantity> <price> [<description>]\n"
+						"<address> offerpay receive address.\n"
 						"<category> category, 255 chars max.\n"
 						"<title> title, 255 chars max.\n"
 						"<quantity> quantity, > 0\n"
