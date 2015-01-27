@@ -242,7 +242,7 @@ void BitcoinGUI::createActions()
     // Hide buttons until we fixed the issues (win and mac)
 	aliasListAction->setVisible (true);
 	dataAliasListAction->setVisible (false);
-	offerListAction->setVisible (false);
+	offerListAction->setVisible (true);
 	certIssuerListAction->setVisible (false);
 	certListAction->setVisible (false);
 

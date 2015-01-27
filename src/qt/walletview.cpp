@@ -17,7 +17,6 @@
 #include "walletmodel.h"
 #include "optionsmodel.h"
 #include "aliastablemodel.h"
-#include "offertablemodel.h"
 #include "transactionview.h"
 #include "overviewpage.h"
 #include "askpassphrasedialog.h"
@@ -140,7 +139,6 @@ void WalletView::setClientModel(ClientModel *clientModel)
         addressBookPage->setOptionsModel(clientModel->getOptionsModel());
         aliasView->setClientModel(clientModel);
 		dataAliasView->setClientModel(clientModel);
-        offerView->setClientModel(clientModel);
         certIssuerListPage->setOptionsModel(clientModel->getOptionsModel());
         certListPage->setOptionsModel(clientModel->getOptionsModel());
         receiveCoinsPage->setOptionsModel(clientModel->getOptionsModel());
@@ -160,7 +158,6 @@ void WalletView::setWalletModel(WalletModel *walletModel)
         overviewPage->setWalletModel(walletModel);
         aliasView->setWalletModel(walletModel);
 		dataAliasView->setWalletModel(walletModel);
-        offerView->setWalletModel(walletModel);
         certIssuerListPage->setModel(walletModel->getCertIssuerTableModel());
         certListPage->setModel(walletModel->getCertIssuerTableModel());
         addressBookPage->setModel(walletModel->getAddressTableModel());

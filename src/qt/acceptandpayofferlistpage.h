@@ -7,7 +7,7 @@ namespace Ui {
     class AcceptandPayOfferListPage;
 }
 class JSONRequest;
-class OfferTableModel;
+
 class OptionsModel;
 class COffer;
 QT_BEGIN_NAMESPACE
@@ -32,16 +32,21 @@ public:
     ~AcceptandPayOfferListPage();
 
     const QString &getReturnValue() const { return returnValue; }
-	bool handleURI(const QUrl &uri, COffer* offerOut);
-	bool handleURI(const QString& strURI, COffer* offerOut);
+	bool handleURI(const QUrl &uri, COffer& offerOut);
+	bool handleURI(const QString& strURI, COffer& offerOut);
 	void setValue(const COffer &offer);
+	void updateCaption();
 public slots:
-    void acceptandpay();
-
+    void accept();
+	void pay();
+	void lookup();
+	void resetState();
 private:
     Ui::AcceptandPayOfferListPage *ui;
     QString returnValue;
-
+	bool offerPaid;
+	std::string offerAcceptGUID;
+	std::string offerAcceptTXID;
     QMenu *contextMenu;
     QAction *deleteAction; // to be able to explicitly disable it
 

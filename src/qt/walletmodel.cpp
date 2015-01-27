@@ -3,7 +3,7 @@
 #include "optionsmodel.h"
 #include "addresstablemodel.h"
 #include "aliastablemodel.h"
-#include "offertablemodel.h"
+
 #include "certtablemodel.h"
 #include "transactiontablemodel.h"
 
@@ -36,8 +36,6 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     transactionTableModel(0),
     aliasTableModelMine(0),
 	aliasTableModelAll(0),
-    offerTableModelMine(0),
-	offerTableModelAll(0),
 	certIssuerTableModel(0),
     cachedBalance(0),
     cachedUnconfirmedBalance(0),
@@ -49,8 +47,7 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     addressTableModel = new AddressTableModel(wallet, this);
   
     //do not load SYS service data this way at the moment, need more efficient load mechanism.
-	/*offerTableModelAll = new OfferTableModel(wallet, this, AllOffers);
-	offerTableModelMine = new OfferTableModel(wallet, this, MyOffers);
+	/*
     certIssuerTableModel = new CertIssuerTableModel(wallet, this);*/
 
     transactionTableModel = new TransactionTableModel(wallet, this);
@@ -181,14 +178,6 @@ void WalletModel::updateAlias(const QString &alias, const QString &value, const 
       //  aliasTableModelAll->updateEntry(alias, value, expDepth, AllAlias, status);
 }
 
-void WalletModel::updateOffer(const QString &offer, const QString &title, const QString &category, 
-    const QString &price, const QString &quantity, const QString &expDepth, const QString &description, int status)
-{
-    if(offerTableModelMine)
-		offerTableModelMine->updateEntry(offer, title, category, price, quantity, expDepth, description, MyOffers, status);
-    if(offerTableModelAll)
-		offerTableModelAll->updateEntry(offer, title, category, price, quantity, expDepth, description, AllOffers, status);
-}
 
 void WalletModel::updateCertIssuer(const QString &cert, const QString &title, const QString &expDepth, int status)
 {
@@ -330,14 +319,7 @@ AliasTableModel *WalletModel::getAliasTableModelAll()
     return aliasTableModelAll;
 }
 
-OfferTableModel *WalletModel::getOfferTableModelMine()
-{
-    return offerTableModelMine;
-}
-OfferTableModel *WalletModel::getOfferTableModelAll()
-{
-    return offerTableModelAll;
-}
+
 CertIssuerTableModel *WalletModel::getCertIssuerTableModel()
 {
     return certIssuerTableModel;
@@ -446,39 +428,7 @@ static void NotifyAliasListChanged(WalletModel *walletmodel, CWallet *wallet, co
 
 }
 
-static void NotifyOfferListChanged(WalletModel *walletmodel, CWallet *wallet, const CTransaction *tx, COffer offer, ChangeType status)
-{
-    unsigned long nExpDepth = offer.nHeight + GetOfferExpirationDepth(offer.nHeight);
-    COfferAccept theAccept;
-    std::vector<unsigned char> vchRand, vchTitle, vchDescription;
-    int64 nPrice;
-    int nQty;
-    vchRand = offer.vchRand;
-    vchTitle = offer.sTitle;
-	vchDescription = offer.sDescription;
-    nPrice = offer.nPrice;
-    nQty = offer.nQty;
-    if(offer.accepts.size()) {
-        theAccept = offer.accepts.back();
-        vchRand = theAccept.vchRand;
-        nPrice = theAccept.nPrice;
-        nQty = theAccept.nQty;
-        nExpDepth = 0;
-    }
 
-    OutputDebugStringF("NotifyOfferListChanged %s %s status=%i\n",
-                       stringFromVch(offer.vchRand).c_str(),
-                       stringFromVch(vchTitle).c_str(), status);
-    QMetaObject::invokeMethod(walletmodel, "updateOffer", Qt::QueuedConnection,
-                              Q_ARG(QString, QString::fromStdString(stringFromVch(vchRand))),
-                              Q_ARG(QString, QString::fromStdString(stringFromVch(vchTitle))),
-                              Q_ARG(QString, QString::fromStdString(stringFromVch(offer.sCategory))),
-                              Q_ARG(QString, QString::fromStdString(strprintf("%lf", (double)nPrice / COIN))),
-                              Q_ARG(QString, QString::fromStdString(strprintf("%d", nQty))),
-                              Q_ARG(QString, QString::fromStdString(strprintf("%lu", nExpDepth))),
-							  Q_ARG(QString, QString::fromStdString(stringFromVch(vchDescription))),
-                              Q_ARG(int, status));
-}
 
 static void NotifyCertIssuerListChanged(WalletModel *walletmodel, CWallet *wallet, const CTransaction *tx, CCertIssuer issuer, ChangeType status)
 {
@@ -518,7 +468,7 @@ void WalletModel::subscribeToCoreSignals()
     wallet->NotifyStatusChanged.connect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
     wallet->NotifyAddressBookChanged.connect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5));
     wallet->NotifyAliasListChanged.connect(boost::bind(NotifyAliasListChanged, this, _1, _2, _3));
-    wallet->NotifyOfferListChanged.connect(boost::bind(NotifyOfferListChanged, this, _1, _2, _3, _4));
+    
     wallet->NotifyCertIssuerListChanged.connect(boost::bind(NotifyCertIssuerListChanged, this, _1, _2, _3, _4));
     wallet->NotifyTransactionChanged.connect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
 }
@@ -529,7 +479,6 @@ void WalletModel::unsubscribeFromCoreSignals()
     wallet->NotifyStatusChanged.disconnect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
     wallet->NotifyAddressBookChanged.disconnect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5));
     wallet->NotifyAliasListChanged.disconnect(boost::bind(NotifyAliasListChanged, this, _1, _2, _3));
-    wallet->NotifyOfferListChanged.disconnect(boost::bind(NotifyOfferListChanged, this, _1, _2, _3, _4));
     wallet->NotifyCertIssuerListChanged.disconnect(boost::bind(NotifyCertIssuerListChanged, this, _1, _2, _3, _4));
     wallet->NotifyTransactionChanged.disconnect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
 }

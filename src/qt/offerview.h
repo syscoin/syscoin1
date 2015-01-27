@@ -10,12 +10,9 @@
 #include <QStackedWidget>
 
 class BitcoinGUI;
-class ClientModel;
-class WalletModel;
-class MyOfferListPage;
-class AllOfferListPage;
+
 class AcceptandPayOfferListPage;
-class AcceptedOfferListPage;
+
 class COffer;
 
 QT_BEGIN_NAMESPACE
@@ -44,26 +41,16 @@ public:
     /** Set the client model.
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
-    void setClientModel(ClientModel *clientModel);
-    /** Set the wallet model.
-        The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
-        functionality.
-    */
-    void setWalletModel(WalletModel *walletModel);
 	
     bool handleURI(const QString &uri);
 
 
 private:
     BitcoinGUI *gui;
-    ClientModel *clientModel;
-    WalletModel *walletModel;
 
 	QTabWidget *tabWidget;
-    MyOfferListPage *myOfferListPage;
-	AllOfferListPage *allOfferListPage;
 	AcceptandPayOfferListPage *acceptandPayOfferListPage;
-	AcceptedOfferListPage *acceptedOfferListPage;
+	
 
 public:
     /** Switch to offer page */

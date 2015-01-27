@@ -373,10 +373,6 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx)
                         if(IsAliasOp(op)) {
                             NotifyAliasListChanged(this, &tx, CT_UPDATED);                       
                         } 
-                        else if (IsOfferOp(op)) {
-                            COffer theOffer(tx);
-                            NotifyOfferListChanged(this, &tx, theOffer, CT_UPDATED);
-                        }
                         else if(IsCertOp(op)) {
                             CCertIssuer theCI(tx);
                             NotifyCertIssuerListChanged(this, &tx, theCI, CT_UPDATED);
@@ -523,11 +519,6 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
             if(IsAliasOp(op)) {
                 NotifyAliasListChanged(this, &wtx, fInsertedNew ? CT_NEW : CT_UPDATED);    
             } 
-            // offer
-            else if (IsOfferOp(op)) {
-                COffer theOffer(wtx);
-                NotifyOfferListChanged(this, &wtx, theOffer, fInsertedNew ? CT_NEW : CT_UPDATED);
-            }
             // certificate
             else if (IsCertOp(op)) {
                 CCertIssuer theCI(wtx);
@@ -1511,11 +1502,6 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
                     // alias
                     if(IsAliasOp(op)) {
                         NotifyAliasListChanged(this, &wtxNew, CT_UPDATED);                   
-                    } 
-                    // offer
-                    else if (IsOfferOp(op)) {
-                        COffer theOffer(wtxNew);
-                        NotifyOfferListChanged(this, &wtxNew, theOffer, CT_UPDATED);
                     }
                     // certificate
                     else if (IsCertOp(op)) {
@@ -2087,11 +2073,6 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx)
                 // alias
                 if(IsAliasOp(op)) {
                     NotifyAliasListChanged(this, &wtx, CT_UPDATED); 
-                }
-                // offer
-                else if (IsOfferOp(op)) {
-                    COffer theOffer(wtx);
-                    NotifyOfferListChanged(this, &wtx, theOffer, CT_UPDATED);
                 }
                 // certificate
                 else if (IsCertOp(op)) {

@@ -10,7 +10,6 @@
 class OptionsModel;
 class AddressTableModel;
 class AliasTableModel;
-class OfferTableModel;
 class CertIssuerTableModel;
 class TransactionTableModel;
 class CWallet;
@@ -67,8 +66,6 @@ public:
     AddressTableModel *getAddressTableModel();
     AliasTableModel *getAliasTableModelMine();
     AliasTableModel *getAliasTableModelAll();
-    OfferTableModel *getOfferTableModelMine();
-	OfferTableModel *getOfferTableModelAll();
     CertIssuerTableModel *getCertIssuerTableModel();
     TransactionTableModel *getTransactionTableModel();
     
@@ -149,8 +146,6 @@ private:
     TransactionTableModel *transactionTableModel;
     AliasTableModel *aliasTableModelMine;
     AliasTableModel *aliasTableModelAll;
-    OfferTableModel *offerTableModelMine;
-	OfferTableModel *offerTableModelAll;
     CertIssuerTableModel *certIssuerTableModel;
 
     // Cache some values to be able to detect changes
@@ -194,9 +189,7 @@ public slots:
     void updateAddressBook(const QString &address, const QString &label, bool isMine, int status);
     /* New, updated or removed alias */
     void updateAlias(const QString &alias, const QString &value, const QString &expDepth, int status);
-   /* New, updated or removed offer */
-    void updateOffer(const QString &offer, const QString &title, const QString &category, 
-        const QString &price, const QString &quantity, const QString &expDepth,const QString &description,int status);
+   
     /* New, updated or removed cert issuer / cert */
     void updateCertIssuer(const QString &cert, const QString &title, const QString &expDepth,int status);
     /* New, updated or removed cert issuer / cert */
