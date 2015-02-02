@@ -296,7 +296,8 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri, COffer& offerOut)
 			offerOut.vchPaymentAddress = vchFromString(find_value(offerObj, "payment_address").get_str());
 		}
 		 
-
+		bool fShouldReturnFalse = true;
+		ui->notesEdit->setText(QString(""));
 	#if QT_VERSION < 0x050000
 		QList<QPair<QString, QString> > items = uri.queryItems();
 	#else
@@ -305,7 +306,7 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri, COffer& offerOut)
 	#endif
 		for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
 		{
-			bool fShouldReturnFalse = true;
+			
 			if (i->first == "quantity")
 			{
 				int64 qty = i->second.toLong();
@@ -318,9 +319,9 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri, COffer& offerOut)
 				QString notes = i->second;
 				ui->notesEdit->setText(notes);
 			}
-			if (fShouldReturnFalse)
-				return false;
 		}
+		if (fShouldReturnFalse)
+			return false;
 	}
 	catch (Object& objError)
 	{
