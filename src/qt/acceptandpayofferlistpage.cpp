@@ -296,8 +296,8 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri, COffer& offerOut)
 			offerOut.vchPaymentAddress = vchFromString(find_value(offerObj, "payment_address").get_str());
 		}
 		 
-		bool fShouldReturnFalse = true;
 		ui->notesEdit->setText(QString(""));
+		ui->qtyEdit->setText(QString("0"));
 	#if QT_VERSION < 0x050000
 		QList<QPair<QString, QString> > items = uri.queryItems();
 	#else
@@ -311,8 +311,6 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri, COffer& offerOut)
 			{
 				int64 qty = i->second.toLong();
 				ui->qtyEdit->setText(QString::number(qty));
-				// qty must exist in URI
-				fShouldReturnFalse = false;
 			}
 			else if (i->first == "notes")
 			{
@@ -320,15 +318,21 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri, COffer& offerOut)
 				ui->notesEdit->setText(notes);
 			}
 		}
-		if (fShouldReturnFalse)
-			return false;
 	}
 	catch (Object& objError)
 	{
+		string strError = find_value(objError, "message").get_str();
+		QMessageBox::critical(this, windowTitle(),
+		tr("Error in offer URI Handler: \"%1\"").arg(QString::fromStdString(strError)),
+			QMessageBox::Ok, QMessageBox::Ok);
 		return false;
 	}
 	catch(std::exception& e)
 	{
+		string strError = e.what();
+		QMessageBox::critical(this, windowTitle(),
+		tr("Exception in offer URI Handler: \"%1\"").arg(QString::fromStdString(strError)),
+			QMessageBox::Ok, QMessageBox::Ok);
 		return false;
 	}
 

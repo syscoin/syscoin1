@@ -55,10 +55,6 @@ bool OfferView::handleURI(const QString& strURI)
 	COffer myOffer;
     if (acceptandPayOfferListPage->handleURI(strURI, myOffer))
     {
-		if(myOffer.nQty <= 0)
-		{
-			return false;
-		}
         tabWidget->setCurrentWidget(acceptandPayOfferListPage);
 		acceptandPayOfferListPage->setValue(myOffer);
         return true;
