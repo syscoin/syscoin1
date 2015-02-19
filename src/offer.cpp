@@ -1787,6 +1787,81 @@ Value offerupdate(const Array& params, bool fHelp) {
 	return wtx.GetHash().GetHex();
 }
 
+Value offerrenew(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 1)
+		throw runtime_error(
+				"offerrenew <guid>\n"
+						"Perform a renewal on an offer you control.\n"
+						+ HelpRequiringPassphrase());
+
+	// gather & validate inputs
+	vector<unsigned char> vchRand = ParseHex(params[0].get_str());
+	vector<unsigned char> vchOffer = vchFromValue(params[0]);
+
+	// this is a syscoind txn
+	CWalletTx wtx;
+	wtx.nVersion = SYSCOIN_TX_VERSION;
+	CScript scriptPubKeyOrig;
+
+	// get a key from our wallet set dest as ourselves
+	CPubKey newDefaultKey;
+	pwalletMain->GetKeyFromPool(newDefaultKey, false);
+	scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
+
+	// create OFFERUPDATE txn keys
+	CScript scriptPubKey;
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << vchOffer
+			<< OP_2DROP << OP_DROP;
+	scriptPubKey += scriptPubKeyOrig;
+
+	{
+		LOCK2(cs_main, pwalletMain->cs_wallet);
+
+		if (mapOfferPending.count(vchOffer)
+				&& mapOfferPending[vchOffer].size()) 
+			throw runtime_error("there are pending operations on that offer");
+
+		EnsureWalletIsUnlocked();
+
+		// look for a transaction with this key
+		CTransaction tx;
+		if (!GetTxOfOffer(*pofferdb, vchOffer, tx))
+			throw runtime_error("could not find an offer with this name");
+
+		// make sure offer is in wallet
+		uint256 wtxInHash = tx.GetHash();
+		if (!pwalletMain->mapWallet.count(wtxInHash)) 
+			throw runtime_error("this offer is not in your wallet");
+		
+		// unserialize offer object from txn
+		COffer theOffer;
+		if(!theOffer.UnserializeFromTx(tx))
+			throw runtime_error("cannot unserialize offer from txn");
+
+		// get the offer from DB
+		vector<COffer> vtxPos;
+		if (!pofferdb->ReadOffer(vchOffer, vtxPos))
+			throw runtime_error("could not read offer from DB");
+		theOffer = vtxPos.back();
+		theOffer.accepts.clear();
+
+		// calculate network fees
+		int64 nNetFee = GetOfferNetworkFee(1, pindexBest->nHeight);
+		theOffer.nFee += nNetFee;
+
+		// serialize offer object
+		string bdata = theOffer.SerializeToString();
+
+		CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
+		string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
+				wtxIn, wtx, false, bdata);
+		if (strError != "")
+			throw JSONRPCError(RPC_WALLET_ERROR, strError);
+	}
+	return wtx.GetHash().GetHex();
+}
+
+
 Value offeraccept(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 1 || params.size() > 2)
 		throw runtime_error("offeraccept <guid> [<quantity]>\n"

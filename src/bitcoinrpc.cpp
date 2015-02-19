@@ -302,6 +302,7 @@ static const CRPCCommand vRPCCommands[] =
     { "offernew",         &offernew,       false,      false,      true },
     { "offeractivate",    &offeractivate,  false,      false,      true },
     { "offerupdate",      &offerupdate,    false,      false,      true },
+    { "offerrenew",       &offerrenew,     false,      false,      true },
     { "offeraccept",      &offeraccept,    false,      false,      true },
     { "offerpay",         &offerpay,       false,      false,      true },
     { "offerlist",        &offerlist,      false,      false,      true },
