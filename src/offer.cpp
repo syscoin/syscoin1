@@ -1735,9 +1735,9 @@ Value offerupdate(const Array& params, bool fHelp) {
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
 
-		if (mapOfferPending.count(vchOffer)
-				&& mapOfferPending[vchOffer].size()) 
-			throw runtime_error("there are pending operations on that offer");
+		// if (mapOfferPending.count(vchOffer)
+		// 		&& mapOfferPending[vchOffer].size()) 
+		// 	throw runtime_error("there are pending operations on that offer");
 
 		EnsureWalletIsUnlocked();
 
@@ -1817,9 +1817,9 @@ Value offerrenew(const Array& params, bool fHelp) {
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
 
-		if (mapOfferPending.count(vchOffer)
-				&& mapOfferPending[vchOffer].size()) 
-			throw runtime_error("there are pending operations on that offer");
+		// if (mapOfferPending.count(vchOffer)
+		// 		&& mapOfferPending[vchOffer].size()) 
+		// 	throw runtime_error("there are pending operations on that offer");
 
 		EnsureWalletIsUnlocked();
 
@@ -1905,13 +1905,13 @@ Value offeraccept(const Array& params, bool fHelp) {
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
 
-		if (mapOfferPending.count(vchOffer)
-				&& mapOfferPending[vchOffer].size()) {
-			error(  "offeraccept() : there are %d pending operations on that offer, including %s",
-					(int) mapOfferPending[vchOffer].size(),
-					mapOfferPending[vchOffer].begin()->GetHex().c_str());
-			throw runtime_error("there are pending operations on that offer");
-		}
+		// if (mapOfferPending.count(vchOffer)
+		// 		&& mapOfferPending[vchOffer].size()) {
+		// 	error(  "offeraccept() : there are %d pending operations on that offer, including %s",
+		// 			(int) mapOfferPending[vchOffer].size(),
+		// 			mapOfferPending[vchOffer].begin()->GetHex().c_str());
+		// 	throw runtime_error("there are pending operations on that offer");
+		// }
 
 		EnsureWalletIsUnlocked();
 
