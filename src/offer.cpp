@@ -1808,12 +1808,6 @@ Value offerrenew(const Array& params, bool fHelp) {
 	pwalletMain->GetKeyFromPool(newDefaultKey, false);
 	scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
 
-	// create OFFERUPDATE txn keys
-	CScript scriptPubKey;
-	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << vchTitle
-			<< OP_2DROP << OP_DROP;
-	scriptPubKey += scriptPubKeyOrig;
-
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
 
@@ -1851,6 +1845,13 @@ Value offerrenew(const Array& params, bool fHelp) {
 
 		// serialize offer object
 		string bdata = theOffer.SerializeToString();
+
+		// create OFFERUPDATE txn keys
+		CScript scriptPubKey;
+		scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << theOffer.sTitle
+				<< OP_2DROP << OP_DROP;
+		scriptPubKey += scriptPubKeyOrig;
+
 
 		CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
 		string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
