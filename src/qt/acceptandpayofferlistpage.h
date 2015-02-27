@@ -32,8 +32,8 @@ public:
     ~AcceptandPayOfferListPage();
 
     const QString &getReturnValue() const { return returnValue; }
-	bool handleURI(const QUrl &uri, COffer& offerOut);
-	bool handleURI(const QString& strURI, COffer& offerOut);
+	bool handleURI(const QUrl &uri);
+	bool handleURI(const QString& strURI);
 	void setValue(const COffer &offer);
 	void updateCaption();
 public slots:

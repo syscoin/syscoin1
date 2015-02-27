@@ -242,8 +242,23 @@ void AcceptandPayOfferListPage::lookup()
 			offerOut.sTitle = vchFromString(find_value(offerObj, "title").get_str());
 			offerOut.sCategory = vchFromString(find_value(offerObj, "category").get_str());
 			offerOut.nPrice = QString::number(find_value(offerObj, "price").get_real()).toLongLong();
-			offerOut.nQty = QString::fromStdString(find_value(offerObj, "quantity").get_str()).toLong();
-			offerOut.sDescription = vchFromString(find_value(offerObj, "description").get_str());
+			offerOut.nQty = QString::fromStdString(find_value(offerObj, "quantity").get_str()).toLong();	
+			string descString = find_value(offerObj, "description").get_str();
+			offerOut.sDescription = vchFromString(descString);
+			Value outerDescValue;
+			if (read_string(descString, outerDescValue))
+			{
+				if(outerDescValue.type() == obj_type)
+				{
+					const Object& outerDescObj = outerDescValue.get_obj();
+					Value descValue = find_value(outerDescObj, "description");
+					if (descValue.type() == str_type)
+					{
+						offerOut.sDescription = vchFromString(descValue.get_str());
+					}
+				}
+
+			}
 			offerOut.nFee = QString::number(find_value(offerObj, "service_fee").get_real()).toLongLong();
 			offerOut.vchPaymentAddress = vchFromString(find_value(offerObj, "payment_address").get_str());
 			setValue(offerOut);
@@ -267,7 +282,7 @@ void AcceptandPayOfferListPage::lookup()
 
 
 }
-bool AcceptandPayOfferListPage::handleURI(const QUrl &uri, COffer& offerOut)
+bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 {
 	  // return if URI is not valid or is no bitcoin URI
     if(!uri.isValid() || uri.scheme() != QString("syscoin"))
@@ -285,15 +300,31 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri, COffer& offerOut)
 		{
 			Object offerObj;
 			offerObj = result.get_obj();
-
+			COffer offerOut;
 			offerOut.vchRand = vchFromString(find_value(offerObj, "id").get_str());
 			offerOut.sTitle = vchFromString(find_value(offerObj, "title").get_str());
 			offerOut.sCategory = vchFromString(find_value(offerObj, "category").get_str());
 			offerOut.nPrice = QString::number(find_value(offerObj, "price").get_real()).toLongLong();
 			offerOut.nQty = QString::fromStdString(find_value(offerObj, "quantity").get_str()).toLong();
-			offerOut.sDescription = vchFromString(find_value(offerObj, "description").get_str());
+			string descString = find_value(offerObj, "description").get_str();
+			offerOut.sDescription = vchFromString(descString);
+			Value outerDescValue;
+			if (read_string(descString, outerDescValue))
+			{
+				if(outerDescValue.type() == obj_type)
+				{
+					const Object& outerDescObj = outerDescValue.get_obj();
+					Value descValue = find_value(outerDescObj, "description");
+					if (descValue.type() == str_type)
+					{
+						offerOut.sDescription = vchFromString(descValue.get_str());
+					}
+				}
+
+			}
 			offerOut.nFee = QString::number(find_value(offerObj, "service_fee").get_real()).toLongLong();
 			offerOut.vchPaymentAddress = vchFromString(find_value(offerObj, "payment_address").get_str());
+			setValue(offerOut);
 		}
 		 
 		ui->notesEdit->setText(QString(""));
@@ -352,7 +383,7 @@ void AcceptandPayOfferListPage::setValue(const COffer &offer)
 
 }
 
-bool AcceptandPayOfferListPage::handleURI(const QString& strURI, COffer& offerOut)
+bool AcceptandPayOfferListPage::handleURI(const QString& strURI)
 {
 	QString URI = strURI;
 	if(URI.startsWith("syscoin://"))
@@ -360,6 +391,6 @@ bool AcceptandPayOfferListPage::handleURI(const QString& strURI, COffer& offerOu
         URI.replace(0, 11, "syscoin:");
     }
     QUrl uriInstance(URI);
-    return handleURI(uriInstance, offerOut);
+    return handleURI(uriInstance);
 }
 

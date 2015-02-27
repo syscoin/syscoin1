@@ -53,10 +53,9 @@ void OfferView::gotoOfferListPage()
 bool OfferView::handleURI(const QString& strURI)
 {
 	COffer myOffer;
-    if (acceptandPayOfferListPage->handleURI(strURI, myOffer))
+    if (acceptandPayOfferListPage->handleURI(strURI))
     {
         tabWidget->setCurrentWidget(acceptandPayOfferListPage);
-		acceptandPayOfferListPage->setValue(myOffer);
         return true;
     }
  
