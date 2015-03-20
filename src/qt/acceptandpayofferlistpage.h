@@ -38,15 +38,14 @@ public:
 	void updateCaption();
 public slots:
     void accept();
-	void pay();
 	void lookup();
 	void resetState();
 private:
     Ui::AcceptandPayOfferListPage *ui;
     QString returnValue;
 	bool offerPaid;
-	std::string offerAcceptGUID;
-	std::string offerAcceptTXID;
+	QString offerAcceptGUID;
+	QString offerAcceptTXID;
     QMenu *contextMenu;
     QAction *deleteAction; // to be able to explicitly disable it
 

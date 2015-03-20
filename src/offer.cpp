@@ -1464,7 +1464,7 @@ Value getofferfees(const Array& params, bool fHelp) {
 Value offernew(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 6)
 		throw runtime_error(
-				"offernew <address> <category> <title> <quantity> <price> [<description>]\n"
+			"offernew <address> <category> <title> <quantity> <price> <description>\n"
 						"<address> offerpay receive address.\n"
 						"<category> category, 255 chars max.\n"
 						"<title> title, 255 chars max.\n"
@@ -1477,10 +1477,9 @@ Value offernew(const Array& params, bool fHelp) {
 	unsigned int nParamIdx = 0;
 	int64 nQty, nPrice;
 
-	vector<unsigned char> vchPaymentAddress = vchFromValue(params[nParamIdx]);
+	vector<unsigned char> vchPaymentAddress = vchFromValue(params[nParamIdx++]);
 	CBitcoinAddress payAddr(stringFromVch(vchPaymentAddress));
-	if(payAddr.IsValid()) nParamIdx++;
-	else {
+	if(!payAddr.IsValid()){
 	    BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& entry, pwalletMain->mapAddressBook) {
 	        if (IsMine(*pwalletMain, entry.first)) {
 	            // sign the data and store it as the alias value
@@ -1493,7 +1492,6 @@ Value offernew(const Array& params, bool fHelp) {
 	        }
 	    }
 	}
-
 	vector<unsigned char> vchCat = vchFromValue(params[nParamIdx++]);
 	vector<unsigned char> vchTitle = vchFromValue(params[nParamIdx++]);
 	vector<unsigned char> vchDesc;
