@@ -2188,7 +2188,7 @@ Value offerlist(const Array& params, bool fHelp) {
         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
         {
 			expired = 0;
-			pending = 1;
+			pending = 0;
 			expires_in = -1;
 			expired_block -1;
             // get txn hash, read txn index
@@ -2241,12 +2241,12 @@ Value offerlist(const Array& params, bool fHelp) {
 
             
 
-            if(nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+            if(pending == 0 && (nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0))
 			{
 				expired = 1;
 				expired_block = nHeight + GetOfferDisplayExpirationDepth(nHeight);
 			}  
-			if(expired != 1 && pending != 1)
+			if(expired != 1)
 			{
 				expires_in = nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
 			}
