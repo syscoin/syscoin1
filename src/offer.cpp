@@ -2178,12 +2178,19 @@ Value offerlist(const Array& params, bool fHelp) {
         uint256 blockHash;
         uint256 hash;
         CTransaction tx;
-
+		int expired;
+		int pending;
+		int expires_in;
+		int expired_block;
         vector<unsigned char> vchValue;
         int nHeight;
 
         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
         {
+			expired = 0;
+			pending = 1;
+			expires_in = -1;
+			expired_block -1;
             // get txn hash, read txn index
             hash = item.second.GetHash();
 
@@ -2217,6 +2224,12 @@ Value offerlist(const Array& params, bool fHelp) {
             if(!GetValueOfOfferTx(tx, vchValue))
                 continue;
 
+			vector<COffer> vtxPos;
+			if (!pofferdb->ReadOffer(vchName, vtxPos))
+				pending = 1;
+			if (vtxPos.size() < 1)
+				pending = 1;
+
             // build the output object
             Object oName;
             oName.push_back(Pair("name", stringFromVch(vchName)));
@@ -2226,11 +2239,21 @@ Value offerlist(const Array& params, bool fHelp) {
             GetOfferAddress(tx, strAddress);
             oName.push_back(Pair("address", strAddress));
 
-            oName.push_back(Pair("expires_in", nHeight
-                                 + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
-            if(nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
-                oName.push_back(Pair("expired", 1));
+            
 
+            if(nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+			{
+				expired = 1;
+				expired_block = nHeight + GetOfferDisplayExpirationDepth(nHeight);
+			}  
+			if(expired != 1 && pending != 1)
+			{
+				expires_in = nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+			}
+			oName.push_back(Pair("expires_in", expires_in));
+			oName.push_back(Pair("expired_block", expired_block));
+			oName.push_back(Pair("expired", expired));
+			oName.push_back(Pair("pending", pending));
             // get last active name only
             if(vNamesI.find(vchName) != vNamesI.end() && vNamesI[vchName] > nHeight)
                 continue;
