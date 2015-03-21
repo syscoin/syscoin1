@@ -15,16 +15,16 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleExecutable</key>
-	<string>SysCoin-Qt</string>
+	<string>Syscoin-Qt</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.syscoin.SysCoin-Qt</string>
+	<string>org.syscoin.Syscoin-Qt</string>
         <key>CFBundleURLTypes</key>
         <array>
           <dict>
             <key>CFBundleTypeRole</key>
             <string>Editor</string>
             <key>CFBundleURLName</key>
-            <string>org.syscoin.SysCoinPayment</string>
+            <string>org.syscoin.SyscoinPayment</string>
             <key>CFBundleURLSchemes</key>
             <array>
               <string>syscoin</string>
