@@ -130,6 +130,7 @@ void AcceptandPayOfferListPage::accept()
 						}
 					}
 					updateCaption();
+					return;
 				}
 			}
 		}

@@ -22,7 +22,7 @@ OfferPayDialog::OfferPayDialog(QString offerID, QString offerAcceptGUID, QString
 	connect(ui->payButton, SIGNAL(clicked()), this, SLOT(pay()));
 	this->timer = new QTimer(this);
     connect(this->timer, SIGNAL(timeout()), this, SLOT(offerAcceptWatcher()));
-    this->timer->start(500);
+    this->timer->start(10);
 	ui->payButton->setEnabled(false);
 
 }
@@ -119,7 +119,7 @@ void OfferPayDialog::offerAcceptWatcher()
 	this->progress += 1;
 	if(this->progress >= 100)
 	{	
-		this->progress = 75;
+		this->progress = 0;
 	}
 	if(this->offerPaid)
 	{
@@ -185,7 +185,9 @@ bool OfferPayDialog::lookup()
 						this->offerPaid = true;
 						this->offerAcceptGUID = QString("");
 						this->offerAcceptTXID = QString("");
-						this->timer->stop();
+						this->progress = 100;
+						this->timer->stop();				
+						ui->progressBar->setValue(this->progress);
 						OfferPayDialog::accept();
 						return true;
 					}
@@ -194,7 +196,9 @@ bool OfferPayDialog::lookup()
 						ui->payMessage->setText(tr("You've purchased %1 %2 for %3 SYS!").arg(qty).arg(QString::fromStdString(stringFromVch(offerOut.sTitle))).arg(price));
 						ui->purchaseHint->setText(tr("Please click the button below to pay for your item"));
 						ui->payButton->setEnabled(true);
-						this->timer->stop();
+						this->progress = 100;
+						this->timer->stop();				
+						ui->progressBar->setValue(this->progress);
 						return true;
 					}
 				}
