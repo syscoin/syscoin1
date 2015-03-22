@@ -115,7 +115,14 @@ void OfferPayDialog::pay()
 }
 void OfferPayDialog::offerAcceptWatcher()
 {
-	lookup();
+	if(!lookup())
+	{
+		this->progress = 0;
+		ui->progressBar->setValue(this->progress);
+		this->timer->stop();
+		ui->purchaseHint->setText(tr("There was a problem looking up this offer information, please try again later..."));
+		return;
+	}
 	this->progress += 1;
 	if(this->progress >= 100)
 	{	

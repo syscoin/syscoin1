@@ -42,6 +42,7 @@ public slots:
 	void resetState();
 private:
     Ui::AcceptandPayOfferListPage *ui;
+	bool URIHandled;
     QString returnValue;
 	bool offerPaid;
 	QString offerAcceptGUID;

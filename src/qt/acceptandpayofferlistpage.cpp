@@ -224,14 +224,15 @@ void AcceptandPayOfferListPage::lookup()
 bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 {
 	  // return if URI is not valid or is no bitcoin URI
-    if(!uri.isValid() || uri.scheme() != QString("syscoin"))
+    if(!uri.isValid() || uri.scheme() != QString("syscoin") || this->URIHandled)
         return false;
+
 	string strError;
 	string strMethod = string("offerinfo");
 	Array params;
 	Value result;
 	params.push_back(uri.path().toStdString());
-
+	
     try {
 		ui->notesEdit->setPlainText(QString(""));
 		ui->qtyEdit->setText(QString("0"));
@@ -288,9 +289,10 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 			offerOut.nFee = QString::number(find_value(offerObj, "service_fee").get_real()).toLongLong();
 			offerOut.vchPaymentAddress = vchFromString(find_value(offerObj, "payment_address").get_str());
 			setValue(offerOut);
+			this->URIHandled = true;
 			OfferAcceptDialog dlg(offerOut, qty, ui->notesEdit->toPlainText(), this);
 			if(dlg.exec())
-			{
+			{	
 				this->offerPaid = dlg.getPaymentStatus();
 				if(this->offerPaid)
 				{
@@ -299,6 +301,7 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 					lookup();
 				}
 			}
+			this->URIHandled = false;
 			updateCaption();
 		}
 		 
