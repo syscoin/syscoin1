@@ -158,8 +158,10 @@ bool OfferPayDialog::lookup()
 			  {
 				QString txid = QString("");
 				QString paid = QString("");
-				QString price = QString("");
-				QString qty = QString("");
+				QString priceStr = QString("");
+				QString qtyStr = QString("");
+				int64 qty = 0;
+				uint64 price = 0;
 				if (accept.type() != obj_type)
 					continue;
 				Object& o = accept.get_obj();
@@ -171,11 +173,14 @@ bool OfferPayDialog::lookup()
 					paid = QString::fromStdString(paid_value.get_str());
 				const Value& qty_value = find_value(o, "quantity");
 				if (qty_value.type() == str_type)
-					qty = QString::fromStdString(qty_value.get_str());
+					qtyStr = QString::fromStdString(qty_value.get_str());
 				const Value& price_value = find_value(o, "price");
 				if (price_value.type() == real_type)
-					price = QString::number(price_value.get_real());
-
+					priceStr = QString::number(price_value.get_real());
+				
+				qty = qtyStr.toLong();
+				price = priceStr.toLongLong()*qty;
+				priceStr = QString::number(price);
 				if(txid == this->offerAcceptTXID)
 				{
 					if(paid == QString("true")) {
@@ -193,7 +198,7 @@ bool OfferPayDialog::lookup()
 					}
 					else
 					{
-						ui->payMessage->setText(tr("You've purchased %1 %2 for %3 SYS!").arg(qty).arg(QString::fromStdString(stringFromVch(offerOut.sTitle))).arg(price));
+						ui->payMessage->setText(tr("You've purchased %1 %2 for %3 SYS!").arg(qtyStr).arg(QString::fromStdString(stringFromVch(offerOut.sTitle))).arg(priceStr));
 						ui->purchaseHint->setText(tr("Please click the button below to pay for your item"));
 						ui->payButton->setEnabled(true);
 						this->progress = 100;

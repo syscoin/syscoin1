@@ -11,16 +11,17 @@ using namespace std;
 using namespace json_spirit;
 extern const CRPCTable tableRPC;
 
-OfferAcceptDialog::OfferAcceptDialog(COffer* offer, QString notes, QWidget *parent) :
+OfferAcceptDialog::OfferAcceptDialog(COffer& offer, QString notes, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::OfferAcceptDialog), offer(offer), notes(notes)
 {
     ui->setupUi(this);
 	ui->acceptMessage->setText(tr("There was a problem accepting this offer, please try again..."));
-	if(offer)
-	{
-		ui->acceptMessage->setText(tr("Are you sure you want to purchase %1 %2? You will be charged %3 SYS").arg(QString::fromStdString(stringFromVch(offer->sTitle))).arg(QString::number(offer->nQty)).arg(QString::number(offer->nPrice)));
-	}
+
+	QString qtyStr = QString::number(this->offer.nQty);
+	QString priceStr = QString::number(this->offer.nQty*this->offer.nPrice);
+	ui->acceptMessage->setText(tr("Are you sure you want to purchase %1 %2? You will be charged %3 SYS").arg(qtyStr).arg(QString::fromStdString(stringFromVch(this->offer.sTitle))).arg(priceStr));
+	
 	this->offerPaid = false;
 	this->offerAcceptGUID = QString("");
 	this->offerAcceptTXID = QString("");
@@ -45,7 +46,7 @@ void OfferAcceptDialog::accept()
 		string strReply;
 		string strError;
 		string strMethod = string("offeraccept");
-		if(this->offer->nQty <= 0)
+		if(this->offer.nQty <= 0)
 		{
 			QMessageBox::critical(this, windowTitle(),
 				tr("Invalid quantity when trying to accept offer!"),
@@ -55,7 +56,7 @@ void OfferAcceptDialog::accept()
 		this->offerPaid = false;
 		if(this->offerAcceptGUID != QString("") && this->offerAcceptTXID != QString(""))
 		{
-			OfferPayDialog dlg(QString::fromStdString(stringFromVch(this->offer->vchRand)), this->offerAcceptGUID, this->offerAcceptTXID,this->notes, this);
+			OfferPayDialog dlg(QString::fromStdString(stringFromVch(this->offer.vchRand)), this->offerAcceptGUID, this->offerAcceptTXID,this->notes, this);
 			if(dlg.exec())
 			{
 				this->offerPaid = dlg.getPaymentStatus();
@@ -74,8 +75,8 @@ void OfferAcceptDialog::accept()
 
 			return;
 		}
-		params.push_back(stringFromVch(this->offer->vchRand));
-		params.push_back(QString::number(this->offer->nQty).toStdString());
+		params.push_back(stringFromVch(this->offer.vchRand));
+		params.push_back(QString::number(this->offer.nQty).toStdString());
 
 	    try {
             result = tableRPC.execute(strMethod, params);
@@ -86,7 +87,7 @@ void OfferAcceptDialog::accept()
 				this->offerAcceptGUID = QString::fromStdString(arr[1].get_str());
 				if(this->offerAcceptGUID != QString("") && this->offerAcceptTXID != QString(""))
 				{
-					OfferPayDialog dlg(QString::fromStdString(stringFromVch(this->offer->vchRand)), this->offerAcceptGUID, this->offerAcceptTXID, this->notes,   this);
+					OfferPayDialog dlg(QString::fromStdString(stringFromVch(this->offer.vchRand)), this->offerAcceptGUID, this->offerAcceptTXID, this->notes,   this);
 					if(dlg.exec())
 					{
 						this->offerPaid = dlg.getPaymentStatus();

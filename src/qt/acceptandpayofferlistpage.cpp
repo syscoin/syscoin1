@@ -287,7 +287,7 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 			offerOut.nFee = QString::number(find_value(offerObj, "service_fee").get_real()).toLongLong();
 			offerOut.vchPaymentAddress = vchFromString(find_value(offerObj, "payment_address").get_str());
 			setValue(offerOut);
-			OfferAcceptDialog dlg(&offerOut, ui->notesEdit->toPlainText(), this);
+			OfferAcceptDialog dlg(offerOut, ui->notesEdit->toPlainText(), this);
 			if(dlg.exec())
 			{
 				this->offerPaid = dlg.getPaymentStatus();
