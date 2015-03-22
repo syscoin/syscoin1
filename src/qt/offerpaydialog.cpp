@@ -95,7 +95,7 @@ void OfferPayDialog::pay()
 		if(this->offerPaid)
 		{
 			QMessageBox::information(this, tr("Purchase Complete"),
-				tr("Your payment is complete!  The merchant has been sent your encrypted shipping information and your item should arrive shortly. The merchant may followup with further information. TxID: %1").arg(payTXID),
+				tr("<p><FONT COLOR='green'><b>Your payment is complete!</b></FONT></p><p>The merchant has been sent your encrypted shipping information and your item should arrive shortly. The merchant may followup with further information.</p><br><br><p>TxID: <b>%1</b></p>").arg(payTXID),
 				QMessageBox::Ok, QMessageBox::Ok);	
 			if(this->offerPaid)
 			{
