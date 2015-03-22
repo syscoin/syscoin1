@@ -58,7 +58,7 @@
       <cursorShape>IBeamCursor</cursorShape>
      </property>
      <property name="text">
-      <string notr="true">Purchase accepted. Please wait for 1 confirmation...</string>
+      <string notr="true">Purchase accepted. Waiting for confirmation, this may take a few minutes</string>
      </property>
      <property name="textFormat">
       <enum>Qt::RichText</enum>

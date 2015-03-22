@@ -20,7 +20,7 @@ OfferAcceptDialog::OfferAcceptDialog(COffer& offer, long quantity, QString notes
 
 	QString qtyStr = QString::number(this->quantity);
 	QString priceStr = QString::number(this->quantity*this->offer.nPrice);
-	ui->acceptMessage->setText(tr("Are you sure you want to purchase %1 %2? You will be charged %3 SYS").arg(qtyStr).arg(QString::fromStdString(stringFromVch(this->offer.sTitle))).arg(priceStr));
+	ui->acceptMessage->setText(tr("Are you sure you want to purchase %1 of '%2'? You will be charged %3 SYS").arg(qtyStr).arg(QString::fromStdString(stringFromVch(this->offer.sTitle))).arg(priceStr));
 	
 	this->offerPaid = false;
 	this->offerAcceptGUID = QString("");

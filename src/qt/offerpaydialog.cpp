@@ -136,7 +136,7 @@ bool OfferPayDialog::lookup()
 	Array params;
 	Value result;
 	params.push_back(this->offerID.toStdString());
-	ui->purchaseHint->setText(tr("Purchase accepted. Please wait for 1 confirmation..."));
+	ui->purchaseHint->setText(tr("Purchase accepted. Waiting for confirmation, this may take a few minutes..."));
     try {
         result = tableRPC.execute(strMethod, params);
 
@@ -198,7 +198,7 @@ bool OfferPayDialog::lookup()
 					}
 					else
 					{
-						ui->payMessage->setText(tr("You've purchased %1 %2 for %3 SYS!").arg(qtyStr).arg(QString::fromStdString(stringFromVch(offerOut.sTitle))).arg(priceStr));
+						ui->payMessage->setText(tr("You've purchased %1 of '%2' for %3 SYS!").arg(qtyStr).arg(QString::fromStdString(stringFromVch(offerOut.sTitle))).arg(priceStr));
 						ui->purchaseHint->setText(tr("Please click the button below to pay for your item"));
 						ui->payButton->setEnabled(true);
 						this->progress = 100;
