@@ -124,14 +124,14 @@ void OfferPayDialog::offerAcceptWatcher()
 		return;
 	}
 	this->progress += 1;
-	if(this->progress >= 100)
-	{	
-		this->progress = 0;
-	}
 	if(this->offerPaid)
 	{
 		this->progress = 100;
 		this->timer->stop();
+	}
+	else if(this->progress >= 100)
+	{
+		this->progress = 0;	
 	}
 	ui->progressBar->setValue(this->progress);
 }
@@ -205,7 +205,7 @@ bool OfferPayDialog::lookup()
 					else
 					{
 						ui->payMessage->setText(tr("You've purchased %1 of '%2' for %3 SYS!").arg(qtyStr).arg(QString::fromStdString(stringFromVch(offerOut.sTitle))).arg(priceStr));
-						ui->purchaseHint->setText(tr("Please click the button below to pay for your item"));
+						ui->purchaseHint->setText(tr("Please click the button below to complete your purchase"));
 						ui->payButton->setEnabled(true);
 						this->progress = 100;
 						this->timer->stop();				
