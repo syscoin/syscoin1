@@ -2245,9 +2245,11 @@ Value offerlist(const Array& params, bool fHelp) {
 			{
 				expired = 1;
 				expired_block = nHeight + GetOfferDisplayExpirationDepth(nHeight);
-				expires_in = nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
 			}  
-			
+			if(pending == 0 && expired == 0)
+			{
+				expires_in = nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+			}
 			oName.push_back(Pair("expires_in", expires_in));
 			oName.push_back(Pair("expired_block", expired_block));
 			oName.push_back(Pair("expired", expired));
