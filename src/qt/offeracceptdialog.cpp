@@ -11,15 +11,15 @@ using namespace std;
 using namespace json_spirit;
 extern const CRPCTable tableRPC;
 
-OfferAcceptDialog::OfferAcceptDialog(COffer& offer, QString notes, QWidget *parent) :
+OfferAcceptDialog::OfferAcceptDialog(COffer& offer, long quantity, QString notes, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::OfferAcceptDialog), offer(offer), notes(notes)
+    ui(new Ui::OfferAcceptDialog), offer(offer), notes(notes), quantity(quantity)
 {
     ui->setupUi(this);
 	ui->acceptMessage->setText(tr("There was a problem accepting this offer, please try again..."));
 
-	QString qtyStr = QString::number(this->offer.nQty);
-	QString priceStr = QString::number(this->offer.nQty*this->offer.nPrice);
+	QString qtyStr = QString::number(this->quantity);
+	QString priceStr = QString::number(this->quantity*this->offer.nPrice);
 	ui->acceptMessage->setText(tr("Are you sure you want to purchase %1 %2? You will be charged %3 SYS").arg(qtyStr).arg(QString::fromStdString(stringFromVch(this->offer.sTitle))).arg(priceStr));
 	
 	this->offerPaid = false;
@@ -46,7 +46,7 @@ void OfferAcceptDialog::accept()
 		string strReply;
 		string strError;
 		string strMethod = string("offeraccept");
-		if(this->offer.nQty <= 0)
+		if(this->quantity <= 0)
 		{
 			QMessageBox::critical(this, windowTitle(),
 				tr("Invalid quantity when trying to accept offer!"),
@@ -76,7 +76,7 @@ void OfferAcceptDialog::accept()
 			return;
 		}
 		params.push_back(stringFromVch(this->offer.vchRand));
-		params.push_back(QString::number(this->offer.nQty).toStdString());
+		params.push_back(QString::number(this->quantity).toStdString());
 
 	    try {
             result = tableRPC.execute(strMethod, params);

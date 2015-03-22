@@ -15,13 +15,14 @@ class OfferAcceptDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit OfferAcceptDialog(COffer& Offer, QString notes, QWidget *parent = 0);
+    explicit OfferAcceptDialog(COffer& Offer, long quantity, QString notes, QWidget *parent = 0);
     ~OfferAcceptDialog();
 
     bool getPaymentStatus();
 
 private:
     Ui::OfferAcceptDialog *ui;
+	long quantity;
 	COffer& offer;
 	QString notes;
 	QString offerAcceptGUID;

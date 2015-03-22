@@ -241,12 +241,13 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 		QUrlQuery uriQuery(uri);
 		QList<QPair<QString, QString> > items = uriQuery.queryItems();
 	#endif
+		long qty = 0;
 		for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
 		{
 			
 			if (i->first == "quantity")
 			{
-				int64 qty = i->second.toLong();
+				qty = i->second.toLong();
 				ui->qtyEdit->setText(QString::number(qty));
 			}
 			else if (i->first == "notes")
@@ -287,7 +288,7 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 			offerOut.nFee = QString::number(find_value(offerObj, "service_fee").get_real()).toLongLong();
 			offerOut.vchPaymentAddress = vchFromString(find_value(offerObj, "payment_address").get_str());
 			setValue(offerOut);
-			OfferAcceptDialog dlg(offerOut, ui->notesEdit->toPlainText(), this);
+			OfferAcceptDialog dlg(offerOut, qty, ui->notesEdit->toPlainText(), this);
 			if(dlg.exec())
 			{
 				this->offerPaid = dlg.getPaymentStatus();
