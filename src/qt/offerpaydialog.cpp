@@ -201,7 +201,6 @@ bool OfferPayDialog::lookup()
 						this->timer->stop();				
 						ui->progressBar->setValue(this->progress);
 						OfferPayDialog::accept();
-						return true;
 					}
 					else
 					{
@@ -211,7 +210,6 @@ bool OfferPayDialog::lookup()
 						this->progress = 100;
 						this->timer->stop();				
 						ui->progressBar->setValue(this->progress);
-						return true;
 					}
 				}
 			  }	
@@ -225,6 +223,7 @@ bool OfferPayDialog::lookup()
 		QMessageBox::critical(this, windowTitle(),
 				tr("Could not find this offer, please check the offer ID and that it has been confirmed by the blockchain"),
 				QMessageBox::Ok, QMessageBox::Ok);
+		return false;
 
 	}
 	catch(std::exception& e)
@@ -232,8 +231,9 @@ bool OfferPayDialog::lookup()
 		QMessageBox::critical(this, windowTitle(),
 			tr("There was an exception trying to locate this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
 				QMessageBox::Ok, QMessageBox::Ok);
+		return false;
 	}
-	return false;
+	return true;
 
 
 }
