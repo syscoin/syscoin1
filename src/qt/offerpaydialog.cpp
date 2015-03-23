@@ -95,7 +95,7 @@ void OfferPayDialog::pay()
 		if(this->offerPaid)
 		{
 			QMessageBox::information(this, tr("Purchase Complete"),
-				tr("<p><FONT COLOR='green'><b>Your payment is complete!</b></FONT></p><p>The merchant has been sent your encrypted shipping information and your item should arrive shortly. The merchant may followup with further information.</p><br><br><p>TxID: <b>%1</b></p>").arg(payTXID),
+				tr("<p><FONT COLOR='green'><b>Your payment is complete!</b></FONT></p><p>The merchant has been sent your delivery information and your item should arrive shortly. The merchant may followup with further information.</p><br><p>TxID: <b>%1</b></p>").arg(payTXID),
 				QMessageBox::Ok, QMessageBox::Ok);	
 			if(this->offerPaid)
 			{
@@ -115,6 +115,10 @@ void OfferPayDialog::pay()
 }
 void OfferPayDialog::offerAcceptWatcher()
 {
+    if(this->progress >= 100)
+	{
+		this->progress = 1;	
+	}
 	if(!lookup())
 	{
 		this->progress = 0;
@@ -123,16 +127,18 @@ void OfferPayDialog::offerAcceptWatcher()
 		ui->purchaseHint->setText(tr("There was a problem looking up this offer information, please try again later..."));
 		return;
 	}
+
 	this->progress += 1;
+    if(this->progress >= 100)
+	{
+		this->progress = 100;	
+	}
 	if(this->offerPaid)
 	{
 		this->progress = 100;
 		this->timer->stop();
 	}
-	else if(this->progress >= 100)
-	{
-		this->progress = 0;	
-	}
+ 
 	ui->progressBar->setValue(this->progress);
 }
 bool OfferPayDialog::lookup()

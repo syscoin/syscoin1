@@ -102,6 +102,7 @@ void OfferAcceptDialog::accept()
 					{
 						OfferAcceptDialog::close();
 					}
+					return;
 
 				}
 			}
