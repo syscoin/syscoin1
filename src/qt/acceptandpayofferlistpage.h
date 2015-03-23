@@ -37,7 +37,7 @@ public:
 	void setValue(const COffer &offer);
 	void updateCaption();
 public slots:
-    void accept();
+    void acceptOffer();
 	void lookup();
 	void resetState();
 private:

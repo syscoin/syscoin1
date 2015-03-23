@@ -30,7 +30,7 @@ private:
 	bool offerPaid; 
 
 private slots:
-    void accept();
+    void acceptOffer();
 };
 
 #endif // OFFERACCEPTDIALOG_H

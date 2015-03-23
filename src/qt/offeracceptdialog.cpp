@@ -25,7 +25,7 @@ OfferAcceptDialog::OfferAcceptDialog(COffer& offer, long quantity, QString notes
 	this->offerPaid = false;
 	this->offerAcceptGUID = QString("");
 	this->offerAcceptTXID = QString("");
-	connect(ui->acceptButton, SIGNAL(clicked()), this, SLOT(accept()));
+	connect(ui->acceptButton, SIGNAL(clicked()), this, SLOT(acceptOffer()));
 }
 
 OfferAcceptDialog::~OfferAcceptDialog()
@@ -33,7 +33,7 @@ OfferAcceptDialog::~OfferAcceptDialog()
     delete ui;
 }
 // send offeraccept with offer guid/qty as params and then send offerpay with wtxid (first param of response) as param, using RPC commands.
-void OfferAcceptDialog::accept()
+void OfferAcceptDialog::acceptOffer()
 {
 
 		Array params;

@@ -34,7 +34,7 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
 	this->offerPaid = false;
 	
     ui->labelExplanation->setText(tr("Accept and purchase this offer, SysCoins will be used to complete the transaction."));
-    connect(ui->acceptButton, SIGNAL(clicked()), this, SLOT(accept()));
+    connect(ui->acceptButton, SIGNAL(clicked()), this, SLOT(acceptOffer()));
 	connect(ui->lookupButton, SIGNAL(clicked()), this, SLOT(lookup()));
 	connect(ui->offeridEdit, SIGNAL(textChanged(const QString &)), this, SLOT(resetState()));
 }
@@ -68,7 +68,7 @@ void AcceptandPayOfferListPage::updateCaption()
 		
 }
 // send offeraccept with offer guid/qty as params and then send offerpay with wtxid (first param of response) as param, using RPC commands.
-void AcceptandPayOfferListPage::accept()
+void AcceptandPayOfferListPage::acceptOffer()
 {
 
 		Array params;
