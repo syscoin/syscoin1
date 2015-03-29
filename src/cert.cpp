@@ -57,7 +57,6 @@ bool IsCertOp(int op) {
 // expiration starts at 87360, increases by 1 per block starting at
 // block 174721 until block 349440
 int64 GetCertNetworkFee(int seed, int nHeight) {
-    if (fCakeNet) return CENT;
     int64 nRes = 48 * COIN;
     int64 nDif = 34 * COIN;
     if(seed==2) {
@@ -334,38 +333,39 @@ int GetCertTxHashHeight(const uint256 txHash) {
 }
 
 uint64 GetCertFeeSubsidy(unsigned int nHeight) {
+	uint64 hr1 = 1, hr12 = 1;
+	{
+		TRY_LOCK(cs_main, cs_trymain);
+		unsigned int h12 = 360 * 12;
+		unsigned int nTargetTime = 0;
+		unsigned int nTarget1hrTime = 0;
+		unsigned int blk1hrht = nHeight - 1;
+		unsigned int blk12hrht = nHeight - 1;
+		bool bFound = false;
 
-    unsigned int h12 = 360 * 12;
-    unsigned int nTargetTime = 0;
-    unsigned int nTarget1hrTime = 0;
-    unsigned int blk1hrht = nHeight - 1;
-    unsigned int blk12hrht = nHeight - 1;
-    bool bFound = false;
-    uint64 hr1 = 1, hr12 = 1;
-
-    BOOST_FOREACH(CCertFee &nmFee, lstCertIssuerFees) {
-        if(nmFee.nHeight <= nHeight)
-            bFound = true;
-        if(bFound) {
-            if(nTargetTime==0) {
-                hr1 = hr12 = 0;
-                nTargetTime = nmFee.nTime - h12;
-                nTarget1hrTime = nmFee.nTime - (h12/12);
-            }
-            if(nmFee.nTime > nTargetTime) {
-                hr12 += nmFee.nFee;
-                blk12hrht = nmFee.nHeight;
-                if(nmFee.nTime > nTarget1hrTime) {
-                    hr1 += nmFee.nFee;
-                    blk1hrht = nmFee.nHeight;
-                }
-            }
-        }
-    }
-    hr12 /= (nHeight - blk12hrht) + 1;
-    hr1 /= (nHeight - blk1hrht) + 1;
-    uint64 nSubsidyOut = hr1 > hr12 ? hr1 : hr12;
-    return nSubsidyOut;
+		BOOST_FOREACH(CCertFee &nmFee, lstCertIssuerFees) {
+			if(nmFee.nHeight <= nHeight)
+				bFound = true;
+			if(bFound) {
+				if(nTargetTime==0) {
+					hr1 = hr12 = 0;
+					nTargetTime = nmFee.nTime - h12;
+					nTarget1hrTime = nmFee.nTime - (h12/12);
+				}
+				if(nmFee.nTime > nTargetTime) {
+					hr12 += nmFee.nFee;
+					blk12hrht = nmFee.nHeight;
+					if(nmFee.nTime > nTarget1hrTime) {
+						hr1 += nmFee.nFee;
+						blk1hrht = nmFee.nHeight;
+					}
+				}
+			}
+		}
+		hr12 /= (nHeight - blk12hrht) + 1;
+		hr1 /= (nHeight - blk1hrht) + 1;
+	}
+    return (hr12 + hr1) / 2;
 }
 
 bool RemoveCertFee(CCertFee &txnVal) {

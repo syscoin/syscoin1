@@ -60,7 +60,6 @@ bool IsOfferOp(int op) {
 int nStartHeight = 161280;
 
 int64 GetOfferNetworkFee(int seed, int nHeight) {
-    if (fCakeNet) return CENT;
     int64 nRes = 88 * COIN;
     int64 nDif = 77 * COIN;
     if(seed==2) {
@@ -371,8 +370,7 @@ uint64 GetOfferFeeSubsidy(unsigned int nHeight) {
 		hr12 /= (nHeight - blk12hrht) + 1;
 		hr1 /= (nHeight - blk1hrht) + 1;
 	}
-	uint64 nSubsidyOut = hr1 > hr12 ? hr1 : hr12;
-	return nSubsidyOut;
+	return (hr12 + hr1) / 2;
 }
 
 bool RemoveOfferFee(COfferFee &txnVal) {
