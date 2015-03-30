@@ -308,8 +308,9 @@ bool CCertDB::ReconstructCertIndex(CBlockIndex *pindexRescan) {
                     nTheFee);
         }
         pindex = pindex->pnext;
-        Flush();
+        
     }
+	Flush();
     }
     return true;
 }
@@ -1052,7 +1053,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
             // check for enough fees
             nNetFee = GetCertNetFee(tx);
-            if (nNetFee < GetCertNetworkFee(1, pindexBlock->nHeight) - COIN)
+            if (nNetFee < GetCertNetworkFee(1, pindexBlock->nHeight))
                 return error(
                         "CheckCertInputs() : got tx %s with fee too low %lu",
                         tx.GetHash().GetHex().c_str(),
@@ -1103,15 +1104,15 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     return error(
                             "CheckCertInputs() : certissueractivate on an unexpired certissuer.");
 
-                if(pindexBlock->nHeight == pindexBest->nHeight) {
-                    BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
-                        if (vvchArgs[0] == s.first) {
-                           return error("CheckInputs() : will not mine certissueractivate %s because it clashes with %s",
-                                   tx.GetHash().GetHex().c_str(),
-                                   s.second.GetHex().c_str());
-                        }
-                    }
-                }
+                //if(pindexBlock->nHeight == pindexBest->nHeight) {
+                //    BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
+                //        if (vvchArgs[0] == s.first) {
+                //           return error("CheckInputs() : will not mine certissueractivate %s because it clashes with %s",
+                //                   tx.GetHash().GetHex().c_str(),
+                //                   s.second.GetHex().c_str());
+                //        }
+                //    }
+                //}
             }
 
             break;
@@ -1137,15 +1138,15 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 return error(
                         "CheckCertInputs() : certissuerupdate on an expired certissuer, or there is a pending transaction on the certissuer");
 
-            if (fBlock && !fJustCheck && pindexBlock->nHeight == pindexBest->nHeight) {
-                BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
-                    if (vvchArgs[0] == s.first) {
-                       return error("CheckInputs() : will not mine certissuerupdate %s because it clashes with %s",
-                               tx.GetHash().GetHex().c_str(),
-                               s.second.GetHex().c_str());
-                    }
-                }
-            }
+            //if (fBlock && !fJustCheck && pindexBlock->nHeight == pindexBest->nHeight) {
+            //    BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
+            //        if (vvchArgs[0] == s.first) {
+            //           return error("CheckInputs() : will not mine certissuerupdate %s because it clashes with %s",
+            //                   tx.GetHash().GetHex().c_str(),
+            //                   s.second.GetHex().c_str());
+            //        }
+            //    }
+            //}
 
             break;
 
@@ -1213,7 +1214,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     return error("could not read certitem from certissuer txn");
 
                 // check for enough fees
-                int64 expectedFee = GetCertNetworkFee(4, pindexBlock->nHeight) - COIN;
+                int64 expectedFee = GetCertNetworkFee(4, pindexBlock->nHeight);
                 nNetFee = GetCertNetFee(tx);
                 if (nNetFee < expectedFee )
                     return error(
@@ -1570,7 +1571,9 @@ Value certissueractivate(const Array& params, bool fHelp) {
 
         // calculate network fees
         int64 nNetFee = GetCertNetworkFee(1, pindexBest->nHeight);
-
+		// Round up to CENT
+		nNetFee += CENT - 1;
+		nNetFee = (nNetFee / CENT) * CENT;
         // unserialize certissuer object from txn, serialize back
         CCertIssuer newCertIssuer;
         if(!newCertIssuer.UnserializeFromTx(wtxIn))
@@ -1690,7 +1693,9 @@ Value certissuerupdate(const Array& params, bool fHelp) {
 
         // calculate network fees
         int64 nNetFee = GetCertNetworkFee(2, pindexBest->nHeight);
-
+		// Round up to CENT
+		nNetFee += CENT - 1;
+		nNetFee = (nNetFee / CENT) * CENT;
         // update certissuer values
         theCertIssuer.vchTitle = vchTitle;
         theCertIssuer.vchData = vchData;
@@ -1889,7 +1894,9 @@ Value certtransfer(const Array& params, bool fHelp) {
 
     // calculate network fees
     int64 nNetFee = GetCertNetworkFee(4, pindexBest->nHeight);
-
+	// Round up to CENT
+	nNetFee += CENT - 1;
+	nNetFee = (nNetFee / CENT) * CENT;
     theCertItem.nFee += nNetFee;
     theCertIssuer.certs.clear();
     theCertIssuer.PutCertItem(theCertItem);

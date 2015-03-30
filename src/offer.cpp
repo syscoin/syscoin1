@@ -313,8 +313,9 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 					nTheFee);	            
         }
         pindex = pindex->pnext;
-        Flush();
+        
     }
+	Flush();
     }
     return true;
 }
@@ -1059,7 +1060,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			// check for enough fees
 			nNetFee = GetOfferNetFee(tx);
-			if (nNetFee < GetOfferNetworkFee(1, pindexBlock->nHeight) - COIN)
+			if (nNetFee < GetOfferNetworkFee(1, pindexBlock->nHeight))
 				return error(
 						"CheckOfferInputs() : got tx %s with fee too low %lu",
 						tx.GetHash().GetHex().c_str(),
@@ -1110,15 +1111,15 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					return error(
 							"CheckOfferInputs() : offeractivate on an unexpired offer.");
 
-				if(pindexBlock->nHeight == pindexBest->nHeight) {
-					BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
-	                    if (vvchArgs[0] == s.first) {
-	                       return error("CheckInputs() : will not mine offeractivate %s because it clashes with %s",
-	                               tx.GetHash().GetHex().c_str(),
-	                               s.second.GetHex().c_str());
-	                    }
-	                }
-	            }
+				//if(pindexBlock->nHeight == pindexBest->nHeight) {
+				//	BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
+	   //                 if (vvchArgs[0] == s.first) {
+	   //                    return error("CheckInputs() : will not mine offeractivate %s because it clashes with %s",
+	   //                            tx.GetHash().GetHex().c_str(),
+	   //                            s.second.GetHex().c_str());
+	   //                 }
+	   //             }
+	   //         }
 			}
 
 			break;
@@ -1144,15 +1145,15 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				return error(
 						"CheckOfferInputs() : offerupdate on an expired offer, or there is a pending transaction on the offer");
 			
-			if (fBlock && !fJustCheck && pindexBlock->nHeight == pindexBest->nHeight) {
-				BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
-                    if (vvchArgs[0] == s.first) {
-                       return error("CheckInputs() : will not mine offerupdate %s because it clashes with %s",
-                               tx.GetHash().GetHex().c_str(),
-                               s.second.GetHex().c_str());
-                    }
-                }
-        	}
+			//if (fBlock && !fJustCheck && pindexBlock->nHeight == pindexBest->nHeight) {
+			//	BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
+   //                 if (vvchArgs[0] == s.first) {
+   //                    return error("CheckInputs() : will not mine offerupdate %s because it clashes with %s",
+   //                            tx.GetHash().GetHex().c_str(),
+   //                            s.second.GetHex().c_str());
+   //                 }
+   //             }
+   //     	}
 
 			break;
 
@@ -1219,7 +1220,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					return error("could not read accept from offer txn");
 
 				// check for enough offer fees with this txn
-				int64 expectedFee = GetOfferNetworkFee(2, pindexBlock->nHeight) - COIN;
+				int64 expectedFee = GetOfferNetworkFee(2, pindexBlock->nHeight);
 				nNetFee = GetOfferNetFee(tx);
 				if (nNetFee < expectedFee )
 					return error(
@@ -1634,7 +1635,9 @@ Value offeractivate(const Array& params, bool fHelp) {
 
 		// calculate network fees
 		int64 nNetFee = GetOfferNetworkFee(1, pindexBest->nHeight);
-
+		// Round up to CENT
+		nNetFee += CENT - 1;
+		nNetFee = (nNetFee / CENT) * CENT;
 		// unserialize offer object from txn, serialize back
 		COffer newOffer;
 		if(!newOffer.UnserializeFromTx(wtxIn))
@@ -1761,7 +1764,9 @@ Value offerupdate(const Array& params, bool fHelp) {
 
 		// calculate network fees
 		int64 nNetFee = GetOfferNetworkFee(1, pindexBest->nHeight);
-		
+		// Round up to CENT
+		nNetFee += CENT - 1;
+		nNetFee = (nNetFee / CENT) * CENT;		
 		// update offer values
 		theOffer.sCategory = vchCat;
 		theOffer.sTitle = vchTitle;
@@ -1837,6 +1842,9 @@ Value offerrenew(const Array& params, bool fHelp) {
 
 		// calculate network fees
 		int64 nNetFee = GetOfferNetworkFee(1, pindexBest->nHeight);
+		// Round up to CENT
+		nNetFee += CENT - 1;
+		nNetFee = (nNetFee / CENT) * CENT;
 		theOffer.nFee += nNetFee;
 
 		// serialize offer object
@@ -2033,6 +2041,9 @@ Value offerpay(const Array& params, bool fHelp) {
     int64 nValueIn = 0;
     uint64 nTotalValue = ( theOfferAccept.nPrice * theOfferAccept.nQty );
     int64 nNetFee = GetOfferNetworkFee(2, pindexBest->nHeight);
+	// Round up to CENT
+	nNetFee += CENT - 1;
+	nNetFee = (nNetFee / CENT) * CENT;
     if (!pwalletMain->SelectCoins(nTotalValue + nNetFee, setCoins, nValueIn)) 
         throw runtime_error("insufficient funds to pay for offer");
 
