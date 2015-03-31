@@ -373,7 +373,7 @@ bool RemoveCertFee(CCertFee &txnVal) {
 	TRY_LOCK(cs_main, cs_trymain);
 
 	CCertFee *theval = NULL;
-
+	if(lstCertIssuerFees.size()==0) return false;
 	BOOST_FOREACH(CCertFee &nmTxnValue, lstCertIssuerFees) {
 		if (txnVal.hash == nmTxnValue.hash
 		 && txnVal.nHeight == nmTxnValue.nHeight) {
@@ -390,22 +390,23 @@ bool RemoveCertFee(CCertFee &txnVal) {
 
 bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
 	TRY_LOCK(cs_main, cs_trymain);
-    list<CCertFee> txnDup;
-    CCertFee oFee;
-    oFee.nTime = pindex->nTime;
-    oFee.nHeight = pindex->nHeight;
-    oFee.nFee = nValue;
-    bool bFound = false;
+    CCertFee txnVal;
+	txnVal.hash = hash;
+    txnVal.nTime = pindex->nTime;
+    txnVal.nHeight = pindex->nHeight;
+    txnVal.nFee = nValue;
+	bool bFound = false;
 
-    BOOST_FOREACH(CCertFee &nmFee, lstCertIssuerFees) {
-        if (oFee.hash == nmFee.hash
-                && oFee.nHeight == nmFee.nHeight) {
-            bFound = true;
-            break;
-        }
-    }
+	BOOST_FOREACH(CCertFee &nmTxnValue, lstCertIssuerFees) {
+		if (txnVal.hash == nmTxnValue.hash
+				&& txnVal.nHeight == nmTxnValue.nHeight) {
+			nmTxnValue = txnVal;
+			bFound = true;
+			break;
+		}
+	}
     if (!bFound)
-        lstCertIssuerFees.push_front(oFee);
+        lstCertIssuerFees.push_front(txnVal);
 
     return bFound;
 }

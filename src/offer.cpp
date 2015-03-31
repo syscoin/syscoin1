@@ -379,7 +379,7 @@ bool RemoveOfferFee(COfferFee &txnVal) {
 		TRY_LOCK(cs_main, cs_trymain);
 
 		COfferFee *theval = NULL;
-
+		if(lstOfferFees.size()==0) return false;
 		BOOST_FOREACH(COfferFee &nmTxnValue, lstOfferFees) {
 			if (txnVal.hash == nmTxnValue.hash
 			 && txnVal.nHeight == nmTxnValue.nHeight) {
@@ -396,21 +396,23 @@ bool RemoveOfferFee(COfferFee &txnVal) {
 
 bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
 	TRY_LOCK(cs_main, cs_trymain);
-	list<COfferFee> txnDup;
-	COfferFee oFee;
-	oFee.nTime = pindex->nTime;
-	oFee.nHeight = pindex->nHeight;
-	oFee.nFee = nValue;
+	COfferFee txnVal;
+	txnVal.hash = hash;
+	txnVal.nTime = pindex->nTime;
+	txnVal.nHeight = pindex->nHeight;
+	txnVal.nFee = nValue;
 	bool bFound = false;
-	BOOST_FOREACH(COfferFee &nmFee, lstOfferFees) {
-		if (oFee.hash == nmFee.hash
-				&& oFee.nHeight == nmFee.nHeight) {
+
+	BOOST_FOREACH(COfferFee &nmTxnValue, lstOfferFees) {
+		if (txnVal.hash == nmTxnValue.hash
+				&& txnVal.nHeight == nmTxnValue.nHeight) {
+			nmTxnValue = txnVal;
 			bFound = true;
 			break;
 		}
 	}
 	if (!bFound)
-		lstOfferFees.push_front(oFee);
+		lstOfferFees.push_front(txnVal);
 
 	return bFound;
 }

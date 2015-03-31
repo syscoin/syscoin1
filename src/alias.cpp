@@ -124,10 +124,9 @@ bool IsAliasOp(int op) {
 			|| op == OP_ALIAS_UPDATE;
 }
 
-bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 vValue) {
+bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
 	TRY_LOCK(cs_main, cs_trymain);
-	list<CAliasFee> txnDup;
-	CAliasFee txnVal(hash, pindex->nTime, pindex->nHeight, vValue);
+	CAliasFee txnVal(hash, pindex->nTime, pindex->nHeight, nValue);
 	bool bFound = false;
 
 	BOOST_FOREACH(CAliasFee &nmTxnValue, lstAliasFees) {
