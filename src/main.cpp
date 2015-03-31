@@ -2290,13 +2290,10 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 
 		int64 bValue = GetBlockValue(pindex->nHeight, nFees, 0);
 
-		if (pindex->nHeight < hardforkLaunch) // block before hardfork were allowed to
-		    bValue += (bValue * 8); // 800% float till fixed
-
 
 		if (nFees >= 0 && vtx[0].GetValueOut()
 				> bValue
-                && pindex->nHeight > 1500) // blocks 0 (genesis) and 1 (premine) have no max restrictions
+                && pindex->nHeight > 1) // blocks 0 (genesis) and 1 (premine) have no max restrictions
 			return state.DoS(100,
 					error( "ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",
 							pindex->nHeight, vtx[0].GetValueOut(),
