@@ -1479,20 +1479,11 @@ Value offernew(const Array& params, bool fHelp) {
 	int64 nQty, nPrice;
 
 	vector<unsigned char> vchPaymentAddress = vchFromValue(params[nParamIdx++]);
-	CBitcoinAddress payAddr(stringFromVch(vchPaymentAddress));
-	if(!payAddr.IsValid()){
-	    BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& entry, pwalletMain->mapAddressBook) {
-	        if (IsMine(*pwalletMain, entry.first)) {
-	            // sign the data and store it as the alias value
-	            CKeyID keyID;
-	            payAddr.Set(entry.first);
-	            if (payAddr.GetKeyID(keyID) && payAddr.IsValid()) {
-		            vchPaymentAddress = vchFromString(payAddr.ToString());
-		            break;
-	            }
-	        }
-	    }
-	}
+	CBitcoinAddress payAddr = CBitcoinAddress(stringFromVch(vchPaymentAddress));
+	if (!payAddr.IsValid())
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
+				"Invalid syscoin address");
+
 	vector<unsigned char> vchCat = vchFromValue(params[nParamIdx++]);
 	vector<unsigned char> vchTitle = vchFromValue(params[nParamIdx++]);
 	vector<unsigned char> vchDesc;
