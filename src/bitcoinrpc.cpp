@@ -42,7 +42,7 @@ static boost::thread_group* rpc_worker_group = NULL;
 static inline unsigned short GetDefaultRPCPort()
 {
     if(GetBoolArg("-testnet", false)) return 18368;
-    else if(GetBoolArg("-cakenet", false)) return 28368;
+    else if(GetBoolArg("-cakenet", true)) return 28368;
     else return 8368;
 }
 

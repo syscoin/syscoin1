@@ -525,7 +525,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     // ********************************************************* Step 2: parameter interactions
 
     fTestNet = GetBoolArg("-testnet");
-    fCakeNet = GetBoolArg("-cakenet");
+    fCakeNet = GetBoolArg("-cakenet", true);
     fBloomFilters = GetBoolArg("-bloomfilters", true);
     if (fBloomFilters)
         nLocalServices |= NODE_BLOOM;

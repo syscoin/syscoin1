@@ -1087,7 +1087,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     if (fNetSpecific) {
         if(GetBoolArg("-testnet", false))
             path /= "testnet";
-        else if(GetBoolArg("-cakenet", false))
+        else if(GetBoolArg("-cakenet", true))
             path /= "cakenet";
     }
 
