@@ -775,129 +775,127 @@ bool CreateCertTransactionWithInputTx(
         return false;
 
     wtxNew.BindWallet(pwalletMain);
-    {
-        LOCK2(cs_main, pwalletMain->cs_wallet);
 
-        nFeeRet = nTransactionFee;
-        loop {
-            wtxNew.vin.clear();
-            wtxNew.vout.clear();
-            wtxNew.fFromMe = true;
-            wtxNew.data = vchFromString(txData);
+    nFeeRet = nTransactionFee;
+    loop {
+        wtxNew.vin.clear();
+        wtxNew.vout.clear();
+        wtxNew.fFromMe = true;
+        wtxNew.data = vchFromString(txData);
 
-            int64 nTotalValue = nValue + nFeeRet;
-            printf("CreateCertTransactionWithInputTx: total value = %d\n",
-                    (int) nTotalValue);
-            double dPriority = 0;
+        int64 nTotalValue = nValue + nFeeRet;
+        printf("CreateCertTransactionWithInputTx: total value = %d\n",
+                (int) nTotalValue);
+        double dPriority = 0;
 
-            // vouts to the payees
-            BOOST_FOREACH(const PAIRTYPE(CScript, int64)& s, vecSend)
-                wtxNew.vout.push_back(CTxOut(s.second, s.first));
+        // vouts to the payees
+        BOOST_FOREACH(const PAIRTYPE(CScript, int64)& s, vecSend)
+            wtxNew.vout.push_back(CTxOut(s.second, s.first));
 
-            int64 nWtxinCredit = wtxIn.vout[nTxOut].nValue;
+        int64 nWtxinCredit = wtxIn.vout[nTxOut].nValue;
 
-            // Choose coins to use
-            set<pair<const CWalletTx*, unsigned int> > setCoins;
-            int64 nValueIn = 0;
-            printf( "CreateCertTransactionWithInputTx: SelectCoins(%s), nTotalValue = %s, nWtxinCredit = %s\n",
-                    FormatMoney(nTotalValue - nWtxinCredit).c_str(),
-                    FormatMoney(nTotalValue).c_str(),
-                    FormatMoney(nWtxinCredit).c_str());
-            if (nTotalValue - nWtxinCredit > 0) {
-                if (!pwalletMain->SelectCoins(nTotalValue - nWtxinCredit,
-                        setCoins, nValueIn))
+        // Choose coins to use
+        set<pair<const CWalletTx*, unsigned int> > setCoins;
+        int64 nValueIn = 0;
+        printf( "CreateCertTransactionWithInputTx: SelectCoins(%s), nTotalValue = %s, nWtxinCredit = %s\n",
+                FormatMoney(nTotalValue - nWtxinCredit).c_str(),
+                FormatMoney(nTotalValue).c_str(),
+                FormatMoney(nWtxinCredit).c_str());
+        if (nTotalValue - nWtxinCredit > 0) {
+            if (!pwalletMain->SelectCoins(nTotalValue - nWtxinCredit,
+                    setCoins, nValueIn))
+                return false;
+        }
+
+        printf( "CreateCertTransactionWithInputTx: selected %d tx outs, nValueIn = %s\n",
+                (int) setCoins.size(), FormatMoney(nValueIn).c_str());
+
+        vector<pair<const CWalletTx*, unsigned int> > vecCoins(
+                setCoins.begin(), setCoins.end());
+
+        BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins) {
+            int64 nCredit = coin.first->vout[coin.second].nValue;
+            dPriority += (double) nCredit
+                    * coin.first->GetDepthInMainChain();
+        }
+
+        // Input tx always at first position
+        vecCoins.insert(vecCoins.begin(), make_pair(&wtxIn, nTxOut));
+
+        nValueIn += nWtxinCredit;
+        dPriority += (double) nWtxinCredit * wtxIn.GetDepthInMainChain();
+
+        // Fill a vout back to self with any change
+        int64 nChange = nValueIn - nTotalValue;
+        if (nChange >= CENT) {
+            // Note: We use a new key here to keep it from being obvious which side is the change.
+            //  The drawback is that by not reusing a previous key, the change may be lost if a
+            //  backup is restored, if the backup doesn't have the new private key for the change.
+            //  If we reused the old key, it would be possible to add code to look for and
+            //  rediscover unknown transactions that were written with keys of ours to recover
+            //  post-backup change.
+
+            // Reserve a new key pair from key pool
+            CPubKey pubkey;
+            assert(reservekey.GetReservedKey(pubkey));
+
+            // -------------- Fill a vout to ourself, using same address type as the payment
+            // Now sending always to hash160 (GetBitcoinAddressHash160 will return hash160, even if pubkey is used)
+            CScript scriptChange;
+            if (Hash160(vecSend[0].first) != 0)
+                scriptChange.SetDestination(pubkey.GetID());
+            else
+                scriptChange << pubkey << OP_CHECKSIG;
+
+            // Insert change txn at random position:
+            vector<CTxOut>::iterator position = wtxNew.vout.begin()
+                    + GetRandInt(wtxNew.vout.size());
+            wtxNew.vout.insert(position, CTxOut(nChange, scriptChange));
+        } else
+            reservekey.ReturnKey();
+
+        // Fill vin
+        BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins)
+            wtxNew.vin.push_back(CTxIn(coin.first->GetHash(), coin.second));
+
+        // Sign
+        int nIn = 0;
+        BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins) {
+            if (coin.first == &wtxIn
+                    && coin.second == (unsigned int) nTxOut) {
+                if (!SignCertIssuerSignature(*coin.first, wtxNew, nIn++))
+                    throw runtime_error("could not sign certissuer coin output");
+            } else {
+                if (!SignSignature(*pwalletMain, *coin.first, wtxNew, nIn++))
                     return false;
             }
-
-            printf( "CreateCertTransactionWithInputTx: selected %d tx outs, nValueIn = %s\n",
-                    (int) setCoins.size(), FormatMoney(nValueIn).c_str());
-
-            vector<pair<const CWalletTx*, unsigned int> > vecCoins(
-                    setCoins.begin(), setCoins.end());
-
-            BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins) {
-                int64 nCredit = coin.first->vout[coin.second].nValue;
-                dPriority += (double) nCredit
-                        * coin.first->GetDepthInMainChain();
-            }
-
-            // Input tx always at first position
-            vecCoins.insert(vecCoins.begin(), make_pair(&wtxIn, nTxOut));
-
-            nValueIn += nWtxinCredit;
-            dPriority += (double) nWtxinCredit * wtxIn.GetDepthInMainChain();
-
-            // Fill a vout back to self with any change
-            int64 nChange = nValueIn - nTotalValue;
-            if (nChange >= CENT) {
-                // Note: We use a new key here to keep it from being obvious which side is the change.
-                //  The drawback is that by not reusing a previous key, the change may be lost if a
-                //  backup is restored, if the backup doesn't have the new private key for the change.
-                //  If we reused the old key, it would be possible to add code to look for and
-                //  rediscover unknown transactions that were written with keys of ours to recover
-                //  post-backup change.
-
-                // Reserve a new key pair from key pool
-                CPubKey pubkey;
-                assert(reservekey.GetReservedKey(pubkey));
-
-                // -------------- Fill a vout to ourself, using same address type as the payment
-                // Now sending always to hash160 (GetBitcoinAddressHash160 will return hash160, even if pubkey is used)
-                CScript scriptChange;
-                if (Hash160(vecSend[0].first) != 0)
-                    scriptChange.SetDestination(pubkey.GetID());
-                else
-                    scriptChange << pubkey << OP_CHECKSIG;
-
-                // Insert change txn at random position:
-                vector<CTxOut>::iterator position = wtxNew.vout.begin()
-                        + GetRandInt(wtxNew.vout.size());
-                wtxNew.vout.insert(position, CTxOut(nChange, scriptChange));
-            } else
-                reservekey.ReturnKey();
-
-            // Fill vin
-            BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins)
-                wtxNew.vin.push_back(CTxIn(coin.first->GetHash(), coin.second));
-
-            // Sign
-            int nIn = 0;
-            BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins) {
-                if (coin.first == &wtxIn
-                        && coin.second == (unsigned int) nTxOut) {
-                    if (!SignCertIssuerSignature(*coin.first, wtxNew, nIn++))
-                        throw runtime_error("could not sign certissuer coin output");
-                } else {
-                    if (!SignSignature(*pwalletMain, *coin.first, wtxNew, nIn++))
-                        return false;
-                }
-            }
-
-            // Limit size
-            unsigned int nBytes = ::GetSerializeSize(*(CTransaction*) &wtxNew,
-                    SER_NETWORK, PROTOCOL_VERSION);
-            if (nBytes >= MAX_BLOCK_SIZE_GEN / 5)
-                return false;
-            dPriority /= nBytes;
-
-            // Check that enough fee is included
-            int64 nPayFee = nTransactionFee * (1 + (int64) nBytes / 1000);
-            bool fAllowFree = CTransaction::AllowFree(dPriority);
-            int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree);
-            if (nFeeRet < max(nPayFee, nMinFee)) {
-                nFeeRet = max(nPayFee, nMinFee);
-                printf( "CreateCertTransactionWithInputTx: re-iterating (nFreeRet = %s)\n",
-                        FormatMoney(nFeeRet).c_str());
-                continue;
-            }
-
-            // Fill vtxPrev by copying from previous transactions vtxPrev
-            wtxNew.AddSupportingTransactions();
-            wtxNew.fTimeReceivedIsTxTime = true;
-
-            break;
         }
+
+        // Limit size
+        unsigned int nBytes = ::GetSerializeSize(*(CTransaction*) &wtxNew,
+                SER_NETWORK, PROTOCOL_VERSION);
+        if (nBytes >= MAX_BLOCK_SIZE_GEN / 5)
+            return false;
+        dPriority /= nBytes;
+
+        // Check that enough fee is included
+        int64 nPayFee = nTransactionFee * (1 + (int64) nBytes / 1000);
+        bool fAllowFree = CTransaction::AllowFree(dPriority);
+        int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree);
+        if (nFeeRet < max(nPayFee, nMinFee)) {
+            nFeeRet = max(nPayFee, nMinFee);
+            printf( "CreateCertTransactionWithInputTx: re-iterating (nFreeRet = %s)\n",
+                    FormatMoney(nFeeRet).c_str());
+            continue;
+        }
+
+        // Fill vtxPrev by copying from previous transactions vtxPrev
+        wtxNew.AddSupportingTransactions();
+        wtxNew.fTimeReceivedIsTxTime = true;
+
+        break;
     }
+    
 
     printf("CreateCertTransactionWithInputTx succeeded:\n%s",
             wtxNew.ToString().c_str());
@@ -1512,101 +1510,100 @@ Value certissueractivate(const Array& params, bool fHelp) {
     wtx.nVersion = SYSCOIN_TX_VERSION;
 
     // check for existing pending certissuers
-    {
-        LOCK2(cs_main, pwalletMain->cs_wallet);
-        if (mapCertIssuerPending.count(vchCertIssuer)
-                && mapCertIssuerPending[vchCertIssuer].size()) {
-            error( "certissueractivate() : there are %d pending operations on that certificate issuer, including %s",
-                   (int) mapCertIssuerPending[vchCertIssuer].size(),
-                   mapCertIssuerPending[vchCertIssuer].begin()->GetHex().c_str());
-            throw runtime_error("there are pending operations on that certissuer");
-        }
 
-        // look for an certificate issuer with identical hex rand keys. wont happen.
-        CTransaction tx;
-        if (GetTxOfCertIssuer(*pcertdb, vchCertIssuer, tx)) {
-            error( "certissueractivate() : this certificate issuer is already active with tx %s",
-                   tx.GetHash().GetHex().c_str());
-            throw runtime_error("this certificate issuer is already active");
-        }
-
-        EnsureWalletIsUnlocked();
-
-        // Make sure there is a previous certissuernew tx on this certificate issuer and that the random value matches
-        uint256 wtxInHash;
-        if (params.size() == 1) {
-            if (!mapMyCertIssuers.count(vchCertIssuer))
-                throw runtime_error(
-                        "could not find a coin with this certissuer, try specifying the certissuernew transaction id");
-            wtxInHash = mapMyCertIssuers[vchCertIssuer];
-        } else
-            wtxInHash.SetHex(params[1].get_str());
-        if (!pwalletMain->mapWallet.count(wtxInHash))
-            throw runtime_error("previous transaction is not in the wallet");
-
-        // verify previous txn was certissuernew
-        CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
-        vector<unsigned char> vchHash;
-        bool found = false;
-        BOOST_FOREACH(CTxOut& out, wtxIn.vout) {
-            vector<vector<unsigned char> > vvch;
-            int op;
-            if (DecodeCertScript(out.scriptPubKey, op, vvch)) {
-                if (op != OP_CERTISSUER_NEW)
-                    throw runtime_error(
-                            "previous transaction wasn't a certissuernew");
-                vchHash = vvch[0]; found = true;
-                break;
-            }
-        }
-        if (!found)
-            throw runtime_error("Could not decode certissuer transaction");
-
-        // calculate network fees
-        int64 nNetFee = GetCertNetworkFee(1, pindexBest->nHeight);
-		// Round up to CENT
-		nNetFee += CENT - 1;
-		nNetFee = (nNetFee / CENT) * CENT;
-        // unserialize certissuer object from txn, serialize back
-        CCertIssuer newCertIssuer;
-        if(!newCertIssuer.UnserializeFromTx(wtxIn))
-            throw runtime_error(
-                    "could not unserialize certissuer from txn");
-
-        newCertIssuer.vchRand = vchCertIssuer;
-        newCertIssuer.nFee = nNetFee;
-
-        string bdata = newCertIssuer.SerializeToString();
-        vector<unsigned char> vchbdata = vchFromString(bdata);
-
-        // check this hash against previous, ensure they match
-        vector<unsigned char> vchToHash(vchRand);
-        vchToHash.insert(vchToHash.end(), vchCertIssuer.begin(), vchCertIssuer.end());
-        uint160 hash = Hash160(vchToHash);
-        if (uint160(vchHash) != hash)
-            throw runtime_error("previous tx used a different random value");
-
-        //create certissueractivate txn keys
-        CPubKey newDefaultKey;
-        pwalletMain->GetKeyFromPool(newDefaultKey, false);
-        CScript scriptPubKeyOrig;
-        scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
-        CScript scriptPubKey;
-        scriptPubKey << CScript::EncodeOP_N(OP_CERTISSUER_ACTIVATE) << vchCertIssuer
-                << vchRand << newCertIssuer.vchTitle << OP_2DROP << OP_2DROP;
-        scriptPubKey += scriptPubKeyOrig;
-
-        // send the tranasction
-        string strError = SendCertMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
-                nNetFee, wtxIn, wtx, false, bdata);
-        if (strError != "")
-            throw JSONRPCError(RPC_WALLET_ERROR, strError);
-
-        printf("SENT:CERTACTIVATE: title=%s, guid=%s, tx=%s, data:\n%s\n",
-                stringFromVch(newCertIssuer.vchTitle).c_str(),
-                stringFromVch(vchCertIssuer).c_str(), wtx.GetHash().GetHex().c_str(),
-                stringFromVch(vchbdata).c_str() );
+    if (mapCertIssuerPending.count(vchCertIssuer)
+            && mapCertIssuerPending[vchCertIssuer].size()) {
+        error( "certissueractivate() : there are %d pending operations on that certificate issuer, including %s",
+               (int) mapCertIssuerPending[vchCertIssuer].size(),
+               mapCertIssuerPending[vchCertIssuer].begin()->GetHex().c_str());
+        throw runtime_error("there are pending operations on that certissuer");
     }
+
+    // look for an certificate issuer with identical hex rand keys. wont happen.
+    CTransaction tx;
+    if (GetTxOfCertIssuer(*pcertdb, vchCertIssuer, tx)) {
+        error( "certissueractivate() : this certificate issuer is already active with tx %s",
+               tx.GetHash().GetHex().c_str());
+        throw runtime_error("this certificate issuer is already active");
+    }
+
+    EnsureWalletIsUnlocked();
+
+    // Make sure there is a previous certissuernew tx on this certificate issuer and that the random value matches
+    uint256 wtxInHash;
+    if (params.size() == 1) {
+        if (!mapMyCertIssuers.count(vchCertIssuer))
+            throw runtime_error(
+                    "could not find a coin with this certissuer, try specifying the certissuernew transaction id");
+        wtxInHash = mapMyCertIssuers[vchCertIssuer];
+    } else
+        wtxInHash.SetHex(params[1].get_str());
+    if (!pwalletMain->mapWallet.count(wtxInHash))
+        throw runtime_error("previous transaction is not in the wallet");
+
+    // verify previous txn was certissuernew
+    CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
+    vector<unsigned char> vchHash;
+    bool found = false;
+    BOOST_FOREACH(CTxOut& out, wtxIn.vout) {
+        vector<vector<unsigned char> > vvch;
+        int op;
+        if (DecodeCertScript(out.scriptPubKey, op, vvch)) {
+            if (op != OP_CERTISSUER_NEW)
+                throw runtime_error(
+                        "previous transaction wasn't a certissuernew");
+            vchHash = vvch[0]; found = true;
+            break;
+        }
+    }
+    if (!found)
+        throw runtime_error("Could not decode certissuer transaction");
+
+    // calculate network fees
+    int64 nNetFee = GetCertNetworkFee(1, pindexBest->nHeight);
+	// Round up to CENT
+	nNetFee += CENT - 1;
+	nNetFee = (nNetFee / CENT) * CENT;
+    // unserialize certissuer object from txn, serialize back
+    CCertIssuer newCertIssuer;
+    if(!newCertIssuer.UnserializeFromTx(wtxIn))
+        throw runtime_error(
+                "could not unserialize certissuer from txn");
+
+    newCertIssuer.vchRand = vchCertIssuer;
+    newCertIssuer.nFee = nNetFee;
+
+    string bdata = newCertIssuer.SerializeToString();
+    vector<unsigned char> vchbdata = vchFromString(bdata);
+
+    // check this hash against previous, ensure they match
+    vector<unsigned char> vchToHash(vchRand);
+    vchToHash.insert(vchToHash.end(), vchCertIssuer.begin(), vchCertIssuer.end());
+    uint160 hash = Hash160(vchToHash);
+    if (uint160(vchHash) != hash)
+        throw runtime_error("previous tx used a different random value");
+
+    //create certissueractivate txn keys
+    CPubKey newDefaultKey;
+    pwalletMain->GetKeyFromPool(newDefaultKey, false);
+    CScript scriptPubKeyOrig;
+    scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
+    CScript scriptPubKey;
+    scriptPubKey << CScript::EncodeOP_N(OP_CERTISSUER_ACTIVATE) << vchCertIssuer
+            << vchRand << newCertIssuer.vchTitle << OP_2DROP << OP_2DROP;
+    scriptPubKey += scriptPubKeyOrig;
+
+    // send the tranasction
+    string strError = SendCertMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
+            nNetFee, wtxIn, wtx, false, bdata);
+    if (strError != "")
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+
+    printf("SENT:CERTACTIVATE: title=%s, guid=%s, tx=%s, data:\n%s\n",
+            stringFromVch(newCertIssuer.vchTitle).c_str(),
+            stringFromVch(vchCertIssuer).c_str(), wtx.GetHash().GetHex().c_str(),
+            stringFromVch(vchbdata).c_str() );
+
     return wtx.GetHash().GetHex();
 }
 
@@ -1653,56 +1650,54 @@ Value certissuerupdate(const Array& params, bool fHelp) {
             << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
 
-    {
-        LOCK2(cs_main, pwalletMain->cs_wallet);
 
-        if (mapCertIssuerPending.count(vchCertIssuer)
-                && mapCertIssuerPending[vchCertIssuer].size())
-            throw runtime_error("there are pending operations on that certificate issuer");
+    if (mapCertIssuerPending.count(vchCertIssuer)
+            && mapCertIssuerPending[vchCertIssuer].size())
+        throw runtime_error("there are pending operations on that certificate issuer");
 
-        EnsureWalletIsUnlocked();
+    EnsureWalletIsUnlocked();
 
-        // look for a transaction with this key
-        CTransaction tx;
-        if (!GetTxOfCertIssuer(*pcertdb, vchCertIssuer, tx))
-            throw runtime_error("could not find a certificate issuer with this key");
+    // look for a transaction with this key
+    CTransaction tx;
+    if (!GetTxOfCertIssuer(*pcertdb, vchCertIssuer, tx))
+        throw runtime_error("could not find a certificate issuer with this key");
 
-        // make sure certissuer is in wallet
-        uint256 wtxInHash = tx.GetHash();
-        if (!pwalletMain->mapWallet.count(wtxInHash))
-            throw runtime_error("this certificate issuer is not in your wallet");
+    // make sure certissuer is in wallet
+    uint256 wtxInHash = tx.GetHash();
+    if (!pwalletMain->mapWallet.count(wtxInHash))
+        throw runtime_error("this certificate issuer is not in your wallet");
 
-        // unserialize certissuer object from txn
-        CCertIssuer theCertIssuer;
-        if(!theCertIssuer.UnserializeFromTx(tx))
-            throw runtime_error("cannot unserialize certissuer from txn");
+    // unserialize certissuer object from txn
+    CCertIssuer theCertIssuer;
+    if(!theCertIssuer.UnserializeFromTx(tx))
+        throw runtime_error("cannot unserialize certissuer from txn");
 
-        // get the certissuer from DB
-        vector<CCertIssuer> vtxPos;
-        if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos))
-            throw runtime_error("could not read certissuer from DB");
-        theCertIssuer = vtxPos.back();
-        theCertIssuer.certs.clear();
+    // get the certissuer from DB
+    vector<CCertIssuer> vtxPos;
+    if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos))
+        throw runtime_error("could not read certissuer from DB");
+    theCertIssuer = vtxPos.back();
+    theCertIssuer.certs.clear();
 
-        // calculate network fees
-        int64 nNetFee = GetCertNetworkFee(2, pindexBest->nHeight);
-		// Round up to CENT
-		nNetFee += CENT - 1;
-		nNetFee = (nNetFee / CENT) * CENT;
-        // update certissuer values
-        theCertIssuer.vchTitle = vchTitle;
-        theCertIssuer.vchData = vchData;
-        theCertIssuer.nFee += nNetFee;
+    // calculate network fees
+    int64 nNetFee = GetCertNetworkFee(2, pindexBest->nHeight);
+	// Round up to CENT
+	nNetFee += CENT - 1;
+	nNetFee = (nNetFee / CENT) * CENT;
+    // update certissuer values
+    theCertIssuer.vchTitle = vchTitle;
+    theCertIssuer.vchData = vchData;
+    theCertIssuer.nFee += nNetFee;
 
-        // serialize certissuer object
-        string bdata = theCertIssuer.SerializeToString();
+    // serialize certissuer object
+    string bdata = theCertIssuer.SerializeToString();
 
-        CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
-        string strError = SendCertMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
-                wtxIn, wtx, false, bdata);
-        if (strError != "")
-            throw JSONRPCError(RPC_WALLET_ERROR, strError);
-    }
+    CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
+    string strError = SendCertMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
+            wtxIn, wtx, false, bdata);
+    if (strError != "")
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    
     return wtx.GetHash().GetHex();
 }
 
@@ -1752,52 +1747,50 @@ Value certnew(const Array& params, bool fHelp) {
     scriptPubKey << CScript::EncodeOP_N(OP_CERT_NEW)
             << vchCertIssuer << vchCertItemRand << certitemHash << OP_2DROP << OP_2DROP;
     scriptPubKey += scriptPubKeyOrig;
-    {
-        LOCK2(cs_main, pwalletMain->cs_wallet);
 
-        if (mapCertIssuerPending.count(vchCertIssuer)
-                && mapCertIssuerPending[vchCertIssuer].size()) {
-            error(  "certnew() : there are %d pending operations on that certificate issuer, including %s",
-                    (int) mapCertIssuerPending[vchCertIssuer].size(),
-                    mapCertIssuerPending[vchCertIssuer].begin()->GetHex().c_str());
-            throw runtime_error("there are pending operations on that certificate issuer");
-        }
-
-        EnsureWalletIsUnlocked();
-
-        // look for a transaction with this key
-        CTransaction tx;
-        if (!GetTxOfCertIssuer(*pcertdb, vchCertIssuer, tx))
-            throw runtime_error("could not find a certificate issuer with this identifier");
-
-        // unserialize certissuer object from txn
-        CCertIssuer theCertIssuer;
-        if(!theCertIssuer.UnserializeFromTx(tx))
-            throw runtime_error("could not unserialize certificate issuer from txn");
-
-        // get the certissuer id from DB
-        vector<CCertIssuer> vtxPos;
-        if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos))
-            throw runtime_error("could not read certificate issuer with this key from DB");
-        theCertIssuer = vtxPos.back();
-
-        // create certitem object
-        CCertItem txCertItem;
-        txCertItem.vchRand = vchCertItemRand;
-        txCertItem.vchTitle = vchTitle;
-        txCertItem.vchData = vchData;
-        theCertIssuer.certs.clear();
-        theCertIssuer.PutCertItem(txCertItem);
-
-        // serialize certissuer object
-        string bdata = theCertIssuer.SerializeToString();
-
-        string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
-                false, bdata);
-        if (strError != "")
-            throw JSONRPCError(RPC_WALLET_ERROR, strError);
-        mapMyCertItems[vchCertItemRand] = wtx.GetHash();
+    if (mapCertIssuerPending.count(vchCertIssuer)
+            && mapCertIssuerPending[vchCertIssuer].size()) {
+        error(  "certnew() : there are %d pending operations on that certificate issuer, including %s",
+                (int) mapCertIssuerPending[vchCertIssuer].size(),
+                mapCertIssuerPending[vchCertIssuer].begin()->GetHex().c_str());
+        throw runtime_error("there are pending operations on that certificate issuer");
     }
+
+    EnsureWalletIsUnlocked();
+
+    // look for a transaction with this key
+    CTransaction tx;
+    if (!GetTxOfCertIssuer(*pcertdb, vchCertIssuer, tx))
+        throw runtime_error("could not find a certificate issuer with this identifier");
+
+    // unserialize certissuer object from txn
+    CCertIssuer theCertIssuer;
+    if(!theCertIssuer.UnserializeFromTx(tx))
+        throw runtime_error("could not unserialize certificate issuer from txn");
+
+    // get the certissuer id from DB
+    vector<CCertIssuer> vtxPos;
+    if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos))
+        throw runtime_error("could not read certificate issuer with this key from DB");
+    theCertIssuer = vtxPos.back();
+
+    // create certitem object
+    CCertItem txCertItem;
+    txCertItem.vchRand = vchCertItemRand;
+    txCertItem.vchTitle = vchTitle;
+    txCertItem.vchData = vchData;
+    theCertIssuer.certs.clear();
+    theCertIssuer.PutCertItem(txCertItem);
+
+    // serialize certissuer object
+    string bdata = theCertIssuer.SerializeToString();
+
+    string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
+            false, bdata);
+    if (strError != "")
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    mapMyCertItems[vchCertItemRand] = wtx.GetHash();
+
     // return results
     vector<Value> res;
     res.push_back(wtx.GetHash().GetHex());
@@ -1826,8 +1819,6 @@ Value certtransfer(const Array& params, bool fHelp) {
     wtx.nVersion = SYSCOIN_TX_VERSION;
     CScript scriptPubKeyOrig;
 
-    {
-    LOCK2(cs_main, pwalletMain->cs_wallet);
 
     if (mapCertItemPending.count(vchCertKey)
             && mapCertItemPending[vchCertKey].size())
@@ -1900,7 +1891,7 @@ Value certtransfer(const Array& params, bool fHelp) {
             wtxIn, wtx, false, theCertIssuer.SerializeToString());
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
-    }
+    
     mapMyCertItems[vchCertKey] = 0;
 
     // return results
@@ -2351,67 +2342,66 @@ Value certissuerscan(const Array& params, bool fHelp) {
      throw runtime_error("certissuer_clean\nClean unsatisfiable transactions from the wallet\n");
 
 
+
+     map<uint256, CWalletTx> mapRemove;
+
+     printf("-----------------------------\n");
+
      {
-         LOCK2(cs_main,pwalletMain->cs_wallet);
-         map<uint256, CWalletTx> mapRemove;
-
-         printf("-----------------------------\n");
-
-         {
-             BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-             {
-                 CWalletTx& wtx = item.second;
-                 vector<unsigned char> vchCertIssuer;
-                 if (wtx.GetDepthInMainChain() < 1 && IsConflictedCertIssuerTx(*pblocktree, wtx, vchCertIssuer))
-                 {
-                     uint256 hash = wtx.GetHash();
-                     mapRemove[hash] = wtx;
-                 }
-             }
-         }
-
-         bool fRepeat = true;
-         while (fRepeat)
-         {
-             fRepeat = false;
-             BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-             {
-                 CWalletTx& wtx = item.second;
-                 BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-                 {
-                     uint256 hash = wtx.GetHash();
-
-                     // If this tx depends on a tx to be removed, remove it too
-                     if (mapRemove.count(txin.prevout.hash) && !mapRemove.count(hash))
-                     {
-                         mapRemove[hash] = wtx;
-                         fRepeat = true;
-                     }
-                 }
-             }
-         }
-
-         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapRemove)
+         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
          {
              CWalletTx& wtx = item.second;
-
-             UnspendInputs(wtx);
-             wtx.RemoveFromMemoryPool();
-             pwalletMain->EraseFromWallet(wtx.GetHash());
              vector<unsigned char> vchCertIssuer;
-             if (GetNameOfCertIssuerTx(wtx, vchCertIssuer) && mapCertIssuerPending.count(vchCertIssuer))
+             if (wtx.GetDepthInMainChain() < 1 && IsConflictedCertIssuerTx(*pblocktree, wtx, vchCertIssuer))
              {
-                 string certissuer = stringFromVch(vchCertIssuer);
-                 printf("certissuer_clean() : erase %s from pending of certissuer %s",
-                 wtx.GetHash().GetHex().c_str(), certissuer.c_str());
-                 if (!mapCertIssuerPending[vchCertIssuer].erase(wtx.GetHash()))
-                     error("certissuer_clean() : erase but it was not pending");
+                 uint256 hash = wtx.GetHash();
+                 mapRemove[hash] = wtx;
              }
-             wtx.print();
          }
-
-         printf("-----------------------------\n");
      }
+
+     bool fRepeat = true;
+     while (fRepeat)
+     {
+         fRepeat = false;
+         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+         {
+             CWalletTx& wtx = item.second;
+             BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+             {
+                 uint256 hash = wtx.GetHash();
+
+                 // If this tx depends on a tx to be removed, remove it too
+                 if (mapRemove.count(txin.prevout.hash) && !mapRemove.count(hash))
+                 {
+                     mapRemove[hash] = wtx;
+                     fRepeat = true;
+                 }
+             }
+         }
+     }
+
+     BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapRemove)
+     {
+         CWalletTx& wtx = item.second;
+
+         UnspendInputs(wtx);
+         wtx.RemoveFromMemoryPool();
+         pwalletMain->EraseFromWallet(wtx.GetHash());
+         vector<unsigned char> vchCertIssuer;
+         if (GetNameOfCertIssuerTx(wtx, vchCertIssuer) && mapCertIssuerPending.count(vchCertIssuer))
+         {
+             string certissuer = stringFromVch(vchCertIssuer);
+             printf("certissuer_clean() : erase %s from pending of certissuer %s",
+             wtx.GetHash().GetHex().c_str(), certissuer.c_str());
+             if (!mapCertIssuerPending[vchCertIssuer].erase(wtx.GetHash()))
+                 error("certissuer_clean() : erase but it was not pending");
+         }
+         wtx.print();
+     }
+
+     printf("-----------------------------\n");
+ 
 
      return true;
  }

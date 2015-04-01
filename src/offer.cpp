@@ -780,129 +780,127 @@ bool CreateOfferTransactionWithInputTx(
 		return false;
 
 	wtxNew.BindWallet(pwalletMain);
-	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
 
-		nFeeRet = nTransactionFee;
-		loop {
-			wtxNew.vin.clear();
-			wtxNew.vout.clear();
-			wtxNew.fFromMe = true;
-			wtxNew.data = vchFromString(txData);
+	nFeeRet = nTransactionFee;
+	loop {
+		wtxNew.vin.clear();
+		wtxNew.vout.clear();
+		wtxNew.fFromMe = true;
+		wtxNew.data = vchFromString(txData);
 
-			int64 nTotalValue = nValue + nFeeRet;
-			printf("CreateOfferTransactionWithInputTx: total value = %d\n",
-					(int) nTotalValue);
-			double dPriority = 0;
+		int64 nTotalValue = nValue + nFeeRet;
+		printf("CreateOfferTransactionWithInputTx: total value = %d\n",
+				(int) nTotalValue);
+		double dPriority = 0;
 
-			// vouts to the payees
-			BOOST_FOREACH(const PAIRTYPE(CScript, int64)& s, vecSend)
-				wtxNew.vout.push_back(CTxOut(s.second, s.first));
+		// vouts to the payees
+		BOOST_FOREACH(const PAIRTYPE(CScript, int64)& s, vecSend)
+			wtxNew.vout.push_back(CTxOut(s.second, s.first));
 
-			int64 nWtxinCredit = wtxIn.vout[nTxOut].nValue;
+		int64 nWtxinCredit = wtxIn.vout[nTxOut].nValue;
 
-			// Choose coins to use
-			set<pair<const CWalletTx*, unsigned int> > setCoins;
-			int64 nValueIn = 0;
-			printf( "CreateOfferTransactionWithInputTx: SelectCoins(%s), nTotalValue = %s, nWtxinCredit = %s\n",
-					FormatMoney(nTotalValue - nWtxinCredit).c_str(),
-					FormatMoney(nTotalValue).c_str(),
-					FormatMoney(nWtxinCredit).c_str());
-			if (nTotalValue - nWtxinCredit > 0) {
-				if (!pwalletMain->SelectCoins(nTotalValue - nWtxinCredit,
-						setCoins, nValueIn))
+		// Choose coins to use
+		set<pair<const CWalletTx*, unsigned int> > setCoins;
+		int64 nValueIn = 0;
+		printf( "CreateOfferTransactionWithInputTx: SelectCoins(%s), nTotalValue = %s, nWtxinCredit = %s\n",
+				FormatMoney(nTotalValue - nWtxinCredit).c_str(),
+				FormatMoney(nTotalValue).c_str(),
+				FormatMoney(nWtxinCredit).c_str());
+		if (nTotalValue - nWtxinCredit > 0) {
+			if (!pwalletMain->SelectCoins(nTotalValue - nWtxinCredit,
+					setCoins, nValueIn))
+				return false;
+		}
+
+		printf( "CreateOfferTransactionWithInputTx: selected %d tx outs, nValueIn = %s\n",
+				(int) setCoins.size(), FormatMoney(nValueIn).c_str());
+
+		vector<pair<const CWalletTx*, unsigned int> > vecCoins(
+				setCoins.begin(), setCoins.end());
+
+		BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins) {
+			int64 nCredit = coin.first->vout[coin.second].nValue;
+			dPriority += (double) nCredit
+					* coin.first->GetDepthInMainChain();
+		}
+
+		// Input tx always at first position
+		vecCoins.insert(vecCoins.begin(), make_pair(&wtxIn, nTxOut));
+
+		nValueIn += nWtxinCredit;
+		dPriority += (double) nWtxinCredit * wtxIn.GetDepthInMainChain();
+
+		// Fill a vout back to self with any change
+		int64 nChange = nValueIn - nTotalValue;
+		if (nChange >= CENT) {
+			// Note: We use a new key here to keep it from being obvious which side is the change.
+			//  The drawback is that by not reusing a previous key, the change may be lost if a
+			//  backup is restored, if the backup doesn't have the new private key for the change.
+			//  If we reused the old key, it would be possible to add code to look for and
+			//  rediscover unknown transactions that were written with keys of ours to recover
+			//  post-backup change.
+
+			// Reserve a new key pair from key pool
+			CPubKey pubkey;
+			assert(reservekey.GetReservedKey(pubkey));
+
+			// -------------- Fill a vout to ourself, using same address type as the payment
+			// Now sending always to hash160 (GetBitcoinAddressHash160 will return hash160, even if pubkey is used)
+			CScript scriptChange;
+			if (Hash160(vecSend[0].first) != 0)
+				scriptChange.SetDestination(pubkey.GetID());
+			else
+				scriptChange << pubkey << OP_CHECKSIG;
+
+			// Insert change txn at random position:
+			vector<CTxOut>::iterator position = wtxNew.vout.begin()
+					+ GetRandInt(wtxNew.vout.size());
+			wtxNew.vout.insert(position, CTxOut(nChange, scriptChange));
+		} else
+			reservekey.ReturnKey();
+
+		// Fill vin
+		BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins)
+			wtxNew.vin.push_back(CTxIn(coin.first->GetHash(), coin.second));
+
+		// Sign
+		int nIn = 0;
+		BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins) {
+			if (coin.first == &wtxIn
+					&& coin.second == (unsigned int) nTxOut) {
+				if (!SignOfferSignature(*coin.first, wtxNew, nIn++))
+					throw runtime_error("could not sign offer coin output");
+			} else {
+				if (!SignSignature(*pwalletMain, *coin.first, wtxNew, nIn++))
 					return false;
 			}
-
-			printf( "CreateOfferTransactionWithInputTx: selected %d tx outs, nValueIn = %s\n",
-					(int) setCoins.size(), FormatMoney(nValueIn).c_str());
-
-			vector<pair<const CWalletTx*, unsigned int> > vecCoins(
-					setCoins.begin(), setCoins.end());
-
-			BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins) {
-				int64 nCredit = coin.first->vout[coin.second].nValue;
-				dPriority += (double) nCredit
-						* coin.first->GetDepthInMainChain();
-			}
-
-			// Input tx always at first position
-			vecCoins.insert(vecCoins.begin(), make_pair(&wtxIn, nTxOut));
-
-			nValueIn += nWtxinCredit;
-			dPriority += (double) nWtxinCredit * wtxIn.GetDepthInMainChain();
-
-			// Fill a vout back to self with any change
-			int64 nChange = nValueIn - nTotalValue;
-			if (nChange >= CENT) {
-				// Note: We use a new key here to keep it from being obvious which side is the change.
-				//  The drawback is that by not reusing a previous key, the change may be lost if a
-				//  backup is restored, if the backup doesn't have the new private key for the change.
-				//  If we reused the old key, it would be possible to add code to look for and
-				//  rediscover unknown transactions that were written with keys of ours to recover
-				//  post-backup change.
-
-				// Reserve a new key pair from key pool
-				CPubKey pubkey;
-				assert(reservekey.GetReservedKey(pubkey));
-
-				// -------------- Fill a vout to ourself, using same address type as the payment
-				// Now sending always to hash160 (GetBitcoinAddressHash160 will return hash160, even if pubkey is used)
-				CScript scriptChange;
-				if (Hash160(vecSend[0].first) != 0)
-					scriptChange.SetDestination(pubkey.GetID());
-				else
-					scriptChange << pubkey << OP_CHECKSIG;
-
-				// Insert change txn at random position:
-				vector<CTxOut>::iterator position = wtxNew.vout.begin()
-						+ GetRandInt(wtxNew.vout.size());
-				wtxNew.vout.insert(position, CTxOut(nChange, scriptChange));
-			} else
-				reservekey.ReturnKey();
-
-			// Fill vin
-			BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins)
-				wtxNew.vin.push_back(CTxIn(coin.first->GetHash(), coin.second));
-
-			// Sign
-			int nIn = 0;
-			BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins) {
-				if (coin.first == &wtxIn
-						&& coin.second == (unsigned int) nTxOut) {
-					if (!SignOfferSignature(*coin.first, wtxNew, nIn++))
-						throw runtime_error("could not sign offer coin output");
-				} else {
-					if (!SignSignature(*pwalletMain, *coin.first, wtxNew, nIn++))
-						return false;
-				}
-			}
-
-			// Limit size
-			unsigned int nBytes = ::GetSerializeSize(*(CTransaction*) &wtxNew,
-					SER_NETWORK, PROTOCOL_VERSION);
-			if (nBytes >= MAX_BLOCK_SIZE_GEN / 5)
-				return false;
-			dPriority /= nBytes;
-
-			// Check that enough fee is included
-			int64 nPayFee = nTransactionFee * (1 + (int64) nBytes / 1000);
-			bool fAllowFree = CTransaction::AllowFree(dPriority);
-			int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree);
-			if (nFeeRet < max(nPayFee, nMinFee)) {
-				nFeeRet = max(nPayFee, nMinFee);
-				printf( "CreateOfferTransactionWithInputTx: re-iterating (nFreeRet = %s)\n",
-						FormatMoney(nFeeRet).c_str());
-				continue;
-			}
-
-			// Fill vtxPrev by copying from previous transactions vtxPrev
-			wtxNew.AddSupportingTransactions();
-			wtxNew.fTimeReceivedIsTxTime = true;
-
-			break;
 		}
+
+		// Limit size
+		unsigned int nBytes = ::GetSerializeSize(*(CTransaction*) &wtxNew,
+				SER_NETWORK, PROTOCOL_VERSION);
+		if (nBytes >= MAX_BLOCK_SIZE_GEN / 5)
+			return false;
+		dPriority /= nBytes;
+
+		// Check that enough fee is included
+		int64 nPayFee = nTransactionFee * (1 + (int64) nBytes / 1000);
+		bool fAllowFree = CTransaction::AllowFree(dPriority);
+		int64 nMinFee = wtxNew.GetMinFee(1, fAllowFree);
+		if (nFeeRet < max(nPayFee, nMinFee)) {
+			nFeeRet = max(nPayFee, nMinFee);
+			printf( "CreateOfferTransactionWithInputTx: re-iterating (nFreeRet = %s)\n",
+					FormatMoney(nFeeRet).c_str());
+			continue;
+		}
+
+		// Fill vtxPrev by copying from previous transactions vtxPrev
+		wtxNew.AddSupportingTransactions();
+		wtxNew.fTimeReceivedIsTxTime = true;
+
+		break;
 	}
+	
 
 	printf("CreateOfferTransactionWithInputTx succeeded:\n%s",
 			wtxNew.ToString().c_str());
@@ -1567,101 +1565,100 @@ Value offeractivate(const Array& params, bool fHelp) {
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 
 	// check for existing pending offers
-	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
-		if (mapOfferPending.count(vchOffer)
-				&& mapOfferPending[vchOffer].size()) {
-			error( "offeractivate() : there are %d pending operations on that offer, including %s",
-				   (int) mapOfferPending[vchOffer].size(),
-				   mapOfferPending[vchOffer].begin()->GetHex().c_str());
-			throw runtime_error("there are pending operations on that offer");
-		}
 
-		// look for an offer with identical hex rand keys. wont happen.
-		CTransaction tx;
-		if (GetTxOfOffer(*pofferdb, vchOffer, tx)) {
-			error( "offeractivate() : this offer is already active with tx %s",
-				   tx.GetHash().GetHex().c_str());
-			throw runtime_error("this offer is already active");
-		}
-
-		EnsureWalletIsUnlocked();
-
-		// Make sure there is a previous offernew tx on this offer and that the random value matches
-		uint256 wtxInHash;
-		if (params.size() == 1) {
-			if (!mapMyOffers.count(vchOffer))
-				throw runtime_error(
-						"could not find a coin with this offer, try specifying the offernew transaction id");
-			wtxInHash = mapMyOffers[vchOffer];
-		} else
-			wtxInHash.SetHex(params[1].get_str());
-		if (!pwalletMain->mapWallet.count(wtxInHash))
-			throw runtime_error("previous transaction is not in the wallet");
-
-		// verify previous txn was offernew
-		CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
-		vector<unsigned char> vchHash;
-		bool found = false;
-		BOOST_FOREACH(CTxOut& out, wtxIn.vout) {
-			vector<vector<unsigned char> > vvch;
-			int op;
-			if (DecodeOfferScript(out.scriptPubKey, op, vvch)) {
-				if (op != OP_OFFER_NEW)
-					throw runtime_error(
-							"previous transaction wasn't a offernew");
-				vchHash = vvch[0]; found = true;
-				break;
-			}
-		}
-		if (!found)
-			throw runtime_error("Could not decode offer transaction");
-
-		// calculate network fees
-		int64 nNetFee = GetOfferNetworkFee(1, pindexBest->nHeight);
-		// Round up to CENT
-		nNetFee += CENT - 1;
-		nNetFee = (nNetFee / CENT) * CENT;
-		// unserialize offer object from txn, serialize back
-		COffer newOffer;
-		if(!newOffer.UnserializeFromTx(wtxIn))
-			throw runtime_error(
-					"could not unserialize offer from txn");
-
-        newOffer.vchRand = vchOffer;
-		newOffer.nFee = nNetFee;
-
-		string bdata = newOffer.SerializeToString();
-		vector<unsigned char> vchbdata = vchFromString(bdata);
-
-		// check this hash against previous, ensure they match
-		vector<unsigned char> vchToHash(vchRand);
-		vchToHash.insert(vchToHash.end(), vchOffer.begin(), vchOffer.end());
-		uint160 hash = Hash160(vchToHash);
-		if (uint160(vchHash) != hash)
-			throw runtime_error("previous tx used a different random value");
-
-		//create offeractivate txn keys
-		CPubKey newDefaultKey;
-		pwalletMain->GetKeyFromPool(newDefaultKey, false);
-		CScript scriptPubKeyOrig;
-		scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
-		CScript scriptPubKey;
-		scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer
-				<< vchRand << newOffer.sTitle << OP_2DROP << OP_2DROP;
-		scriptPubKey += scriptPubKeyOrig;
-
-		// send the tranasction
-		string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
-				nNetFee, wtxIn, wtx, false, bdata);
-		if (strError != "")
-			throw JSONRPCError(RPC_WALLET_ERROR, strError);
-
-		printf("SENT:OFFERACTIVATE: title=%s, guid=%s, tx=%s, data:\n%s\n",
-				stringFromVch(newOffer.sTitle).c_str(),
-				stringFromVch(vchOffer).c_str(), wtx.GetHash().GetHex().c_str(),
-				stringFromVch(vchbdata).c_str() );
+	if (mapOfferPending.count(vchOffer)
+			&& mapOfferPending[vchOffer].size()) {
+		error( "offeractivate() : there are %d pending operations on that offer, including %s",
+			   (int) mapOfferPending[vchOffer].size(),
+			   mapOfferPending[vchOffer].begin()->GetHex().c_str());
+		throw runtime_error("there are pending operations on that offer");
 	}
+
+	// look for an offer with identical hex rand keys. wont happen.
+	CTransaction tx;
+	if (GetTxOfOffer(*pofferdb, vchOffer, tx)) {
+		error( "offeractivate() : this offer is already active with tx %s",
+			   tx.GetHash().GetHex().c_str());
+		throw runtime_error("this offer is already active");
+	}
+
+	EnsureWalletIsUnlocked();
+
+	// Make sure there is a previous offernew tx on this offer and that the random value matches
+	uint256 wtxInHash;
+	if (params.size() == 1) {
+		if (!mapMyOffers.count(vchOffer))
+			throw runtime_error(
+					"could not find a coin with this offer, try specifying the offernew transaction id");
+		wtxInHash = mapMyOffers[vchOffer];
+	} else
+		wtxInHash.SetHex(params[1].get_str());
+	if (!pwalletMain->mapWallet.count(wtxInHash))
+		throw runtime_error("previous transaction is not in the wallet");
+
+	// verify previous txn was offernew
+	CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
+	vector<unsigned char> vchHash;
+	bool found = false;
+	BOOST_FOREACH(CTxOut& out, wtxIn.vout) {
+		vector<vector<unsigned char> > vvch;
+		int op;
+		if (DecodeOfferScript(out.scriptPubKey, op, vvch)) {
+			if (op != OP_OFFER_NEW)
+				throw runtime_error(
+						"previous transaction wasn't a offernew");
+			vchHash = vvch[0]; found = true;
+			break;
+		}
+	}
+	if (!found)
+		throw runtime_error("Could not decode offer transaction");
+
+	// calculate network fees
+	int64 nNetFee = GetOfferNetworkFee(1, pindexBest->nHeight);
+	// Round up to CENT
+	nNetFee += CENT - 1;
+	nNetFee = (nNetFee / CENT) * CENT;
+	// unserialize offer object from txn, serialize back
+	COffer newOffer;
+	if(!newOffer.UnserializeFromTx(wtxIn))
+		throw runtime_error(
+				"could not unserialize offer from txn");
+
+    newOffer.vchRand = vchOffer;
+	newOffer.nFee = nNetFee;
+
+	string bdata = newOffer.SerializeToString();
+	vector<unsigned char> vchbdata = vchFromString(bdata);
+
+	// check this hash against previous, ensure they match
+	vector<unsigned char> vchToHash(vchRand);
+	vchToHash.insert(vchToHash.end(), vchOffer.begin(), vchOffer.end());
+	uint160 hash = Hash160(vchToHash);
+	if (uint160(vchHash) != hash)
+		throw runtime_error("previous tx used a different random value");
+
+	//create offeractivate txn keys
+	CPubKey newDefaultKey;
+	pwalletMain->GetKeyFromPool(newDefaultKey, false);
+	CScript scriptPubKeyOrig;
+	scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
+	CScript scriptPubKey;
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer
+			<< vchRand << newOffer.sTitle << OP_2DROP << OP_2DROP;
+	scriptPubKey += scriptPubKeyOrig;
+
+	// send the tranasction
+	string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
+			nNetFee, wtxIn, wtx, false, bdata);
+	if (strError != "")
+		throw JSONRPCError(RPC_WALLET_ERROR, strError);
+
+	printf("SENT:OFFERACTIVATE: title=%s, guid=%s, tx=%s, data:\n%s\n",
+			stringFromVch(newOffer.sTitle).c_str(),
+			stringFromVch(vchOffer).c_str(), wtx.GetHash().GetHex().c_str(),
+			stringFromVch(vchbdata).c_str() );
+
 	return wtx.GetHash().GetHex();
 }
 
@@ -1715,60 +1712,58 @@ Value offerupdate(const Array& params, bool fHelp) {
 			<< OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
-	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
 
-		if (mapOfferPending.count(vchOffer)
-				&& mapOfferPending[vchOffer].size()) 
-			throw runtime_error("there are pending operations on that offer");
+	if (mapOfferPending.count(vchOffer)
+			&& mapOfferPending[vchOffer].size()) 
+		throw runtime_error("there are pending operations on that offer");
 
-		EnsureWalletIsUnlocked();
+	EnsureWalletIsUnlocked();
 
-		// look for a transaction with this key
-		CTransaction tx;
-		if (!GetTxOfOffer(*pofferdb, vchOffer, tx))
-			throw runtime_error("could not find an offer with this name");
+	// look for a transaction with this key
+	CTransaction tx;
+	if (!GetTxOfOffer(*pofferdb, vchOffer, tx))
+		throw runtime_error("could not find an offer with this name");
 
-		// make sure offer is in wallet
-		uint256 wtxInHash = tx.GetHash();
-		if (!pwalletMain->mapWallet.count(wtxInHash)) 
-			throw runtime_error("this offer is not in your wallet");
-		
-		// unserialize offer object from txn
-		COffer theOffer;
-		if(!theOffer.UnserializeFromTx(tx))
-			throw runtime_error("cannot unserialize offer from txn");
+	// make sure offer is in wallet
+	uint256 wtxInHash = tx.GetHash();
+	if (!pwalletMain->mapWallet.count(wtxInHash)) 
+		throw runtime_error("this offer is not in your wallet");
+	
+	// unserialize offer object from txn
+	COffer theOffer;
+	if(!theOffer.UnserializeFromTx(tx))
+		throw runtime_error("cannot unserialize offer from txn");
 
-		// get the offer from DB
-		vector<COffer> vtxPos;
-		if (!pofferdb->ReadOffer(vchOffer, vtxPos))
-			throw runtime_error("could not read offer from DB");
-		theOffer = vtxPos.back();
-		theOffer.accepts.clear();
+	// get the offer from DB
+	vector<COffer> vtxPos;
+	if (!pofferdb->ReadOffer(vchOffer, vtxPos))
+		throw runtime_error("could not read offer from DB");
+	theOffer = vtxPos.back();
+	theOffer.accepts.clear();
 
-		// calculate network fees
-		int64 nNetFee = GetOfferNetworkFee(1, pindexBest->nHeight);
-		// Round up to CENT
-		nNetFee += CENT - 1;
-		nNetFee = (nNetFee / CENT) * CENT;		
-		// update offer values
-		theOffer.sCategory = vchCat;
-		theOffer.sTitle = vchTitle;
-		theOffer.sDescription = vchDesc;
-		if(theOffer.GetRemQty() + qty >= 0)
-			theOffer.nQty += qty;
-		theOffer.nPrice = price * COIN;
-		theOffer.nFee += nNetFee;
+	// calculate network fees
+	int64 nNetFee = GetOfferNetworkFee(1, pindexBest->nHeight);
+	// Round up to CENT
+	nNetFee += CENT - 1;
+	nNetFee = (nNetFee / CENT) * CENT;		
+	// update offer values
+	theOffer.sCategory = vchCat;
+	theOffer.sTitle = vchTitle;
+	theOffer.sDescription = vchDesc;
+	if(theOffer.GetRemQty() + qty >= 0)
+		theOffer.nQty += qty;
+	theOffer.nPrice = price * COIN;
+	theOffer.nFee += nNetFee;
 
-		// serialize offer object
-		string bdata = theOffer.SerializeToString();
+	// serialize offer object
+	string bdata = theOffer.SerializeToString();
 
-		CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
-		string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
-				wtxIn, wtx, false, bdata);
-		if (strError != "")
-			throw JSONRPCError(RPC_WALLET_ERROR, strError);
-	}
+	CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
+	string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
+			wtxIn, wtx, false, bdata);
+	if (strError != "")
+		throw JSONRPCError(RPC_WALLET_ERROR, strError);
+
 	return wtx.GetHash().GetHex();
 }
 
@@ -1793,60 +1788,58 @@ Value offerrenew(const Array& params, bool fHelp) {
 	pwalletMain->GetKeyFromPool(newDefaultKey, false);
 	scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
 
-	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
 
-		if (mapOfferPending.count(vchOffer)
-				&& mapOfferPending[vchOffer].size()) 
-			throw runtime_error("there are pending operations on that offer");
+	if (mapOfferPending.count(vchOffer)
+			&& mapOfferPending[vchOffer].size()) 
+		throw runtime_error("there are pending operations on that offer");
 
-		EnsureWalletIsUnlocked();
+	EnsureWalletIsUnlocked();
 
-		// look for a transaction with this key
-		CTransaction tx;
-		if (!GetTxOfOffer(*pofferdb, vchOffer, tx))
-			throw runtime_error("could not find an offer with this name");
+	// look for a transaction with this key
+	CTransaction tx;
+	if (!GetTxOfOffer(*pofferdb, vchOffer, tx))
+		throw runtime_error("could not find an offer with this name");
 
-		// make sure offer is in wallet
-		uint256 wtxInHash = tx.GetHash();
-		if (!pwalletMain->mapWallet.count(wtxInHash)) 
-			throw runtime_error("this offer is not in your wallet");
-		
-		// unserialize offer object from txn
-		COffer theOffer;
-		if(!theOffer.UnserializeFromTx(tx))
-			throw runtime_error("cannot unserialize offer from txn");
+	// make sure offer is in wallet
+	uint256 wtxInHash = tx.GetHash();
+	if (!pwalletMain->mapWallet.count(wtxInHash)) 
+		throw runtime_error("this offer is not in your wallet");
+	
+	// unserialize offer object from txn
+	COffer theOffer;
+	if(!theOffer.UnserializeFromTx(tx))
+		throw runtime_error("cannot unserialize offer from txn");
 
-		// get the offer from DB
-		vector<COffer> vtxPos;
-		if (!pofferdb->ReadOffer(vchOffer, vtxPos))
-			throw runtime_error("could not read offer from DB");
-		theOffer = vtxPos.back();
-		theOffer.accepts.clear();
+	// get the offer from DB
+	vector<COffer> vtxPos;
+	if (!pofferdb->ReadOffer(vchOffer, vtxPos))
+		throw runtime_error("could not read offer from DB");
+	theOffer = vtxPos.back();
+	theOffer.accepts.clear();
 
-		// calculate network fees
-		int64 nNetFee = GetOfferNetworkFee(1, pindexBest->nHeight);
-		// Round up to CENT
-		nNetFee += CENT - 1;
-		nNetFee = (nNetFee / CENT) * CENT;
-		theOffer.nFee += nNetFee;
+	// calculate network fees
+	int64 nNetFee = GetOfferNetworkFee(1, pindexBest->nHeight);
+	// Round up to CENT
+	nNetFee += CENT - 1;
+	nNetFee = (nNetFee / CENT) * CENT;
+	theOffer.nFee += nNetFee;
 
-		// serialize offer object
-		string bdata = theOffer.SerializeToString();
+	// serialize offer object
+	string bdata = theOffer.SerializeToString();
 
-		// create OFFERUPDATE txn keys
-		CScript scriptPubKey;
-		scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << theOffer.sTitle
-				<< OP_2DROP << OP_DROP;
-		scriptPubKey += scriptPubKeyOrig;
+	// create OFFERUPDATE txn keys
+	CScript scriptPubKey;
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << theOffer.sTitle
+			<< OP_2DROP << OP_DROP;
+	scriptPubKey += scriptPubKeyOrig;
 
 
-		CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
-		string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
-				wtxIn, wtx, false, bdata);
-		if (strError != "")
-			throw JSONRPCError(RPC_WALLET_ERROR, strError);
-	}
+	CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
+	string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
+			wtxIn, wtx, false, bdata);
+	if (strError != "")
+		throw JSONRPCError(RPC_WALLET_ERROR, strError);
+
 	return wtx.GetHash().GetHex();
 }
 
@@ -1891,55 +1884,53 @@ Value offeraccept(const Array& params, bool fHelp) {
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT)
 			<< vchOffer << vchAcceptRand << acceptHash << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
-	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
 
-		if (mapOfferPending.count(vchOffer)
-				&& mapOfferPending[vchOffer].size()) {
-			error(  "offeraccept() : there are %d pending operations on that offer, including %s",
-					(int) mapOfferPending[vchOffer].size(),
-					mapOfferPending[vchOffer].begin()->GetHex().c_str());
-			throw runtime_error("there are pending operations on that offer");
-		}
-
-		EnsureWalletIsUnlocked();
-
-		// look for a transaction with this key
-		CTransaction tx;
-		if (!GetTxOfOffer(*pofferdb, vchOffer, tx))
-			throw runtime_error("could not find an offer with this identifier");
-
-		// unserialize offer object from txn
-		COffer theOffer;
-		if(!theOffer.UnserializeFromTx(tx))
-			throw runtime_error("could not unserialize offer from txn");
-
-		// get the offer id from DB
-		vector<COffer> vtxPos;
-		if (!pofferdb->ReadOffer(vchOffer, vtxPos))
-			throw runtime_error("could not read offer with this name from DB");
-		theOffer = vtxPos.back();
-
-		if(theOffer.GetRemQty() < nQty)
-			throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
-
-		// create accept object
-		COfferAccept txAccept;
-		txAccept.vchRand = vchAcceptRand;
-		txAccept.nQty = nQty;
-		txAccept.nPrice = theOffer.nPrice;
-		theOffer.accepts.clear();
-		theOffer.PutOfferAccept(txAccept);
-
-		// serialize offer object
-		string bdata = theOffer.SerializeToString();
-
-		string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
-				false, bdata);
-		if (strError != "")
-			throw JSONRPCError(RPC_WALLET_ERROR, strError);
-		mapMyOfferAccepts[vchAcceptRand] = wtx.GetHash();
+	if (mapOfferPending.count(vchOffer)
+			&& mapOfferPending[vchOffer].size()) {
+		error(  "offeraccept() : there are %d pending operations on that offer, including %s",
+				(int) mapOfferPending[vchOffer].size(),
+				mapOfferPending[vchOffer].begin()->GetHex().c_str());
+		throw runtime_error("there are pending operations on that offer");
 	}
+
+	EnsureWalletIsUnlocked();
+
+	// look for a transaction with this key
+	CTransaction tx;
+	if (!GetTxOfOffer(*pofferdb, vchOffer, tx))
+		throw runtime_error("could not find an offer with this identifier");
+
+	// unserialize offer object from txn
+	COffer theOffer;
+	if(!theOffer.UnserializeFromTx(tx))
+		throw runtime_error("could not unserialize offer from txn");
+
+	// get the offer id from DB
+	vector<COffer> vtxPos;
+	if (!pofferdb->ReadOffer(vchOffer, vtxPos))
+		throw runtime_error("could not read offer with this name from DB");
+	theOffer = vtxPos.back();
+
+	if(theOffer.GetRemQty() < nQty)
+		throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
+
+	// create accept object
+	COfferAccept txAccept;
+	txAccept.vchRand = vchAcceptRand;
+	txAccept.nQty = nQty;
+	txAccept.nPrice = theOffer.nPrice;
+	theOffer.accepts.clear();
+	theOffer.PutOfferAccept(txAccept);
+
+	// serialize offer object
+	string bdata = theOffer.SerializeToString();
+
+	string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
+			false, bdata);
+	if (strError != "")
+		throw JSONRPCError(RPC_WALLET_ERROR, strError);
+	mapMyOfferAccepts[vchAcceptRand] = wtx.GetHash();
+
 	// return results
 	vector<Value> res;
 	res.push_back(wtx.GetHash().GetHex());
@@ -1971,8 +1962,6 @@ Value offerpay(const Array& params, bool fHelp) {
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 	CScript scriptPubKeyOrig;
 
-	{
-	LOCK2(cs_main, pwalletMain->cs_wallet);
 
 	// exit if pending offers
 	if (mapOfferAcceptPending.count(vchRand)
@@ -2059,7 +2048,7 @@ Value offerpay(const Array& params, bool fHelp) {
 			wtxIn, wtx, false, theOffer.SerializeToString());
 	if (strError != "")
 		throw JSONRPCError(RPC_WALLET_ERROR, strError);
-	}
+	
 	mapMyOfferAccepts[vchRand] = wtx.GetHash();
 	
 	// return results
@@ -2581,65 +2570,64 @@ Value offerscan(const Array& params, bool fHelp) {
 	if (fHelp || params.size())
 	throw runtime_error("offer_clean\nClean unsatisfiable transactions from the wallet - including offer_update on an already taken offer\n");
 
+
+	map<uint256, CWalletTx> mapRemove;
+
+	printf("-----------------------------\n");
+
 	{
-		LOCK2(cs_main,pwalletMain->cs_wallet);
-		map<uint256, CWalletTx> mapRemove;
-
-		printf("-----------------------------\n");
-
-		{
-			BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet){
-	 			CWalletTx& wtx = item.second;
-			 	vector<unsigned char> vchOffer;
-	 			if (wtx.GetDepthInMainChain() < 1 && IsConflictedOfferTx(*pblocktree, wtx, vchOffer))
-	 			{
-	 				uint256 hash = wtx.GetHash();
-	 				mapRemove[hash] = wtx;
-	 			}
-	 		}
-	 	}
-
-	 	bool fRepeat = true;
-	 	while (fRepeat)
-	 	{
-	 		fRepeat = false;
-	 		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-	 		{
-	 			CWalletTx& wtx = item.second;
-	 			BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-	 			{
-	 				uint256 hash = wtx.GetHash();
-
-	 				// If this tx depends on a tx to be removed, remove it too
-	 				if (mapRemove.count(txin.prevout.hash) && !mapRemove.count(hash))
-	 				{
-	 					mapRemove[hash] = wtx;
-	 					fRepeat = true;
-	 				}
-	 			}
-	 		}
-	 	}
-
-		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapRemove)
-		{
-		 	CWalletTx& wtx = item.second;
-
-		 	UnspendInputs(wtx);
-		 	wtx.RemoveFromMemoryPool();
-		 	pwalletMain->EraseFromWallet(wtx.GetHash());
+		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet){
+ 			CWalletTx& wtx = item.second;
 		 	vector<unsigned char> vchOffer;
-		 	if (GetNameOfOfferTx(wtx, vchOffer) && mapOfferPending.count(vchOffer))
-		 	{
-		 		string offer = stringFromVch(vchOffer);
-		 		printf("offer_clean() : erase %s from pending of offer %s",
-		 			wtx.GetHash().GetHex().c_str(), offer.c_str());
-		 		if (!mapOfferPending[vchOffer].erase(wtx.GetHash()))
-		 			error("offer_clean() : erase but it was not pending");
-		 	}
-		 	wtx.print();
-		}
+ 			if (wtx.GetDepthInMainChain() < 1 && IsConflictedOfferTx(*pblocktree, wtx, vchOffer))
+ 			{
+ 				uint256 hash = wtx.GetHash();
+ 				mapRemove[hash] = wtx;
+ 			}
+ 		}
+ 	}
 
-		printf("-----------------------------\n");
+ 	bool fRepeat = true;
+ 	while (fRepeat)
+ 	{
+ 		fRepeat = false;
+ 		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+ 		{
+ 			CWalletTx& wtx = item.second;
+ 			BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+ 			{
+ 				uint256 hash = wtx.GetHash();
+
+ 				// If this tx depends on a tx to be removed, remove it too
+ 				if (mapRemove.count(txin.prevout.hash) && !mapRemove.count(hash))
+ 				{
+ 					mapRemove[hash] = wtx;
+ 					fRepeat = true;
+ 				}
+ 			}
+ 		}
+ 	}
+
+	BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapRemove)
+	{
+	 	CWalletTx& wtx = item.second;
+
+	 	UnspendInputs(wtx);
+	 	wtx.RemoveFromMemoryPool();
+	 	pwalletMain->EraseFromWallet(wtx.GetHash());
+	 	vector<unsigned char> vchOffer;
+	 	if (GetNameOfOfferTx(wtx, vchOffer) && mapOfferPending.count(vchOffer))
+	 	{
+	 		string offer = stringFromVch(vchOffer);
+	 		printf("offer_clean() : erase %s from pending of offer %s",
+	 			wtx.GetHash().GetHex().c_str(), offer.c_str());
+	 		if (!mapOfferPending[vchOffer].erase(wtx.GetHash()))
+	 			error("offer_clean() : erase but it was not pending");
+	 	}
+	 	wtx.print();
 	}
+
+	printf("-----------------------------\n");
+
 	return true;
  }

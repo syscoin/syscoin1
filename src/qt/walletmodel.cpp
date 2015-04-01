@@ -245,7 +245,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
 				vecSend.push_back(make_pair(scriptPubKey, rcp.amount));
 			}
         }
-
+		LOCK2(cs_main, wallet->cs_wallet);
         CWalletTx wtx;
         CReserveKey keyChange(wallet);
         int64 nFeeRequired = 0;

@@ -150,7 +150,6 @@ bool CheckAliasInputs(
 bool ExtractAliasAddress(const CScript& script, std::string& address);
 bool IsAliasMine(const CTransaction& tx);
 bool IsAliasMine2(const CTransaction& tx);
-void RemoveAliasTxnFromMemoryPool(const CTransaction& tx);
 bool IsAliasMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasnew = false);
 bool IsAliasOp(int op);
 
