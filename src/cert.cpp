@@ -1243,17 +1243,6 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
             return error( "CheckCertInputs() : certissuer transaction has unknown op");
         }
 
-        // save serialized certissuer for later use
-        CCertIssuer serializedCertIssuer = theCertIssuer;
-
-        // if not an certissuernew, load the certissuer data from the DB
-        vector<CCertIssuer> vtxPos;
-        if(op != OP_CERTISSUER_NEW)
-            if (pcertdb->ExistsCertIssuer(vvchArgs[0])) {
-                if (!pcertdb->ReadCertIssuer(vvchArgs[0], vtxPos))
-                    return error(
-                            "CheckCertInputs() : failed to read from certissuer DB");
-            }
 
 //todo fucking suspect
         // // for certissuerupdate or certtransfer check to make sure the previous txn exists and is valid
@@ -1268,6 +1257,16 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         // these ifs are problably total bullshit except for the certissuernew
         if (fBlock || (!fBlock && !fMiner && !fJustCheck)) {
             if (op != OP_CERTISSUER_NEW) {
+				// save serialized certissuer for later use
+				CCertIssuer serializedCertIssuer = theCertIssuer;
+
+				// if not an certissuernew, load the certissuer data from the DB
+				vector<CCertIssuer> vtxPos;
+				if (pcertdb->ExistsCertIssuer(vvchArgs[0]) && op != OP_CERTISSUER_ACTIVATE && !fJustCheck) {
+					if (!pcertdb->ReadCertIssuer(vvchArgs[0], vtxPos))
+						return error(
+								"CheckCertInputs() : failed to read from certissuer DB");
+				}
                 if (!fMiner && !fJustCheck && pindexBlock->nHeight != pindexBest->nHeight) {
                     int nHeight = pindexBlock->nHeight;
 
@@ -1294,10 +1293,12 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                         theCertItem.nTime = pindexBlock->nTime;
                         theCertItem.nHeight = nHeight;
                         theCertIssuer.PutCertItem(theCertItem);
-
+						{
+						TRY_LOCK(cs_main, cs_trymain);
                         if (!pcertdb->WriteCertItem(vvchArgs[1], vvchArgs[0]))
                             return error( "CheckCertInputs() : failed to write to cert DB");
                         mapTestPool[vvchArgs[1]] = tx.GetHash();
+						}
                     }
 
                     if(op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE)
@@ -1308,7 +1309,8 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     theCertIssuer.txHash = tx.GetHash();
                     theCertIssuer.nTime = pindexBlock->nTime;
                     theCertIssuer.PutToCertIssuerList(vtxPos);
-
+					{
+					TRY_LOCK(cs_main, cs_trymain);
                     // write cert issuer 
                     if (!pcertdb->WriteCertIssuer(vvchArgs[0], vtxPos))
                         return error( "CheckCertInputs() : failed to write to cert DB");
@@ -1328,8 +1330,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     // activate or update - seller txn
                     if (op == OP_CERTISSUER_NEW || op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE) {
                         vector<unsigned char> vchCertIssuer = op == OP_CERTISSUER_NEW ?
-                                    vchFromString(HexStr(vvchArgs[0])) : vvchArgs[0];
-                        TRY_LOCK(cs_main, cs_trymain);
+                                    vchFromString(HexStr(vvchArgs[0])) : vvchArgs[0]; 
                         std::map<std::vector<unsigned char>, std::set<uint256> >::iterator
                                 mi = mapCertIssuerPending.find(vchCertIssuer);
                         if (mi != mapCertIssuerPending.end())
@@ -1338,12 +1339,11 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
                     // certitem or pay - buyer txn
                     else {
-                        TRY_LOCK(cs_main, cs_trymain);
                         std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapCertItemPending.find(vvchArgs[1]);
                         if (mi != mapCertItemPending.end())
                             mi->second.erase(tx.GetHash());
                     }
-
+					
                     // debug
                     printf( "CONNECTED CERT: op=%s certissuer=%s title=%s hash=%s height=%d fees=%llu\n",
                             certissuerFromOp(op).c_str(),
@@ -1351,6 +1351,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                             stringFromVch(theCertIssuer.vchTitle).c_str(),
                             tx.GetHash().ToString().c_str(),
                             nHeight, nTheFee / COIN);
+					}
                 }
             }
         }

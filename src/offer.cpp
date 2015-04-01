@@ -1248,17 +1248,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			return error( "CheckOfferInputs() : offer transaction has unknown op");
 		}
 
-		// save serialized offer for later use
-		COffer serializedOffer = theOffer;
-
-		// if not an offernew, load the offer data from the DB
-		vector<COffer> vtxPos;
-		if(op != OP_OFFER_NEW)
-			if (pofferdb->ExistsOffer(vvchArgs[0])) {
-				if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos))
-					return error(
-							"CheckOfferInputs() : failed to read from offer DB");
-			}
 
 		//todo fucking suspect
 		// // for offerupdate or offerpay check to make sure the previous txn exists and is valid
@@ -1273,6 +1262,17 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		// these ifs are problably total bullshit except for the offernew
 		if (fBlock || (!fBlock && !fMiner && !fJustCheck)) {
 			if (op != OP_OFFER_NEW) {
+
+				// save serialized offer for later use
+				COffer serializedOffer = theOffer;
+
+				// if not an offernew, load the offer data from the DB
+				vector<COffer> vtxPos;
+				if (pofferdb->ExistsOffer(vvchArgs[0]) && op != OP_OFFER_ACTIVATE && !fJustCheck) {
+					if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos))
+						return error(
+								"CheckOfferInputs() : failed to read from offer DB");
+				}
 				if (!fMiner && !fJustCheck && pindexBlock->nHeight != pindexBest->nHeight) {
 					int nHeight = pindexBlock->nHeight;
 
@@ -1333,11 +1333,13 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						theOfferAccept.nTime = pindexBlock->nTime;
 						theOfferAccept.nHeight = nHeight;
 						theOffer.PutOfferAccept(theOfferAccept);
-						mapTestPool[vvchArgs[1]] = tx.GetHash();
-
+						{
+						TRY_LOCK(cs_main, cs_trymain);
 						// write the offer / offer accept mapping to the database
 						if (!pofferdb->WriteOfferAccept(vvchArgs[1], vvchArgs[0]))
 							return error( "CheckOfferInputs() : failed to write to offer DB");
+						mapTestPool[vvchArgs[1]] = tx.GetHash();
+						}
 					}
 					
 					// only modify the offer's height on an activate or update
@@ -1349,7 +1351,8 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					theOffer.txHash = tx.GetHash();
 					theOffer.nTime = pindexBlock->nTime;
 					theOffer.PutToOfferList(vtxPos);
-
+					{
+					TRY_LOCK(cs_main, cs_trymain);
 					// write offer
 					if (!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 						return error( "CheckOfferInputs() : failed to write to offer DB");
@@ -1367,19 +1370,17 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					// activate or update - seller txn
                     if (op == OP_OFFER_ACTIVATE || op == OP_OFFER_UPDATE) {
 						vector<unsigned char> vchOffer = op == OP_OFFER_NEW ? vchFromString(HexStr(vvchArgs[0])) : vvchArgs[0];
-						TRY_LOCK(cs_main, cs_trymain);
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferPending.find(vchOffer);
 						if (mi != mapOfferPending.end())
 							mi->second.erase(tx.GetHash());
 					}
 					// accept or pay - buyer txn
 					else {
-						TRY_LOCK(cs_main, cs_trymain);
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferAcceptPending.find(vvchArgs[1]);
 						if (mi != mapOfferAcceptPending.end())
 							mi->second.erase(tx.GetHash());
 					}
-
+					
 					// debug
 					printf( "CONNECTED OFFER: op=%s offer=%s title=%s qty=%llu hash=%s height=%d fees=%llu\n",
 							offerFromOp(op).c_str(),
@@ -1388,6 +1389,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							theOffer.GetRemQty(),
 							tx.GetHash().ToString().c_str(), 
 							nHeight, nTheFee / COIN);
+					}
 				}
 			}
 		}

@@ -1873,7 +1873,8 @@ bool DisconnectAlias( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
 				vtxPos.pop_back();
 			// TODO validate that the first pos is the current tx pos
 		}
-
+		{
+		TRY_LOCK(cs_main, cs_maintry);
 		if(!paliasdb->WriteName(vvchArgs[0], vtxPos))
 			return error("DisconnectBlock() : failed to write to alias DB");
 
@@ -1886,6 +1887,7 @@ bool DisconnectAlias( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
 		vector<CAliasFee> vAliasFees(lstAliasFees.begin(), lstAliasFees.end());
 		if (!paliasdb->WriteAliasTxFees(vAliasFees))
 			return error( "DisconnectBlock() : failed to write fees to alias DB");
+		}
 
 	}
 
@@ -1920,10 +1922,12 @@ bool DisconnectOffer( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
         	if(!theOffer.GetAcceptByHash(vvchOfferAccept, theOfferAccept))
 	            return error("DisconnectBlock() : not found in offer for offer accept %s %s\n",
 	            		opName.c_str(), HexStr(vvchOfferAccept).c_str());
-
+			{
+			TRY_LOCK(cs_main, cs_maintry);
 	        // make sure offer accept db record already exists
 	        if (pofferdb->ExistsOfferAccept(vvchOfferAccept))
 	        	pofferdb->EraseOfferAccept(vvchOfferAccept);
+			}
         }
 
         // vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
@@ -1937,7 +1941,8 @@ bool DisconnectOffer( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
             while(vtxPos.back().txHash == tx.GetHash())
                 vtxPos.pop_back();
         }
-
+		{
+		TRY_LOCK(cs_main, cs_maintry);
         // write new offer state to db
 		if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 			return error("DisconnectBlock() : failed to write to offer DB");
@@ -1950,6 +1955,7 @@ bool DisconnectOffer( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
 		vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
 		if (!pofferdb->WriteOfferTxFees(vOfferFees))
 			return error( "DisconnectBlock() : failed to write fees to offer DB");
+		}
 	}
 
 	printf("DISCONNECTED offer TXN: offer=%s op=%s hash=%s  height=%d\n",
@@ -1983,10 +1989,12 @@ bool DisconnectCertificate( CBlockIndex *pindex, const CTransaction &tx, int op,
 			if(!theIssuer.GetCertItemByHash(vvchCert, theCert))
 				return error("DisconnectBlock() : not found in offer for offer accept %s %s\n",
 						opName.c_str(), HexStr(vvchCert).c_str());
-
+			{
+			TRY_LOCK(cs_main, cs_maintry);
 			// make sure offer accept db record already exists
 			if (pcertdb->ExistsCertItem(vvchCert))
 				pcertdb->EraseCertItem(vvchCert);
+			}
 		}
 
 		// vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
@@ -2000,7 +2008,8 @@ bool DisconnectCertificate( CBlockIndex *pindex, const CTransaction &tx, int op,
 				vtxPos.pop_back();
 			// TODO validate that the first pos is the current tx pos
 		}
-
+		{
+		TRY_LOCK(cs_main, cs_maintry);
 		// write new offer state to db
 		if(!pcertdb->WriteCertIssuer(vvchArgs[0], vtxPos))
 			return error("DisconnectBlock() : failed to write to offer DB");
@@ -2014,6 +2023,7 @@ bool DisconnectCertificate( CBlockIndex *pindex, const CTransaction &tx, int op,
 		vector<CCertFee> vCertIssuerFees(lstCertIssuerFees.begin(), lstCertIssuerFees.end());
 		if (!pcertdb->WriteCertFees(vCertIssuerFees))
 			return error( "DisconnectBlock() : failed to write fees to certissuer DB");
+		}
 	}
 
 	printf("DISCONNECTED CERT TXN: title=%s hash=%s height=%d\n",
