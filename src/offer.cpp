@@ -1248,17 +1248,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			return error( "CheckOfferInputs() : offer transaction has unknown op");
 		}
 
-
-		//todo fucking suspect
-		// // for offerupdate or offerpay check to make sure the previous txn exists and is valid
-		// if (!fBlock && fJustCheck && (op == OP_OFFER_UPDATE || op == OP_OFFER_PAY)) {
-		// 	if (!CheckOfferTxPos(vtxPos, prevCoins->nHeight))
-		// 		return error(
-		// 				"CheckOfferInputs() : tx %s rejected, since previous tx (%s) is not in the offer DB\n",
-		// 				tx.GetHash().ToString().c_str(),
-		// 				prevOutput->hash.ToString().c_str());
-		// }
-
 		// these ifs are problably total bullshit except for the offernew
 		if (fBlock || (!fBlock && !fMiner && !fJustCheck)) {
 			if (op != OP_OFFER_NEW) {

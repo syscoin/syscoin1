@@ -1244,15 +1244,6 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         }
 
 
-//todo fucking suspect
-        // // for certissuerupdate or certtransfer check to make sure the previous txn exists and is valid
-        // if (!fBlock && fJustCheck && (op == OP_CERTISSUER_UPDATE || op == OP_CERT_TRANSFER)) {
-        // 	if (!CheckCertIssuerTxPos(vtxPos, prevCoins->nHeight))
-        // 		return error(
-        // 				"CheckCertInputs() : tx %s rejected, since previous tx (%s) is not in the certissuer DB\n",
-        // 				tx.GetHash().ToString().c_str(),
-        // 				prevOutput->hash.ToString().c_str());
-        // }
 
         // these ifs are problably total bullshit except for the certissuernew
         if (fBlock || (!fBlock && !fMiner && !fJustCheck)) {
