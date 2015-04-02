@@ -914,7 +914,7 @@ bool CreateCertTransactionWithInputTx(
             wtxNew.ToString().c_str());
     return true;
 }
-void EraseCert(CWalletTx& wtxNew)
+void EraseCert(CWalletTx& wtx)
 {
 	 UnspendInputs(wtx);
 	 wtx.RemoveFromMemoryPool();
