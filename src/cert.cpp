@@ -60,11 +60,11 @@ int64 GetCertNetworkFee(int seed, int nHeight) {
     int64 nRes = 48 * COIN;
     int64 nDif = 34 * COIN;
     if(seed==2) {
-        nRes = 175;
-        nDif = 111;
+        nRes = 175 * COIN;
+        nDif = 111 * COIN;
     } else if(seed==4) {
-        nRes = 10;
-        nDif = 8;
+        nRes = 10 * COIN;
+        nDif = 8 * COIN;
     }
     int nTargetHeight = 130080;
     if(nHeight>nTargetHeight) return nRes - nDif;
@@ -216,7 +216,7 @@ bool CCertDB::ReconstructCertIndex(CBlockIndex *pindexRescan) {
             int op, nOut;
 
             // decode the certissuer op, params, height
-            bool o = DecodeCertTx(tx, op, nOut, vvchArgs, nHeight);
+            bool o = DecodeCertTx(tx, op, nOut, vvchArgs, -1);
             if (!o || !IsCertOp(op)) continue;
             if (op == OP_CERTISSUER_NEW) continue;
 
@@ -296,7 +296,7 @@ bool CCertDB::ReconstructCertIndex(CBlockIndex *pindexRescan) {
 			vector<CCertFee> vCertFees(lstCertIssuerFees.begin(),
 				lstCertIssuerFees.end());
 			if (!pcertdb->WriteCertFees(vCertFees))
-				return error("CheckOfferInputs() : failed to write fees to alias DB");
+				return error("ReconstructCertIndex() : failed to write fees to alias DB");
 
 
             printf( "RECONSTRUCT CERT: op=%s certissuer=%s title=%s hash=%s height=%d fees=%llu\n",
@@ -475,7 +475,7 @@ bool IsConflictedCertIssuerTx(CBlockTreeDB& txdb, const CTransaction& tx,
         return false;
     vector<vector<unsigned char> > vvchArgs;
     int op, nOut, nPrevHeight;
-    if (!DecodeCertTx(tx, op, nOut, vvchArgs, pindexBest->nHeight))
+    if (!DecodeCertTx(tx, op, nOut, vvchArgs, -1))
         return error("IsConflictedCertIssuerTx() : could not decode a syscoin tx");
 
     switch (op) {
@@ -1019,7 +1019,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         vector<vector<unsigned char> > vvchArgs;
         int op;
         int nOut;
-        bool good = DecodeCertTx(tx, op, nOut, vvchArgs, pindexBlock->nHeight);
+        bool good = DecodeCertTx(tx, op, nOut, vvchArgs, -1);
         if (!good)
             return error("CheckCertInputs() : could not decode a syscoin tx");
         int nPrevHeight;
@@ -1136,7 +1136,13 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
             if ((fBlock || fMiner) && nDepth < 0)
                 return error(
                         "CheckCertInputs() : certissuerupdate on an expired certissuer, or there is a pending transaction on the certissuer");
-
+           // check for enough fees
+            nNetFee = GetCertNetFee(tx);
+            if (nNetFee < GetCertNetworkFee(2, pindexBlock->nHeight))
+                return error(
+                        "CheckCertInputs() : got tx %s with fee too low %lu",
+                        tx.GetHash().GetHex().c_str(),
+                        (long unsigned int) nNetFee);
             //if (fBlock && !fJustCheck && pindexBlock->nHeight == pindexBest->nHeight) {
             //    BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
             //        if (vvchArgs[0] == s.first) {
@@ -1410,7 +1416,7 @@ Value getcertfees(const Array& params, bool fHelp) {
 	oRes.push_back(Pair("new_fee", (double)1.0));
     oRes.push_back(Pair("activate_fee", ValueFromAmount(GetCertNetworkFee(1, nBestHeight) )));
     oRes.push_back(Pair("cert_fee", ValueFromAmount(GetCertNetworkFee(2, nBestHeight) )));
-    oRes.push_back(Pair("transfer_fee", ValueFromAmount(GetCertNetworkFee(3, nBestHeight) )));
+    oRes.push_back(Pair("transfer_fee", ValueFromAmount(GetCertNetworkFee(4, nBestHeight) )));
     return oRes;
 
 }

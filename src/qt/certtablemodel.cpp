@@ -84,7 +84,7 @@ public:
 
                     int op, nOut;
                     vector<vector<unsigned char> > vvchArgs;
-                    bool o = DecodeCertTx(tx, op, nOut, vvchArgs, nHeight);
+                    bool o = DecodeCertTx(tx, op, nOut, vvchArgs, -1);
                     if (!o || !IsCertOp(op) || !IsCertMine(tx)) continue;
 
                     // get the transaction

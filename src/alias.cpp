@@ -702,7 +702,7 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 					lstAliasFees.end());
 				if (!paliasdb->WriteAliasTxFees(vAliasFees))
 					return error(
-							"CheckOfferInputs() : failed to write fees to alias DB");
+							"ReconstructOfferIndex() : failed to write fees to alias DB");
 
 
 				printf(
