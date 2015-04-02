@@ -7,6 +7,7 @@
 #include "bitcoingui.h"
 #include "ui_interface.h"
 #include "bitcoinrpc.h"
+#include "script.h"
 #include <QDataWidgetMapper>
 #include <QMessageBox>
 
@@ -14,7 +15,7 @@ using namespace std;
 using namespace json_spirit;
 extern int nBestHeight;
 extern const CRPCTable tableRPC;
-int64 GetAliasNetworkFee(int nType, int nHeight);
+int64 GetAliasNetworkFee(opcodetype seed, int nHeight);
 EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::EditAliasDialog), mapper(0), mode(mode), model(0)
@@ -89,8 +90,8 @@ bool EditAliasDialog::saveCurrentRow()
 	Array params;
 	string strMethod;
 	int64 newFee;
-	int64 updateFee;
-	std::string newFeeStr, updateFeeStr;
+	int64 updateFee,activateFee;
+	std::string newFeeStr, updateFeeStr,activateFeeStr;
 	QMessageBox::StandardButton retval;
     switch(mode)
     {
@@ -105,11 +106,11 @@ bool EditAliasDialog::saveCurrentRow()
         }
 		newFee = 1;
 		QMessageBox::StandardButton retval;
-		updateFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE, nBestHeight)/COIN;
+		activateFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE, nBestHeight)/COIN;
 		newFeeStr = strprintf("%"PRI64d, newFee);
-		updateFeeStr = strprintf("%"PRI64d, updateFee);
+		activateFeeStr = strprintf("%"PRI64d, activateFee);
 		retval = QMessageBox::question(this, tr("Confirm new Alias"),
-			tr("Warning: Creating new Alias will cost ") + QString::fromStdString(newFeeStr) + tr(" SYS, and activating will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish to create an Alias?"),
+			tr("Warning: Creating new Alias will cost ") + QString::fromStdString(newFeeStr) + tr(" SYS, and activating will cost ") + QString::fromStdString(activateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish to create an Alias?"),
                  QMessageBox::Yes|QMessageBox::Cancel,
                  QMessageBox::Cancel);
         if(retval != QMessageBox::Yes)

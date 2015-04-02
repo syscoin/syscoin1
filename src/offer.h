@@ -3,7 +3,7 @@
 
 #include "bitcoinrpc.h"
 #include "leveldb.h"
-
+#include "script.h"
 class CTransaction;
 class CTxOut;
 class CValidationState;
@@ -35,7 +35,7 @@ int GetOfferTxHashHeight(const uint256 txHash);
 int GetOfferTxPosHeight(const CDiskTxPos& txPos);
 int GetOfferTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
 int GetOfferDisplayExpirationDepth(int nHeight);
-int64 GetOfferNetworkFee(int seed, int nHeight);
+int64 GetOfferNetworkFee(opcodetype seed, int nHeight);
 int64 GetOfferNetFee(const CTransaction& tx);
 bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue);
 

@@ -445,7 +445,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			nNetFee = GetAliasNetFee(tx);
 			if (nNetFee < GetAliasNetworkFee(OP_ALIAS_UPDATE, pindexBlock->nHeight))
 				return error(
-						"CheckAliasInputs() : got tx %s with fee too low %lu",
+						"CheckAliasInputs() : OP_ALIAS_UPDATE got tx %s with fee too low %lu",
 						tx.GetHash().GetHex().c_str(),
 						(long unsigned int) nNetFee);
 			// BOOST_FOREACH(const MAPTESTPOOLTYPE &s, mapTestPool) {
@@ -726,7 +726,7 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 	return true;
 }
 
-int64 GetAliasNetworkFee(int seed, int nHeight) {
+int64 GetAliasNetworkFee(opcodetype seed, int nHeight) {
 	int64 nRes = 0;
 	int64 nDif = 0;
 	int64 nFee = 0;
@@ -991,7 +991,18 @@ bool CreateTransactionWithInputTx(const vector<pair<CScript, int64> >& vecSend,
 			wtxNew.ToString().c_str());
 	return true;
 }
-
+void EraseAlias(CWalletTx& wtx)
+{
+	UnspendInputs(wtx);
+	wtx.RemoveFromMemoryPool();
+	pwalletMain->EraseFromWallet(wtx.GetHash());
+	vector<unsigned char> vchName;
+	if (GetAliasOfTx(wtx, vchName)
+			&& mapAliasesPending.count(vchName)) {
+		string name = stringFromVch(vchName);
+		mapAliasesPending[vchName].erase(wtx.GetHash());
+	}
+}
 // nTxOut is the output from wtxIn that we should grab
 string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee,
 		CWalletTx& wtxIn, CWalletTx& wtxNew, bool fAskFee,
@@ -1032,9 +1043,11 @@ string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee,
 #endif
 
 	if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
+	{
+		EraseAlias(wtxNew);
 		return _(
-				"Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
-
+				"Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here. The transaction will be removed once you restart the wallet.");
+	}
 	return "";
 }
 

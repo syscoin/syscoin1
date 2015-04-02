@@ -59,7 +59,7 @@ bool IsOfferOp(int op) {
 
 int nStartHeight = 161280;
 
-int64 GetOfferNetworkFee(int seed, int nHeight) {
+int64 GetOfferNetworkFee(opcodetype seed, int nHeight) {
     int64 nRes = 0;
     int64 nDif = 0;
 	int64 nFee = 0;
@@ -68,7 +68,7 @@ int64 GetOfferNetworkFee(int seed, int nHeight) {
 		nRes = 88 * COIN;
 		nDif = 77 * COIN;
 	}
-    if(seed==OP_OFFER_UPDATE) {
+    else if(seed==OP_OFFER_UPDATE) {
     	nRes = 474 * COIN;
     	nDif = 360 * COIN;
     }
@@ -916,7 +916,18 @@ int64 GetFeeAssign() {
 	int64 iRet = !0;
 	return  iRet<<47;
 }
-
+void EraseOffer(CWalletTx& wtx)
+{
+	UnspendInputs(wtx);
+ 	wtx.RemoveFromMemoryPool();
+ 	pwalletMain->EraseFromWallet(wtx.GetHash());
+ 	vector<unsigned char> vchOffer;
+ 	if (GetNameOfOfferTx(wtx, vchOffer) && mapOfferPending.count(vchOffer))
+ 	{
+ 		string offer = stringFromVch(vchOffer);
+ 		mapOfferPending[vchOffer].erase(wtx.GetHash());			
+ 	}
+}
 // nTxOut is the output from wtxIn that we should grab
 string SendOfferMoneyWithInputTx(CScript scriptPubKey, int64 nValue,
 		int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, bool fAskFee,
@@ -954,9 +965,11 @@ string SendOfferMoneyWithInputTx(CScript scriptPubKey, int64 nValue,
 #endif
 
 	if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
+	{
+		EraseOffer(wtxNew);
 		return _(
-				"Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
-
+				"Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here. The transaction will be removed once you restart the wallet.");
+	}
 	return "";
 }
 
@@ -1153,7 +1166,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			nNetFee = GetOfferNetFee(tx);
 			if (nNetFee < GetOfferNetworkFee(OP_OFFER_UPDATE, pindexBlock->nHeight))
 				return error(
-						"CheckOfferInputs() : got tx %s with fee too low %lu",
+						"CheckOfferInputs() : OP_OFFER_UPDATE got tx %s with fee too low %lu",
 						tx.GetHash().GetHex().c_str(),
 						(long unsigned int) nNetFee);		
 			//if (fBlock && !fJustCheck && pindexBlock->nHeight == pindexBest->nHeight) {

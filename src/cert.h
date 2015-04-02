@@ -3,7 +3,7 @@
 
 #include "bitcoinrpc.h"
 #include "leveldb.h"
-
+#include "script.h"
 class CTransaction;
 class CTxOut;
 class CValidationState;
@@ -33,7 +33,7 @@ int GetCertTxHashHeight(const uint256 txHash);
 int GetCertTxPosHeight(const CDiskTxPos& txPos);
 int GetCertTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
 int GetCertDisplayExpirationDepth(int nHeight);
-int64 GetCertNetworkFee(int seed, int nHeight);
+int64 GetCertNetworkFee(opcodetype seed, int nHeight);
 int64 GetCertNetFee(const CTransaction& tx);
 bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue);
 bool ExtractCertIssuerAddress(const CScript& script, std::string& address);

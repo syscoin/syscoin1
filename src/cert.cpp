@@ -56,7 +56,7 @@ bool IsCertOp(int op) {
 // expiration blocks is 262080 (final)
 // expiration starts at 87360, increases by 1 per block starting at
 // block 174721 until block 349440
-int64 GetCertNetworkFee(int seed, int nHeight) {
+int64 GetCertNetworkFee(opcodetype seed, int nHeight) {
     int64 nRes = 0;
     int64 nDif = 0;
 	int64 nFee = 0;
@@ -69,7 +69,8 @@ int64 GetCertNetworkFee(int seed, int nHeight) {
 	{
         nRes = 175 * COIN;
         nDif = 111 * COIN;
-    } else if(seed==OP_CERT_TRANSFER) 
+    } 
+	else if(seed==OP_CERT_TRANSFER) 
 	{
         nRes = 10 * COIN;
         nDif = 8 * COIN;
@@ -913,7 +914,18 @@ bool CreateCertTransactionWithInputTx(
             wtxNew.ToString().c_str());
     return true;
 }
-
+void EraseCert(CWalletTx& wtxNew)
+{
+	 UnspendInputs(wtx);
+	 wtx.RemoveFromMemoryPool();
+	 pwalletMain->EraseFromWallet(wtx.GetHash());
+	 vector<unsigned char> vchCertIssuer;
+	 if (GetNameOfCertIssuerTx(wtx, vchCertIssuer) && mapCertIssuerPending.count(vchCertIssuer))
+	 {
+		 string certissuer = stringFromVch(vchCertIssuer);
+		 mapCertIssuerPending[vchCertIssuer].erase(wtx.GetHash());
+	 }
+}
 // nTxOut is the output from wtxIn that we should grab
 string SendCertMoneyWithInputTx(CScript scriptPubKey, int64 nValue,
         int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, bool fAskFee,
@@ -951,9 +963,11 @@ string SendCertMoneyWithInputTx(CScript scriptPubKey, int64 nValue,
 #endif
 
     if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
+	{
+		EraseCert(wtxNew);
         return _(
-                "Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
-
+                "Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here. The transaction will be removed once you restart the wallet.");
+	}
     return "";
 }
 
@@ -1152,7 +1166,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
             nNetFee = GetCertNetFee(tx);
             if (nNetFee < GetCertNetworkFee(OP_CERTISSUER_UPDATE, pindexBlock->nHeight))
                 return error(
-                        "CheckCertInputs() : got tx %s with fee too low %lu",
+                        "CheckCertInputs() : OP_CERTISSUER_UPDATE got tx %s with fee too low %lu",
                         tx.GetHash().GetHex().c_str(),
                         (long unsigned int) nNetFee);
             //if (fBlock && !fJustCheck && pindexBlock->nHeight == pindexBest->nHeight) {
