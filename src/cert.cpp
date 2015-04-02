@@ -1715,7 +1715,7 @@ Value certissuerupdate(const Array& params, bool fHelp) {
     // update certissuer values
     theCertIssuer.vchTitle = vchTitle;
     theCertIssuer.vchData = vchData;
-    theCertIssuer.nFee += nNetFee;
+    theCertIssuer.nFee = nNetFee;
 
     // serialize certissuer object
     string bdata = theCertIssuer.SerializeToString();
@@ -1907,7 +1907,7 @@ Value certtransfer(const Array& params, bool fHelp) {
     // calculate network fees
     int64 nNetFee = GetCertNetworkFee(OP_CERT_TRANSFER, pindexBest->nHeight);
 
-    theCertItem.nFee += nNetFee;
+    theCertItem.nFee = nNetFee;
     theCertIssuer.certs.clear();
     theCertIssuer.PutCertItem(theCertItem);
 

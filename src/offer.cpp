@@ -72,7 +72,7 @@ int64 GetOfferNetworkFee(opcodetype seed, int nHeight) {
     	nRes = 474 * COIN;
     	nDif = 360 * COIN;
     }
-	else if(seed==OP_OFFER_PAY)
+	else if(seed==OP_OFFER_PAY||seed==OP_OFFER_ACCEPT)
 	{
 		nRes = 2 * COIN;
 		nDif = 1 * COIN;
@@ -1200,6 +1200,14 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				if(!theOffer.GetAcceptByHash(vchAcceptRand, theOfferAccept))
 					return error("could not read accept from offer txn");
 	   		}
+			// check for enough fees
+			nNetFee = GetOfferNetFee(tx);
+			if (nNetFee < GetOfferNetworkFee(OP_OFFER_ACCEPT, pindexBlock->nHeight))
+				return error(
+						"CheckOfferInputs() : OP_OFFER_ACCEPT got tx %s with fee too low %lu",
+						tx.GetHash().GetHex().c_str(),
+						(long unsigned int) nNetFee);
+
 			break;
 
 		case OP_OFFER_PAY:
@@ -1470,6 +1478,7 @@ Value getofferfees(const Array& params, bool fHelp) {
 	oRes.push_back(Pair("new_fee", (double)1.0));
 	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_ACTIVATE, nBestHeight) )));
 	oRes.push_back(Pair("update_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_UPDATE, nBestHeight) )));
+	oRes.push_back(Pair("accept_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_ACCEPT, nBestHeight) )));
 	oRes.push_back(Pair("pay_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_PAY, nBestHeight) )));
 	return oRes;
 
@@ -1773,7 +1782,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 	if(theOffer.GetRemQty() + qty >= 0)
 		theOffer.nQty += qty;
 	theOffer.nPrice = price * COIN;
-	theOffer.nFee += nNetFee;
+	theOffer.nFee = nNetFee;
 
 	// serialize offer object
 	string bdata = theOffer.SerializeToString();
@@ -1840,7 +1849,7 @@ Value offerrenew(const Array& params, bool fHelp) {
 	// calculate network fees
 	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_UPDATE, pindexBest->nHeight);
 
-	theOffer.nFee += nNetFee;
+	theOffer.nFee = nNetFee;
 
 	// serialize offer object
 	string bdata = theOffer.SerializeToString();
@@ -1922,7 +1931,11 @@ Value offeraccept(const Array& params, bool fHelp) {
 	COffer theOffer;
 	if(!theOffer.UnserializeFromTx(tx))
 		throw runtime_error("could not unserialize offer from txn");
-
+	// make sure offer is in wallet
+	uint256 wtxInHash = tx.GetHash();
+	if (!pwalletMain->mapWallet.count(wtxInHash)) 
+		throw runtime_error("this offer is not in your wallet");
+	CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
 	// get the offer id from DB
 	vector<COffer> vtxPos;
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos))
@@ -1931,22 +1944,24 @@ Value offeraccept(const Array& params, bool fHelp) {
 
 	if(theOffer.GetRemQty() < nQty)
 		throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
-
+	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_ACCEPT, pindexBest->nHeight);
 	// create accept object
 	COfferAccept txAccept;
 	txAccept.vchRand = vchAcceptRand;
 	txAccept.nQty = nQty;
 	txAccept.nPrice = theOffer.nPrice;
+	txAccept.nFee = nNetFee;
 	theOffer.accepts.clear();
 	theOffer.PutOfferAccept(txAccept);
 
 	// serialize offer object
 	string bdata = theOffer.SerializeToString();
+	
+    string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
+            nNetFee, wtxIn, wtx, false, bdata);
+    if (strError != "")
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
-	string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
-			false, bdata);
-	if (strError != "")
-		throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	mapMyOfferAccepts[vchAcceptRand] = wtx.GetHash();
 
 	// return results
