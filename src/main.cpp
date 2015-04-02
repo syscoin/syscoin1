@@ -1779,13 +1779,13 @@ bool CTransaction::CheckInputs(CBlockIndex *pindex, CValidationState &state, CCo
 				return false;
 		}
 		
-		bGood = DecodeOfferTx(*this, op, nOut, vvchArgs, -1);
+		bGood = DecodeOfferTx(*this, op, nOut, vvchArgs, pindex->nHeight);
 		if (bGood && IsOfferOp(op)) {
 			if (!CheckOfferInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
 				return false;
 		} 
 		
-		bGood = DecodeCertTx(*this, op, nOut, vvchArgs, -1);
+		bGood = DecodeCertTx(*this, op, nOut, vvchArgs, pindex->nHeight);
 		if (bGood && IsCertOp(op)) {
 			if (!CheckCertInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
 				return false;
@@ -1950,7 +1950,6 @@ bool DisconnectOffer( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
 		COfferFee theFeeObject;
 		theFeeObject.hash =  tx.GetHash();
 		theFeeObject.nHeight = pindex->nHeight;
-		theFeeObject.nFee = 0;
 		//RemoveOfferFee(theFeeObject);
 		InsertOfferFee(pindex, tx.GetHash(), 0);
 		vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
