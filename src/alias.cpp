@@ -1046,7 +1046,7 @@ string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee,
 	{
 		EraseAlias(wtxNew);
 		return _(
-				"Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here. The transaction will be removed once you restart the wallet.");
+				"Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here. The transaction will be removed after you restart the wallet.");
 	}
 	return "";
 }
@@ -1995,11 +1995,7 @@ void UnspendInputs(CWalletTx& wtx) {
 			prev.fAvailableCreditCached = false;
 			prev.WriteToDisk();
 		}
-#ifdef GUI
-		//pwalletMain->vWalletUpdated.push_back(prev.GetHash());
-		pwalletMain->NotifyTransactionChanged(pwalletMain, prev.GetHash(), CT_DELETED);
 
-#endif
 	}
 }
 

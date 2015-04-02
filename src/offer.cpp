@@ -968,7 +968,7 @@ string SendOfferMoneyWithInputTx(CScript scriptPubKey, int64 nValue,
 	{
 		EraseOffer(wtxNew);
 		return _(
-				"Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here. The transaction will be removed once you restart the wallet.");
+				"Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here. The transaction will be removed after you restart the wallet.");
 	}
 	return "";
 }
@@ -1253,15 +1253,15 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							(long unsigned int) nNetFee);
 
 				// make sure we don't attempt to mine an accept & pay in the same block
-				if(pindexBlock->nHeight == pindexBest->nHeight) {
-	                BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
-	                    if (vvchArgs[1] == s.first) {
-	                       return error("CheckInputs() : will not mine offerpay %s because it clashes with %s",
-	                               tx.GetHash().GetHex().c_str(),
-	                               s.second.GetHex().c_str());
-	                    }
-	                }
-	            }
+				//if(pindexBlock->nHeight == pindexBest->nHeight) {
+	   //             BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
+	   //                 if (vvchArgs[1] == s.first) {
+	   //                    return error("CheckInputs() : will not mine offerpay %s because it clashes with %s",
+	   //                            tx.GetHash().GetHex().c_str(),
+	   //                            s.second.GetHex().c_str());
+	   //                 }
+	   //             }
+	   //         }
 			}
 
 			break;
