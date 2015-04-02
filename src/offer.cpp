@@ -63,8 +63,8 @@ int64 GetOfferNetworkFee(int seed, int nHeight) {
     int64 nRes = 88 * COIN;
     int64 nDif = 77 * COIN;
     if(seed==2) {
-    	nRes = 474;
-    	nDif = 360;
+    	nRes = 474 * COIN;
+    	nDif = 360 * COIN;
     }
     int nTargetHeight = 130080;
     if(nHeight>nTargetHeight) return nRes - nDif;
@@ -198,19 +198,6 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
     
     {
 	TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
-
-	uint64 startHeight = pindexRescan->nHeight;
-	while(pindex->pnext != NULL) pindex = pindex->pnext;
-	uint64 endHeight = pindex->nHeight;
-
-	BOOST_FOREACH(COfferFee &oFee, lstOfferFees) {
-		if (oFee.nHeight >= startHeight && oFee.nHeight < endHeight) {
-			oFee.nFee = 0;
-			break;
-		}
-	}
-
-    CBlockIndex* pindex = pindexRescan;
     while (pindex) {  
 
         int nHeight = pindex->nHeight;
@@ -227,7 +214,7 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
             int op, nOut;
 
             // decode the offer op, params, height
-            bool o = DecodeOfferTx(tx, op, nOut, vvchArgs, nHeight);
+            bool o = DecodeOfferTx(tx, op, nOut, vvchArgs, -1);
             if (!o || !IsOfferOp(op)) continue;
             
             if (op == OP_OFFER_NEW) continue;
@@ -302,6 +289,9 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 			// master index
 			int64 nTheFee = GetOfferNetFee(tx);
 			InsertOfferFee(pindex, tx.GetHash(), nTheFee);
+			vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
+			if (!pofferdb->WriteOfferTxFees(vOfferFees))
+				return error( "ReconstructOfferIndex() : failed to write fees to offer DB");
 
 			printf( "RECONSTRUCT OFFER: op=%s offer=%s title=%s qty=%llu hash=%s height=%d fees=%llu\n",
 					offerFromOp(op).c_str(),
@@ -481,7 +471,7 @@ bool IsConflictedOfferTx(CBlockTreeDB& txdb, const CTransaction& tx,
 		return false;
 	vector<vector<unsigned char> > vvchArgs;
 	int op, nOut, nPrevHeight;
-	if (!DecodeOfferTx(tx, op, nOut, vvchArgs, pindexBest->nHeight))
+	if (!DecodeOfferTx(tx, op, nOut, vvchArgs, -1))
 		return error("IsConflictedOfferTx() : could not decode a syscoin tx");
 
 	switch (op) {
@@ -1028,7 +1018,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		vector<vector<unsigned char> > vvchArgs;
 		int op;
 		int nOut;
-		bool good = DecodeOfferTx(tx, op, nOut, vvchArgs, pindexBlock->nHeight);
+		bool good = DecodeOfferTx(tx, op, nOut, vvchArgs, -1);
 		if (!good)
 			return error("CheckOfferInputs() : could not decode a syscoin tx");
 		int nPrevHeight;
@@ -1144,7 +1134,13 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if ((fBlock || fMiner) && nDepth < 0)
 				return error(
 						"CheckOfferInputs() : offerupdate on an expired offer, or there is a pending transaction on the offer");
-			
+				// check for enough fees
+			nNetFee = GetOfferNetFee(tx);
+			if (nNetFee < GetOfferNetworkFee(2, pindexBlock->nHeight))
+				return error(
+						"CheckOfferInputs() : got tx %s with fee too low %lu",
+						tx.GetHash().GetHex().c_str(),
+						(long unsigned int) nNetFee);		
 			//if (fBlock && !fJustCheck && pindexBlock->nHeight == pindexBest->nHeight) {
 			//	BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
    //                 if (vvchArgs[0] == s.first) {
@@ -1220,7 +1216,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					return error("could not read accept from offer txn");
 
 				// check for enough offer fees with this txn
-				int64 expectedFee = GetOfferNetworkFee(2, pindexBlock->nHeight);
+				int64 expectedFee = GetOfferNetworkFee(3, pindexBlock->nHeight);
 				nNetFee = GetOfferNetFee(tx);
 				if (nNetFee < expectedFee )
 					return error(
@@ -1369,13 +1365,13 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					}
 					
 					// debug
-					printf( "CONNECTED OFFER: op=%s offer=%s title=%s qty=%llu hash=%s height=%d fees=%llu\n",
+					printf( "CONNECTED OFFER: op=%s offer=%s title=%s qty=%llu hash=%s height=%d fees=%1f\n",
 							offerFromOp(op).c_str(),
 							stringFromVch(vvchArgs[0]).c_str(),
 							stringFromVch(theOffer.sTitle).c_str(),
 							theOffer.GetRemQty(),
 							tx.GetHash().ToString().c_str(), 
-							nHeight, nTheFee / COIN);
+							nHeight, (double)nTheFee / COIN);
 					}
 				}
 			}
@@ -1742,7 +1738,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 	theOffer.accepts.clear();
 
 	// calculate network fees
-	int64 nNetFee = GetOfferNetworkFee(1, pindexBest->nHeight);
+	int64 nNetFee = GetOfferNetworkFee(2, pindexBest->nHeight);
 	// Round up to CENT
 	nNetFee += CENT - 1;
 	nNetFee = (nNetFee / CENT) * CENT;		
@@ -1818,7 +1814,7 @@ Value offerrenew(const Array& params, bool fHelp) {
 	theOffer.accepts.clear();
 
 	// calculate network fees
-	int64 nNetFee = GetOfferNetworkFee(1, pindexBest->nHeight);
+	int64 nNetFee = GetOfferNetworkFee(2, pindexBest->nHeight);
 	// Round up to CENT
 	nNetFee += CENT - 1;
 	nNetFee = (nNetFee / CENT) * CENT;
@@ -2013,7 +2009,7 @@ Value offerpay(const Array& params, bool fHelp) {
     set<pair<const CWalletTx*,unsigned int> > setCoins;
     int64 nValueIn = 0;
     uint64 nTotalValue = ( theOfferAccept.nPrice * theOfferAccept.nQty );
-    int64 nNetFee = GetOfferNetworkFee(2, pindexBest->nHeight);
+    int64 nNetFee = GetOfferNetworkFee(3, pindexBest->nHeight);
 	// Round up to CENT
 	nNetFee += CENT - 1;
 	nNetFee = (nNetFee / CENT) * CENT;
