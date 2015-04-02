@@ -105,7 +105,7 @@ bool EditAliasDialog::saveCurrentRow()
         }
 		newFee = 1;
 		QMessageBox::StandardButton retval;
-		updateFee = GetAliasNetworkFee(1, nBestHeight)/COIN;
+		updateFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE, nBestHeight)/COIN;
 		newFeeStr = strprintf("%"PRI64d, newFee);
 		updateFeeStr = strprintf("%"PRI64d, updateFee);
 		retval = QMessageBox::question(this, tr("Confirm new Alias"),
@@ -161,7 +161,7 @@ bool EditAliasDialog::saveCurrentRow()
     case EditAlias:
         if(mapper->submit())
         {
-			updateFee = GetAliasNetworkFee(2, nBestHeight)/COIN;
+			updateFee = GetAliasNetworkFee(OP_ALIAS_UPDATE, nBestHeight)/COIN;
 			updateFeeStr = strprintf("%"PRI64d, updateFee);
             retval = QMessageBox::question(this, tr("Confirm Alias Update"),
                 tr("Warning: Updating Alias will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish update this Alias?"),
@@ -208,7 +208,7 @@ bool EditAliasDialog::saveCurrentRow()
     case TransferAlias:
         if(mapper->submit())
         {
-			updateFee = GetAliasNetworkFee(2, nBestHeight)/COIN;
+			updateFee = GetAliasNetworkFee(OP_ALIAS_UPDATE, nBestHeight)/COIN;
 			updateFeeStr = strprintf("%"PRI64d, updateFee);
             retval = QMessageBox::question(this, tr("Confirm Alias Transfer"),
                 tr("Warning: Transferring Alias will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish transfer this Alias?"),

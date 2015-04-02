@@ -360,7 +360,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			// verify enough fees with this txn
 			nNetFee = GetAliasNetFee(tx);
-			if (nNetFee < GetAliasNetworkFee(1, pindexBlock->nHeight))
+			if (nNetFee < GetAliasNetworkFee(OP_ALIAS_ACTIVATE, pindexBlock->nHeight))
 				return error(
 						"CheckAliasInputs() : got tx %s with fee too low %lu",
 						tx.GetHash().GetHex().c_str(),
@@ -441,7 +441,13 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if ((fBlock || fMiner) && nDepth < 0)
 				return error(
 						"CheckAliasInputs() : aliasupdate on an expired alias, or there is a pending transaction on the alias");
-
+			// verify enough fees with this txn
+			nNetFee = GetAliasNetFee(tx);
+			if (nNetFee < GetAliasNetworkFee(OP_ALIAS_UPDATE, pindexBlock->nHeight))
+				return error(
+						"CheckAliasInputs() : got tx %s with fee too low %lu",
+						tx.GetHash().GetHex().c_str(),
+						(long unsigned int) nNetFee);
 			// BOOST_FOREACH(const MAPTESTPOOLTYPE &s, mapTestPool) {
 			//     if (s.first == vvchArgs[0]) {
 			//         return error("CheckAliasInputs() : will not mine %s because it clashes with %s",
@@ -720,14 +726,29 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 	return true;
 }
 
-int64 GetAliasNetworkFee(int nType, int nHeight) {
-	int64 nRes = 5172 * COIN;
-	int64 nDif = 3448 * COIN;
+int64 GetAliasNetworkFee(int seed, int nHeight) {
+	int64 nRes = 0;
+	int64 nDif = 0;
+	int64 nFee = 0;
+	if(seed==OP_ALIAS_ACTIVATE)
+	{
+		nRes = 517 * COIN;
+		nDif = 344 * COIN;
+	}
+	else if(seed==OP_ALIAS_UPDATE)
+	{
+		nRes = 5172 * COIN;
+		nDif = 3448 * COIN;
+	}
 	int nTargetHeight = 130080;
 	if (nHeight > nTargetHeight)
-		return nRes - nDif;
+		nFee = nRes - nDif;
 	else
-		return nRes - ((nHeight / nTargetHeight) * nDif);
+		nFee = nRes - ((nHeight / nTargetHeight) * nDif);
+	// Round up to CENT
+	nFee += CENT - 1;
+	nFee = (nFee / CENT) * CENT;
+	return nFee;
 }
 
 // int64 GetAliasNetworkFee(int nType, int nHeight) {
@@ -1443,10 +1464,7 @@ Value aliasactivate(const Array& params, bool fHelp) {
 			throw runtime_error("previous tx used a different random value");
 		}
 
-		int64 nNetFee = GetAliasNetworkFee(1, pindexBest->nHeight);
-		// Round up to CENT
-		nNetFee += CENT - 1;
-		nNetFee = (nNetFee / CENT) * CENT;
+		int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE, pindexBest->nHeight);
 
 		string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
 				nNetFee, wtxIn, wtx, false);
@@ -1521,10 +1539,7 @@ Value aliasupdate(const Array& params, bool fHelp) {
 					wtxInHash.GetHex().c_str());
 			throw runtime_error("this alias is not in your wallet");
 		}
-		int64 nNetFee = GetAliasNetworkFee(2, pindexBest->nHeight);
-		// Round up to CENT
-		nNetFee += CENT - 1;
-		nNetFee = (nNetFee / CENT) * CENT;
+		int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_UPDATE, pindexBest->nHeight);
 
 		CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
 		string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
@@ -2091,8 +2106,8 @@ Value getaliasfees(const Array& params, bool fHelp) {
 	oRes.push_back(Pair("height", nBestHeight ));
 	oRes.push_back(Pair("subsidy", ValueFromAmount(GetAliasFeeSubsidy(nBestHeight) )));
 	oRes.push_back(Pair("new_fee", (double)1.0));
-	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetAliasNetworkFee(1, nBestHeight) )));
-	oRes.push_back(Pair("update_fee", ValueFromAmount(GetAliasNetworkFee(2, nBestHeight) )));
+	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetAliasNetworkFee(OP_ALIAS_ACTIVATE, nBestHeight) )));
+	oRes.push_back(Pair("update_fee", ValueFromAmount(GetAliasNetworkFee(OP_ALIAS_UPDATE, nBestHeight) )));
 	return oRes;
 
 }
@@ -2267,10 +2282,7 @@ Value dataactivate(const Array& params, bool fHelp) {
 				throw runtime_error(
 						"previous tx used a different random value");
 
-			int64 nNetFee = GetAliasNetworkFee(1, pindexBest->nHeight);
-			// Round up to CENT
-			nNetFee += CENT - 1;
-			nNetFee = (nNetFee / CENT) * CENT;
+			int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE, pindexBest->nHeight);
 
 			string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
 					nNetFee, wtxIn, wtx, false, txdata);
@@ -2348,10 +2360,7 @@ Value dataupdate(const Array& params, bool fHelp) {
 			throw runtime_error("this data is not in your wallet");
 		}
 
-		int64 nNetFee = GetAliasNetworkFee(2, pindexBest->nHeight);
-		// Round up to CENT
-		nNetFee += CENT - 1;
-		nNetFee = (nNetFee / CENT) * CENT;
+		int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_UPDATE, pindexBest->nHeight);
 
 		CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
 		string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,

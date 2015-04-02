@@ -60,15 +60,30 @@ bool IsOfferOp(int op) {
 int nStartHeight = 161280;
 
 int64 GetOfferNetworkFee(int seed, int nHeight) {
-    int64 nRes = 88 * COIN;
-    int64 nDif = 77 * COIN;
-    if(seed==2) {
+    int64 nRes = 0;
+    int64 nDif = 0;
+	int64 nFee = 0;
+	if(seed==OP_OFFER_ACTIVATE)
+	{
+		nRes = 88 * COIN;
+		nDif = 77 * COIN;
+	}
+    if(seed==OP_OFFER_UPDATE) {
     	nRes = 474 * COIN;
     	nDif = 360 * COIN;
     }
+	else if(seed==OP_OFFER_PAY)
+	{
+		nRes = 2 * COIN;
+		nDif = 1 * COIN;
+	}
     int nTargetHeight = 130080;
-    if(nHeight>nTargetHeight) return nRes - nDif;
-    else return nRes - ( (nHeight/nTargetHeight) * nDif );
+    if(nHeight>nTargetHeight) nFee = nRes - nDif;
+    else nFee= nRes - ( (nHeight/nTargetHeight) * nDif );
+	// Round up to CENT
+	nFee += CENT - 1;
+	nFee = (nFee / CENT) * CENT;
+	return nFee;
 }
 
 // int64 GetOfferNetworkFee(int seed, int nHeight) {
@@ -1050,7 +1065,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			// check for enough fees
 			nNetFee = GetOfferNetFee(tx);
-			if (nNetFee < GetOfferNetworkFee(1, pindexBlock->nHeight))
+			if (nNetFee < GetOfferNetworkFee(OP_OFFER_ACTIVATE, pindexBlock->nHeight))
 				return error(
 						"CheckOfferInputs() : got tx %s with fee too low %lu",
 						tx.GetHash().GetHex().c_str(),
@@ -1136,7 +1151,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						"CheckOfferInputs() : offerupdate on an expired offer, or there is a pending transaction on the offer");
 				// check for enough fees
 			nNetFee = GetOfferNetFee(tx);
-			if (nNetFee < GetOfferNetworkFee(2, pindexBlock->nHeight))
+			if (nNetFee < GetOfferNetworkFee(OP_OFFER_UPDATE, pindexBlock->nHeight))
 				return error(
 						"CheckOfferInputs() : got tx %s with fee too low %lu",
 						tx.GetHash().GetHex().c_str(),
@@ -1216,7 +1231,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					return error("could not read accept from offer txn");
 
 				// check for enough offer fees with this txn
-				int64 expectedFee = GetOfferNetworkFee(3, pindexBlock->nHeight);
+				int64 expectedFee = GetOfferNetworkFee(OP_OFFER_PAY, pindexBlock->nHeight);
 				nNetFee = GetOfferNetFee(tx);
 				if (nNetFee < expectedFee )
 					return error(
@@ -1440,9 +1455,9 @@ Value getofferfees(const Array& params, bool fHelp) {
 	oRes.push_back(Pair("height", nBestHeight ));
 	oRes.push_back(Pair("subsidy", ValueFromAmount(GetOfferFeeSubsidy(nBestHeight) )));
 	oRes.push_back(Pair("new_fee", (double)1.0));
-	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetOfferNetworkFee(1, nBestHeight) )));
-	oRes.push_back(Pair("update_fee", ValueFromAmount(GetOfferNetworkFee(2, nBestHeight) )));
-	oRes.push_back(Pair("pay_fee", ValueFromAmount(GetOfferNetworkFee(3, nBestHeight) )));
+	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_ACTIVATE, nBestHeight) )));
+	oRes.push_back(Pair("update_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_UPDATE, nBestHeight) )));
+	oRes.push_back(Pair("pay_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_PAY, nBestHeight) )));
 	return oRes;
 
 }
@@ -1611,10 +1626,8 @@ Value offeractivate(const Array& params, bool fHelp) {
 		throw runtime_error("Could not decode offer transaction");
 
 	// calculate network fees
-	int64 nNetFee = GetOfferNetworkFee(1, pindexBest->nHeight);
-	// Round up to CENT
-	nNetFee += CENT - 1;
-	nNetFee = (nNetFee / CENT) * CENT;
+	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_ACTIVATE, pindexBest->nHeight);
+
 	// unserialize offer object from txn, serialize back
 	COffer newOffer;
 	if(!newOffer.UnserializeFromTx(wtxIn))
@@ -1738,10 +1751,8 @@ Value offerupdate(const Array& params, bool fHelp) {
 	theOffer.accepts.clear();
 
 	// calculate network fees
-	int64 nNetFee = GetOfferNetworkFee(2, pindexBest->nHeight);
-	// Round up to CENT
-	nNetFee += CENT - 1;
-	nNetFee = (nNetFee / CENT) * CENT;		
+	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_UPDATE, pindexBest->nHeight);
+	
 	// update offer values
 	theOffer.sCategory = vchCat;
 	theOffer.sTitle = vchTitle;
@@ -1814,10 +1825,8 @@ Value offerrenew(const Array& params, bool fHelp) {
 	theOffer.accepts.clear();
 
 	// calculate network fees
-	int64 nNetFee = GetOfferNetworkFee(2, pindexBest->nHeight);
-	// Round up to CENT
-	nNetFee += CENT - 1;
-	nNetFee = (nNetFee / CENT) * CENT;
+	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_UPDATE, pindexBest->nHeight);
+
 	theOffer.nFee += nNetFee;
 
 	// serialize offer object
@@ -2009,10 +2018,8 @@ Value offerpay(const Array& params, bool fHelp) {
     set<pair<const CWalletTx*,unsigned int> > setCoins;
     int64 nValueIn = 0;
     uint64 nTotalValue = ( theOfferAccept.nPrice * theOfferAccept.nQty );
-    int64 nNetFee = GetOfferNetworkFee(3, pindexBest->nHeight);
-	// Round up to CENT
-	nNetFee += CENT - 1;
-	nNetFee = (nNetFee / CENT) * CENT;
+    int64 nNetFee = GetOfferNetworkFee(OP_OFFER_PAY, pindexBest->nHeight);
+
     if (!pwalletMain->SelectCoins(nTotalValue + nNetFee, setCoins, nValueIn)) 
         throw runtime_error("insufficient funds to pay for offer");
 

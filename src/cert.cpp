@@ -57,18 +57,30 @@ bool IsCertOp(int op) {
 // expiration starts at 87360, increases by 1 per block starting at
 // block 174721 until block 349440
 int64 GetCertNetworkFee(int seed, int nHeight) {
-    int64 nRes = 48 * COIN;
-    int64 nDif = 34 * COIN;
-    if(seed==2) {
+    int64 nRes = 0;
+    int64 nDif = 0;
+	int64 nFee = 0;
+	if(seed==OP_CERTISSUER_ACTIVATE)
+	{
+        nRes = 48 * COIN;
+        nDif = 34 * COIN;
+	}
+    else if(seed==OP_CERTISSUER_UPDATE) 
+	{
         nRes = 175 * COIN;
         nDif = 111 * COIN;
-    } else if(seed==4) {
+    } else if(seed==OP_CERT_TRANSFER) 
+	{
         nRes = 10 * COIN;
         nDif = 8 * COIN;
     }
     int nTargetHeight = 130080;
-    if(nHeight>nTargetHeight) return nRes - nDif;
-    else return nRes - ( (nHeight/nTargetHeight) * nDif );
+    if(nHeight>nTargetHeight) nFee = nRes - nDif;
+    else nFee = nRes - ( (nHeight/nTargetHeight) * nDif );
+	// Round up to CENT
+	nFee += CENT - 1;
+	nFee = (nFee / CENT) * CENT;
+	return nFee;
 }
 
 // int nCStartHeight = 161280;
@@ -1052,7 +1064,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
             // check for enough fees
             nNetFee = GetCertNetFee(tx);
-            if (nNetFee < GetCertNetworkFee(1, pindexBlock->nHeight))
+            if (nNetFee < GetCertNetworkFee(OP_CERTISSUER_ACTIVATE, pindexBlock->nHeight))
                 return error(
                         "CheckCertInputs() : got tx %s with fee too low %lu",
                         tx.GetHash().GetHex().c_str(),
@@ -1138,7 +1150,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                         "CheckCertInputs() : certissuerupdate on an expired certissuer, or there is a pending transaction on the certissuer");
            // check for enough fees
             nNetFee = GetCertNetFee(tx);
-            if (nNetFee < GetCertNetworkFee(2, pindexBlock->nHeight))
+            if (nNetFee < GetCertNetworkFee(OP_CERTISSUER_UPDATE, pindexBlock->nHeight))
                 return error(
                         "CheckCertInputs() : got tx %s with fee too low %lu",
                         tx.GetHash().GetHex().c_str(),
@@ -1219,7 +1231,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     return error("could not read certitem from certissuer txn");
 
                 // check for enough fees
-                int64 expectedFee = GetCertNetworkFee(4, pindexBlock->nHeight);
+                int64 expectedFee = GetCertNetworkFee(OP_CERT_TRANSFER, pindexBlock->nHeight);
                 nNetFee = GetCertNetFee(tx);
                 if (nNetFee < expectedFee )
                     return error(
@@ -1414,9 +1426,9 @@ Value getcertfees(const Array& params, bool fHelp) {
     oRes.push_back(Pair("height", nBestHeight ));
     oRes.push_back(Pair("subsidy", ValueFromAmount(GetCertFeeSubsidy(nBestHeight) )));
 	oRes.push_back(Pair("new_fee", (double)1.0));
-    oRes.push_back(Pair("activate_fee", ValueFromAmount(GetCertNetworkFee(1, nBestHeight) )));
-    oRes.push_back(Pair("cert_fee", ValueFromAmount(GetCertNetworkFee(2, nBestHeight) )));
-    oRes.push_back(Pair("transfer_fee", ValueFromAmount(GetCertNetworkFee(4, nBestHeight) )));
+    oRes.push_back(Pair("activate_fee", ValueFromAmount(GetCertNetworkFee(OP_CERTISSUER_ACTIVATE, nBestHeight) )));
+    oRes.push_back(Pair("cert_fee", ValueFromAmount(GetCertNetworkFee(OP_CERTISSUER_UPDATE, nBestHeight) )));
+    oRes.push_back(Pair("transfer_fee", ValueFromAmount(GetCertNetworkFee(OP_CERT_TRANSFER, nBestHeight) )));
     return oRes;
 
 }
@@ -1566,10 +1578,8 @@ Value certissueractivate(const Array& params, bool fHelp) {
         throw runtime_error("Could not decode certissuer transaction");
 
     // calculate network fees
-    int64 nNetFee = GetCertNetworkFee(1, pindexBest->nHeight);
-	// Round up to CENT
-	nNetFee += CENT - 1;
-	nNetFee = (nNetFee / CENT) * CENT;
+    int64 nNetFee = GetCertNetworkFee(OP_CERTISSUER_ACTIVATE, pindexBest->nHeight);
+
     // unserialize certissuer object from txn, serialize back
     CCertIssuer newCertIssuer;
     if(!newCertIssuer.UnserializeFromTx(wtxIn))
@@ -1686,10 +1696,8 @@ Value certissuerupdate(const Array& params, bool fHelp) {
     theCertIssuer.certs.clear();
 
     // calculate network fees
-    int64 nNetFee = GetCertNetworkFee(2, pindexBest->nHeight);
-	// Round up to CENT
-	nNetFee += CENT - 1;
-	nNetFee = (nNetFee / CENT) * CENT;
+    int64 nNetFee = GetCertNetworkFee(OP_CERTISSUER_UPDATE, pindexBest->nHeight);
+
     // update certissuer values
     theCertIssuer.vchTitle = vchTitle;
     theCertIssuer.vchData = vchData;
@@ -1883,10 +1891,8 @@ Value certtransfer(const Array& params, bool fHelp) {
         "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
     // calculate network fees
-    int64 nNetFee = GetCertNetworkFee(4, pindexBest->nHeight);
-	// Round up to CENT
-	nNetFee += CENT - 1;
-	nNetFee = (nNetFee / CENT) * CENT;
+    int64 nNetFee = GetCertNetworkFee(OP_CERT_TRANSFER, pindexBest->nHeight);
+
     theCertItem.nFee += nNetFee;
     theCertIssuer.certs.clear();
     theCertIssuer.PutCertItem(theCertItem);
