@@ -1944,7 +1944,11 @@ Value offeraccept(const Array& params, bool fHelp) {
 	string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
 			false, bdata);
     if (strError != "")
+	{
+		EraseOffer(wtx);
+		strError = strError + " The transaction will be removed after you restart your wallet.";
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
+	}
 
 	mapMyOfferAccepts[vchAcceptRand] = wtx.GetHash();
 
