@@ -1201,7 +1201,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         case OP_CERT_TRANSFER:
 
             // validate conditions
-            if ( ( !found || (prevOp != OP_CERT_NEW && prevOP != OP_CERT_TRANSFER) ) && !fJustCheck )
+            if ( ( !found || (prevOp != OP_CERT_NEW && prevOp != OP_CERT_TRANSFER) ) && !fJustCheck )
                 return error("certtransfer previous op %s is invalid", certissuerFromOp(prevOp).c_str());
 
             if (vvchArgs[0].size() > 20)
