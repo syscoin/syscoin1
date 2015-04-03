@@ -69,7 +69,7 @@ int64 GetOfferNetworkFee(opcodetype seed) {
     else if(seed==OP_OFFER_UPDATE) {
     	nFee = 150 * COIN;
     }
-	else if(seed==OP_OFFER_PAY||seed==OP_OFFER_ACCEPT)
+	else if(seed==OP_OFFER_PAY)
 	{
 		nFee = 1 * COIN;
 	}
@@ -1194,14 +1194,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				if(!theOffer.GetAcceptByHash(vchAcceptRand, theOfferAccept))
 					return error("could not read accept from offer txn");
 	   		}
-			// check for enough fees
-			nNetFee = GetOfferNetFee(tx);
-			if (nNetFee < GetOfferNetworkFee(OP_OFFER_ACCEPT))
-				return error(
-						"CheckOfferInputs() : OP_OFFER_ACCEPT got tx %s with fee too low %lu",
-						tx.GetHash().GetHex().c_str(),
-						(long unsigned int) nNetFee);
-
 			break;
 
 		case OP_OFFER_PAY:
@@ -1476,7 +1468,6 @@ Value getofferfees(const Array& params, bool fHelp) {
 	oRes.push_back(Pair("new_fee", (double)1.0));
 	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_ACTIVATE) )));
 	oRes.push_back(Pair("update_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_UPDATE) )));
-	oRes.push_back(Pair("accept_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_ACCEPT) )));
 	oRes.push_back(Pair("pay_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_PAY) )));
 	return oRes;
 
@@ -1942,7 +1933,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 
 	if(theOffer.GetRemQty() < nQty)
 		throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
-	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_ACCEPT);
+	int64 nNetFee = 0;
 	// create accept object
 	COfferAccept txAccept;
 	txAccept.vchRand = vchAcceptRand;
