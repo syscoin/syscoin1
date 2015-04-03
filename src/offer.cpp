@@ -1920,11 +1920,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 	COffer theOffer;
 	if(!theOffer.UnserializeFromTx(tx))
 		throw runtime_error("could not unserialize offer from txn");
-	// make sure offer is in wallet
-	uint256 wtxInHash = tx.GetHash();
-	if (!pwalletMain->mapWallet.count(wtxInHash)) 
-		throw runtime_error("this offer is not in your wallet");
-	CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
+	
 	// get the offer id from DB
 	vector<COffer> vtxPos;
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos))
@@ -1933,21 +1929,20 @@ Value offeraccept(const Array& params, bool fHelp) {
 
 	if(theOffer.GetRemQty() < nQty)
 		throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
-	int64 nNetFee = 0;
 	// create accept object
 	COfferAccept txAccept;
 	txAccept.vchRand = vchAcceptRand;
 	txAccept.nQty = nQty;
 	txAccept.nPrice = theOffer.nPrice;
-	txAccept.nFee = nNetFee;
+	txAccept.nFee = 0;
 	theOffer.accepts.clear();
 	theOffer.PutOfferAccept(txAccept);
 
 	// serialize offer object
 	string bdata = theOffer.SerializeToString();
-	
-    string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
-            nNetFee, wtxIn, wtx, false, bdata);
+
+	string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
+			false, bdata);
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
@@ -2043,7 +2038,8 @@ Value offerpay(const Array& params, bool fHelp) {
     theOfferAccept.vchRand = vchRand;
     theOfferAccept.txPayId = wtxPay.GetHash();
     theOfferAccept.vchMessage = vchMessage;
-    theOfferAccept.nFee = nNetFee;
+	theOfferAccept.nFee = 0;
+    theOffer.nFee = nNetFee;
     theOffer.accepts.clear();
     theOffer.PutOfferAccept(theOfferAccept);
 
