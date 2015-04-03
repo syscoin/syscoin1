@@ -665,119 +665,115 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
     vector<vector<unsigned char> > vvch;
     int op;
     int nOut;
+	string err = "";
+  
+    // this is a  misnomer - this method decodes all Syscoin transactions
+    bool good = DecodeAliasTx(*this, op, nOut, vvch, -1);
+    if(!good) return true;
 
-    bool ret[2];
-    for (int iter = 0; iter < 2; iter++) {
-        ret[iter] = true;
-
-        // this is a  misnomer - this method decodes all Syscoin transactions
-        bool good = DecodeAliasTx(*this, op, nOut, vvch, iter == 0 ? 0 : -1);
-        if(!good) continue;
-
-        // alias
-        if(IsAliasOp(op)) {
-	        if (vvch[0].size() > MAX_NAME_LENGTH) {
-	            ret[iter] = error("alias transaction with alias too long");
-	            continue;
-	        }
-	        switch (op) {
-	            case OP_ALIAS_NEW:
-	                if (vvch[0].size() != 20)
-	                    ret[iter] = error("aliasnew tx with incorrect hash length");
-	                break;
-	            case OP_ALIAS_ACTIVATE:
-	                if (vvch[1].size() > 20)
-	                    ret[iter] = error("aliasactivate tx with rand too big");
-	                if (vvch[2].size() > MAX_VALUE_LENGTH)
-	                    ret[iter] = error("aliasactivate tx with value too long");
-	                break;
-	            case OP_ALIAS_UPDATE:
-	                if (vvch[1].size() > MAX_VALUE_LENGTH)
-	                    ret[iter] = error("aliasupdate tx with value too long");
-	                break;
-	            default:
-	                ret[iter] = error("alias transaction has unknown op");
-	        }
+    // alias
+    if(IsAliasOp(op)) {
+        if (vvch[0].size() > MAX_NAME_LENGTH) {
+            err = error("alias transaction with alias too long");
         }
-        else if(IsOfferOp(op)) {
-	        if (vvch[0].size() > MAX_NAME_LENGTH) {
-	            ret[iter] = error("offer transaction with offer title too long");
-	            continue;
-	        }
-	        switch (op) {
-	            case OP_OFFER_NEW:
-	                if (vvch[0].size() != 20)
-	                    ret[iter] = error("offernew tx with incorrect hash length");
-	                break;
-	            case OP_OFFER_ACTIVATE:
-	                if (vvch[1].size() > 20)
-	                    ret[iter] = error("offeractivate tx with rand too big");
-	                if (vvch[2].size() > MAX_VALUE_LENGTH)
-	                    ret[iter] = error("offeractivate tx with value too long");
-	                break;
-	            case OP_OFFER_UPDATE:
-                    if (vvch[1].size() > MAX_VALUE_LENGTH)
-	                    ret[iter] = error("offerupdate tx with value too long");
-	                break;
-	            case OP_OFFER_ACCEPT: 
-	            	if (vvch[0].size() > 20)
-	                    ret[iter] = error("offeraccept tx with offer rand too big");
-	                if (vvch[2].size() > 20)
-	                    ret[iter] = error("offeraccept tx with invalid hash length");
-	                if (vvch[1].size() > 20)
-	                    ret[iter] = error("offeraccept tx with alias rand too big");
-	                break;
-	            case OP_OFFER_PAY:
-	            	if (vvch[0].size() > 20)
-	                    ret[iter] = error("offerpay tx with offer rand too big");
-	                if (vvch[1].size() > 20)
-	                    ret[iter] = error("offeraccept tx with alias rand too big");
-	                break;
-	            default:
-	                ret[iter] = error("offer transaction has unknown op");
-	        }
+        switch (op) {
+            case OP_ALIAS_NEW:
+                if (vvch[0].size() != 20)
+                    err = error("aliasnew tx with incorrect hash length");
+                break;
+            case OP_ALIAS_ACTIVATE:
+                if (vvch[1].size() > 20)
+                    err = error("aliasactivate tx with rand too big");
+                if (vvch[2].size() > MAX_VALUE_LENGTH)
+                    err = error("aliasactivate tx with value too long");
+                break;
+            case OP_ALIAS_UPDATE:
+                if (vvch[1].size() > MAX_VALUE_LENGTH)
+                    err = error("aliasupdate tx with value too long");
+                break;
+            default:
+                err = error("alias transaction has unknown op");
         }
-        else if(IsCertOp(op)) {
-	        if (vvch[0].size() > MAX_NAME_LENGTH) {
-	            ret[iter] = error("cert transaction with cert title too long");
-	            continue;
-	        }
-	        switch (op) {
-	            case OP_CERTISSUER_NEW:
-	                if (vvch[0].size() != 20)
-	                    ret[iter] = error("cert tx with incorrect hash length");
-	                break;
-	            case OP_CERTISSUER_ACTIVATE:
-	                if (vvch[1].size() > 20)
-	                    ret[iter] = error("cert tx with rand too big");
-	                if (vvch[2].size() > MAX_VALUE_LENGTH)
-	                    ret[iter] = error("cert tx with value too long");
-	                break;
-	            case OP_CERTISSUER_UPDATE:
-	                if (vvch[1].size() > MAX_VALUE_LENGTH)
-	                    ret[iter] = error("cert tx with value too long");
-	                break;
-	            case OP_CERT_NEW: 
-	            	if (vvch[0].size() > 20)
-	                    ret[iter] = error("cert tx with cert rand too big");
-	                if (vvch[2].size() > 20)
-	                    ret[iter] = error("cert tx with invalid hash length");
-	                if (vvch[1].size() > 20)
-	                    ret[iter] = error("cert tx with cert rand too big");
-	                break;
-	            case OP_CERT_TRANSFER:
-	            	if (vvch[0].size() > 20)
-	                    ret[iter] = error("cert tx with offer rand too big");
-	                if (vvch[1].size() > 20)
-	                    ret[iter] = error("cert tx with alias rand too big");
-	                break;
-	            default:
-	                ret[iter] = error("cert transaction has unknown op");
-	        }
-        }        
     }
-    // TODO CB this is an artifact from namecoin. I need to understand and remove if not necessary
-    return ret[0] || ret[1];
+    else if(IsOfferOp(op)) {
+        if (vvch[0].size() > MAX_NAME_LENGTH) {
+            err = error("offer transaction with offer title too long");
+        }
+        switch (op) {
+            case OP_OFFER_NEW:
+                if (vvch[0].size() != 20)
+                    err = error("offernew tx with incorrect hash length");
+                break;
+            case OP_OFFER_ACTIVATE:
+                if (vvch[1].size() > 20)
+                    err = error("offeractivate tx with rand too big");
+                if (vvch[2].size() > MAX_VALUE_LENGTH)
+                    err= error("offeractivate tx with value too long");
+                break;
+            case OP_OFFER_UPDATE:
+                if (vvch[1].size() > MAX_VALUE_LENGTH)
+                    err = error("offerupdate tx with value too long");
+                break;
+            case OP_OFFER_ACCEPT: 
+            	if (vvch[0].size() > 20)
+                    err = error("offeraccept tx with offer rand too big");
+                if (vvch[2].size() > 20)
+                    err = error("offeraccept tx with invalid hash length");
+                if (vvch[1].size() > 20)
+                    err = error("offeraccept tx with alias rand too big");
+                break;
+            case OP_OFFER_PAY:
+            	if (vvch[0].size() > 20)
+                    err = error("offerpay tx with offer rand too big");
+                if (vvch[1].size() > 20)
+                    err = error("offeraccept tx with alias rand too big");
+                break;
+            default:
+                err = error("offer transaction has unknown op");
+        }
+    }
+    else if(IsCertOp(op)) {
+        if (vvch[0].size() > MAX_NAME_LENGTH) {
+            err = error("cert transaction with cert title too long");
+        }
+        switch (op) {
+            case OP_CERTISSUER_NEW:
+                if (vvch[0].size() != 20)
+                    err = error("cert tx with incorrect hash length");
+                break;
+            case OP_CERTISSUER_ACTIVATE:
+                if (vvch[1].size() > 20)
+                    err = error("cert tx with rand too big");
+                if (vvch[2].size() > MAX_VALUE_LENGTH)
+                    err = error("cert tx with value too long");
+                break;
+            case OP_CERTISSUER_UPDATE:
+                if (vvch[1].size() > MAX_VALUE_LENGTH)
+                    err = error("cert tx with value too long");
+                break;
+            case OP_CERT_NEW: 
+            	if (vvch[0].size() > 20)
+                    err = error("cert tx with cert rand too big");
+                if (vvch[2].size() > 20)
+                    err = error("cert tx with invalid hash length");
+                if (vvch[1].size() > 20)
+                    err = error("cert tx with cert rand too big");
+                break;
+            case OP_CERT_TRANSFER:
+            	if (vvch[0].size() > 20)
+                    err = error("cert tx with offer rand too big");
+                if (vvch[1].size() > 20)
+                    err = error("cert tx with alias rand too big");
+                break;
+            default:
+                err = error("cert transaction has unknown op");
+        }
+	}           
+    if(err != "")
+	{
+		return state.DoS(10,error(err.c_str()));
+	}
+    return true;
 }
 
 int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree,
@@ -1542,7 +1538,7 @@ void static InvalidBlockFound(CBlockIndex *pindex) {
 }
 
 bool LoadSyscoinFees() {
-	LOCK(cs_main);
+	TRY_LOCK(cs_main, cs_trymain);
     // read alias and offer indexes
 
     // read alias network fees
@@ -1882,11 +1878,11 @@ bool DisconnectAlias( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
 		theFeeObject.hash =  tx.GetHash();
 		theFeeObject.nHeight = pindex->nHeight;
 		theFeeObject.nValue = 0;
-		//RemoveAliasFee(theFeeObject);
-		InsertAliasFee(pindex, tx.GetHash(), 0);
-		vector<CAliasFee> vAliasFees(lstAliasFees.begin(), lstAliasFees.end());
-		if (!paliasdb->WriteAliasTxFees(vAliasFees))
-			return error( "DisconnectBlock() : failed to write fees to alias DB");
+		RemoveAliasFee(theFeeObject);
+		//InsertAliasFee(pindex, tx.GetHash(), 0);
+		//vector<CAliasFee> vAliasFees(lstAliasFees.begin(), lstAliasFees.end());
+		//if (!paliasdb->WriteAliasTxFees(vAliasFees))
+			//return error( "DisconnectBlock() : failed to write fees to alias DB");
 		
 
 	}
@@ -1951,11 +1947,11 @@ bool DisconnectOffer( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
 		theFeeObject.hash =  tx.GetHash();
 		theFeeObject.nHeight = pindex->nHeight;
 		theFeeObject.nFee = 0;
-		//RemoveOfferFee(theFeeObject);
-		InsertOfferFee(pindex, tx.GetHash(), 0);
-		vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
-		if (!pofferdb->WriteOfferTxFees(vOfferFees))
-			return error( "DisconnectBlock() : failed to write fees to offer DB");
+		RemoveOfferFee(theFeeObject);
+		//InsertOfferFee(pindex, tx.GetHash(), 0);
+		//vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
+		//if (!pofferdb->WriteOfferTxFees(vOfferFees))
+			//return error( "DisconnectBlock() : failed to write fees to offer DB");
 		
 	}
 
@@ -2019,11 +2015,11 @@ bool DisconnectCertificate( CBlockIndex *pindex, const CTransaction &tx, int op,
 		theFeeObject.hash =  tx.GetHash();
 		theFeeObject.nHeight = pindex->nHeight;
 		theFeeObject.nFee = 0;
-		//RemoveCertFee(theFeeObject);
-		InsertCertFee(pindex, tx.GetHash(), 0);
-		vector<CCertFee> vCertIssuerFees(lstCertIssuerFees.begin(), lstCertIssuerFees.end());
-		if (!pcertdb->WriteCertFees(vCertIssuerFees))
-			return error( "DisconnectBlock() : failed to write fees to certissuer DB");
+		RemoveCertFee(theFeeObject);
+		//InsertCertFee(pindex, tx.GetHash(), 0);
+		//vector<CCertFee> vCertIssuerFees(lstCertIssuerFees.begin(), lstCertIssuerFees.end());
+		//if (!pcertdb->WriteCertFees(vCertIssuerFees))
+			//return error( "DisconnectBlock() : failed to write fees to certissuer DB");
 		
 	}
 
@@ -2305,10 +2301,19 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 		if (nFees >= 0 && vtx[0].GetValueOut()
 				> bValue
                 && pindex->nHeight > 1) // blocks 0 (genesis) and 1 (premine) have no max restrictions
-			return state.DoS(100,
-					error( "ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",
-							pindex->nHeight, vtx[0].GetValueOut(),
-                            bValue));
+		{
+			// recalculate the syscoin fee structures which the subsidy calculation is based off of ( vtx[0].GetValueOut() )
+			printf("VerifyDB(): Coinbase calculation mismatch with Syscoin subsidy fees, resetting fees and trying again...");
+			VerifyDB(4, 288);
+			bValue = GetBlockValue(pindex->nHeight, nFees, 0);
+			if(vtx[0].GetValueOut() > bValue)
+			{
+				return state.DoS(100,
+							error( "ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",
+									pindex->nHeight, vtx[0].GetValueOut(),
+									bValue));
+			}
+		}
     if(nFees < 0) {
         std::string strHash = pindex->GetBlockHash().ToString();
         uint256 hash(strHash);

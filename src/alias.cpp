@@ -360,7 +360,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			// verify enough fees with this txn
 			nNetFee = GetAliasNetFee(tx);
-			if (nNetFee < GetAliasNetworkFee(OP_ALIAS_ACTIVATE, pindexBlock->nHeight))
+			if (nNetFee < GetAliasNetworkFee(OP_ALIAS_ACTIVATE))
 				return error(
 						"CheckAliasInputs() : got tx %s with fee too low %lu",
 						tx.GetHash().GetHex().c_str(),
@@ -443,7 +443,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						"CheckAliasInputs() : aliasupdate on an expired alias, or there is a pending transaction on the alias");
 			// verify enough fees with this txn
 			nNetFee = GetAliasNetFee(tx);
-			if (nNetFee < GetAliasNetworkFee(OP_ALIAS_UPDATE, pindexBlock->nHeight))
+			if (nNetFee < GetAliasNetworkFee(OP_ALIAS_UPDATE))
 				return error(
 						"CheckAliasInputs() : OP_ALIAS_UPDATE got tx %s with fee too low %lu",
 						tx.GetHash().GetHex().c_str(),
@@ -506,20 +506,23 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 					// write alias fees to db
 					int64 nTheFee = GetAliasNetFee(tx);
-					InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
-					if (nTheFee != 0)
-						printf( "ALIAS FEES: Added %lf in fees to track for regeneration.\n",
-								(double) nTheFee / COIN);
+					if(nTheFee > 0)
+					{
+						InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
+						if (nTheFee != 0)
+							printf( "ALIAS FEES: Added %lf in fees to track for regeneration.\n",
+									(double) nTheFee / COIN);
 
-					vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
-							lstAliasFees.end());
-					if (!paliasdb->WriteAliasTxFees(vAliasFees))
-						return error( "CheckOfferInputs() : failed to write fees to alias DB");
-					
-						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi =
-								mapAliasesPending.find(vvchArgs[0]);
-						if (mi != mapAliasesPending.end())
-							mi->second.erase(tx.GetHash());
+						vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
+								lstAliasFees.end());
+						if (!paliasdb->WriteAliasTxFees(vAliasFees))
+							return error( "CheckOfferInputs() : failed to write fees to alias DB");
+						
+							std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi =
+									mapAliasesPending.find(vvchArgs[0]);
+							if (mi != mapAliasesPending.end())
+								mi->second.erase(tx.GetHash());
+						}
 					}
 
 					printf(
@@ -703,14 +706,15 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 
 				// get fees for txn and add them to regenerate list
 				int64 nTheFee = GetAliasNetFee(tx);
-				InsertAliasFee(pindex, tx.GetHash(), nTheFee);
-				vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
-					lstAliasFees.end());
-				if (!paliasdb->WriteAliasTxFees(vAliasFees))
-					return error(
-							"ReconstructOfferIndex() : failed to write fees to alias DB");
-
-
+				if(nTheFee > 0)
+				{
+					InsertAliasFee(pindex, tx.GetHash(), nTheFee);
+					vector<CAliasFee> vAliasFees(lstAliasFees.begin(),
+						lstAliasFees.end());
+					if (!paliasdb->WriteAliasTxFees(vAliasFees))
+						return error(
+								"ReconstructOfferIndex() : failed to write fees to alias DB");
+				}
 				printf(
 						"RECONSTRUCT ALIAS: op=%s alias=%s value=%s hash=%s height=%d fees=%llu\n",
 						aliasFromOp(op).c_str(), stringFromVch(vchName).c_str(),
@@ -726,25 +730,16 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 	return true;
 }
 
-int64 GetAliasNetworkFee(opcodetype seed, int nHeight) {
-	int64 nRes = 0;
-	int64 nDif = 0;
+int64 GetAliasNetworkFee(opcodetype seed) {
 	int64 nFee = 0;
 	if(seed==OP_ALIAS_ACTIVATE)
 	{
-		nRes = 517 * COIN;
-		nDif = 344 * COIN;
+		nFee = 10 * COIN;
 	}
 	else if(seed==OP_ALIAS_UPDATE)
 	{
-		nRes = 5172 * COIN;
-		nDif = 3448 * COIN;
+		nFee = 100 * COIN;
 	}
-	int nTargetHeight = 130080;
-	if (nHeight > nTargetHeight)
-		nFee = nRes - nDif;
-	else
-		nFee = nRes - ((nHeight / nTargetHeight) * nDif);
 	// Round up to CENT
 	nFee += CENT - 1;
 	nFee = (nFee / CENT) * CENT;
@@ -1046,7 +1041,7 @@ string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee,
 	{
 		EraseAlias(wtxNew);
 		return _(
-				"Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here. The transaction will be removed after you restart the wallet.");
+				"Error: The transaction was rejected. The transaction will be removed after you restart your wallet.");
 	}
 	return "";
 }
@@ -1477,7 +1472,7 @@ Value aliasactivate(const Array& params, bool fHelp) {
 			throw runtime_error("previous tx used a different random value");
 		}
 
-		int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE, pindexBest->nHeight);
+		int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE);
 
 		string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
 				nNetFee, wtxIn, wtx, false);
@@ -1552,7 +1547,7 @@ Value aliasupdate(const Array& params, bool fHelp) {
 					wtxInHash.GetHex().c_str());
 			throw runtime_error("this alias is not in your wallet");
 		}
-		int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_UPDATE, pindexBest->nHeight);
+		int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_UPDATE);
 
 		CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
 		string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
@@ -2115,8 +2110,8 @@ Value getaliasfees(const Array& params, bool fHelp) {
 	oRes.push_back(Pair("height", nBestHeight ));
 	oRes.push_back(Pair("subsidy", ValueFromAmount(GetAliasFeeSubsidy(nBestHeight) )));
 	oRes.push_back(Pair("new_fee", (double)1.0));
-	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetAliasNetworkFee(OP_ALIAS_ACTIVATE, nBestHeight) )));
-	oRes.push_back(Pair("update_fee", ValueFromAmount(GetAliasNetworkFee(OP_ALIAS_UPDATE, nBestHeight) )));
+	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetAliasNetworkFee(OP_ALIAS_ACTIVATE) )));
+	oRes.push_back(Pair("update_fee", ValueFromAmount(GetAliasNetworkFee(OP_ALIAS_UPDATE) )));
 	return oRes;
 
 }
@@ -2291,7 +2286,7 @@ Value dataactivate(const Array& params, bool fHelp) {
 				throw runtime_error(
 						"previous tx used a different random value");
 
-			int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE, pindexBest->nHeight);
+			int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE);
 
 			string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
 					nNetFee, wtxIn, wtx, false, txdata);
@@ -2369,7 +2364,7 @@ Value dataupdate(const Array& params, bool fHelp) {
 			throw runtime_error("this data is not in your wallet");
 		}
 
-		int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_UPDATE, pindexBest->nHeight);
+		int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_UPDATE);
 
 		CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
 		string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
