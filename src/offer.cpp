@@ -69,10 +69,6 @@ int64 GetOfferNetworkFee(opcodetype seed) {
     else if(seed==OP_OFFER_UPDATE) {
     	nFee = 150 * COIN;
     }
-	else if(seed==OP_OFFER_PAY)
-	{
-		nFee = 1 * COIN;
-	}
 	// Round up to CENT
 	nFee += CENT - 1;
 	nFee = (nFee / CENT) * CENT;
@@ -1237,15 +1233,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				if(!theOffer.GetAcceptByHash(vchOfferAccept, theOfferAccept))
 					return error("could not read accept from offer txn");
 
-				// check for enough offer fees with this txn
-				int64 expectedFee = GetOfferNetworkFee(OP_OFFER_PAY);
-				nNetFee = GetOfferNetFee(tx);
-				if (nNetFee < expectedFee )
-					return error(
-							"CheckOfferInputs() : got offerpay tx %s with fee too low %lu",
-							tx.GetHash().GetHex().c_str(),
-							(long unsigned int) nNetFee);
-
+				
 				// make sure we don't attempt to mine an accept & pay in the same block
 				//if(pindexBlock->nHeight == pindexBest->nHeight) {
 	   //             BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
@@ -1468,7 +1456,6 @@ Value getofferfees(const Array& params, bool fHelp) {
 	oRes.push_back(Pair("new_fee", (double)1.0));
 	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_ACTIVATE) )));
 	oRes.push_back(Pair("update_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_UPDATE) )));
-	oRes.push_back(Pair("pay_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_PAY) )));
 	return oRes;
 
 }
@@ -2034,15 +2021,15 @@ Value offerpay(const Array& params, bool fHelp) {
     set<pair<const CWalletTx*,unsigned int> > setCoins;
     int64 nValueIn = 0;
     uint64 nTotalValue = ( theOfferAccept.nPrice * theOfferAccept.nQty );
-    int64 nNetFee = GetOfferNetworkFee(OP_OFFER_PAY);
+    int64 nNetFee = 0;
 
-    if (!pwalletMain->SelectCoins(nTotalValue + nNetFee, setCoins, nValueIn)) 
+    if (!pwalletMain->SelectCoins(nTotalValue, setCoins, nValueIn)) 
         throw runtime_error("insufficient funds to pay for offer");
 
     theOfferAccept.vchRand = vchRand;
     theOfferAccept.txPayId = wtxPay.GetHash();
     theOfferAccept.vchMessage = vchMessage;
-	theOfferAccept.nFee = 0;
+	theOfferAccept.nFee = nNetFee;
     theOffer.nFee = nNetFee;
     theOffer.accepts.clear();
     theOffer.PutOfferAccept(theOfferAccept);
