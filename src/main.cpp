@@ -2303,8 +2303,8 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
                 && pindex->nHeight > 1) // blocks 0 (genesis) and 1 (premine) have no max restrictions
 		{
 			// recalculate the syscoin fee structures which the subsidy calculation is based off of ( vtx[0].GetValueOut() )
-			printf("VerifyDB(): Coinbase calculation mismatch with Syscoin subsidy fees, resetting fees and trying again...");
-			VerifyDB(4, 288);
+			printf("LoadSyscoinFees(): Coinbase calculation mismatch with Syscoin subsidy fees, resetting fees and trying again...");
+			LoadSyscoinFees();
 			bValue = GetBlockValue(pindex->nHeight, nFees, 0);
 			if(vtx[0].GetValueOut() > bValue)
 			{

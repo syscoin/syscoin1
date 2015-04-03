@@ -1207,7 +1207,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		case OP_OFFER_PAY:
 
 			// validate conditions
-			if ( ( !found || prevOp != OP_OFFER_ACCEPT ) && !fJustCheck )
+			if ( ( !found || (prevOp != OP_OFFER_ACCEPT && prevOp != OP_OFFER_PAY) ) && !fJustCheck )
 				return error("offerpay previous op %s is invalid", offerFromOp(prevOp).c_str());
 
 			if (vvchArgs[0].size() > 20)
