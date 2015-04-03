@@ -1071,16 +1071,8 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
         case OP_CERTISSUER_ACTIVATE:
 
-            // check for enough fees
-            nNetFee = GetCertNetFee(tx);
-            if (nNetFee < GetCertNetworkFee(OP_CERTISSUER_ACTIVATE))
-                return error(
-                        "CheckCertInputs() : got tx %s with fee too low %lu",
-                        tx.GetHash().GetHex().c_str(),
-                        (long unsigned int) nNetFee);
-
             // validate conditions
-            if ((!found || prevOp != OP_CERTISSUER_NEW) && !fJustCheck)
+            if ((!found || (prevOp != OP_CERTISSUER_NEW && prevOp != OP_CERTISSUER_ACTIVATE)) && !fJustCheck)
                 return error("CheckCertInputs() : certissueractivate tx without previous certissuernew tx");
 
             if (vvchArgs[1].size() > 20)
@@ -1115,7 +1107,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                         GetCertExpirationDepth(pindexBlock->nHeight));
                 if (nDepth == -1)
                     return error(
-                            "CheckCertInputs() : certissueractivate cannot be mined if certissuernew is not already in chain and unexpired");
+                            "CheckCertInputs() : certissueractivate cannot be mined if certissuernew/certissueractivate is not already in chain and unexpired");
 
                 nPrevHeight = GetCertHeight(vchCertIssuer);
                 if (!fBlock && nPrevHeight >= 0
@@ -1123,6 +1115,13 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                                 < GetCertExpirationDepth(pindexBlock->nHeight))
                     return error(
                             "CheckCertInputs() : certissueractivate on an unexpired certissuer.");
+				// check for enough fees
+				nNetFee = GetCertNetFee(tx);
+				if (nNetFee < GetCertNetworkFee(OP_CERTISSUER_ACTIVATE))
+					return error(
+							"CheckCertInputs() : got tx %s with fee too low %lu",
+							tx.GetHash().GetHex().c_str(),
+							(long unsigned int) nNetFee);
 
                 //if(pindexBlock->nHeight == pindexBest->nHeight) {
                 //    BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
@@ -1202,7 +1201,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         case OP_CERT_TRANSFER:
 
             // validate conditions
-            if ( ( !found || prevOp != OP_CERT_NEW ) && !fJustCheck )
+            if ( ( !found || (prevOp != OP_CERT_NEW && prevOP != OP_CERT_TRANSFER) ) && !fJustCheck )
                 return error("certtransfer previous op %s is invalid", certissuerFromOp(prevOp).c_str());
 
             if (vvchArgs[0].size() > 20)
@@ -1226,7 +1225,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                         prevCoins, pindexBlock->nHeight);
                 if (nDepth == -1)
                     return error(
-                            "CheckCertInputs() : certtransfer cannot be mined if certitem is not already in chain");
+                            "CheckCertInputs() : certtransfer cannot be mined if certitem/certtransfer is not already in chain");
 
                 // check certissuer certitem hash against prev txn
                 if (uint160(vvchPrevArgs[2]) != hash)

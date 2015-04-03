@@ -1073,7 +1073,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		case OP_OFFER_ACTIVATE:
 
 			// validate conditions
-			if ((!found || prevOp != OP_OFFER_NEW) && !fJustCheck)
+			if ((!found || (prevOp != OP_OFFER_NEW && prevOp != OP_OFFER_ACTIVATE)) && !fJustCheck)
 				return error("CheckOfferInputs() : offeractivate tx without previous offernew tx");
 
 			if (vvchArgs[1].size() > 20)
@@ -1108,21 +1108,21 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						GetOfferExpirationDepth(pindexBlock->nHeight));
 				if (nDepth == -1)
 					return error(
-							"CheckOfferInputs() : offeractivate cannot be mined if offernew is not already in chain and unexpired");
+							"CheckOfferInputs() : offeractivate cannot be mined if offernew/offeractivate is not already in chain and unexpired");
 
 				nPrevHeight = GetOfferHeight(vchOffer);
 				if (!fBlock && nPrevHeight >= 0
 						&& pindexBlock->nHeight - nPrevHeight
 								< GetOfferExpirationDepth(pindexBlock->nHeight))
 					return error(
-							"CheckOfferInputs() : offeractivate on an unexpired offer.");
-			// check for enough fees
-			nNetFee = GetOfferNetFee(tx);
-			if (nNetFee < GetOfferNetworkFee(OP_OFFER_ACTIVATE))
-				return error(
-						"CheckOfferInputs() : got tx %s with fee too low %lu",
-						tx.GetHash().GetHex().c_str(),
-						(long unsigned int) nNetFee);
+								"CheckOfferInputs() : offeractivate on an unexpired offer.");
+				// check for enough fees
+				nNetFee = GetOfferNetFee(tx);
+				if (nNetFee < GetOfferNetworkFee(OP_OFFER_ACTIVATE))
+					return error(
+							"CheckOfferInputs() : got tx %s with fee too low %lu",
+							tx.GetHash().GetHex().c_str(),
+							(long unsigned int) nNetFee);
 				//if(pindexBlock->nHeight == pindexBest->nHeight) {
 				//	BOOST_FOREACH(const MAPTESTPOOLTYPE& s, mapTestPool) {
 	   //                 if (vvchArgs[0] == s.first) {
@@ -1231,7 +1231,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						prevCoins, pindexBlock->nHeight);
 				if (nDepth == -1)
 					return error(
-							"CheckOfferInputs() : offerpay cannot be mined if offeraccept is not already in chain");
+							"CheckOfferInputs() : offerpay cannot be mined if offeraccept/offerpay is not already in chain");
 
 				// check offer accept hash against prev txn
 				if (uint160(vvchPrevArgs[2]) != hash)

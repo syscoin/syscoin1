@@ -358,16 +358,8 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 		case OP_ALIAS_ACTIVATE:
 
-			// verify enough fees with this txn
-			nNetFee = GetAliasNetFee(tx);
-			if (nNetFee < GetAliasNetworkFee(OP_ALIAS_ACTIVATE))
-				return error(
-						"CheckAliasInputs() : got tx %s with fee too low %lu",
-						tx.GetHash().GetHex().c_str(),
-						(long unsigned int) nNetFee);
-
 			// veryify that prev txn is aliasnew
-			if ((!found || prevOp != OP_ALIAS_NEW) && !fJustCheck)
+			if ((!found || (prevOp != OP_ALIAS_NEW && prevOp != OP_ALIAS_ACTIVATE)) && !fJustCheck)
 				return error(
 						"CheckAliasInputs() : aliasactivate tx without previous aliasnew tx");
 
@@ -399,7 +391,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						GetAliasExpirationDepth(pindexBlock->nHeight));
 				if (nDepth == -1)
 					return error(
-							"CheckAliasInputs() : aliasactivate cannot be mined if aliasnew is not already in chain and unexpired");
+							"CheckAliasInputs() : aliasactivate cannot be mined if aliasnew/aliasactivate is not already in chain and unexpired");
 
 				nPrevHeight = GetAliasHeight(vvchArgs[0]);
 				if (!fBlock && nPrevHeight >= 0
@@ -407,7 +399,13 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 								< GetAliasExpirationDepth(pindexBlock->nHeight))
 					return error(
 							"CheckAliasInputs() : aliasactivate on an unexpired alias");
-
+				// verify enough fees with this txn
+				nNetFee = GetAliasNetFee(tx);
+				if (nNetFee < GetAliasNetworkFee(OP_ALIAS_ACTIVATE))
+					return error(
+							"CheckAliasInputs() : got tx %s with fee too low %lu",
+							tx.GetHash().GetHex().c_str(),
+							(long unsigned int) nNetFee);
 				// BOOST_FOREACH(const MAPTESTPOOLTYPE &s, mapTestPool) {
 				//     if (s.first == vvchArgs[0]) {
 				//         return error("CheckAliasInputs() : will not mine %s because it clashes with %s",
