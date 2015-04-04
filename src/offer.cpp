@@ -1368,14 +1368,18 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     if (op == OP_OFFER_ACTIVATE || op == OP_OFFER_UPDATE) {
 						vector<unsigned char> vchOffer = op == OP_OFFER_NEW ? vchFromString(HexStr(vvchArgs[0])) : vvchArgs[0];
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferPending.find(vchOffer);
-						if (mi != mapOfferPending.end())
+						if (mi != mapOfferPending.end()) {
 							mi->second.erase(tx.GetHash());
+							printf("removed pending lock for offer %s", stringFromVch(vvchArgs[0]).c_str());
+						}
 					}
 					// accept or pay - buyer txn
 					else {
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferAcceptPending.find(vvchArgs[1]);
-						if (mi != mapOfferAcceptPending.end())
+						if (mi != mapOfferAcceptPending.end()) {
 							mi->second.erase(tx.GetHash());
+							printf("removed pending lock for offer accept %s", stringFromVch(vvchArgs[1]).c_str());
+						}
 					}
 					
 					// debug

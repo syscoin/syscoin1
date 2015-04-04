@@ -983,12 +983,16 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 			if(IsOfferOp(op)) {
 				TRY_LOCK(cs_main, cs_trymain);
 	            if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
-					if(op == OP_OFFER_PAY)
+					if(op == OP_OFFER_PAY) {
 						mapOfferAcceptPending[vvch[1]].insert(tx.GetHash());
+						printf("added pending lock for offer accept %s", stringFromVch(vvch[1]).c_str());
+					}
 	            }
-				else
+				else {
 	                mapOfferPending[op == OP_OFFER_NEW ? vchFromString(HexStr(vvch[0]))
 	                    : vvch[0]].insert(tx.GetHash());
+	                printf("added pending lock for offer %s", stringFromVch(vvch[0]).c_str());
+				}
 				printf("AcceptToMemoryPool() : Added offer transaction '%s' to memory pool.\n", 
 	                stringFromVch(vvch[0]).c_str());
 			} 
