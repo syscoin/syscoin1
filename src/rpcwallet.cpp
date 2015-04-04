@@ -1071,21 +1071,23 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             if (fNameTx) {
                 vector<vector<unsigned char> > vvchArgs;
                 int op,nOut, nTxOut;
-                if(DecodeAliasTx(wtx, op, nOut, vvchArgs, -1)) {
-                    if(IsAliasOp(op)) {
-                        nTxOut = IndexOfNameOutput(wtx);
-                        ExtractAliasAddress(wtx.vout[nTxOut].scriptPubKey, strAddress);
-                    } 
-                    else if(IsOfferOp(op)) {
-                        nTxOut = IndexOfOfferOutput(wtx);
-                        ExtractOfferAddress(wtx.vout[nTxOut].scriptPubKey, strAddress);
-                    } 
-                    else if(IsCertOp(op)) {
-                        nTxOut = IndexOfCertIssuerOutput(wtx);
-                        ExtractCertIssuerAddress(wtx.vout[nTxOut].scriptPubKey, strAddress);
-                    } 
-                }
-            }
+				if(DecodeAliasTx(wtx, op, nOut, vvchArgs, -1))
+				{
+					nTxOut = IndexOfNameOutput(wtx);
+                    ExtractAliasAddress(wtx.vout[nTxOut].scriptPubKey, strAddress);
+				}
+				else if(DecodeOfferTx(wtx, op, nOut, vvchArgs, -1))
+				{
+                    nTxOut = IndexOfOfferOutput(wtx);
+                    ExtractOfferAddress(wtx.vout[nTxOut].scriptPubKey, strAddress);
+					 
+				}
+				else if(DecodeCertTx(wtx, op, nOut, vvchArgs, -1))
+				{
+                    nTxOut = IndexOfCertIssuerOutput(wtx);
+                    ExtractCertIssuerAddress(wtx.vout[nTxOut].scriptPubKey, strAddress);					
+				}
+			}     
             entry.push_back(Pair("address", strAddress));
             entry.push_back(Pair("category", "send"));
             entry.push_back(Pair("amount", ValueFromAmount(0)));

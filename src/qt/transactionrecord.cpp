@@ -74,12 +74,14 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         vector<vector<unsigned char> > vvchArgs;
         int op, nOut;
         if (wtx.nVersion == SYSCOIN_TX_VERSION) {
-            bool o = DecodeAliasTx(wtx, op, nOut, vvchArgs, -1);
-            if (IsOfferOp(op)) {
-                DecodeOfferTx(wtx, op, nOut, vvchArgs, -1);
-            } else if (IsCertOp(op)) {
-                DecodeCertTx(wtx, op, nOut, vvchArgs, -1);
-            }
+			if(DecodeAliasTx(wtx, op, nOut, vvchArgs, -1))
+			{
+
+			}
+			else if(DecodeCertTx(wtx, op, nOut, vvchArgs, -1))
+			{
+
+			}
         }
 
         bool fAllFromMe = true;

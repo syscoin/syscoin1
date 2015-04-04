@@ -368,18 +368,18 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx)
 
                     vector<vector<unsigned char> > vvchArgs;
                     int op, nOut;
-
-                    if(DecodeAliasTx(tx, op, nOut, vvchArgs, -1)) {
-                        if(IsAliasOp(op)) {
-                            NotifyAliasListChanged(this, &tx, CT_UPDATED);                       
-                        } 
-                        else if(IsCertOp(op)) {
-                            CCertIssuer theCI(tx);
-                            NotifyCertIssuerListChanged(this, &tx, theCI, CT_UPDATED);
-                        }
-                    }
-                }
-            }
+					if(DecodeAliasTx(tx, op, nOut, vvchArgs, -1))
+					{
+						NotifyAliasListChanged(this, &tx, CT_UPDATED);
+						
+					}
+					else if(DecodeCertTx(tx, op, nOut, vvchArgs, -1))
+					{
+						CCertIssuer theCI(tx);
+						NotifyCertIssuerListChanged(this, &tx, theCI, CT_UPDATED);
+					} 
+				}
+			}
         }
     }
 }
@@ -514,17 +514,16 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
         // notify on syscoin transaction
         vector<vector<unsigned char> > vvchArgs;
         int op, nOut;
-        if(DecodeAliasTx(wtx, op, nOut, vvchArgs, -1)) {
-            // alias
-            if(IsAliasOp(op)) {
-                NotifyAliasListChanged(this, &wtx, fInsertedNew ? CT_NEW : CT_UPDATED);    
-            } 
-            // certificate
-            else if (IsCertOp(op)) {
-                CCertIssuer theCI(wtx);
-                NotifyCertIssuerListChanged(this, &wtx, theCI, fInsertedNew ? CT_NEW : CT_UPDATED);
-            }
-        }
+		if(DecodeAliasTx(wtx, op, nOut, vvchArgs, -1))
+		{
+			NotifyAliasListChanged(this, &wtx, fInsertedNew ? CT_NEW : CT_UPDATED);
+		}
+		else if(DecodeCertTx(wtx, op, nOut, vvchArgs, -1))
+		{
+			CCertIssuer theCI(wtx);
+            NotifyCertIssuerListChanged(this, &wtx, theCI, fInsertedNew ? CT_NEW : CT_UPDATED);
+		} 
+        
 
         // notify an external script when a wallet transaction comes in or is updated
         std::string strCmd = GetArg("-walletnotify", "");
@@ -746,23 +745,22 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
         vector<vector<unsigned char> > vvch;
         int op;
         if(DecodeAliasScript(txout.scriptPubKey, op, vvch)) {
-            if (IsAliasOp(op)) {
-                nCarriedOverCoin -= txout.nValue;
-                if (op != OP_ALIAS_NEW)
-                    continue; // Ignore locked coin
-            }
-            else if (IsOfferOp(op)) {
-                nCarriedOverCoin -= txout.nValue;
-                if (op != OP_OFFER_NEW)
-                    continue;
-            }
-            else if (IsCertOp(op)) {
-                nCarriedOverCoin -= txout.nValue;
-                if (op != OP_CERTISSUER_NEW)
-                    continue;
-            }
+            nCarriedOverCoin -= txout.nValue;
+            if (op != OP_ALIAS_NEW)
+                continue; // Ignore locked coin
         }
-
+		else if(DecodeOfferScript(txout.scriptPubKey, op, vvch)) {
+ 
+            nCarriedOverCoin -= txout.nValue;
+            if (op != OP_OFFER_NEW)
+                continue;
+        }
+		else if(DecodeCertScript(txout.scriptPubKey, op, vvch)) {
+ 
+            nCarriedOverCoin -= txout.nValue;
+            if (op != OP_CERTISSUER_NEW)
+                continue;
+        }
         // Don't report 'change' txouts
         if (nDebit > 0 && pwallet->IsChange(txout))
             continue;
@@ -1498,19 +1496,17 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
                 // notify on syscoin transaction
                 vector<vector<unsigned char> > vvchArgs;
                 int op, nOut;
-                if(DecodeAliasTx(wtxNew, op, nOut, vvchArgs, -1)) {
-                    // alias
-                    if(IsAliasOp(op)) {
-                        NotifyAliasListChanged(this, &wtxNew, CT_UPDATED);                   
-                    }
-                    // certificate
-                    else if (IsCertOp(op)) {
-                        CCertIssuer theCI(wtxNew);
-                        NotifyCertIssuerListChanged(this, &wtxNew, theCI, CT_UPDATED);
-                    }
-                }
-            }
-
+               
+				if(DecodeAliasTx(wtxNew, op, nOut, vvchArgs, -1))
+				{
+					NotifyAliasListChanged(this, &wtxNew, CT_UPDATED);
+				}
+				else if(DecodeCertTx(wtxNew, op, nOut, vvchArgs, -1))
+				{
+                    CCertIssuer theCI(wtxNew);
+                    NotifyCertIssuerListChanged(this, &wtxNew, theCI, CT_UPDATED);
+				} 
+			}
             if (fFileBacked)
                 delete pwalletdb;
         }
@@ -2068,18 +2064,15 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx)
             // notify on syscoin transaction
             vector<vector<unsigned char> > vvchArgs;
             int op, nOut;
-
-            if(DecodeAliasTx(wtx, op, nOut, vvchArgs, -1)) {
-                // alias
-                if(IsAliasOp(op)) {
-                    NotifyAliasListChanged(this, &wtx, CT_UPDATED); 
-                }
-                // certificate
-                else if (IsCertOp(op)) {
-                    CCertIssuer theCI(wtx);
-                    NotifyCertIssuerListChanged(this, &wtx, theCI, CT_UPDATED);
-                }
-            }
+			if(DecodeAliasTx(wtx, op, nOut, vvchArgs, -1))
+			{
+				NotifyAliasListChanged(this, &wtx, CT_UPDATED);
+			}
+			else if(DecodeCertTx(wtx, op, nOut, vvchArgs, -1))
+			{
+                CCertIssuer theCI(wtx);
+                NotifyCertIssuerListChanged(this, &wtx, theCI, CT_UPDATED);
+			}
         }
     }
 }
