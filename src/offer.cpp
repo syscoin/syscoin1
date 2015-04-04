@@ -1301,7 +1301,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 									std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = 
 										mapOfferAcceptPending.find(vvchArgs[1]);
 									if (mi != mapOfferAcceptPending.end())
-										mi->second.erase(tx.GetHash());
+										mi->second.clear();
 								}
 								return true;
 							}
@@ -1377,7 +1377,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					else {
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferAcceptPending.find(vvchArgs[1]);
 						if (mi != mapOfferAcceptPending.end()) {
-							mi->second.erase(tx.GetHash());
+							mi->second.clear();
 							printf("removed pending lock for offer accept %s", stringFromVch(vvchArgs[1]).c_str());
 						}
 					}
