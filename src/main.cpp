@@ -101,7 +101,7 @@ bool ExistsInMempool(std::vector<unsigned char> vchNameOrRand, opcodetype type)
 		if(type == OP_ALIAS_NEW || OP_ALIAS_ACTIVATE)
 		{
 		}
-		else if(type == OP_OFFER_NEW || type == OP_OFFER_ACTIVATE || type == OP_OFFER_ACCEPT || OP_OFFER_PAY)
+		else if(type == OP_OFFER_NEW || type == OP_OFFER_ACTIVATE || type == OP_OFFER_ACCEPT || type == OP_OFFER_PAY)
 		{
 			vector<vector<unsigned char> > vvch;
 			int op, nOut;
