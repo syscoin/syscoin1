@@ -1002,8 +1002,8 @@ void EraseAlias(CWalletTx& wtx)
 		if(op != OP_ALIAS_NEW)
 		{
 		
-			std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferPending.find(vvchArgs[0]);
-			if (mi != mapOfferPending.end()) {
+			std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapAliasesPending.find(vvchArgs[0]);
+			if (mi != mapAliasesPending.end()) {
 				mi->second.erase(wtx.GetHash());
 			}
 		}
