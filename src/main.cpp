@@ -973,38 +973,42 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 	    int op, nOut;
 		if(DecodeAliasTx(tx, op, nOut, vvch, -1)) {
 			TRY_LOCK(cs_main, cs_trymain);
-            mapAliasesPending[vvch[0]].insert(tx.GetHash());
-	        printf("AcceptToMemoryPool() : Added alias transaction '%s' to memory pool.\n",
-                stringFromVch(vvch[0]).c_str());
-	    
+			if(op != OP_ALIAS_NEW)
+			{
+				mapAliasesPending[vvch[0]].insert(tx.GetHash());
+				printf("AcceptToMemoryPool() : Added alias transaction '%s' to memory pool.\n",
+					stringFromVch(vvch[0]).c_str());
+			}
 		}
 		else if(DecodeOfferTx(tx, op, nOut, vvch, -1)) {
 			TRY_LOCK(cs_main, cs_trymain);
-            if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
-				if(op == OP_OFFER_PAY) {
+            if(op != OP_OFFER_NEW)
+			{
+				if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
 					mapOfferAcceptPending[vvch[1]].insert(tx.GetHash());
 					printf("added pending lock for offer accept %s", stringFromVch(vvch[1]).c_str());
+					
 				}
-            }
-			else {
-                mapOfferPending[op == OP_OFFER_NEW ? vchFromString(HexStr(vvch[0]))
-                    : vvch[0]].insert(tx.GetHash());
-                printf("added pending lock for offer %s", stringFromVch(vvch[0]).c_str());
+				else {
+					mapOfferPending[vvch[0]].insert(tx.GetHash());
+					printf("added pending lock for offer %s", stringFromVch(vvch[0]).c_str());
+				}
+				printf("AcceptToMemoryPool() : Added offer transaction '%s' to memory pool.\n", 
+					stringFromVch(vvch[0]).c_str());
 			}
-			printf("AcceptToMemoryPool() : Added offer transaction '%s' to memory pool.\n", 
-                stringFromVch(vvch[0]).c_str());
 		 
 		}
 		else if(DecodeCertTx(tx, op, nOut, vvch, -1)) {
 			TRY_LOCK(cs_main, cs_trymain);
-			if(op == OP_CERT_TRANSFER)
-				mapCertItemPending[vvch[1]].insert(tx.GetHash());
-			else
-                mapCertIssuerPending[op == OP_CERTISSUER_NEW ? vchFromString(HexStr(vvch[0]))
-                    : vvch[0]].insert(tx.GetHash());
-			printf("AcceptToMemoryPool() : Added cert transaction '%s' to memory pool.\n", 
-                stringFromVch(vvch[0]).c_str());
-	    
+			if(op != OP_CERTISSUER_NEW)
+			{
+				if(op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE)
+					mapCertIssuerPending[vvch[0]].insert(tx.GetHash());
+				else
+					mapCertItemPending[vvch[1]].insert(tx.GetHash());
+				printf("AcceptToMemoryPool() : Added cert transaction '%s' to memory pool.\n", 
+					stringFromVch(vvch[0]).c_str());
+			}
 		}
 
 

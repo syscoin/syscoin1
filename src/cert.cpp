@@ -914,12 +914,26 @@ void EraseCert(CWalletTx& wtx)
 	 UnspendInputs(wtx);
 	 wtx.RemoveFromMemoryPool();
 	 pwalletMain->EraseFromWallet(wtx.GetHash());
-	 vector<unsigned char> vchCertIssuer;
-	 if (GetNameOfCertIssuerTx(wtx, vchCertIssuer) && mapCertIssuerPending.count(vchCertIssuer))
+     vector<vector<unsigned char> > vvchArgs;
+    int op, nOut;
+    if (DecodeCertTx(wtx, op, nOut, vvchArgs, -1))
+	{
+	 if(op != OP_CERTISSUER_NEW)
 	 {
-		 string certissuer = stringFromVch(vchCertIssuer);
-		 mapCertIssuerPending[vchCertIssuer].erase(wtx.GetHash());
+		if (op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE) {
+			std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapCertIssuerPending.find(vvchArgs[0]);
+			if (mi != mapCertIssuerPending.end())
+				mi->second.erase(wtx.GetHash());
+		}
+
+		// certitem or pay - buyer txn
+		else {
+			std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapCertItemPending.find(vvchArgs[1]);
+			if (mi != mapCertItemPending.end())
+				mi->second.erase(wtx.GetHash());
+		}
 	 }
+	}
 }
 // nTxOut is the output from wtxIn that we should grab
 string SendCertMoneyWithInputTx(CScript scriptPubKey, int64 nValue,
@@ -1345,11 +1359,8 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     // remove certissuer from pendings
 
                     // activate or update - seller txn
-                    if (op == OP_CERTISSUER_NEW || op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE) {
-                        vector<unsigned char> vchCertIssuer = op == OP_CERTISSUER_NEW ?
-                                    vchFromString(HexStr(vvchArgs[0])) : vvchArgs[0]; 
-                        std::map<std::vector<unsigned char>, std::set<uint256> >::iterator
-                                mi = mapCertIssuerPending.find(vchCertIssuer);
+                    if (op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE) {
+                        std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapCertIssuerPending.find(vvchArgs[0]);
                         if (mi != mapCertIssuerPending.end())
                             mi->second.erase(tx.GetHash());
                     }

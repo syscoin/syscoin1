@@ -913,12 +913,29 @@ void EraseOffer(CWalletTx& wtx)
 	UnspendInputs(wtx);
  	wtx.RemoveFromMemoryPool();
  	pwalletMain->EraseFromWallet(wtx.GetHash());
- 	vector<unsigned char> vchOffer;
- 	if (GetNameOfOfferTx(wtx, vchOffer) && mapOfferPending.count(vchOffer))
- 	{
- 		string offer = stringFromVch(vchOffer);
- 		mapOfferPending[vchOffer].erase(wtx.GetHash());			
- 	}
+    vector<vector<unsigned char> > vvchArgs;
+    int op, nOut;
+    if (DecodeOfferTx(wtx, op, nOut, vvchArgs, -1))
+	{
+		if(op != OP_OFFER_NEW)
+		{
+			if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
+				std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferAcceptPending.find(vvchArgs[1]);
+				if (mi != mapOfferAcceptPending.end()) {
+					mi->second.erase(wtx.GetHash());
+					printf("removed pending lock for offer accept %s", stringFromVch(vvchArgs[1]).c_str());
+				}
+				
+			}
+			else {
+				std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferPending.find(vvchArgs[0]);
+				if (mi != mapOfferPending.end()) {
+					mi->second.erase(wtx.GetHash());
+					printf("removed pending lock for offer %s", stringFromVch(vvchArgs[0]).c_str());
+				}
+			}
+		}
+	}
 }
 // nTxOut is the output from wtxIn that we should grab
 string SendOfferMoneyWithInputTx(CScript scriptPubKey, int64 nValue,
@@ -1301,7 +1318,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 									std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = 
 										mapOfferAcceptPending.find(vvchArgs[1]);
 									if (mi != mapOfferAcceptPending.end())
-										mi->second.clear();
+										mi->second.erase(tx.GetHash());
 								}
 								return true;
 							}
@@ -1365,23 +1382,22 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 					// remove offer from pendings
 					// activate or update - seller txn
-                    if (op == OP_OFFER_ACTIVATE || op == OP_OFFER_UPDATE) {
-						vector<unsigned char> vchOffer = op == OP_OFFER_NEW ? vchFromString(HexStr(vvchArgs[0])) : vvchArgs[0];
-						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferPending.find(vchOffer);
+					if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
+						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferAcceptPending.find(vvchArgs[1]);
+						if (mi != mapOfferAcceptPending.end()) {
+							mi->second.erase(tx.GetHash());
+							printf("removed pending lock for offer accept %s", stringFromVch(vvchArgs[1]).c_str());
+						}
+						
+					}
+					else {
+						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferPending.find(vvchArgs[0]);
 						if (mi != mapOfferPending.end()) {
 							mi->second.erase(tx.GetHash());
 							printf("removed pending lock for offer %s", stringFromVch(vvchArgs[0]).c_str());
 						}
 					}
-					// accept or pay - buyer txn
-					else {
-						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferAcceptPending.find(vvchArgs[1]);
-						if (mi != mapOfferAcceptPending.end()) {
-							mi->second.clear();
-							printf("removed pending lock for offer accept %s", stringFromVch(vvchArgs[1]).c_str());
-						}
-					}
-					
+
 					// debug
 					printf( "CONNECTED OFFER: op=%s offer=%s title=%s qty=%llu hash=%s height=%d fees=%1f\n",
 							offerFromOp(op).c_str(),
@@ -2625,18 +2641,7 @@ Value offerscan(const Array& params, bool fHelp) {
 	{
 	 	CWalletTx& wtx = item.second;
 
-	 	UnspendInputs(wtx);
-	 	wtx.RemoveFromMemoryPool();
-	 	pwalletMain->EraseFromWallet(wtx.GetHash());
-	 	vector<unsigned char> vchOffer;
-	 	if (GetNameOfOfferTx(wtx, vchOffer) && mapOfferPending.count(vchOffer))
-	 	{
-	 		string offer = stringFromVch(vchOffer);
-	 		printf("offer_clean() : erase %s from pending of offer %s",
-	 			wtx.GetHash().GetHex().c_str(), offer.c_str());
-	 		if (!mapOfferPending[vchOffer].erase(wtx.GetHash()))
-	 			error("offer_clean() : erase but it was not pending");
-	 	}
+	 	EraseOffer(wtx);
 	 	wtx.print();
 	}
 

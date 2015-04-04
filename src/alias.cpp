@@ -995,6 +995,20 @@ void EraseAlias(CWalletTx& wtx)
 		string name = stringFromVch(vchName);
 		mapAliasesPending[vchName].erase(wtx.GetHash());
 	}
+	vector<vector<unsigned char> > vvchArgs;
+    int op, nOut;
+    if (DecodeAliasTx(wtx, op, nOut, vvchArgs, -1))
+	{
+		if(op != OP_ALIAS_NEW)
+		{
+		
+			std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferPending.find(vvchArgs[0]);
+			if (mi != mapOfferPending.end()) {
+				mi->second.erase(wtx.GetHash());
+			}
+		}
+	}
+
 }
 // nTxOut is the output from wtxIn that we should grab
 string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee,
