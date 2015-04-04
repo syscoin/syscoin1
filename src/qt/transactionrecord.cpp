@@ -78,6 +78,10 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 			{
 
 			}
+            else if(DecodeOfferTx(wtx, op, nOut, vvchArgs, -1))
+            {
+
+            }
 			else if(DecodeCertTx(wtx, op, nOut, vvchArgs, -1))
 			{
 
