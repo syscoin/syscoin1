@@ -980,18 +980,17 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 					stringFromVch(vvch[0]).c_str());
 			}
 		}
-		else if(DecodeOfferTx(tx, op, nOut, vvch, -1)) {
+		else if(DecodeOfferTx(tx, op, nOut, vvch, -1) && IsOfferMine(tx)) {
 			TRY_LOCK(cs_main, cs_trymain);
             if(op != OP_OFFER_NEW)
 			{
 				if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
 					mapOfferAcceptPending[vvch[1]].insert(tx.GetHash());
-					printf("added pending lock for offer accept %s", stringFromVch(vvch[1]).c_str());
-					
+					printf("added pending lock for offer accept %s\n", stringFromVch(vvch[1]).c_str());
 				}
 				else {
 					mapOfferPending[vvch[0]].insert(tx.GetHash());
-					printf("added pending lock for offer %s", stringFromVch(vvch[0]).c_str());
+					printf("added pending lock for offer %s\n", stringFromVch(vvch[0]).c_str());
 				}
 				printf("AcceptToMemoryPool() : Added offer transaction '%s' to memory pool.\n", 
 					stringFromVch(vvch[0]).c_str());

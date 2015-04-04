@@ -923,7 +923,7 @@ void EraseOffer(CWalletTx& wtx)
 				std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferAcceptPending.find(vvchArgs[1]);
 				if (mi != mapOfferAcceptPending.end()) {
 					mi->second.erase(wtx.GetHash());
-					printf("removed pending lock for offer accept %s", stringFromVch(vvchArgs[1]).c_str());
+					printf("removed pending lock for offer accept %s\n", stringFromVch(vvchArgs[1]).c_str());
 				}
 				
 			}
@@ -931,7 +931,7 @@ void EraseOffer(CWalletTx& wtx)
 				std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferPending.find(vvchArgs[0]);
 				if (mi != mapOfferPending.end()) {
 					mi->second.erase(wtx.GetHash());
-					printf("removed pending lock for offer %s", stringFromVch(vvchArgs[0]).c_str());
+					printf("removed pending lock for offer %s\n", stringFromVch(vvchArgs[0]).c_str());
 				}
 			}
 		}
@@ -1212,7 +1212,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		case OP_OFFER_PAY:
 
 			// validate conditions
-			if ( ( !found || (prevOp != OP_OFFER_ACCEPT && prevOp != OP_OFFER_PAY) ) && !fJustCheck )
+			if ( ( !found || prevOp != OP_OFFER_ACCEPT ) && !fJustCheck )
 				return error("offerpay previous op %s is invalid", offerFromOp(prevOp).c_str());
 
 			if (vvchArgs[0].size() > 20)
@@ -1386,7 +1386,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferAcceptPending.find(vvchArgs[1]);
 						if (mi != mapOfferAcceptPending.end()) {
 							mi->second.erase(tx.GetHash());
-							printf("removed pending lock for offer accept %s", stringFromVch(vvchArgs[1]).c_str());
+							printf("removed pending lock for offer accept %s\n", stringFromVch(vvchArgs[1]).c_str());
 						}
 						
 					}
@@ -1394,7 +1394,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferPending.find(vvchArgs[0]);
 						if (mi != mapOfferPending.end()) {
 							mi->second.erase(tx.GetHash());
-							printf("removed pending lock for offer %s", stringFromVch(vvchArgs[0]).c_str());
+							printf("removed pending lock for offer %s\n", stringFromVch(vvchArgs[0]).c_str());
 						}
 					}
 
@@ -1991,12 +1991,11 @@ Value offerpay(const Array& params, bool fHelp) {
 	CScript scriptPubKeyOrig;
 
 	// exit if pending offers
-	if (mapOfferAcceptPending.count(vchRand)
-			&& mapOfferAcceptPending[vchRand].size()) 
+	if (mapOfferAcceptPending.count(vchRand) && mapOfferAcceptPending[vchRand].size()) {
 		error(  "offerpay() : there are %d pending operations on that offer accept, including %s",
-		(int) mapOfferAcceptPending[vchRand].size(),
-		mapOfferAcceptPending[vchRand].begin()->GetHex().c_str());
+		(int) mapOfferAcceptPending[vchRand].size(), mapOfferAcceptPending[vchRand].begin()->GetHex().c_str());
 		throw runtime_error( "offerpay() : there are pending operations on that offer accept" );
+	}
 
 	EnsureWalletIsUnlocked();
 
