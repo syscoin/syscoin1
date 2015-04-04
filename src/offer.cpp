@@ -18,10 +18,8 @@ template<typename T> void ConvertTo(Value& value, bool fAllowNull = false);
 
 std::map<std::vector<unsigned char>, uint256> mapMyOffers;
 std::map<std::vector<unsigned char>, uint256> mapMyOfferAccepts;
-std::map<std::vector<unsigned char>, std::set<uint256> > mapOfferPending;
-std::map<std::vector<unsigned char>, std::set<uint256> > mapOfferAcceptPending;
 std::list<COfferFee> lstOfferFees;
-
+extern bool ExistsInMempool(std::vector<unsigned char> vchNameOrRand, opcodetype type);
 #ifdef GUI
 extern std::map<uint160, std::vector<unsigned char> > mapMyOfferHashes;
 #endif
@@ -913,29 +911,7 @@ void EraseOffer(CWalletTx& wtx)
 	UnspendInputs(wtx);
  	wtx.RemoveFromMemoryPool();
  	pwalletMain->EraseFromWallet(wtx.GetHash());
-    vector<vector<unsigned char> > vvchArgs;
-    int op, nOut;
-    if (DecodeOfferTx(wtx, op, nOut, vvchArgs, -1))
-	{
-		if(op != OP_OFFER_NEW)
-		{
-			if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
-				std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferAcceptPending.find(vvchArgs[1]);
-				if (mi != mapOfferAcceptPending.end()) {
-					mi->second.erase(wtx.GetHash());
-					printf("removed pending lock for offer accept %s", stringFromVch(vvchArgs[1]).c_str());
-				}
-				
-			}
-			else {
-				std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferPending.find(vvchArgs[0]);
-				if (mi != mapOfferPending.end()) {
-					mi->second.erase(wtx.GetHash());
-					printf("removed pending lock for offer %s", stringFromVch(vvchArgs[0]).c_str());
-				}
-			}
-		}
-	}
+
 }
 // nTxOut is the output from wtxIn that we should grab
 string SendOfferMoneyWithInputTx(CScript scriptPubKey, int64 nValue,
@@ -1313,13 +1289,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 									theOfferAccept.nQty, 
 									theOffer.GetRemQty(), 
 									stringFromVch(theOfferAccept.vchRand).c_str());
-								{
-									TRY_LOCK(cs_main, cs_trymain);
-									std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = 
-										mapOfferAcceptPending.find(vvchArgs[1]);
-									if (mi != mapOfferAcceptPending.end())
-										mi->second.erase(tx.GetHash());
-								}
 								return true;
 							}
 						} 
@@ -1379,24 +1348,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							return error( "CheckOfferInputs() : failed to write fees to offer DB");
 					}
 			
-
-					// remove offer from pendings
-					// activate or update - seller txn
-					if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
-						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferAcceptPending.find(vvchArgs[1]);
-						if (mi != mapOfferAcceptPending.end()) {
-							mi->second.erase(tx.GetHash());
-							printf("removed pending lock for offer accept %s", stringFromVch(vvchArgs[1]).c_str());
-						}
-						
-					}
-					else {
-						std::map<std::vector<unsigned char>, std::set<uint256> >::iterator mi = mapOfferPending.find(vvchArgs[0]);
-						if (mi != mapOfferPending.end()) {
-							mi->second.erase(tx.GetHash());
-							printf("removed pending lock for offer %s", stringFromVch(vvchArgs[0]).c_str());
-						}
-					}
 
 					// debug
 					printf( "CONNECTED OFFER: op=%s offer=%s title=%s qty=%llu hash=%s height=%d fees=%1f\n",
@@ -1594,12 +1545,7 @@ Value offeractivate(const Array& params, bool fHelp) {
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 
 	// check for existing pending offers
-
-	if (mapOfferPending.count(vchOffer)
-			&& mapOfferPending[vchOffer].size()) {
-		error( "offeractivate() : there are %d pending operations on that offer, including %s",
-			   (int) mapOfferPending[vchOffer].size(),
-			   mapOfferPending[vchOffer].begin()->GetHex().c_str());
+	if (ExistsInMempool(vchRand, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE)) {
 		throw runtime_error("there are pending operations on that offer");
 	}
 
@@ -1739,11 +1685,11 @@ Value offerupdate(const Array& params, bool fHelp) {
 			<< OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
-
-	if (mapOfferPending.count(vchOffer)
-			&& mapOfferPending[vchOffer].size()) 
+	// check for existing pending offers
+	if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchRand, OP_OFFER_ACTIVATE) 
+		|| ExistsInMempool(vchRand, OP_OFFER_UPDATE) || ExistsInMempool(vchRand, OP_OFFER_UPDATE)) {
 		throw runtime_error("there are pending operations on that offer");
-
+	}
 	EnsureWalletIsUnlocked();
 
 	// look for a transaction with this key
@@ -1813,10 +1759,10 @@ Value offerrenew(const Array& params, bool fHelp) {
 	pwalletMain->GetKeyFromPool(newDefaultKey, false);
 	scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
 
-
-	if (mapOfferPending.count(vchOffer)
-			&& mapOfferPending[vchOffer].size()) 
+	if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchRand, OP_OFFER_ACTIVATE) || 
+		ExistsInMempool(vchOffer, OP_OFFER_UPDATE) || ExistsInMempool(vchRand, OP_OFFER_UPDATE)) {
 		throw runtime_error("there are pending operations on that offer");
+	}
 
 	EnsureWalletIsUnlocked();
 
@@ -1908,13 +1854,10 @@ Value offeraccept(const Array& params, bool fHelp) {
 			<< vchOffer << vchAcceptRand << acceptHash << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
-	if (mapOfferPending.count(vchOffer)
-			&& mapOfferPending[vchOffer].size()) {
-		error(  "offeraccept() : there are %d pending operations on that offer, including %s",
-				(int) mapOfferPending[vchOffer].size(),
-				mapOfferPending[vchOffer].begin()->GetHex().c_str());
+	if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_UPDATE)) {
 		throw runtime_error("there are pending operations on that offer");
 	}
+
 
 	EnsureWalletIsUnlocked();
 
@@ -1991,12 +1934,10 @@ Value offerpay(const Array& params, bool fHelp) {
 	CScript scriptPubKeyOrig;
 
 	// exit if pending offers
-	if (mapOfferAcceptPending.count(vchRand)
-			&& mapOfferAcceptPending[vchRand].size()) 
-		error(  "offerpay() : there are %d pending operations on that offer accept, including %s",
-		(int) mapOfferAcceptPending[vchRand].size(),
-		mapOfferAcceptPending[vchRand].begin()->GetHex().c_str());
-		throw runtime_error( "offerpay() : there are pending operations on that offer accept" );
+	if (ExistsInMempool(vchRand, OP_OFFER_ACCEPT) || ExistsInMempool(vchRand, OP_OFFER_PAY)) {
+		throw runtime_error("there are pending operations on that offer");
+	}
+	
 
 	EnsureWalletIsUnlocked();
 

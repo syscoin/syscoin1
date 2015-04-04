@@ -91,6 +91,32 @@ int64 nHPSTimerStart = 0;
 int64 nTransactionFee = 0;
 int64 nMinimumInputValue = DUST_HARD_LIMIT;
 
+bool ExistsInMempool(std::vector<unsigned char> vchNameOrRand, opcodetype type)
+{
+	for (map<uint256, CTransaction>::iterator mi = mempool.mapTx.begin();
+		mi != mempool.mapTx.end(); ++mi) {
+		CTransaction& tx = (*mi).second;
+		//if (tx.IsCoinBase() || !tx.IsFinal())
+			//continue;
+		if(type == OP_ALIAS_NEW || OP_ALIAS_ACTIVATE)
+		{
+		}
+		else if(type == OP_OFFER_NEW || type == OP_OFFER_ACTIVATE || type == OP_OFFER_ACCEPT || OP_OFFER_PAY)
+		{
+			vector<vector<unsigned char> > vvch;
+			int op, nOut;
+			if(DecodeOfferTx(tx, op, nOut, vvch, -1)) {
+				if(op == type)
+				{
+					if(vvch[0] == vchNameOrRand || vvch[1] == vchNameOrRand)
+						return true;
+				}
+			}
+		}
+	}
+	return false;
+
+}
 //////////////////////////////////////////////////////////////////////////////
 //
 // dispatching functions
@@ -829,7 +855,6 @@ void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins) {
 		it++;
 	}
 }
-
 bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 		bool fCheckInputs, bool fLimitFree, bool* pfMissingInputs) {
 
@@ -979,24 +1004,6 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 				printf("AcceptToMemoryPool() : Added alias transaction '%s' to memory pool.\n",
 					stringFromVch(vvch[0]).c_str());
 			}
-		}
-		else if(DecodeOfferTx(tx, op, nOut, vvch, -1)) {
-			TRY_LOCK(cs_main, cs_trymain);
-            if(op != OP_OFFER_NEW)
-			{
-				if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
-					mapOfferAcceptPending[vvch[1]].insert(tx.GetHash());
-					printf("added pending lock for offer accept %s", stringFromVch(vvch[1]).c_str());
-					
-				}
-				else {
-					mapOfferPending[vvch[0]].insert(tx.GetHash());
-					printf("added pending lock for offer %s", stringFromVch(vvch[0]).c_str());
-				}
-				printf("AcceptToMemoryPool() : Added offer transaction '%s' to memory pool.\n", 
-					stringFromVch(vvch[0]).c_str());
-			}
-		 
 		}
 		else if(DecodeCertTx(tx, op, nOut, vvch, -1)) {
 			TRY_LOCK(cs_main, cs_trymain);
