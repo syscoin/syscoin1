@@ -372,11 +372,11 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx)
 					{
 						NotifyAliasListChanged(this, &tx, CT_UPDATED);
 					}
-                    else if(DecodeOfferTx(tx, op, nOut, vvchArgs, -1))
-                    {
-                        COffer theOffer(tx);
-                        NotifyOfferListChanged(this, &tx, theOffer, CT_UPDATED);
-                    } 
+//                    else if(DecodeOfferTx(tx, op, nOut, vvchArgs, -1))
+//                    {
+//                        COffer theOffer(tx);
+//                        NotifyOfferListChanged(this, &tx, theOffer, CT_UPDATED);
+//                    }
 					else if(DecodeCertTx(tx, op, nOut, vvchArgs, -1))
 					{
 						CCertIssuer theCI(tx);
@@ -522,11 +522,11 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
 		{
 			NotifyAliasListChanged(this, &wtx, fInsertedNew ? CT_NEW : CT_UPDATED);
 		}
-        else if(DecodeOfferTx(wtx, op, nOut, vvchArgs, -1))
-        {
-            COffer theOffer(wtx);
-            NotifyOfferListChanged(this, &wtx, theOffer, fInsertedNew ? CT_NEW : CT_UPDATED);
-        } 
+//        else if(DecodeOfferTx(wtx, op, nOut, vvchArgs, -1))
+//        {
+//            COffer theOffer(wtx);
+//            NotifyOfferListChanged(this, &wtx, theOffer, fInsertedNew ? CT_NEW : CT_UPDATED);
+//        }
 		else if(DecodeCertTx(wtx, op, nOut, vvchArgs, -1))
 		{
 			CCertIssuer theCI(wtx);
@@ -1510,11 +1510,11 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
 				{
 					NotifyAliasListChanged(this, &wtxNew, CT_UPDATED);
 				}
-                else if(DecodeOfferTx(wtxNew, op, nOut, vvchArgs, -1))
-                {
-                    COffer theOffer(wtxNew);
-                    NotifyOfferListChanged(this, &wtxNew, theOffer, CT_UPDATED);
-                } 
+//                else if(DecodeOfferTx(wtxNew, op, nOut, vvchArgs, -1))
+//                {
+//                    COffer theOffer(wtxNew);
+//                    NotifyOfferListChanged(this, &wtxNew, theOffer, CT_UPDATED);
+//                }
 				else if(DecodeCertTx(wtxNew, op, nOut, vvchArgs, -1))
 				{
                     CCertIssuer theCI(wtxNew);
@@ -2082,11 +2082,11 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx)
 			{
 				NotifyAliasListChanged(this, &wtx, CT_UPDATED);
 			}
-            else if(DecodeOfferTx(wtx, op, nOut, vvchArgs, -1))
-            {
-                COffer theOffer(wtx);
-                NotifyOfferListChanged(this, &wtx, theOffer, CT_UPDATED);
-            } 
+//            else if(DecodeOfferTx(wtx, op, nOut, vvchArgs, -1))
+//            {
+//                COffer theOffer(wtx);
+//                NotifyOfferListChanged(this, &wtx, theOffer, CT_UPDATED);
+//            }
 			else if(DecodeCertTx(wtx, op, nOut, vvchArgs, -1))
 			{
                 CCertIssuer theCI(wtx);
