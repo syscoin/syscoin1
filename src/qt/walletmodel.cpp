@@ -428,7 +428,29 @@ static void NotifyAliasListChanged(WalletModel *walletmodel, CWallet *wallet, co
 
 }
 
+static void NotifyOfferListChanged(WalletModel *walletmodel, CWallet *wallet, const CTransaction *tx, COffer offer, ChangeType status)
+{
+    // CCertItem theCert;
+    // unsigned long nExpDepth = issuer.nHeight + GetCertExpirationDepth(issuer.nHeight);
+    // std::vector<unsigned char> vchRand, vchTitle;
+    // vchRand = issuer.vchRand;
+    // vchTitle = issuer.vchTitle;
+    // if(issuer.certs.size()) {
+    //     theCert = issuer.certs.back();
+    //     vchRand = theCert.vchRand;
+    //     vchTitle = theCert.vchTitle;
+    //     nExpDepth = 0;
+    // }
 
+    // OutputDebugStringF("NotifyCertIssuerListChanged %s %s status=%i\n",
+    //                    stringFromVch(vchRand).c_str(),
+    //                    stringFromVch(vchTitle).c_str(), status);
+    // QMetaObject::invokeMethod(walletmodel, "updateCertIssuer", Qt::QueuedConnection,
+    //                           Q_ARG(QString, QString::fromStdString(stringFromVch(vchRand))),
+    //                           Q_ARG(QString, QString::fromStdString(stringFromVch(vchTitle))),
+    //                           Q_ARG(QString, QString::fromStdString(strprintf("%lu", nExpDepth))),
+    //                           Q_ARG(int, status));
+}
 
 static void NotifyCertIssuerListChanged(WalletModel *walletmodel, CWallet *wallet, const CTransaction *tx, CCertIssuer issuer, ChangeType status)
 {

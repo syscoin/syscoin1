@@ -371,8 +371,12 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx)
 					if(DecodeAliasTx(tx, op, nOut, vvchArgs, -1))
 					{
 						NotifyAliasListChanged(this, &tx, CT_UPDATED);
-						
 					}
+                    else if(DecodeOfferTx(tx, op, nOut, vvchArgs, -1))
+                    {
+                        COffer theOffer(tx);
+                        NotifyOfferListChanged(this, &tx, theOffer, CT_UPDATED);
+                    } 
 					else if(DecodeCertTx(tx, op, nOut, vvchArgs, -1))
 					{
 						CCertIssuer theCI(tx);
