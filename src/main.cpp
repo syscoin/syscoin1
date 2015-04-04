@@ -968,7 +968,8 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 						dFreeCount + nSize);
 			dFreeCount += nSize;
 		}
-      vector<vector<unsigned char> > vvch;
+        
+        vector<vector<unsigned char> > vvch;
 	    int op, nOut;
 		if(DecodeAliasTx(tx, op, nOut, vvch, -1)) {
 			if(IsAliasOp(op)) {
@@ -977,7 +978,9 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 		        printf("AcceptToMemoryPool() : Added alias transaction '%s' to memory pool.\n",
 	                stringFromVch(vvch[0]).c_str());
 		    } 
-			else if(IsOfferOp(op)) {
+		}
+		else if(DecodeOfferTx(tx, op, nOut, vvch, -1)) {
+			if(IsOfferOp(op)) {
 				TRY_LOCK(cs_main, cs_trymain);
 	            if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY)
 					mapOfferAcceptPending[vvch[1]].insert(tx.GetHash());
@@ -987,7 +990,9 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 				printf("AcceptToMemoryPool() : Added offer transaction '%s' to memory pool.\n", 
 	                stringFromVch(vvch[0]).c_str());
 			} 
-			else if(IsCertOp(op)) {
+		}
+		else if(DecodeCertTx(tx, op, nOut, vvch, -1)) {
+			if(IsCertOp(op)) {
 				TRY_LOCK(cs_main, cs_trymain);
 				if(op == OP_CERT_TRANSFER)
 					mapCertItemPending[vvch[1]].insert(tx.GetHash());
@@ -998,6 +1003,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 	                stringFromVch(vvch[0]).c_str());
 		    }
 		}
+
 
 		// Check against previous transactions
 		// This is done last to help prevent CPU exhaustion denial-of-service attacks.

@@ -1970,11 +1970,13 @@ Value offerpay(const Array& params, bool fHelp) {
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 	CScript scriptPubKeyOrig;
 
-
 	// exit if pending offers
 	if (mapOfferAcceptPending.count(vchRand)
 			&& mapOfferAcceptPending[vchRand].size()) 
-		throw runtime_error( "offerpay() : there are pending operations on that offer" );
+		error(  "offerpay() : there are %d pending operations on that offer accept, including %s",
+		(int) mapOfferAcceptPending[vchRand].size(),
+		mapOfferAcceptPending[vchRand].begin()->GetHex().c_str());
+		throw runtime_error( "offerpay() : there are pending operations on that offer accept" );
 
 	EnsureWalletIsUnlocked();
 
