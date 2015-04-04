@@ -982,8 +982,10 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 		else if(DecodeOfferTx(tx, op, nOut, vvch, -1)) {
 			if(IsOfferOp(op)) {
 				TRY_LOCK(cs_main, cs_trymain);
-	            if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY)
-					mapOfferAcceptPending[vvch[1]].insert(tx.GetHash());
+	            if(op == OP_OFFER_ACCEPT || op == OP_OFFER_PAY) {
+					if(op == OP_OFFER_PAY)
+						mapOfferAcceptPending[vvch[1]].insert(tx.GetHash());
+	            }
 				else
 	                mapOfferPending[op == OP_OFFER_NEW ? vchFromString(HexStr(vvch[0]))
 	                    : vvch[0]].insert(tx.GetHash());
