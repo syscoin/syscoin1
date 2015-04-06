@@ -288,7 +288,7 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 					offerFromOp(op).c_str(),
 					stringFromVch(vvchArgs[0]).c_str(),
 					stringFromVch(txOffer.sTitle).c_str(),
-					txOffer.GetRemQty(),
+					txOffer.nQty,
 					tx.GetHash().ToString().c_str(), 
 					nHeight,
 					nTheFee);	            
@@ -1121,15 +1121,17 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					
 					// get the offer accept qty, validate acceptance. txn is still valid
 					// if qty cannot be fulfilled, first-to-mine makes it
-					if(theOfferAccept.nQty < 1 || theOfferAccept.nQty > theOffer.GetRemQty()) {
+					if(theOfferAccept.nQty < 1 || theOfferAccept.nQty > theOffer.nQty) {
 						printf("txn %s accepted but offer not fulfilled because desired"
 							" qty %llu is more than available qty %llu for offer accept %s\n", 
 							tx.GetHash().GetHex().c_str(), 
 							theOfferAccept.nQty, 
-							theOffer.GetRemQty(), 
+							theOffer.nQty, 
 							stringFromVch(theOfferAccept.vchRand).c_str());
 						return true;
 					}
+					theOffer.nQty -= theOfferAccept.nQty;
+					
 					// if the accept exists in the database, great. 
 					// we don't need to use it, however, the serialized
 					// version is just fine
@@ -1152,7 +1154,8 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				// only modify the offer's height on an activate or update
 				if(op == OP_OFFER_ACTIVATE || op == OP_OFFER_UPDATE)
 					theOffer.nHeight = pindexBlock->nHeight;
-
+				if(theOffer.nQty < 0)
+					theOffer.nQty = 0;
 				// set the offer's txn-dependent values
                 theOffer.vchRand = vvchArgs[0];
 				theOffer.txHash = tx.GetHash();
@@ -1181,7 +1184,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						offerFromOp(op).c_str(),
 						stringFromVch(vvchArgs[0]).c_str(),
 						stringFromVch(theOffer.sTitle).c_str(),
-						theOffer.GetRemQty(),
+						theOffer.nQty,
 						tx.GetHash().ToString().c_str(), 
 						nHeight, (double)nTheFee / COIN);
 				}
@@ -1465,10 +1468,10 @@ Value offerupdate(const Array& params, bool fHelp) {
 	theOffer.sTitle = vchTitle;
 	theOffer.sDescription = vchDesc;
 	int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
-	if(((theOffer.GetRemQty()+qty)-memPoolQty) < 0)
+	if(((theOffer.nQty+qty)-memPoolQty) < 0)
 		throw runtime_error("Quantity would be less than 0 with this offerupdate, please adjust your quantity parameter and try again");
 
-	theOffer.nQty += qty;
+	theOffer.nQty = qty;
 	theOffer.nPrice = price * COIN;
 	theOffer.nFee = nNetFee;
 	theOffer.accepts.clear();
@@ -1631,7 +1634,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 		throw runtime_error("could not read offer with this name from DB");
 	theOffer = vtxPos.back();
 	int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
-	if(theOffer.GetRemQty() < (nQty+memPoolQty))
+	if(theOffer.nQty < (nQty+memPoolQty))
 		throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
 	// create accept object
 	COfferAccept txAccept;
@@ -1758,7 +1761,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOffer.push_back(Pair("payment_address", stringFromVch(theOffer.vchPaymentAddress)));
 			oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
 			oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
-			oOffer.push_back(Pair("quantity", strprintf("%llu", theOffer.GetRemQty())));
+			oOffer.push_back(Pair("quantity", strprintf("%llu", theOffer.nQty)));
 			oOffer.push_back(Pair("price", ValueFromAmount(theOffer.nPrice) ) );
 			oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 			oOffer.push_back(Pair("accepts", aoOfferAccepts));

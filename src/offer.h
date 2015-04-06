@@ -205,13 +205,6 @@ public:
         return false;
     }
 
-    int64 GetRemQty() {
-        int64 nRet = nQty;
-        for(unsigned int i=0;i<accepts.size();i++) 
-            nRet -= accepts[i].nQty;
-        return nRet;
-    }
-
     friend bool operator==(const COffer &a, const COffer &b) {
         return (
            a.vchRand == b.vchRand
