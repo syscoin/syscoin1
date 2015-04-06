@@ -131,50 +131,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     sub.type = TransactionRecord::SendToAddress;
                     sub.address = CBitcoinAddress(address).ToString();
                 }
-                else
-                {
-                    if (op) {
-                        vector<unsigned char> vchName;
-                        switch(op)
-                        {
-                        case OP_ALIAS_NEW:
-                            sub.type = TransactionRecord::AliasNew;
-                            sub.address = mapValue["to"];
-                            break;
-                        case OP_OFFER_NEW:
-                            sub.type = TransactionRecord::OfferNew;
-                            sub.address = mapValue["to"];
-                            break;
-                        case OP_OFFER_ACCEPT:
-                            sub.type = TransactionRecord::OfferAccept;
-                            vchName = vvchArgs[0];
-                            sub.address = stringFromVch(vchName);
-                            break;
-                        case OP_CERTISSUER_NEW:
-                            sub.type = TransactionRecord::CertIssuerNew;
-                            sub.address = mapValue["to"];
-                            break;
-                        case OP_CERT_NEW:
-                            sub.type = TransactionRecord::CertNew;
-                            vchName = vvchArgs[0];
-                            sub.address = stringFromVch(vchName);
-                            break;
-                        default:
-                            sub.type = TransactionRecord::SendToOther;
-                            sub.address = mapValue["to"];
-                        }
-                        //if (op == OP_ALIAS_NEW) {
-                        //    sub.type = TransactionRecord::AliasNew;
-                            //sub.address = stringFromVch(vchName);
-                        //    sub.address = mapValue["to"];
-                        //}
-                    } else {
-                        // Sent to IP, or other non-address transaction like OP_EVAL
-                        sub.type = TransactionRecord::SendToOther;
-                        sub.address = mapValue["to"];
-                    }
-                }
-
+               
                 int64 nValue = txout.nValue;
                 /* Add fee to first output */
                 if (nTxFee > 0)
@@ -220,10 +177,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 case OP_OFFER_UPDATE:
                     vchName = vvchArgs[0];
                     sub.type = TransactionRecord::OfferUpdate;
-                    break;
-                case OP_OFFER_PAY:
-                    vchName = vvchArgs[0];
-                    sub.type = TransactionRecord::OfferPay;
                     break;
                 case OP_CERTISSUER_ACTIVATE:
                     strGUID += " ("; strGUID += stringFromVch(vvchArgs[0]); strGUID += ")";

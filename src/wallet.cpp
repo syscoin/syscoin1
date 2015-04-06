@@ -761,8 +761,7 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
 		else if(DecodeOfferScript(txout.scriptPubKey, op, vvch)) {
  
             nCarriedOverCoin -= txout.nValue;
-            if (op != OP_OFFER_NEW)
-                continue;
+
         }
 		else if(DecodeCertScript(txout.scriptPubKey, op, vvch)) {
  
@@ -779,7 +778,7 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
 
         if (pwallet->IsMine(txout) 
             || IsAliasMine(*this, txout, true) 
-            || IsOfferMine(*this, txout, true)
+            || IsOfferMine(*this, txout)
             || IsCertMine(*this, txout, true))
             listReceived.push_back(make_pair(address, txout.nValue));
     }

@@ -300,13 +300,10 @@ static const CRPCCommand vRPCCommands[] =
 
     // use the blockchain as a distributed marketplace
     { "offernew",         &offernew,       false,      true,      true },
-    { "offeractivate",    &offeractivate,  false,      true,      true },
     { "offerupdate",      &offerupdate,    false,      true,      true },
     { "offerrenew",       &offerrenew,     false,      true,      true },
     { "offeraccept",      &offeraccept,    false,      true,      true },
-    { "offerpay",         &offerpay,       false,      true,      true },
     { "offerlist",        &offerlist,      false,      true,      true },
-    { "offeracceptlist",  &offeracceptlist,false,      true,      true },
     { "offerinfo",        &offerinfo,      false,      true,      true },
     { "offerhistory",     &offerhistory,   false,      true,      true },
     { "offerscan",        &offerscan,      false,      true,      true },

@@ -91,25 +91,43 @@ int64 nHPSTimerStart = 0;
 int64 nTransactionFee = 0;
 int64 nMinimumInputValue = DUST_HARD_LIMIT;
 
-bool ExistsInMempool(std::vector<unsigned char> vchNameOrRand, opcodetype type)
+bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 {
 	for (map<uint256, CTransaction>::iterator mi = mempool.mapTx.begin();
 		mi != mempool.mapTx.end(); ++mi) {
 		CTransaction& tx = (*mi).second;
-		//if (tx.IsCoinBase() || !tx.IsFinal())
-			//continue;
-		if(type == OP_ALIAS_NEW || OP_ALIAS_ACTIVATE)
+		if (tx.IsCoinBase() || !tx.IsFinal())
+			continue;
+		if(IsAliasOp(type))
 		{
 		}
-		else if(type == OP_OFFER_NEW || type == OP_OFFER_ACTIVATE || type == OP_OFFER_ACCEPT || type == OP_OFFER_PAY)
+		else if(IsOfferOp(type))
 		{
 			vector<vector<unsigned char> > vvch;
 			int op, nOut;
+			
 			if(DecodeOfferTx(tx, op, nOut, vvch, -1)) {
 				if(op == type)
 				{
-					if(vvch[0] == vchNameOrRand || vvch[1] == vchNameOrRand)
+					string vchToFindStr = stringFromVch(vchToFind);
+					string vvchFirstStr = stringFromVch(vvch[0]);
+					
+					printf("first %s, second %s \n", vchToFindStr.c_str(), vvchFirstStr.c_str());
+					if(vvchFirstStr == vchToFindStr)
+					{
+						printf("returning hash");
 						return true;
+					}
+					if(vvch.size() > 1)
+					{
+						string vvchSecondStr = HexStr(vvch[1]);
+						printf("first %s, second %s, third %s \n", vchToFindStr.c_str(), vvchFirstStr.c_str(), vvchSecondStr.c_str());
+						if(vvchSecondStr == vchToFindStr)
+						{
+							printf("returning hash");
+							return true;
+						}
+					}
 				}
 			}
 		}
@@ -724,10 +742,6 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 			err = error("offer transaction with offer title too long");
 		}
 		switch (op) {
-			case OP_OFFER_NEW:
-				if (vvch[0].size() != 20)
-					err = error("offernew tx with incorrect hash length");
-				break;
 			case OP_OFFER_ACTIVATE:
 				if (vvch[1].size() > 20)
 					err = error("offeractivate tx with rand too big");
@@ -743,12 +757,6 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 					err = error("offeraccept tx with offer rand too big");
 				if (vvch[2].size() > 20)
 					err = error("offeraccept tx with invalid hash length");
-				if (vvch[1].size() > 20)
-					err = error("offeraccept tx with alias rand too big");
-				break;
-			case OP_OFFER_PAY:
-        		if (vvch[0].size() > 20)
-					err = error("offerpay tx with offer rand too big");
 				if (vvch[1].size() > 20)
 					err = error("offeraccept tx with alias rand too big");
 				break;
@@ -1924,57 +1932,56 @@ bool DisconnectOffer( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
 	if (theOffer.IsNull())
 		error("CheckOfferInputs() : null offer object");
 
-    if(op != OP_OFFER_NEW) {
-		TRY_LOCK(cs_main, cs_maintry);
-        // make sure a DB record exists for this offer
-        vector<COffer> vtxPos;
-        if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos))
-            return error("DisconnectBlock() : failed to read from offer DB for %s %s\n",
-            		opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
+	TRY_LOCK(cs_main, cs_maintry);
+    // make sure a DB record exists for this offer
+    vector<COffer> vtxPos;
+    if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos))
+        return error("DisconnectBlock() : failed to read from offer DB for %s %s\n",
+        		opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
 
-        if( op == OP_OFFER_PAY || op == OP_OFFER_ACCEPT ) {
-        	vector<unsigned char> vvchOfferAccept = vvchArgs[1];
-        	COfferAccept theOfferAccept;
+    if(op == OP_OFFER_ACCEPT ) {
+    	vector<unsigned char> vvchOfferAccept = vvchArgs[1];
+    	COfferAccept theOfferAccept;
 
-        	// make sure the offeraccept is also in the serialized offer in the txn
-        	if(!theOffer.GetAcceptByHash(vvchOfferAccept, theOfferAccept))
-	            return error("DisconnectBlock() : not found in offer for offer accept %s %s\n",
-	            		opName.c_str(), HexStr(vvchOfferAccept).c_str());
-			
-			
-	        // make sure offer accept db record already exists
-	        if (pofferdb->ExistsOfferAccept(vvchOfferAccept))
-	        	pofferdb->EraseOfferAccept(vvchOfferAccept);
-			
-        }
-
-        // vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
-        // be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
-        if (vtxPos.size()) {
-            CDiskTxPos txindex;
-            if (!pblocktree->ReadTxIndex(tx.GetHash(), txindex))
-                return error("DisconnectBlock() : failed to read tx index for offer %s %s %s\n",
-                		opName.c_str(), stringFromVch(vvchArgs[0]).c_str(), tx.GetHash().ToString().c_str());
-
-            while(vtxPos.back().txHash == tx.GetHash())
-                vtxPos.pop_back();
-        }
-
-        // write new offer state to db
-		if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
-			return error("DisconnectBlock() : failed to write to offer DB");
-
-		COfferFee theFeeObject;
-		theFeeObject.hash =  tx.GetHash();
-		theFeeObject.nHeight = pindex->nHeight;
-		theFeeObject.nFee = 0;
-		RemoveOfferFee(theFeeObject);
-		//InsertOfferFee(pindex, tx.GetHash(), 0);
-		//vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
-		//if (!pofferdb->WriteOfferTxFees(vOfferFees))
-			//return error( "DisconnectBlock() : failed to write fees to offer DB");
+    	// make sure the offeraccept is also in the serialized offer in the txn
+    	if(!theOffer.GetAcceptByHash(vvchOfferAccept, theOfferAccept))
+            return error("DisconnectBlock() : not found in offer for offer accept %s %s\n",
+            		opName.c_str(), HexStr(vvchOfferAccept).c_str());
 		
-	}
+		
+        // make sure offer accept db record already exists
+        if (pofferdb->ExistsOfferAccept(vvchOfferAccept))
+        	pofferdb->EraseOfferAccept(vvchOfferAccept);
+		
+    }
+
+    // vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
+    // be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
+    if (vtxPos.size()) {
+        CDiskTxPos txindex;
+        if (!pblocktree->ReadTxIndex(tx.GetHash(), txindex))
+            return error("DisconnectBlock() : failed to read tx index for offer %s %s %s\n",
+            		opName.c_str(), stringFromVch(vvchArgs[0]).c_str(), tx.GetHash().ToString().c_str());
+
+        while(vtxPos.back().txHash == tx.GetHash())
+            vtxPos.pop_back();
+    }
+
+    // write new offer state to db
+	if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
+		return error("DisconnectBlock() : failed to write to offer DB");
+
+	COfferFee theFeeObject;
+	theFeeObject.hash =  tx.GetHash();
+	theFeeObject.nHeight = pindex->nHeight;
+	theFeeObject.nFee = 0;
+	RemoveOfferFee(theFeeObject);
+	//InsertOfferFee(pindex, tx.GetHash(), 0);
+	//vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
+	//if (!pofferdb->WriteOfferTxFees(vOfferFees))
+		//return error( "DisconnectBlock() : failed to write fees to offer DB");
+	
+	
 
 	printf("DISCONNECTED offer TXN: offer=%s op=%s hash=%s  height=%d\n",
 		stringFromVch(vvchArgs[0]).c_str(),
