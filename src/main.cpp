@@ -111,20 +111,15 @@ bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 				{
 					string vchToFindStr = stringFromVch(vchToFind);
 					string vvchFirstStr = stringFromVch(vvch[0]);
-					
-					printf("first %s, second %s \n", vchToFindStr.c_str(), vvchFirstStr.c_str());
 					if(vvchFirstStr == vchToFindStr)
 					{
-						printf("returning hash");
 						return true;
 					}
 					if(vvch.size() > 1)
 					{
 						string vvchSecondStr = HexStr(vvch[1]);
-						printf("first %s, second %s, third %s \n", vchToFindStr.c_str(), vvchFirstStr.c_str(), vvchSecondStr.c_str());
 						if(vvchSecondStr == vchToFindStr)
 						{
-							printf("returning hash");
 							return true;
 						}
 					}

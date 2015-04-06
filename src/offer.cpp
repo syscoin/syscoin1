@@ -1346,6 +1346,39 @@ Value offernew(const Array& params, bool fHelp) {
 	return res;
 }
 
+int QtyOfPendingAcceptsInMempool(std::vector<unsigned char> vchToFind)
+{
+	int nQty = 0;
+	for (map<uint256, CTransaction>::iterator mi = mempool.mapTx.begin();
+		mi != mempool.mapTx.end(); ++mi) {
+		CTransaction& tx = (*mi).second;
+		if (tx.IsCoinBase() || !tx.IsFinal())
+			continue;
+		vector<vector<unsigned char> > vvch;
+		int op, nOut;
+		
+		if(DecodeOfferTx(tx, op, nOut, vvch, -1)) {
+			if(op == OP_OFFER_ACCEPT)
+			{
+				string vchToFindStr = stringFromVch(vchToFind);
+				string vvchFirstStr = stringFromVch(vvch[0]);
+				if(vvchFirstStr == vchToFindStr)
+				{
+					COffer theOffer(tx);
+					COfferAccept theOfferAccept;
+					if (theOffer.IsNull())
+						continue;
+					if(theOffer.GetAcceptByHash(vvch[1], theOfferAccept))
+					{
+						nQty += theOfferAccept.nQty;
+					}
+				}
+			}
+		}		
+	}
+	return nQty;
+
+}
 Value offerupdate(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 5 || params.size() > 6)
 		throw runtime_error(
@@ -1422,7 +1455,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos))
 		throw runtime_error("could not read offer from DB");
 	theOffer = vtxPos.back();
-	theOffer.accepts.clear();
+	
 
 	// calculate network fees
 	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_UPDATE);
@@ -1431,11 +1464,14 @@ Value offerupdate(const Array& params, bool fHelp) {
 	theOffer.sCategory = vchCat;
 	theOffer.sTitle = vchTitle;
 	theOffer.sDescription = vchDesc;
-	if(theOffer.GetRemQty() + qty >= 0)
-		theOffer.nQty += qty;
+	int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
+	if(((theOffer.GetRemQty()+qty)-memPoolQty) < 0)
+		throw runtime_error("Quantity would be less than 0 with this offerupdate, please adjust your quantity parameter and try again");
+
+	theOffer.nQty += qty;
 	theOffer.nPrice = price * COIN;
 	theOffer.nFee = nNetFee;
-
+	theOffer.accepts.clear();
 	// serialize offer object
 	string bdata = theOffer.SerializeToString();
 
@@ -1521,41 +1557,6 @@ Value offerrenew(const Array& params, bool fHelp) {
 	return wtx.GetHash().GetHex();
 }
 
-
-int QtyOfPendingAcceptsInMempool(std::vector<unsigned char> vchToFind)
-{
-	int nQty = 0;
-	for (map<uint256, CTransaction>::iterator mi = mempool.mapTx.begin();
-		mi != mempool.mapTx.end(); ++mi) {
-		CTransaction& tx = (*mi).second;
-		if (tx.IsCoinBase() || !tx.IsFinal())
-			continue;
-		vector<vector<unsigned char> > vvch;
-		int op, nOut;
-		
-		if(DecodeOfferTx(tx, op, nOut, vvch, -1)) {
-			if(op == OP_OFFER_ACCEPT)
-			{
-				string vchToFindStr = stringFromVch(vchToFind);
-				string vvchFirstStr = stringFromVch(vvch[0]);
-				if(vvchFirstStr == vchToFindStr)
-				{
-					COffer theOffer(tx);
-					COfferAccept theOfferAccept;
-					if (theOffer.IsNull())
-						continue;
-					if(theOffer.GetAcceptByHash(vvch[1], theOfferAccept))
-					{
-						nQty += theOfferAccept.nQty;
-					}
-				}
-			}
-		}		
-	}
-	printf("qty in mempool %d\n", nQty);
-	return nQty;
-
-}
 Value offeraccept(const Array& params, bool fHelp) {
 	if (fHelp || 1 > params.size() || params.size() > 3)
 		throw runtime_error("offeraccept <guid> [<quantity] [<message>]\n"
