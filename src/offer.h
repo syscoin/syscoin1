@@ -53,7 +53,7 @@ public:
 	uint256 txHash;
 	uint64 nHeight;
 	uint64 nTime;
-	int64 nQty;
+	uint64 nQty;
 	uint64 nPrice;
 	uint64 nFee;
 	bool bPaid;
@@ -130,7 +130,7 @@ public:
 	std::vector<unsigned char> sTitle;
 	std::vector<unsigned char> sDescription;
 	uint64 nPrice;
-	int64 nQty;
+	uint64 nQty;
 	uint64 nFee;
 	std::vector<COfferAccept>accepts;
 

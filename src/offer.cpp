@@ -1154,8 +1154,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				// only modify the offer's height on an activate or update
 				if(op == OP_OFFER_ACTIVATE || op == OP_OFFER_UPDATE)
 					theOffer.nHeight = pindexBlock->nHeight;
-				if(theOffer.nQty < 0)
-					theOffer.nQty = 0;
 				// set the offer's txn-dependent values
                 theOffer.vchRand = vvchArgs[0];
 				theOffer.txHash = tx.GetHash();
@@ -1264,7 +1262,7 @@ Value offernew(const Array& params, bool fHelp) {
 	// gather inputs
 	string baSig;
 	unsigned int nParamIdx = 0;
-	int64 nQty, nPrice;
+	uint64 nQty, nPrice;
 
 	vector<unsigned char> vchPaymentAddress = vchFromValue(params[nParamIdx++]);
 	CBitcoinAddress payAddr = CBitcoinAddress(stringFromVch(vchPaymentAddress));
@@ -1276,7 +1274,12 @@ Value offernew(const Array& params, bool fHelp) {
 	vector<unsigned char> vchTitle = vchFromValue(params[nParamIdx++]);
 	vector<unsigned char> vchDesc;
 
-	nQty = atoi(params[nParamIdx++].get_str().c_str());
+	int64 qty = atoi64(params[nParamIdx++].get_str().c_str());
+	if(qty < 0)
+	{
+		throw runtime_error("invalid quantity value.");
+	}
+	nQty = (uint64)qty;
 	nPrice = atoi64(params[nParamIdx++].get_str().c_str());
 
 	if(nParamIdx < params.size()) vchDesc = vchFromValue(params[nParamIdx++]);
@@ -1349,9 +1352,9 @@ Value offernew(const Array& params, bool fHelp) {
 	return res;
 }
 
-int QtyOfPendingAcceptsInMempool(std::vector<unsigned char> vchToFind)
+uint64 QtyOfPendingAcceptsInMempool(std::vector<unsigned char> vchToFind)
 {
-	int nQty = 0;
+	uint64 nQty = 0;
 	for (map<uint256, CTransaction>::iterator mi = mempool.mapTx.begin();
 		mi != mempool.mapTx.end(); ++mi) {
 		CTransaction& tx = (*mi).second;
@@ -1395,15 +1398,20 @@ Value offerupdate(const Array& params, bool fHelp) {
 	vector<unsigned char> vchCat = vchFromValue(params[1]);
 	vector<unsigned char> vchTitle = vchFromValue(params[2]);
 	vector<unsigned char> vchDesc;
-	int qty;
-	uint64 price;
+	int64 qty=0;
+	uint64 price,nQty;
 	if (params.size() == 6) vchDesc = vchFromValue(params[5]);
 	try {
-		qty = atoi(params[3].get_str().c_str());
+		qty = atoi64(params[3].get_str().c_str());
 		price = atoi64(params[4].get_str().c_str());
 	} catch (std::exception &e) {
 		throw runtime_error("invalid price and/or quantity values.");
 	}
+	if(qty < 0)
+	{
+		throw runtime_error("invalid quantity value.");
+	}
+	nQty = (uint64)qty;
 	if(vchCat.size() < 1)
         throw runtime_error("offer category < 1 bytes!\n");
 	if(vchTitle.size() < 1)
@@ -1467,11 +1475,11 @@ Value offerupdate(const Array& params, bool fHelp) {
 	theOffer.sCategory = vchCat;
 	theOffer.sTitle = vchTitle;
 	theOffer.sDescription = vchDesc;
-	int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
-	if(((theOffer.nQty+qty)-memPoolQty) < 0)
-		throw runtime_error("Quantity would be less than 0 with this offerupdate, please adjust your quantity parameter and try again");
+	uint64 memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
+	if((nQty-memPoolQty) < 0)
+		throw runtime_error("not enough remaining quantity to fulfill this offerupdate");
 
-	theOffer.nQty = qty;
+	theOffer.nQty = nQty;
 	theOffer.nPrice = price * COIN;
 	theOffer.nFee = nNetFee;
 	theOffer.accepts.clear();
@@ -1570,18 +1578,23 @@ Value offeraccept(const Array& params, bool fHelp) {
 				+ HelpRequiringPassphrase());
 
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
-	vector<unsigned char> vchQty;
+
 	vector<unsigned char> vchMessage = vchFromValue(params.size()==3?params[2]:params[0]);
-	int nQty=1;
+	uint64 nQty;
+	int64 qty = 1;
 	if (params.size() >= 2) {
 		try {
-			nQty=atoi(params[1].get_str().c_str());
+			qty=atoi64(params[1].get_str().c_str());
 		} catch (std::exception &e) {
 			throw runtime_error("invalid price and/or quantity values.");
 		}
-		vchQty = vchFromValue(params[1]);
-	} else vchQty = vchFromValue("1");
+		if(qty < 0)
+		{
+			throw runtime_error("invalid quantity value.");
+		}
 
+	} 
+	nQty = (uint64)qty;
     if (vchMessage.size() < 1)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "offeraccept message data < 1 bytes!\n");
     if (vchMessage.size() > 16 * 1024)
@@ -1633,7 +1646,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos))
 		throw runtime_error("could not read offer with this name from DB");
 	theOffer = vtxPos.back();
-	int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
+	uint64 memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if(theOffer.nQty < (nQty+memPoolQty))
 		throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
 	// create accept object
