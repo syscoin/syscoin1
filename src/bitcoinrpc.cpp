@@ -278,7 +278,6 @@ static const CRPCCommand vRPCCommands[] =
 
 	// use the blockchain to register namespaced aliases
     { "aliasnew",          &aliasnew,          false,      true,      true },
-    { "aliasactivate",     &aliasactivate,     false,      true,      true },
     { "aliasupdate",       &aliasupdate,       false,      true,      true },
     { "aliaslist",         &aliaslist,         false,      true,      true },
     { "aliasinfo",         &aliasinfo,         false,      true,      true },
@@ -291,7 +290,6 @@ static const CRPCCommand vRPCCommands[] =
 
 	// use the blockchain to store provably-ownable data
     { "datanew",          &datanew,         false,      true,      true },
-    { "dataactivate",     &dataactivate,    false,      true,      true },
     { "dataupdate",       &dataupdate,      false,      true,      true },
     { "datalist",         &datalist,        false,      true,      true },
     { "datainfo",         &datainfo,        false,      true,      true },
@@ -313,7 +311,6 @@ static const CRPCCommand vRPCCommands[] =
 
   // use the blockchain as a certificate issuance platform
   { "certissuernew",         &certissuernew,     false,      true,      true },
-  { "certissueractivate",    &certissueractivate,false,      true,      true },
   { "certissuerupdate",      &certissuerupdate,  false,      true,      true },
   { "certnew",               &certnew,           false,      true,      true },
   { "certtransfer",          &certtransfer,      false,      true,      true },

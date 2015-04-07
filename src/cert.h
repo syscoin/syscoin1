@@ -17,7 +17,7 @@ class CDiskTxPos;
 bool CheckCertInputs(CBlockIndex *pindex, const CTransaction &tx, CValidationState &state, CCoinsViewCache &inputs,
                      std::map<std::vector<unsigned char>,uint256> &mapTestPool, bool fBlock, bool fMiner, bool fJustCheck);
 bool IsCertMine(const CTransaction& tx);
-bool IsCertMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasnew = false);
+bool IsCertMine(const CTransaction& tx, const CTxOut& txout);
 std::string SendCertMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, CWalletTx& wtxIn,
                                      CWalletTx& wtxNew, bool fAskFee, const std::string& txData = "");
 bool CreateCertTransactionWithInputTx(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxIn,
@@ -40,10 +40,6 @@ bool ExtractCertIssuerAddress(const CScript& script, std::string& address);
 
 std::string certissuerFromOp(int op);
 
-extern std::map<std::vector<unsigned char>, uint256> mapMyCertIssuers;
-extern std::map<std::vector<unsigned char>, uint256> mapMyCertItems;
-extern std::map<std::vector<unsigned char>, std::set<uint256> > mapCertIssuerPending;
-extern std::map<std::vector<unsigned char>, std::set<uint256> > mapCertItemPending;
 
 class CBitcoinAddress;
 

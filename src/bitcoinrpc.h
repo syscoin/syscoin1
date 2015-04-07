@@ -224,7 +224,6 @@ extern json_spirit::Value dumpdata(const json_spirit::Array& params, bool fHelp)
 
 // register names using the blockchain
 extern json_spirit::Value aliasnew(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value aliasactivate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value aliasupdate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value aliaslist(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value aliasinfo(const json_spirit::Array& params, bool fHelp);
@@ -236,7 +235,6 @@ extern json_spirit::Value getaliasfees(const json_spirit::Array& params, bool fH
 
 // store key-value pairs using the blockchain
 extern json_spirit::Value datanew(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value dataactivate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value dataupdate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value datalist(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value datainfo(const json_spirit::Array& params, bool fHelp);
@@ -258,7 +256,6 @@ extern json_spirit::Value offerclean(const json_spirit::Array& params, bool fHel
 extern json_spirit::Value getofferfees(const json_spirit::Array& params, bool fHelp);
 
 extern json_spirit::Value certissuernew(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value certissueractivate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value certissuerupdate(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value certnew(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value certtransfer(const json_spirit::Array& params, bool fHelp);

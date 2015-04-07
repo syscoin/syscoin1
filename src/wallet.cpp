@@ -755,19 +755,12 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
         int op;
         if(DecodeAliasScript(txout.scriptPubKey, op, vvch)) {
             nCarriedOverCoin -= txout.nValue;
-            if (op != OP_ALIAS_NEW)
-                continue; // Ignore locked coin
         }
 		else if(DecodeOfferScript(txout.scriptPubKey, op, vvch)) {
- 
             nCarriedOverCoin -= txout.nValue;
-
         }
 		else if(DecodeCertScript(txout.scriptPubKey, op, vvch)) {
- 
             nCarriedOverCoin -= txout.nValue;
-            if (op != OP_CERTISSUER_NEW)
-                continue;
         }
         // Don't report 'change' txouts
         if (nDebit > 0 && pwallet->IsChange(txout))
@@ -777,9 +770,9 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
             listSent.push_back(make_pair(address, txout.nValue));
 
         if (pwallet->IsMine(txout) 
-            || IsAliasMine(*this, txout, true) 
+            || IsAliasMine(*this, txout) 
             || IsOfferMine(*this, txout)
-            || IsCertMine(*this, txout, true))
+            || IsCertMine(*this, txout))
             listReceived.push_back(make_pair(address, txout.nValue));
     }
 

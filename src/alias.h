@@ -128,8 +128,7 @@ public:
 
 
 
-extern std::map<std::vector<unsigned char>, uint256> mapMyAliases;
-extern std::map<std::vector<unsigned char>, std::set<uint256> > mapAliasesPending;
+
 
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const json_spirit::Value& value);
@@ -149,8 +148,7 @@ bool CheckAliasInputs(
     bool fBlock, bool fMiner, bool fJustCheck);
 bool ExtractAliasAddress(const CScript& script, std::string& address);
 bool IsAliasMine(const CTransaction& tx);
-bool IsAliasMine2(const CTransaction& tx);
-bool IsAliasMine(const CTransaction& tx, const CTxOut& txout, bool ignore_aliasnew = false);
+bool IsAliasMine(const CTransaction& tx, const CTxOut& txout);
 bool IsAliasOp(int op);
 
 int GetNameTxPosHeight(const CAliasIndex& txPos);
