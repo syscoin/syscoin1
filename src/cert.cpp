@@ -1036,8 +1036,8 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 return error(
                         "CheckCertInputs() : certissueractivate tx pointing to previous syscoin tx");
 
-            if (vvchArgs[0].size() != 20)
-                return error("certissueractivate tx with incorrect hash length");
+            if (vvchArgs[0].size() > 20)
+                return error("certissueractivate tx tx with guid too big");
 			if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
                 return error("certissueractivate tx with value too long");
 
@@ -1316,7 +1316,7 @@ Value certissuernew(const Array& params, bool fHelp) {
     // gather inputs
     uint64 rand = GetRand((uint64) -1);
     vector<unsigned char> vchRand = CBigNum(rand).getvch();
-    vector<unsigned char> vchCertIssuer = vchFromValue(params[0]);
+    vector<unsigned char> vchCertIssuer = vchFromValue(HexStr(vchRand));
 
     // this is a syscoin transaction
     CWalletTx wtx;
@@ -1593,10 +1593,6 @@ Value certtransfer(const Array& params, bool fHelp) {
     uint256 wtxInHash = tx.GetHash();
     if (!pwalletMain->mapWallet.count(wtxInHash))
         throw runtime_error("certtransfer() : certificate is not in your wallet" );
-
-    // check that prev txn contains certissuer
-    if(!theCertIssuer.UnserializeFromTx(tx))
-        throw runtime_error("could not unserialize certificate from txn");
 
     // get the certissuer certitem from certissuer
     if(!theCertIssuer.GetCertItemByHash(vchCertKey, theCertItem))

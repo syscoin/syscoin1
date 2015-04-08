@@ -337,16 +337,10 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				return error("aliasactivate tx with incorrect hash length");
 			if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
 				return error("aliasactivate tx with value too long");
-			printf("CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
-					HexStr(vvchArgs[0]).c_str(), aliasFromOp(op).c_str(),
-					tx.GetHash().ToString().c_str(), pindexBlock->nHeight);
 
 			break;
 
 		case OP_ALIAS_UPDATE:
-
-			if (fBlock && fJustCheck && !found)
-				return true;
 
 			if (!found
 					|| (prevOp != OP_ALIAS_ACTIVATE && prevOp != OP_ALIAS_UPDATE))

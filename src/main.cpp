@@ -1977,12 +1977,6 @@ bool DisconnectOffer( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
 	theFeeObject.nHeight = pindex->nHeight;
 	theFeeObject.nFee = 0;
 	RemoveOfferFee(theFeeObject);
-	//InsertOfferFee(pindex, tx.GetHash(), 0);
-	//vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
-	//if (!pofferdb->WriteOfferTxFees(vOfferFees))
-		//return error( "DisconnectBlock() : failed to write fees to offer DB");
-	
-	
 
 	printf("DISCONNECTED offer TXN: offer=%s op=%s hash=%s  height=%d\n",
 		stringFromVch(vvchArgs[0]).c_str(),
