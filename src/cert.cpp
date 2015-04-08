@@ -1096,7 +1096,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         case OP_CERT_TRANSFER:
 
             // validate conditions
-            if ( ( !found || (prevOp != OP_CERT_NEW && prevOp != OP_CERT_TRANSFER) ) && !fJustCheck )
+            if ( ( !found || (prevOp != OP_CERT_NEW && prevOp != OP_CERT_TRANSFER && prevOp != OP_CERTISSUER_UPDATE) ) && !fJustCheck )
                 return error("certtransfer previous op %s is invalid", certissuerFromOp(prevOp).c_str());
 
             if (vvchArgs[0].size() > 20)
@@ -1412,7 +1412,7 @@ Value certissuerupdate(const Array& params, bool fHelp) {
 
 
   	// check for existing cert issuer's
-	if (ExistsInMempool(vchCertIssuer, OP_CERTISSUER_ACTIVATE) || ExistsInMempool(vchCertIssuer, OP_CERTISSUER_UPDATE)) {
+	if (ExistsInMempool(vchCertIssuer, OP_CERTISSUER_ACTIVATE) || ExistsInMempool(vchCertIssuer, OP_CERTISSUER_UPDATE) || ExistsInMempool(vchCertIssuer, OP_CERT_TRANSFER)) {
 		throw runtime_error("there are pending operations on that certissuer");
 	}
     EnsureWalletIsUnlocked();
@@ -1594,6 +1594,7 @@ Value certtransfer(const Array& params, bool fHelp) {
     if (!pwalletMain->mapWallet.count(wtxInHash))
         throw runtime_error("certtransfer() : certificate is not in your wallet" );
 
+
     // get the certissuer certitem from certissuer
     if(!theCertIssuer.GetCertItemByHash(vchCertKey, theCertItem))
         throw runtime_error("could not find a certificate with this name");
@@ -1616,7 +1617,7 @@ Value certtransfer(const Array& params, bool fHelp) {
         throw runtime_error("could not find a certificate with this hash in DB");
 
   	// check for existing cert issuer's or cert transfer already in progress for this cert issuer, can only transfer a cert of a certissuer one at a time for now!
-	if (ExistsInMempool(vchCert, OP_CERT_NEW) || ExistsInMempool(vchCertIssuer, OP_CERT_TRANSFER)) {
+	if (ExistsInMempool(vchCertIssuer, OP_CERTISSUER_UPDATE) || ExistsInMempool(vchCert, OP_CERT_NEW) || ExistsInMempool(vchCertIssuer, OP_CERT_TRANSFER)) {
 		throw runtime_error("there are pending operations on that cert or certissuer");
 	}
 
