@@ -418,8 +418,8 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				if(nTheFee > 0)
 				{
 					InsertAliasFee(pindexBlock, tx.GetHash(), nTheFee);
-					if (nTheFee != 0)
-						printf( "ALIAS FEES: Added %lf in fees to track for regeneration.\n",
+					
+					printf( "ALIAS FEES: Added %lf in fees to track for regeneration.\n",
 								(double) nTheFee / COIN);
 
 					vector<CAliasFee> vAliasFees(lstAliasFees.begin(),

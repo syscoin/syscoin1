@@ -1211,7 +1211,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				if(nTheFee > 0)
 				{
 					InsertCertFee(pindexBlock, tx.GetHash(), nTheFee);
-					if(nTheFee > 0) printf("CERT FEES: Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
+					printf("CERT FEES: Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
 					vector<CCertFee> vCertIssuerFees(lstCertIssuerFees.begin(), lstCertIssuerFees.end());
 					if (!pcertdb->WriteCertFees(vCertIssuerFees))
 						return error( "CheckCertInputs() : failed to write fees to certissuer DB");
