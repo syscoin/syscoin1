@@ -25,7 +25,6 @@ private:
 	long quantity;
 	COffer& offer;
 	QString notes;
-	QString offerAcceptGUID;
 	QString offerAcceptTXID;
 	bool offerPaid; 
 

@@ -29,11 +29,10 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
     ui(new Ui::AcceptandPayOfferListPage)
 {
     ui->setupUi(this);
-	this->offerAcceptGUID = QString("");
 	this->offerAcceptTXID = QString("");
 	this->offerPaid = false;
 	
-    ui->labelExplanation->setText(tr("Accept and purchase this offer, SysCoins will be used to complete the transaction."));
+    ui->labelExplanation->setText(tr("Accept and purchase this offer, Syscoins will be used to complete the transaction"));
     connect(ui->acceptButton, SIGNAL(clicked()), this, SLOT(acceptOffer()));
 	connect(ui->lookupButton, SIGNAL(clicked()), this, SLOT(lookup()));
 	connect(ui->offeridEdit, SIGNAL(textChanged(const QString &)), this, SLOT(resetState()));
@@ -45,7 +44,6 @@ AcceptandPayOfferListPage::~AcceptandPayOfferListPage()
 }
 void AcceptandPayOfferListPage::resetState()
 {
-		this->offerAcceptGUID = QString("");
 		this->offerAcceptTXID = QString("");
 		this->offerPaid = false;
 		updateCaption();
@@ -57,13 +55,9 @@ void AcceptandPayOfferListPage::updateCaption()
 		{
 			ui->labelExplanation->setText(tr("<font color='green'>You have successfully paid for this offer!</font>"));
 		}
-		else if(this->offerAcceptGUID != QString(""))
-		{
-			ui->labelExplanation->setText(tr("<font color='red'>You have accepted the offer, please click Pay to complete your payment.</font>"));
-		}
 		else
 		{
-			ui->labelExplanation->setText(tr("Accept and purchase this offer, SysCoins will be used to complete the transaction."));
+			ui->labelExplanation->setText(tr("Accept and purchase this offer, Syscoins will be used to complete the transaction"));
 		}
 		
 }
@@ -89,15 +83,15 @@ void AcceptandPayOfferListPage::acceptOffer()
 			return;
 		}
 		this->offerPaid = false;
-		if(this->offerAcceptGUID != QString("") && this->offerAcceptTXID != QString(""))
+		ui->labelExplanation->setText(tr("Waiting for confirmation on the purchase of this offer"));
+		if(this->offerAcceptTXID != QString(""))
 		{
-				OfferPayDialog dlg(ui->offeridEdit->text(), this->offerAcceptGUID, this->offerAcceptTXID,ui->notesEdit->toPlainText(), this);
+				OfferPayDialog dlg(ui->offeridEdit->text(), this->offerAcceptTXID,ui->notesEdit->toPlainText(), this);
 				if(dlg.exec())
 				{
 					this->offerPaid = dlg.getPaymentStatus();
 					if(this->offerPaid)
 					{
-						this->offerAcceptGUID = QString("");
 						this->offerAcceptTXID = QString("");
 						lookup();
 					}
@@ -108,6 +102,10 @@ void AcceptandPayOfferListPage::acceptOffer()
 		}
 		params.push_back(ui->offeridEdit->text().toStdString());
 		params.push_back(ui->qtyEdit->text().toStdString());
+		if(ui->notesEdit->toPlainText() != QString(""))
+		{
+			params.push_back(ui->notesEdit->toPlainText().toStdString());
+		}
 
 	    try {
             result = tableRPC.execute(strMethod, params);
@@ -115,16 +113,14 @@ void AcceptandPayOfferListPage::acceptOffer()
 			{
 				arr = result.get_array();
 				this->offerAcceptTXID = QString::fromStdString(arr[0].get_str());
-				this->offerAcceptGUID = QString::fromStdString(arr[1].get_str());
-				if(this->offerAcceptGUID != QString("") && this->offerAcceptTXID != QString(""))
+				if(this->offerAcceptTXID != QString(""))
 				{
-					OfferPayDialog dlg(ui->offeridEdit->text(), this->offerAcceptGUID, this->offerAcceptTXID,ui->notesEdit->toPlainText(), this);
+					OfferPayDialog dlg(ui->offeridEdit->text(), this->offerAcceptTXID,ui->notesEdit->toPlainText(), this);
 					if(dlg.exec())
 					{
 						this->offerPaid = dlg.getPaymentStatus();
 						if(this->offerPaid)
 						{
-							this->offerAcceptGUID = QString("");
 							this->offerAcceptTXID = QString("");
 							lookup();
 						}
@@ -150,7 +146,7 @@ void AcceptandPayOfferListPage::acceptOffer()
 			return;
 		}
 	
-		if(this->offerAcceptGUID == QString("") || this->offerAcceptTXID == QString("") )
+		if(this->offerAcceptTXID == QString("") )
 		{
 			QMessageBox::critical(this, windowTitle(),
 				tr("Offer Accept returned empty result!"),
@@ -296,7 +292,6 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 				this->offerPaid = dlg.getPaymentStatus();
 				if(this->offerPaid)
 				{
-					this->offerAcceptGUID = QString("");
 					this->offerAcceptTXID = QString("");
 					lookup();
 				}

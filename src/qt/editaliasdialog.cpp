@@ -104,40 +104,23 @@ bool EditAliasDialog::saveCurrentRow()
                 QMessageBox::Ok, QMessageBox::Ok);
             return false;
         }
-		newFee = 1;
-		QMessageBox::StandardButton retval;
-		activateFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE)/COIN;
-		newFeeStr = strprintf("%"PRI64d, newFee);
-		activateFeeStr = strprintf("%"PRI64d, activateFee);
-		retval = QMessageBox::question(this, tr("Confirm new Alias"),
-			tr("Warning: Creating new Alias will cost ") + QString::fromStdString(newFeeStr) + tr(" SYS, and activating will cost ") + QString::fromStdString(activateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish to create an Alias?"),
-                 QMessageBox::Yes|QMessageBox::Cancel,
-                 QMessageBox::Cancel);
-        if(retval != QMessageBox::Yes)
-        {
-			return false;
-		}
 		strMethod = string("aliasnew");
         params.push_back(ui->aliasEdit->text().trimmed().toStdString());
+		params.push_back(ui->nameEdit->text().toStdString());
 		try {
             Value result = tableRPC.execute(strMethod, params);
 			if (result.type() == array_type)
 			{
 				Array arr = result.get_array();
-								
-				strMethod = string("aliasactivate");
-				params.clear();
-                params.push_back(ui->aliasEdit->text().trimmed().toStdString());
-				params.push_back(arr[1].get_str());
-				params.push_back(ui->nameEdit->text().toStdString());
-				result = tableRPC.execute(strMethod, params);
 				if (result.type() != null_type)
 				{
-					
+					string strResult = result.get_str();
+					alias = ui->nameEdit->text() + ui->aliasEdit->text();
+
 					QMessageBox::information(this, windowTitle(),
-                    tr("New Alias created successfully! Alias will be active after 120 confirmations. GUID for the new Alias is: \"%1\"").arg(QString::fromStdString(arr[1].get_str())),
-					QMessageBox::Ok, QMessageBox::Ok);
-					return true;
+                    tr("New Alias created successfully! TXID: \"%1\"").arg(QString::fromStdString(strResult)),
+						QMessageBox::Ok, QMessageBox::Ok);
+						
 				}	
 			}
 		}
@@ -184,7 +167,7 @@ bool EditAliasDialog::saveCurrentRow()
 					alias = ui->nameEdit->text() + ui->aliasEdit->text();
 
 					QMessageBox::information(this, windowTitle(),
-                    tr("Alias updated successfully! Transaction Id for the update is: \"%1\"").arg(QString::fromStdString(strResult)),
+                    tr("Alias updated successfully! TXID: \"%1\"").arg(QString::fromStdString(strResult)),
 						QMessageBox::Ok, QMessageBox::Ok);
 						
 				}
@@ -232,7 +215,7 @@ bool EditAliasDialog::saveCurrentRow()
 					alias = ui->nameEdit->text() + ui->aliasEdit->text()+ui->transferEdit->text();
 
 					QMessageBox::information(this, windowTitle(),
-                    tr("Alias transferred successfully! Transaction Id for the update is: \"%1\" <br><br>").arg(QString::fromStdString(strResult)),
+                    tr("Alias transferred successfully! TXID: \"%1\"").arg(QString::fromStdString(strResult)),
 						QMessageBox::Ok, QMessageBox::Ok);
 						
 				}

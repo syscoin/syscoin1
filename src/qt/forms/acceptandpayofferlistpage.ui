@@ -242,7 +242,11 @@
    <item>
     <widget class="QPushButton" name="acceptButton">
      <property name="text">
-      <string>&amp;Accept Offer</string>
+      <string>&amp;Pay For Item</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../bitcoin.qrc">
+       <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
      </property>
     </widget>
    </item>

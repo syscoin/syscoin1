@@ -60,7 +60,7 @@
       <cursorShape>IBeamCursor</cursorShape>
      </property>
      <property name="text">
-      <string notr="true">After accepting this item you will be prompted to pay once there is a confirmation of your order on the blockchain</string>
+      <string notr="true">After paying for this item, you should wait until confirmation however this is not strictly necessary.</string>
      </property>
      <property name="textFormat">
       <enum>Qt::RichText</enum>
@@ -76,7 +76,11 @@
    <item row="3" column="0">
     <widget class="QPushButton" name="acceptButton">
      <property name="text">
-      <string>&amp;Accept Offer</string>
+      <string>&amp;Pay for Item</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../bitcoin.qrc">
+       <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
      </property>
     </widget>
    </item>

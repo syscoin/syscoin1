@@ -11,19 +11,19 @@
 using namespace std;
 using namespace json_spirit;
 extern const CRPCTable tableRPC;
-OfferPayDialog::OfferPayDialog(QString offerID, QString offerAcceptGUID, QString offerAcceptTXID, QString notes, QWidget *parent) :
+OfferPayDialog::OfferPayDialog(QString offerAcceptGUID, QString offerAcceptTXID, QString notes, QWidget *parent) :
     QDialog(parent), 
-	ui(new Ui::OfferPayDialog), offerID(offerID), offerAcceptGUID(offerAcceptGUID), offerAcceptTXID(offerAcceptTXID), notes(notes)
+	ui(new Ui::OfferPayDialog), offerAcceptGUID(offerAcceptGUID), offerAcceptTXID(offerAcceptTXID), notes(notes)
 {
     ui->setupUi(this);
 	this->offerPaid = false;
 	this->progress = 0;
 	ui->progressBar->setValue(this->progress);
-	connect(ui->payButton, SIGNAL(clicked()), this, SLOT(pay()));
+	connect(ui->finishButton, SIGNAL(clicked()), this, SLOT(accept()));
 	this->timer = new QTimer(this);
     connect(this->timer, SIGNAL(timeout()), this, SLOT(offerAcceptWatcher()));
     this->timer->start(10);
-	ui->payButton->setEnabled(false);
+	ui->finishButton->setEnabled(false);
 
 }
 
@@ -32,87 +32,7 @@ OfferPayDialog::~OfferPayDialog()
 	timer->stop();
     delete ui;
 }
-// send offeraccept with offer guid/qty as params and then send offerpay with wtxid (first param of response) as param, using RPC commands.
-void OfferPayDialog::pay()
-{
 
-		Array params;
-		Value valError;
-		Object ret ;
-		Value valResult;
-		Array arr;
-		Value valId;
-		Value result ;
-		string strReply;
-		string strError;
-		string strMethod = string("offerpay");
-		QString payTXID = QString("");
-		if(this->notes == QString(""))
-		{
-			QMessageBox::critical(this, windowTitle(),
-				tr("You must enter a note to the seller, usually shipping address if the offer is for a physical item!"),
-				QMessageBox::Ok, QMessageBox::Ok);
-			return;
-		}
-		if(this->offerAcceptGUID == QString(""))
-		{
-			QMessageBox::critical(this, windowTitle(),
-				tr("You must accept the offer first!"),
-				QMessageBox::Ok, QMessageBox::Ok);
-			return;
-		}
-		this->offerPaid = false;
-		params.push_back(this->offerAcceptGUID.toStdString());
-		params.push_back(this->notes.toStdString());
-	    try {
-            result = tableRPC.execute(strMethod, params);
-			if (result.type() == array_type)
-			{
-				arr = result.get_array();				
-				payTXID = QString::fromStdString(arr[0].get_str());
-				if(payTXID != QString(""))
-				{
-					this->offerPaid = true;
-				}
-			}
-		}
-		catch (Object& objError)
-		{
-			strError = find_value(objError, "message").get_str();
-			QMessageBox::critical(this, windowTitle(),
-			tr("Error paying for offer: \"%1\"").arg(QString::fromStdString(strError)),
-				QMessageBox::Ok, QMessageBox::Ok);
-			return;
-		}
-		catch(std::exception& e)
-		{
-			QMessageBox::critical(this, windowTitle(),
-				tr("General exception when trying to pay for offer"),
-				QMessageBox::Ok, QMessageBox::Ok);
-					return;
-		}
-			
-		if(this->offerPaid)
-		{
-			QMessageBox::information(this, tr("Purchase Complete"),
-				tr("<p><FONT COLOR='green'><b>Your payment is complete!</b></FONT></p><p>The merchant has been sent your delivery information and your item should arrive shortly. The merchant may followup with further information.</p><br><p>TxID: <b>%1</b></p>").arg(payTXID),
-				QMessageBox::Ok, QMessageBox::Ok);	
-			if(this->offerPaid)
-			{
-				this->offerAcceptGUID = QString("");
-				this->offerAcceptTXID = QString("");
-			}
-			OfferPayDialog::accept();
-		}
-		else
-		{
-			QMessageBox::critical(this, windowTitle(),
-				tr("Offer pay returned empty result!"),
-				QMessageBox::Ok, QMessageBox::Ok);
-		}
-   
-
-}
 void OfferPayDialog::offerAcceptWatcher()
 {
     if(this->progress >= 100)
@@ -148,7 +68,7 @@ bool OfferPayDialog::lookup()
 	string strMethod = string("offerinfo");
 	Array params;
 	Value result;
-	params.push_back(this->offerID.toStdString());
+	params.push_back(this->offerAcceptGUID.toStdString());
 	ui->purchaseHint->setText(tr("Purchase accepted. Waiting for confirmation, this may take a few minutes..."));
     try {
         result = tableRPC.execute(strMethod, params);
@@ -169,7 +89,7 @@ bool OfferPayDialog::lookup()
 			  Array arr = acceptsValue.get_array();
 			  BOOST_FOREACH(Value& accept, arr)
 			  {
-				QString txid = QString("");
+				QString paytxid = QString("");
 				QString paid = QString("");
 				QString priceStr = QString("");
 				QString qtyStr = QString("");
@@ -178,9 +98,9 @@ bool OfferPayDialog::lookup()
 				if (accept.type() != obj_type)
 					continue;
 				Object& o = accept.get_obj();
-				const Value& txid_value = find_value(o, "txid");
+				const Value& txid_value = find_value(o, "paytxid");
 				if (txid_value.type() == str_type)
-					txid = QString::fromStdString(txid_value.get_str());
+					paytxid = QString::fromStdString(txid_value.get_str());
 				const Value& paid_value = find_value(o, "paid");
 				if (paid_value.type() == str_type)
 					paid = QString::fromStdString(paid_value.get_str());
@@ -194,28 +114,11 @@ bool OfferPayDialog::lookup()
 				qty = qtyStr.toLong();
 				price = priceStr.toLongLong()*qty;
 				priceStr = QString::number(price);
-				if(txid == this->offerAcceptTXID)
+				if(paytxid == this->offerAcceptTXID)
 				{
 					if(paid == QString("true")) {
-						QMessageBox::critical(this, windowTitle(),
-								tr("You have already paid for this offer!"),
-								QMessageBox::Ok, QMessageBox::Ok);
-						this->offerPaid = true;
-						this->offerAcceptGUID = QString("");
-						this->offerAcceptTXID = QString("");
-						this->progress = 100;
-						this->timer->stop();				
-						ui->progressBar->setValue(this->progress);
-						OfferPayDialog::accept();
-					}
-					else
-					{
-						ui->payMessage->setText(tr("You've purchased %1 of '%2' for %3 SYS!").arg(qtyStr).arg(QString::fromStdString(stringFromVch(offerOut.sTitle))).arg(priceStr));
-						ui->purchaseHint->setText(tr("Please click the button below to complete your purchase"));
-						ui->payButton->setEnabled(true);
-						this->progress = 100;
-						this->timer->stop();				
-						ui->progressBar->setValue(this->progress);
+						ui->payMessage->setText(tr("<p>You've purchased %1 of '%2' for %3 SYS!</p><p><FONT COLOR='green'><b>Your payment is complete!</b></FONT></p><p>The merchant has been sent your delivery information and your item should arrive shortly. The merchant may followup with further information.</p><br><p>TxID: <b>%1</b></p>").arg(qtyStr).arg(QString::fromStdString(stringFromVch(offerOut.sTitle))).arg(priceStr).arg(paytxid));
+						confirmed();
 					}
 				}
 			  }	
@@ -242,6 +145,17 @@ bool OfferPayDialog::lookup()
 	return true;
 
 
+}
+void OfferPayDialog::confirmed()
+{
+	ui->finishButton->setEnabled(true);
+	this->offerPaid = true;
+	this->offerAcceptGUID = QString("");
+	this->offerAcceptTXID = QString("");
+	this->progress = 100;
+	this->timer->stop();				
+	ui->progressBar->setValue(this->progress);
+	ui->purchaseHint->setText(tr("Please click Finish"));
 }
 bool OfferPayDialog::getPaymentStatus()
 {

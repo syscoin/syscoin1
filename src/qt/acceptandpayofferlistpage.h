@@ -45,7 +45,6 @@ private:
 	bool URIHandled;
     QString returnValue;
 	bool offerPaid;
-	QString offerAcceptGUID;
 	QString offerAcceptTXID;
     QMenu *contextMenu;
     QAction *deleteAction; // to be able to explicitly disable it

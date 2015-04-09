@@ -14,17 +14,6 @@
    <string>Pay For Item</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="3" column="0">
-    <widget class="QPushButton" name="payButton">
-     <property name="text">
-      <string>&amp;Pay for Item</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../bitcoin.qrc">
-       <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
-     </property>
-    </widget>
-   </item>
    <item row="0" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
@@ -78,6 +67,17 @@
      </property>
      <property name="format">
       <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QPushButton" name="finishButton">
+     <property name="text">
+      <string>&amp;Finish</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../bitcoin.qrc">
+       <normaloff>:/icons/synced</normaloff>:/icons/synced</iconset>
      </property>
     </widget>
    </item>

@@ -15,25 +15,23 @@ class OfferPayDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit OfferPayDialog(QString offerID, QString offerAcceptGUID, QString offerAcceptTXID, QString notes, QWidget *parent = 0);
+    explicit OfferPayDialog(QString offerAcceptGUID, QString offerAcceptTXID, QString notes, QWidget *parent = 0);
     ~OfferPayDialog();
 
 
     bool getPaymentStatus();
 	bool lookup();
-
+	void confirmed();
 private:
 	Ui::OfferPayDialog *ui;
 	QTimer* timer;
 	int progress;
-	QString offerID;
 	QString offerAcceptTXID;
 	QString offerAcceptGUID;
 	QString notes;
 	bool offerPaid;  
 private slots:
 	void offerAcceptWatcher();
-    void pay();
 
 };
 

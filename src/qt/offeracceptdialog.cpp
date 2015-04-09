@@ -23,7 +23,6 @@ OfferAcceptDialog::OfferAcceptDialog(COffer& offer, long quantity, QString notes
 	ui->acceptMessage->setText(tr("Are you sure you want to purchase %1 of '%2'? You will be charged %3 SYS").arg(qtyStr).arg(QString::fromStdString(stringFromVch(this->offer.sTitle))).arg(priceStr));
 	
 	this->offerPaid = false;
-	this->offerAcceptGUID = QString("");
 	this->offerAcceptTXID = QString("");
 	connect(ui->acceptButton, SIGNAL(clicked()), this, SLOT(acceptOffer()));
 }
@@ -54,15 +53,14 @@ void OfferAcceptDialog::acceptOffer()
 			return;
 		}
 		this->offerPaid = false;
-		if(this->offerAcceptGUID != QString("") && this->offerAcceptTXID != QString(""))
+		if(this->offerAcceptTXID != QString(""))
 		{
-			OfferPayDialog dlg(QString::fromStdString(stringFromVch(this->offer.vchRand)), this->offerAcceptGUID, this->offerAcceptTXID,this->notes, this);
+			OfferPayDialog dlg(QString::fromStdString(stringFromVch(this->offer.vchRand)), this->offerAcceptTXID,this->notes, this);
 			if(dlg.exec())
 			{
 				this->offerPaid = dlg.getPaymentStatus();
 				if(this->offerPaid)
 				{
-					this->offerAcceptGUID = QString("");
 					this->offerAcceptTXID = QString("");
 				}
 				OfferAcceptDialog::accept();
@@ -77,6 +75,10 @@ void OfferAcceptDialog::acceptOffer()
 		}
 		params.push_back(stringFromVch(this->offer.vchRand));
 		params.push_back(QString::number(this->quantity).toStdString());
+		if(this->notes != QString(""))
+		{
+			params.push_back(this->notes.toStdString());
+		}
 
 	    try {
             result = tableRPC.execute(strMethod, params);
@@ -84,16 +86,14 @@ void OfferAcceptDialog::acceptOffer()
 			{
 				arr = result.get_array();
 				this->offerAcceptTXID = QString::fromStdString(arr[0].get_str());
-				this->offerAcceptGUID = QString::fromStdString(arr[1].get_str());
-				if(this->offerAcceptGUID != QString("") && this->offerAcceptTXID != QString(""))
+				if(this->offerAcceptTXID != QString(""))
 				{
-					OfferPayDialog dlg(QString::fromStdString(stringFromVch(this->offer.vchRand)), this->offerAcceptGUID, this->offerAcceptTXID, this->notes,   this);
+					OfferPayDialog dlg(QString::fromStdString(stringFromVch(this->offer.vchRand)), this->offerAcceptTXID, this->notes, this);
 					if(dlg.exec())
 					{
 						this->offerPaid = dlg.getPaymentStatus();
 						if(this->offerPaid)
 						{
-							this->offerAcceptGUID = QString("");
 							this->offerAcceptTXID = QString("");
 						}
 						OfferAcceptDialog::accept();
@@ -123,7 +123,7 @@ void OfferAcceptDialog::acceptOffer()
 			return;
 		}
 	
-		if(this->offerAcceptGUID == QString("") || this->offerAcceptTXID == QString(""))
+		if(this->offerAcceptTXID == QString(""))
 		{
 			QMessageBox::critical(this, windowTitle(),
 				tr("Offer Accept returned empty result!"),
