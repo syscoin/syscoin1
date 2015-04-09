@@ -36,16 +36,16 @@ public:
 	bool handleURI(const QString& strURI);
 	void setValue(const COffer &offer);
 	void updateCaption();
+	void OpenPayDialog();
 public slots:
     void acceptOffer();
-	void lookup();
+	bool lookup(QString id = QString(""));
 	void resetState();
 private:
     Ui::AcceptandPayOfferListPage *ui;
 	bool URIHandled;
     QString returnValue;
 	bool offerPaid;
-	QString offerAcceptTXID;
     QMenu *contextMenu;
     QAction *deleteAction; // to be able to explicitly disable it
 

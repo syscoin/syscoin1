@@ -81,6 +81,9 @@
        </property>
       </widget>
      </item>
+     <item row="7" column="1">
+      <widget class="QPlainTextEdit" name="notesEdit"/>
+     </item>
      <item row="10" column="0">
       <widget class="QLabel" name="label_3">
        <property name="font">
@@ -137,7 +140,7 @@
      <item row="13" column="0">
       <widget class="QLabel" name="label_5">
        <property name="text">
-        <string>Price:</string>
+        <string>Price (SYS):</string>
        </property>
       </widget>
      </item>
@@ -197,7 +200,7 @@
      <item row="16" column="0">
       <widget class="QLabel" name="label_8">
        <property name="text">
-        <string>Fee:</string>
+        <string>Fee (SYS):</string>
        </property>
       </widget>
      </item>
@@ -234,19 +237,16 @@
        </property>
       </widget>
      </item>
-     <item row="7" column="1">
-      <widget class="QPlainTextEdit" name="notesEdit"/>
-     </item>
     </layout>
    </item>
    <item>
     <widget class="QPushButton" name="acceptButton">
      <property name="text">
-      <string>&amp;Pay For Item</string>
+      <string>&amp;Accept Offer</string>
      </property>
      <property name="icon">
       <iconset resource="../bitcoin.qrc">
-       <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
+       <normaloff>:/icons/cart</normaloff>:/icons/cart</iconset>
      </property>
     </widget>
    </item>

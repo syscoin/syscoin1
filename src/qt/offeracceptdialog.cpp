@@ -11,19 +11,16 @@ using namespace std;
 using namespace json_spirit;
 extern const CRPCTable tableRPC;
 
-OfferAcceptDialog::OfferAcceptDialog(COffer& offer, long quantity, QString notes, QWidget *parent) :
+OfferAcceptDialog::OfferAcceptDialog(QString title, QString price, QString quantity, QString offerAcceptGUID, QString notes, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::OfferAcceptDialog), offer(offer), notes(notes), quantity(quantity)
+    ui(new Ui::OfferAcceptDialog), offerAcceptGUID(offerAcceptGUID), notes(notes), quantity(quantity)
 {
     ui->setupUi(this);
 	ui->acceptMessage->setText(tr("There was a problem accepting this offer, please try again..."));
 
-	QString qtyStr = QString::number(this->quantity);
-	QString priceStr = QString::number(this->quantity*this->offer.nPrice);
-	ui->acceptMessage->setText(tr("Are you sure you want to purchase %1 of '%2'? You will be charged %3 SYS").arg(qtyStr).arg(QString::fromStdString(stringFromVch(this->offer.sTitle))).arg(priceStr));
+	ui->acceptMessage->setText(tr("Are you sure you want to purchase %1 of '%2'? You will be charged %3 SYS").arg(quantity).arg(title).arg(price));
 	
 	this->offerPaid = false;
-	this->offerAcceptTXID = QString("");
 	connect(ui->acceptButton, SIGNAL(clicked()), this, SLOT(acceptOffer()));
 }
 
@@ -45,7 +42,7 @@ void OfferAcceptDialog::acceptOffer()
 		string strReply;
 		string strError;
 		string strMethod = string("offeraccept");
-		if(this->quantity <= 0)
+		if(this->quantity.toLong() <= 0)
 		{
 			QMessageBox::critical(this, windowTitle(),
 				tr("Invalid quantity when trying to accept offer!"),
@@ -53,28 +50,8 @@ void OfferAcceptDialog::acceptOffer()
 			return;
 		}
 		this->offerPaid = false;
-		if(this->offerAcceptTXID != QString(""))
-		{
-			OfferPayDialog dlg(QString::fromStdString(stringFromVch(this->offer.vchRand)), this->offerAcceptTXID,this->notes, this);
-			if(dlg.exec())
-			{
-				this->offerPaid = dlg.getPaymentStatus();
-				if(this->offerPaid)
-				{
-					this->offerAcceptTXID = QString("");
-				}
-				OfferAcceptDialog::accept();
-			}
-			else
-			{
-				OfferAcceptDialog::close();
-			}
-			
-
-			return;
-		}
-		params.push_back(stringFromVch(this->offer.vchRand));
-		params.push_back(QString::number(this->quantity).toStdString());
+		params.push_back(this->offerAcceptGUID.toStdString());
+		params.push_back(this->quantity.toStdString());
 		if(this->notes != QString(""))
 		{
 			params.push_back(this->notes.toStdString());
@@ -85,17 +62,13 @@ void OfferAcceptDialog::acceptOffer()
 			if (result.type() == array_type)
 			{
 				arr = result.get_array();
-				this->offerAcceptTXID = QString::fromStdString(arr[0].get_str());
-				if(this->offerAcceptTXID != QString(""))
+				QString offerAcceptTXID = QString::fromStdString(arr[0].get_str());
+				if(offerAcceptTXID != QString(""))
 				{
-					OfferPayDialog dlg(QString::fromStdString(stringFromVch(this->offer.vchRand)), this->offerAcceptTXID, this->notes, this);
+					OfferPayDialog dlg(this->offerAcceptGUID, offerAcceptTXID, this->notes, this);
 					if(dlg.exec())
 					{
 						this->offerPaid = dlg.getPaymentStatus();
-						if(this->offerPaid)
-						{
-							this->offerAcceptTXID = QString("");
-						}
 						OfferAcceptDialog::accept();
 					}
 					else
@@ -123,12 +96,6 @@ void OfferAcceptDialog::acceptOffer()
 			return;
 		}
 	
-		if(this->offerAcceptTXID == QString(""))
-		{
-			QMessageBox::critical(this, windowTitle(),
-				tr("Offer Accept returned empty result!"),
-				QMessageBox::Ok, QMessageBox::Ok);
-		}
    
 
 }

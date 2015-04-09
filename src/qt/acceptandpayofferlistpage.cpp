@@ -2,7 +2,6 @@
 #include "ui_acceptandpayofferlistpage.h"
 #include "init.h"
 #include "util.h"
-#include "offerpaydialog.h"
 #include "offeracceptdialog.h"
 
 #include "offer.h"
@@ -29,7 +28,6 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
     ui(new Ui::AcceptandPayOfferListPage)
 {
     ui->setupUi(this);
-	this->offerAcceptTXID = QString("");
 	this->offerPaid = false;
 	
     ui->labelExplanation->setText(tr("Accept and purchase this offer, Syscoins will be used to complete the transaction"));
@@ -44,7 +42,6 @@ AcceptandPayOfferListPage::~AcceptandPayOfferListPage()
 }
 void AcceptandPayOfferListPage::resetState()
 {
-		this->offerAcceptTXID = QString("");
 		this->offerPaid = false;
 		updateCaption();
 }
@@ -61,109 +58,46 @@ void AcceptandPayOfferListPage::updateCaption()
 		}
 		
 }
+void AcceptandPayOfferListPage::OpenPayDialog()
+{
+	QString price = QString::number(ui->infoPrice->text().toLongLong()*ui->qtyEdit->text().toLong());
+	OfferAcceptDialog dlg(ui->infoTitle->text(), price, ui->qtyEdit->text(), ui->offeridEdit->text(), ui->notesEdit->toPlainText(), this);
+	if(dlg.exec())
+	{
+		this->offerPaid = dlg.getPaymentStatus();
+		if(this->offerPaid)
+		{
+			lookup();
+		}
+	}
+	updateCaption();
+}
 // send offeraccept with offer guid/qty as params and then send offerpay with wtxid (first param of response) as param, using RPC commands.
 void AcceptandPayOfferListPage::acceptOffer()
 {
-
-		Array params;
-		Value valError;
-		Object ret ;
-		Value valResult;
-		Array arr;
-		Value valId;
-		Value result ;
-		string strReply;
-		string strError;
-		string strMethod = string("offeraccept");
-		if(ui->qtyEdit->text().toInt() <= 0)
-		{
-			QMessageBox::critical(this, windowTitle(),
-				tr("Invalid quantity when trying to accept offer!"),
-				QMessageBox::Ok, QMessageBox::Ok);
-			return;
-		}
-		this->offerPaid = false;
-		ui->labelExplanation->setText(tr("Waiting for confirmation on the purchase of this offer"));
-		if(this->offerAcceptTXID != QString(""))
-		{
-				OfferPayDialog dlg(ui->offeridEdit->text(), this->offerAcceptTXID,ui->notesEdit->toPlainText(), this);
-				if(dlg.exec())
-				{
-					this->offerPaid = dlg.getPaymentStatus();
-					if(this->offerPaid)
-					{
-						this->offerAcceptTXID = QString("");
-						lookup();
-					}
-				}
-				updateCaption();
-
-			return;
-		}
-		params.push_back(ui->offeridEdit->text().toStdString());
-		params.push_back(ui->qtyEdit->text().toStdString());
-		if(ui->notesEdit->toPlainText() != QString(""))
-		{
-			params.push_back(ui->notesEdit->toPlainText().toStdString());
-		}
-
-	    try {
-            result = tableRPC.execute(strMethod, params);
-			if (result.type() == array_type)
-			{
-				arr = result.get_array();
-				this->offerAcceptTXID = QString::fromStdString(arr[0].get_str());
-				if(this->offerAcceptTXID != QString(""))
-				{
-					OfferPayDialog dlg(ui->offeridEdit->text(), this->offerAcceptTXID,ui->notesEdit->toPlainText(), this);
-					if(dlg.exec())
-					{
-						this->offerPaid = dlg.getPaymentStatus();
-						if(this->offerPaid)
-						{
-							this->offerAcceptTXID = QString("");
-							lookup();
-						}
-					}
-					updateCaption();
-					return;
-				}
-			}
-		}
-		catch (Object& objError)
-		{
-			strError = find_value(objError, "message").get_str();
-			QMessageBox::critical(this, windowTitle(),
-			tr("Error accepting offer: \"%1\"").arg(QString::fromStdString(strError)),
-				QMessageBox::Ok, QMessageBox::Ok);
-			return;
-		}
-		catch(std::exception& e)
-		{
-			QMessageBox::critical(this, windowTitle(),
-				tr("General exception when accepting offer"),
-				QMessageBox::Ok, QMessageBox::Ok);
-			return;
-		}
-	
-		if(this->offerAcceptTXID == QString("") )
-		{
-			QMessageBox::critical(this, windowTitle(),
-				tr("Offer Accept returned empty result!"),
-				QMessageBox::Ok, QMessageBox::Ok);	
-		}
-   
-
+	if(ui->qtyEdit->text().toInt() <= 0)
+	{
+		QMessageBox::critical(this, windowTitle(),
+			tr("Invalid quantity when trying to accept this offer!"),
+			QMessageBox::Ok, QMessageBox::Ok);
+		return;
+	}
+	this->offerPaid = false;
+	ui->labelExplanation->setText(tr("Waiting for confirmation on the purchase of this offer"));
+	OpenPayDialog();
 }
 
-void AcceptandPayOfferListPage::lookup()
+bool AcceptandPayOfferListPage::lookup(QString id)
 {
-
+	if(id == QString(""))
+	{
+		id = ui->offeridEdit->text();
+	}
 	string strError;
 	string strMethod = string("offerinfo");
 	Array params;
 	Value result;
-	params.push_back(ui->offeridEdit->text().toStdString());
+	params.push_back(id.toStdString());
 
     try {
         result = tableRPC.execute(strMethod, params);
@@ -197,6 +131,7 @@ void AcceptandPayOfferListPage::lookup()
 			offerOut.nFee = QString::number(find_value(offerObj, "service_fee").get_real()).toLongLong();
 			offerOut.vchPaymentAddress = vchFromString(find_value(offerObj, "payment_address").get_str());
 			setValue(offerOut);
+			return true;
 		}
 		 
 
@@ -214,6 +149,7 @@ void AcceptandPayOfferListPage::lookup()
 			tr("There was an exception trying to locate this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
 				QMessageBox::Ok, QMessageBox::Ok);
 	}
+	return false;
 
 
 }
@@ -253,54 +189,12 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 				ui->notesEdit->setPlainText(notes);
 			}
 		}
-
-        result = tableRPC.execute(strMethod, params);
-
-		if (result.type() == obj_type)
+		if(lookup(uri.path()))
 		{
-			Object offerObj;
-			offerObj = result.get_obj();
-			COffer offerOut;
-			offerOut.vchRand = vchFromString(find_value(offerObj, "id").get_str());
-			offerOut.sTitle = vchFromString(find_value(offerObj, "title").get_str());
-			offerOut.sCategory = vchFromString(find_value(offerObj, "category").get_str());
-			offerOut.nPrice = QString::number(find_value(offerObj, "price").get_real()).toLongLong();
-			offerOut.nQty = QString::fromStdString(find_value(offerObj, "quantity").get_str()).toLong();
-			string descString = find_value(offerObj, "description").get_str();
-			offerOut.sDescription = vchFromString(descString);
-			Value outerDescValue;
-			if (read_string(descString, outerDescValue))
-			{
-				if(outerDescValue.type() == obj_type)
-				{
-					const Object& outerDescObj = outerDescValue.get_obj();
-					Value descValue = find_value(outerDescObj, "description");
-					if (descValue.type() == str_type)
-					{
-						offerOut.sDescription = vchFromString(descValue.get_str());
-					}
-				}
-
-			}
-			offerOut.nFee = QString::number(find_value(offerObj, "service_fee").get_real()).toLongLong();
-			offerOut.vchPaymentAddress = vchFromString(find_value(offerObj, "payment_address").get_str());
-			setValue(offerOut);
 			this->URIHandled = true;
-			OfferAcceptDialog dlg(offerOut, qty, ui->notesEdit->toPlainText(), this);
-			if(dlg.exec())
-			{	
-				this->offerPaid = dlg.getPaymentStatus();
-				if(this->offerPaid)
-				{
-					this->offerAcceptTXID = QString("");
-					lookup();
-				}
-			}
+			OpenPayDialog();
 			this->URIHandled = false;
-			updateCaption();
-		}
-		 
-		
+		}	
 	}
 	catch (Object& objError)
 	{
@@ -327,7 +221,7 @@ void AcceptandPayOfferListPage::setValue(const COffer &offer)
     ui->offeridEdit->setText(QString::fromStdString(stringFromVch(offer.vchRand)));
 	ui->infoTitle->setText(QString::fromStdString(stringFromVch(offer.sTitle)));
 	ui->infoCategory->setText(QString::fromStdString(stringFromVch(offer.sCategory)));
-	ui->infoPrice->setText(QString::number(offer.nPrice)+" SYS");
+	ui->infoPrice->setText(QString::number(offer.nPrice));
 	ui->infoQty->setText(QString::number(offer.nQty));
 	ui->infoDescription->setText(QString::fromStdString(stringFromVch(offer.sDescription)));
 	ui->infoFee->setText(QString::number(offer.nFee));
