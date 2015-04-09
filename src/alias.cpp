@@ -24,7 +24,7 @@ extern CAliasDB *paliasdb;
 
 list<CAliasFee> lstAliasFees;
 extern bool ExistsInMempool(std::vector<unsigned char> vchNameOrRand, opcodetype type);
-
+extern bool HasReachedMainNetForkB2();
 template<typename T> void ConvertTo(Value& value, bool fAllowNull = false);
 
 extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo,
@@ -278,8 +278,7 @@ bool IsAliasMine(const CTransaction& tx, const CTxOut& txout) {
 }
 
 bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
-		CValidationState &state, CCoinsViewCache &inputs,
-		map<vector<unsigned char>, uint256> &mapTestPool, bool fBlock,
+		CValidationState &state, CCoinsViewCache &inputs, bool fBlock,
 		bool fMiner, bool fJustCheck) {
 
 	if (!tx.IsCoinBase()) {
@@ -362,7 +361,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							"CheckAliasInputs() : aliasupdate on an expired alias, or there is a pending transaction on the alias");
 				// verify enough fees with this txn
 				nNetFee = GetAliasNetFee(tx);
-				if (nNetFee < GetAliasNetworkFee(OP_ALIAS_UPDATE))
+				if (nNetFee < GetAliasNetworkFee(OP_ALIAS_UPDATE) && HasReachedMainNetForkB2())
 					return error(
 							"CheckAliasInputs() : OP_ALIAS_UPDATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -925,9 +924,9 @@ string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee,
 
 	if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
 	{
-		EraseAlias(wtxNew);
+
 		return _(
-				"Error: The transaction was rejected. The transaction will be removed after you restart your wallet.");
+				"Error: The transaction was rejected.");
 	}
 	return "";
 }
@@ -1264,8 +1263,7 @@ Value aliasnew(const Array& params, bool fHelp) {
 				false);
 	if (strError != "")
 	{
-		EraseAlias(wtx);
-		strError = strError + " The transaction will be removed after you restart your wallet.";	
+
 		throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}
 	return wtx.GetHash().GetHex();
@@ -1940,9 +1938,7 @@ Value datanew(const Array& params, bool fHelp) {
 	string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
 				false, txdata);
 	if (strError != "")
-	{
-		EraseAlias(wtx);
-		strError = strError + " The transaction will be removed after you restart your wallet.";	
+	{	
 		throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}
 

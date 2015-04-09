@@ -19,7 +19,7 @@ template<typename T> void ConvertTo(Value& value, bool fAllowNull = false);
 
 std::list<COfferFee> lstOfferFees;
 extern bool ExistsInMempool(std::vector<unsigned char> vchNameOrRand, opcodetype type);
-
+extern bool HasReachedMainNetForkB2();
 
 extern COfferDB *pofferdb;
 
@@ -925,9 +925,8 @@ string SendOfferMoneyWithInputTx(CScript scriptPubKey, int64 nValue,
 
 	if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
 	{
-		EraseOffer(wtxNew);
 		return _(
-				"Error: The transaction was rejected. The transaction will be removed after you restart your wallet.");
+				"Error: The transaction was rejected.");
 	}
 	return "";
 }
@@ -965,8 +964,7 @@ CScript RemoveOfferScriptPrefix(const CScript& scriptIn) {
 }
 
 bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
-		CValidationState &state, CCoinsViewCache &inputs,
-		map<vector<unsigned char>, uint256> &mapTestPool, bool fBlock, bool fMiner,
+		CValidationState &state, CCoinsViewCache &inputs, bool fBlock, bool fMiner,
 		bool fJustCheck) {
 
 	if (!tx.IsCoinBase()) {
@@ -1054,7 +1052,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							"CheckOfferInputs() : offerupdate on an expired offer, or there is a pending transaction on the offer");
 					// check for enough fees
 				nNetFee = GetOfferNetFee(tx);
-				if (nNetFee < GetOfferNetworkFee(OP_OFFER_UPDATE))
+				if (nNetFee < GetOfferNetworkFee(OP_OFFER_UPDATE) && HasReachedMainNetForkB2())
 					return error(
 							"CheckOfferInputs() : OP_OFFER_UPDATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -1337,8 +1335,6 @@ Value offernew(const Array& params, bool fHelp) {
 				false, bdata);
 	if (strError != "")
 	{
-		EraseOffer(wtx);
-		strError = strError + " The transaction will be removed after you restart your wallet.";	
 		throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}
 
@@ -1693,8 +1689,6 @@ Value offeraccept(const Array& params, bool fHelp) {
 			false, bdata);
     if (strError != "")
 	{
-		EraseOffer(wtx);
-		strError = strError + " The transaction will be removed after you restart your wallet.";
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}
 

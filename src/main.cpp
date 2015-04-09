@@ -52,8 +52,7 @@ bool fTxIndex = true; // syscoin is using transaction index by default
 unsigned int nCoinCacheSize = 5000;
 
 int hardforkLaunch = 1660;
-
-std::map<std::vector<unsigned char>, uint256> dummyTestPool;
+int hardforkB2 = 350000;
 
 extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey,
 		uint256 hash, int nHashType, CScript& scriptSigRet,
@@ -90,7 +89,10 @@ int64 nHPSTimerStart = 0;
 // Settings
 int64 nTransactionFee = 0;
 int64 nMinimumInputValue = DUST_HARD_LIMIT;
-
+bool HasReachedMainNetForkB2()
+{
+	return (!fCakeNet && !fTestNet && nBestHeight >= hardforkB2);
+}
 bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 {
 	for (map<uint256, CTransaction>::iterator mi = mempool.mapTx.begin();
@@ -1040,7 +1042,7 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx,
 		// Check against previous transactions
 		// This is done last to help prevent CPU exhaustion denial-of-service attacks.
 		if (!tx.CheckInputs(pindexBest, state, view, true, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC,
-				dummyTestPool, NULL, true, false, false)) {
+				NULL, true, false, false)) {
 			return error("CTxMemPool::accept() : CheckInputs failed %s",
 					hash.ToString().c_str());
 		}
@@ -1763,8 +1765,7 @@ bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo,
 }
 
 bool CTransaction::CheckInputs(CBlockIndex *pindex, CValidationState &state, CCoinsViewCache &inputs,
-		bool fScriptChecks, unsigned int flags, std::map<std::vector<unsigned char>,uint256> &mapTestPool,
-		std::vector<CScriptCheck> *pvChecks, bool bJustCheck, bool fBlock, bool fMiner) const {
+		bool fScriptChecks, unsigned int flags, std::vector<CScriptCheck> *pvChecks, bool bJustCheck, bool fBlock, bool fMiner) const {
 	
 	if (!IsCoinBase()) {
 		if (pvChecks)
@@ -1810,18 +1811,18 @@ bool CTransaction::CheckInputs(CBlockIndex *pindex, CValidationState &state, CCo
 		
 		if(DecodeAliasTx(*this, op, nOut, vvchArgs, -1))
 		{
-			if (!CheckAliasInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
+			if (!CheckAliasInputs(pindex, *this, state, inputs, fBlock, fMiner, bJustCheck))
 				return false;
 			
 		}
 		else if(DecodeOfferTx(*this, op, nOut, vvchArgs, -1))
 		{			
-			if (!CheckOfferInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
+			if (!CheckOfferInputs(pindex, *this, state, inputs, fBlock, fMiner, bJustCheck))
 				return false;		 
 		}
 		else if(DecodeCertTx(*this, op, nOut, vvchArgs, -1))
 		{
-			if (!CheckCertInputs(pindex, *this, state, inputs, mapTestPool, fBlock, fMiner, bJustCheck))
+			if (!CheckCertInputs(pindex, *this, state, inputs, fBlock, fMiner, bJustCheck))
 				return false;			
 		}
 		
@@ -2296,8 +2297,7 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 
 			std::vector<CScriptCheck> vChecks;
 
-			if (!tx.CheckInputs(pindex, state, view, fScriptChecks, flags, dummyTestPool,
-					nScriptCheckThreads ? &vChecks : NULL, fJustCheck, true, false))
+			if (!tx.CheckInputs(pindex, state, view, fScriptChecks, flags, nScriptCheckThreads ? &vChecks : NULL, fJustCheck, true, false))
 				return false;
 
 			control.Add(vChecks);
@@ -2321,6 +2321,8 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 
 		int64 bValue = GetBlockValue(pindex->nHeight, nFees, 0);
 
+		if (!HasReachedMainNetForkB2()) // block before hardfork were allowed to
+		    bValue += (bValue * 8); // 800% float till fixed
 
 		if (nFees >= 0 && vtx[0].GetValueOut()
 				> bValue
@@ -4985,8 +4987,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn) {
 						TxPriority(dPriority, dFeePerKb, &(*mi).second));
 		}
 
-		// Collect transactions into block
-		map<vector<unsigned char>,uint256> mapTestPool;
 		uint64 nBlockSize = 1000;
 		uint64 nBlockTx = 0;
 		int nBlockSigOps = 100;
@@ -5040,13 +5040,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn) {
 			if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
 				continue;
 
-	        // for (unsigned int i = 0; i < tx.vin.size(); i++) {
-	        // 	mapTestPool[tx.vin[i].prevout.hash] = tx.GetHash();
-	        // }
-
 	        CValidationState state;
 			if (!tx.CheckInputs(pindexPrev, state, view, true, SCRIPT_VERIFY_P2SH,
-					mapTestPool, NULL, false, true, false))
+					NULL, false, true, false))
 				continue;
 
 			CTxUndo txundo;

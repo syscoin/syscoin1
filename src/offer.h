@@ -14,8 +14,7 @@ class CScript;
 class CWalletTx;
 class CDiskTxPos;
 
-bool CheckOfferInputs(CBlockIndex *pindex, const CTransaction &tx, CValidationState &state, CCoinsViewCache &inputs, 
-    std::map<std::vector<unsigned char>,uint256> &mapTestPool, bool fBlock, bool fMiner, bool fJustCheck);
+bool CheckOfferInputs(CBlockIndex *pindex, const CTransaction &tx, CValidationState &state, CCoinsViewCache &inputs, bool fBlock, bool fMiner, bool fJustCheck);
 bool ExtractOfferAddress(const CScript& script, std::string& address);
 bool IsOfferMine(const CTransaction& tx);
 bool IsOfferMine(const CTransaction& tx, const CTxOut& txout);

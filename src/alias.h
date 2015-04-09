@@ -144,8 +144,7 @@ static const unsigned int MIN_ACTIVATE_DEPTH_CAKENET = 1;
 
 bool CheckAliasInputs(
     CBlockIndex *pindex, const CTransaction &tx, CValidationState &state,
-	CCoinsViewCache &inputs, std::map<std::vector<unsigned char>,uint256> &mapTestPool, 
-    bool fBlock, bool fMiner, bool fJustCheck);
+	CCoinsViewCache &inputs, bool fBlock, bool fMiner, bool fJustCheck);
 bool ExtractAliasAddress(const CScript& script, std::string& address);
 bool IsAliasMine(const CTransaction& tx);
 bool IsAliasMine(const CTransaction& tx, const CTxOut& txout);

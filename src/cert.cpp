@@ -18,7 +18,7 @@ template<typename T> void ConvertTo(Value& value, bool fAllowNull = false);
 
 std::list<CCertFee> lstCertIssuerFees;
 extern bool ExistsInMempool(std::vector<unsigned char> vchNameOrRand, opcodetype type);
-
+extern bool HasReachedMainNetForkB2();
 extern CCertDB *pcertdb;
 
 extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo,
@@ -931,9 +931,8 @@ string SendCertMoneyWithInputTx(CScript scriptPubKey, int64 nValue,
 
     if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
 	{
-		EraseCert(wtxNew);
         return _(
-                "Error: The transaction was rejected. The transaction will be removed after you restart your wallet.");
+                "Error: The transaction was rejected.");
 	}
     return "";
 }
@@ -972,8 +971,7 @@ CScript RemoveCertIssuerScriptPrefix(const CScript& scriptIn) {
 }
 
 bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
-        CValidationState &state, CCoinsViewCache &inputs,
-        map<vector<unsigned char>, uint256> &mapTestPool, bool fBlock, bool fMiner,
+        CValidationState &state, CCoinsViewCache &inputs, bool fBlock, bool fMiner,
         bool fJustCheck) {
 
     if (!tx.IsCoinBase()) {
@@ -1062,7 +1060,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							"CheckCertInputs() : certissuerupdate on an expired certissuer, or there is a pending transaction on the certissuer");
 			   // check for enough fees
 				nNetFee = GetCertNetFee(tx);
-				if (nNetFee < GetCertNetworkFee(OP_CERTISSUER_UPDATE))
+				if (nNetFee < GetCertNetworkFee(OP_CERTISSUER_UPDATE) && HasReachedMainNetForkB2())
 					return error(
 							"CheckCertInputs() : OP_CERTISSUER_UPDATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -1096,7 +1094,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         case OP_CERT_TRANSFER:
 
             // validate conditions
-            if ( ( !found || (prevOp != OP_CERT_NEW && prevOp != OP_CERT_TRANSFER && prevOp != OP_CERTISSUER_UPDATE) ) && !fJustCheck )
+            if ( ( !found || (prevOp != OP_CERT_NEW && prevOp != OP_CERT_TRANSFER && prevOp != OP_CERTISSUER_UPDATE) ) && !fJustCheck && HasReachedMainNetForkB2() )
                 return error("certtransfer previous op %s is invalid", certissuerFromOp(prevOp).c_str());
 
             if (vvchArgs[0].size() > 20)
@@ -1126,7 +1124,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 // check for enough fees
                 int64 expectedFee = GetCertNetworkFee(OP_CERT_TRANSFER);
                 nNetFee = GetCertNetFee(tx);
-                if (nNetFee < expectedFee )
+                if (nNetFee < expectedFee && HasReachedMainNetForkB2())
                     return error(
                             "CheckCertInputs() : got certtransfer tx %s with fee too low %lu",
                             tx.GetHash().GetHex().c_str(),
@@ -1350,8 +1348,6 @@ Value certissuernew(const Array& params, bool fHelp) {
 				false, bdata);
 	if (strError != "")
 	{
-		EraseCert(wtx);
-		strError = strError + " The transaction will be removed after you restart your wallet.";	
 		throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}
 
@@ -1544,8 +1540,6 @@ Value certnew(const Array& params, bool fHelp) {
             false, bdata);
 	if (strError != "")
 	{
-		EraseCert(wtx);
-		strError = strError + " The transaction will be removed after you restart your wallet.";	
 		throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}
     // return results

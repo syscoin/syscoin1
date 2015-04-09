@@ -75,8 +75,6 @@ static const int fHaveUPnP = false;
 
 extern CScript COINBASE_FLAGS;
 
-#define MAPTESTPOOLTYPE pair<vector<unsigned char>, uint256>
-
 extern CCriticalSection cs_main;
 extern std::map<uint256, CBlockIndex*> mapBlockIndex;
 extern std::set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexValid;
@@ -461,8 +459,6 @@ public:
 };
 
 
-extern std::map<std::vector<unsigned char>, uint256> dummyTestPool;
-
 enum GetMinFee_mode
 {
     GMF_BLOCK,
@@ -712,9 +708,7 @@ public:
     // This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
     // instead of being performed inline.
     bool CheckInputs(CBlockIndex *pindex, CValidationState &state, CCoinsViewCache &view, bool fScriptChecks = true,
-                     unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC,
-                     std::map<std::vector<unsigned char>,uint256> &mapTestPool = dummyTestPool,
-                     std::vector<CScriptCheck> *pvChecks = NULL, bool bCheckInputs = true,
+                     unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, std::vector<CScriptCheck> *pvChecks = NULL, bool bCheckInputs = true,
                      bool fBlock = false, bool fMiner = false) const;
 
     // Apply the effects of this transaction on the UTXO set represented by view
