@@ -1421,7 +1421,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description > 65536 bytes!\n");
 
 	// this is a syscoind txn
-	CWalletTx wtx;
+	CWalletTx wtx, wtxIn;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 	CScript scriptPubKeyOrig;
 
@@ -1447,9 +1447,8 @@ Value offerupdate(const Array& params, bool fHelp) {
 	if (!GetTxOfOffer(*pofferdb, vchOffer, tx))
 		throw runtime_error("could not find an offer with this name");
 
-	// make sure offer is in wallet
-	uint256 wtxInHash = tx.GetHash();
-	if (!pwalletMain->mapWallet.count(wtxInHash)) 
+
+	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
 		throw runtime_error("this offer is not in your wallet");
 	
 	// unserialize offer object from txn
@@ -1482,7 +1481,6 @@ Value offerupdate(const Array& params, bool fHelp) {
 	// serialize offer object
 	string bdata = theOffer.SerializeToString();
 
-	CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
 	string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
 			wtxIn, wtx, false, bdata);
 	if (strError != "")
@@ -1503,7 +1501,7 @@ Value offerrenew(const Array& params, bool fHelp) {
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 
 	// this is a syscoind txn
-	CWalletTx wtx;
+	CWalletTx wtx, wtxIn;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 	CScript scriptPubKeyOrig;
 
@@ -1524,10 +1522,9 @@ Value offerrenew(const Array& params, bool fHelp) {
 		throw runtime_error("could not find an offer with this name");
 
 	// make sure offer is in wallet
-	uint256 wtxInHash = tx.GetHash();
-	if (!pwalletMain->mapWallet.count(wtxInHash)) 
+	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
 		throw runtime_error("this offer is not in your wallet");
-	
+
 	// unserialize offer object from txn
 	COffer theOffer;
 	if(!theOffer.UnserializeFromTx(tx))
@@ -1554,8 +1551,6 @@ Value offerrenew(const Array& params, bool fHelp) {
 			<< OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
-
-	CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
 	string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
 			wtxIn, wtx, false, bdata);
 	if (strError != "")

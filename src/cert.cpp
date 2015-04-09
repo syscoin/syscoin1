@@ -1391,7 +1391,7 @@ Value certissuerupdate(const Array& params, bool fHelp) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate issuer data > 65536 bytes!\n");
 
     // this is a syscoind txn
-    CWalletTx wtx;
+    CWalletTx wtx, wtxIn;
     wtx.nVersion = SYSCOIN_TX_VERSION;
     CScript scriptPubKeyOrig;
 
@@ -1419,9 +1419,8 @@ Value certissuerupdate(const Array& params, bool fHelp) {
         throw runtime_error("could not find a certificate issuer with this key");
 
     // make sure certissuer is in wallet
-    uint256 wtxInHash = tx.GetHash();
-    if (!pwalletMain->mapWallet.count(wtxInHash))
-        throw runtime_error("this certificate issuer is not in your wallet");
+	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
+		throw runtime_error("this certissuer is not in your wallet");
 
     // unserialize certissuer object from txn
     CCertIssuer theCertIssuer;
@@ -1446,7 +1445,6 @@ Value certissuerupdate(const Array& params, bool fHelp) {
     // serialize certissuer object
     string bdata = theCertIssuer.SerializeToString();
 
-    CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
     string strError = SendCertMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
             wtxIn, wtx, false, bdata);
     if (strError != "")
@@ -1567,7 +1565,7 @@ Value certtransfer(const Array& params, bool fHelp) {
         throw runtime_error("Invalid Syscoin address.");
 
     // this is a syscoin txn
-    CWalletTx wtx;
+    CWalletTx wtx, wtxIn;
     wtx.nVersion = SYSCOIN_TX_VERSION;
     CScript scriptPubKeyOrig;
 
@@ -1584,10 +1582,8 @@ Value certtransfer(const Array& params, bool fHelp) {
         throw runtime_error("could not find a certificate with this key");
 
     // check to see if certificate in wallet
-    uint256 wtxInHash = tx.GetHash();
-    if (!pwalletMain->mapWallet.count(wtxInHash))
-        throw runtime_error("certtransfer() : certificate is not in your wallet" );
-
+	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
+		throw runtime_error("this certificate is not in your wallet");
 
     // get the certissuer certitem from certissuer
     if(!theCertIssuer.GetCertItemByHash(vchCertKey, theCertItem))
@@ -1635,7 +1631,6 @@ Value certtransfer(const Array& params, bool fHelp) {
     theCertIssuer.PutCertItem(theCertItem);
 
     // send the certissuer pay txn
-    CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
     string strError = SendCertMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
             wtxIn, wtx, false, theCertIssuer.SerializeToString());
     if (strError != "")

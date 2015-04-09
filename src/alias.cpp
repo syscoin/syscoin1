@@ -1283,7 +1283,7 @@ Value aliasupdate(const Array& params, bool fHelp) {
 	vector<unsigned char> vchValue = vchFromValue(params[1]);
 	if (vchValue.size() > 519)
 		throw runtime_error("alias value > 1023 bytes!\n");
-	CWalletTx wtx;
+	CWalletTx wtx, wtxIn;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 	CScript scriptPubKeyOrig;
 
@@ -1323,16 +1323,12 @@ Value aliasupdate(const Array& params, bool fHelp) {
     if(!IsAliasMine(tx)) {
 		throw runtime_error("Cannot modify a transferred alias");
     }
-	uint256 wtxInHash = tx.GetHash();
 
-	if (!pwalletMain->mapWallet.count(wtxInHash)) {
-		error("aliasupdate() : this alias is not in your wallet %s",
-				wtxInHash.GetHex().c_str());
+	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
 		throw runtime_error("this alias is not in your wallet");
-	}
+
 	int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_UPDATE);
 
-	CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
 	string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
 			nNetFee, wtxIn, wtx, false);
 	if (strError != "")
@@ -1962,7 +1958,7 @@ Value dataupdate(const Array& params, bool fHelp) {
 		throw JSONRPCError(RPC_INVALID_PARAMETER,
 				"Data chunk is too long.  Split the payload to several transactions.");
 
-	CWalletTx wtx;
+	CWalletTx wtx, wtxIn;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 	CScript scriptPubKeyOrig;
 
@@ -2000,17 +1996,11 @@ Value dataupdate(const Array& params, bool fHelp) {
 		throw runtime_error("cannot modify this non-data alias."
 				" use aliasupdate");
 
-	uint256 wtxInHash = tx.GetHash();
-
-	if (!pwalletMain->mapWallet.count(wtxInHash)) {
-		error("aliasupdate() : this data is not in your wallet %s",
-				wtxInHash.GetHex().c_str());
-		throw runtime_error("this data is not in your wallet");
-	}
+	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
+		throw runtime_error("this alias is not in your wallet");
 
 	int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_UPDATE);
 
-	CWalletTx& wtxIn = pwalletMain->mapWallet[wtxInHash];
 	string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
 			nNetFee, wtxIn, wtx, false, txdata);
 	if (strError != "")
