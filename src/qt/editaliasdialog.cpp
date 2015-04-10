@@ -109,19 +109,15 @@ bool EditAliasDialog::saveCurrentRow()
 		params.push_back(ui->nameEdit->text().toStdString());
 		try {
             Value result = tableRPC.execute(strMethod, params);
-			if (result.type() == array_type)
+			if (result.type() != null_type)
 			{
-				Array arr = result.get_array();
-				if (result.type() != null_type)
-				{
-					string strResult = result.get_str();
-					alias = ui->nameEdit->text() + ui->aliasEdit->text();
+				string strResult = result.get_str();
+				alias = ui->nameEdit->text() + ui->aliasEdit->text();
 
-					QMessageBox::information(this, windowTitle(),
-                    tr("New Alias created successfully! TXID: \"%1\"").arg(QString::fromStdString(strResult)),
-						QMessageBox::Ok, QMessageBox::Ok);
-						
-				}	
+				QMessageBox::information(this, windowTitle(),
+                tr("New Alias created successfully! TXID: \"%1\"").arg(QString::fromStdString(strResult)),
+					QMessageBox::Ok, QMessageBox::Ok);
+					
 			}
 		}
 		catch (Object& objError)
