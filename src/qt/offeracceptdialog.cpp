@@ -13,7 +13,7 @@ extern const CRPCTable tableRPC;
 
 OfferAcceptDialog::OfferAcceptDialog(QString title, QString price, QString quantity, QString offerAcceptGUID, QString notes, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::OfferAcceptDialog), offerAcceptGUID(offerAcceptGUID), notes(notes), quantity(quantity)
+    ui(new Ui::OfferAcceptDialog), offerAcceptGUID(offerAcceptGUID), notes(notes), quantity(quantity), title(title), price(price)
 {
     ui->setupUi(this);
 	ui->acceptMessage->setText(tr("There was a problem accepting this offer, please try again..."));
@@ -65,16 +65,10 @@ void OfferAcceptDialog::acceptOffer()
 				QString offerAcceptTXID = QString::fromStdString(arr[0].get_str());
 				if(offerAcceptTXID != QString(""))
 				{
-					OfferPayDialog dlg(this->offerAcceptGUID, offerAcceptTXID, this->notes, this);
-					if(dlg.exec())
-					{
-						this->offerPaid = dlg.getPaymentStatus();
-						OfferAcceptDialog::accept();
-					}
-					else
-					{
-						OfferAcceptDialog::close();
-					}
+					OfferPayDialog dlg(this->title, this->quantity, this->price, this);
+					dlg.exec();
+					this->offerPaid = true;
+					OfferAcceptDialog::accept();
 					return;
 
 				}

@@ -19,20 +19,9 @@ public:
     ~OfferPayDialog();
 
 
-    bool getPaymentStatus();
-	bool lookup();
-	void confirmed();
 private:
 	Ui::OfferPayDialog *ui;
-	QTimer* timer;
-	int progress;
-	QString offerAcceptTXID;
-	QString offerAcceptGUID;
-	QString notes;
-	bool offerPaid;  
-private slots:
-	void offerAcceptWatcher();
-
+ 
 };
 
 #endif // OFFERPAYDIALOG_H

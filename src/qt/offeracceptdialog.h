@@ -23,6 +23,8 @@ public:
 private:
     Ui::OfferAcceptDialog *ui;
 	QString quantity;
+	QString title;
+	QString price;
 	QString notes;
 	QString offerAcceptGUID;
 	bool offerPaid; 
