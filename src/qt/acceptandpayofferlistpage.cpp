@@ -29,7 +29,7 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
 {
     ui->setupUi(this);
 	this->offerPaid = false;
-	
+	this->URIHandled = false;	
     ui->labelExplanation->setText(tr("Accept and purchase this offer, Syscoins will be used to complete the transaction"));
     connect(ui->acceptButton, SIGNAL(clicked()), this, SLOT(acceptOffer()));
 	connect(ui->lookupButton, SIGNAL(clicked()), this, SLOT(lookup()));
@@ -39,10 +39,12 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
 AcceptandPayOfferListPage::~AcceptandPayOfferListPage()
 {
     delete ui;
+	this->URIHandled = false;
 }
 void AcceptandPayOfferListPage::resetState()
 {
 		this->offerPaid = false;
+		this->URIHandled = false;
 		updateCaption();
 }
 void AcceptandPayOfferListPage::updateCaption()
@@ -154,8 +156,20 @@ bool AcceptandPayOfferListPage::lookup(QString id)
 
 }
 bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
-{
-	  // return if URI is not valid or is no bitcoin URI
+{	
+	if(!uri.isValid() || uri.scheme() != QString("syscoin"))
+	{
+		QMessageBox::critical(this, windowTitle(),
+		tr("URI Path is not valid: \"%1\"").arg(uri.path()),
+			QMessageBox::Ok, QMessageBox::Ok);
+	}
+	if(this->URIHandled)
+	{
+		QMessageBox::critical(this, windowTitle(),
+		tr("URI has been already handled"),
+			QMessageBox::Ok, QMessageBox::Ok);
+	}
+	  // return if URI is not valid or is no Sys URI
     if(!uri.isValid() || uri.scheme() != QString("syscoin") || this->URIHandled)
         return false;
 
@@ -189,27 +203,32 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 				ui->notesEdit->setPlainText(notes);
 			}
 		}
+
 		if(lookup(uri.path()))
 		{
+		
 			this->URIHandled = true;
 			OpenPayDialog();
 			this->URIHandled = false;
-		}	
+		}
+
 	}
 	catch (Object& objError)
 	{
-		string strError = find_value(objError, "message").get_str();
+		strError = find_value(objError, "message").get_str();
 		QMessageBox::critical(this, windowTitle(),
 		tr("Error in offer URI Handler: \"%1\"").arg(QString::fromStdString(strError)),
 			QMessageBox::Ok, QMessageBox::Ok);
+		this->URIHandled = false;
 		return false;
 	}
 	catch(std::exception& e)
 	{
-		string strError = e.what();
+		strError = e.what();
 		QMessageBox::critical(this, windowTitle(),
 		tr("Exception in offer URI Handler: \"%1\"").arg(QString::fromStdString(strError)),
 			QMessageBox::Ok, QMessageBox::Ok);
+		this->URIHandled = false;
 		return false;
 	}
 
