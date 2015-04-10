@@ -1532,8 +1532,35 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
     return true;
 }
 
+// used for syscoin new OP's like offernew, certnew, aliasnew so we can pass in fees without an input transaction to tie into like sendmoneywithinputtx
+string CWallet::SendMoney(const std::vector<std::pair<CScript, int64> >& vecSend, int64 nValue, CWalletTx& wtxNew, bool fAskFee, const string& txData)
+{
+    CReserveKey reservekey(this);
+    int64 nFeeRequired;
 
+    if (IsLocked())
+    {
+        string strError = _("Error: Wallet locked, unable to create transaction!");
+        printf("SendMoney() : %s", strError.c_str());
+        return strError;
+    }
+    string strError;
+    if (!CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, strError, NULL, txData))
+    {
+        if (nValue + nFeeRequired > GetBalance())
+            strError = strprintf(_("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!"), FormatMoney(nFeeRequired).c_str());
+        printf("SendMoney() : %s\n", strError.c_str());
+        return strError;
+    }
 
+    if (fAskFee && !uiInterface.ThreadSafeAskFee(nFeeRequired))
+        return "ABORTED";
+
+    if (!CommitTransaction(wtxNew, reservekey))
+        return _("Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+
+    return "";
+}
 
 string CWallet::SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee, const string& txData)
 {

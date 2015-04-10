@@ -55,9 +55,11 @@ int nStartHeight = 161280;
 int64 GetOfferNetworkFee(opcodetype seed) {
 
 	int64 nFee = 0;
-
-    if(seed==OP_OFFER_UPDATE) {
-    	nFee = 150 * COIN;
+    if(seed==OP_OFFER_ACTIVATE) {
+    	nFee = 50 * COIN;
+    }
+    else if(seed==OP_OFFER_UPDATE) {
+    	nFee = 100 * COIN;
     }
 	// Round up to CENT
 	nFee += CENT - 1;
@@ -1030,6 +1032,16 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				return error("offeractivate tx with guid too big");
 			if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
 				return error("offeractivate tx with value too long");
+			if (fBlock && !fJustCheck) {
+
+					// check for enough fees
+				nNetFee = GetOfferNetFee(tx);
+				if (nNetFee < GetOfferNetworkFee(OP_OFFER_ACTIVATE) && HasReachedMainNetForkB2())
+					return error(
+							"CheckOfferInputs() : OP_OFFER_ACTIVATE got tx %s with fee too low %lu",
+							tx.GetHash().GetHex().c_str(),
+							(long unsigned int) nNetFee);		
+			}
 			break;
 
 
@@ -1306,7 +1318,8 @@ Value offernew(const Array& params, bool fHelp) {
 	vector<unsigned char> vchOffer = vchFromString(HexStr(vchRand));
 
 	EnsureWalletIsUnlocked();
-	
+	// calculate network fees
+	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_ACTIVATE);	
 	// unserialize offer object from txn, serialize back
 	// build offer object
 	COffer newOffer;
@@ -1317,7 +1330,7 @@ Value offernew(const Array& params, bool fHelp) {
 	newOffer.sDescription = vchDesc;
 	newOffer.nQty = nQty;
 	newOffer.nPrice = nPrice * COIN;
-	newOffer.nFee = 0;
+	newOffer.nFee = nNetFee;
 	string bdata = newOffer.SerializeToString();
 	
 	//create offeractivate txn keys
@@ -1330,8 +1343,16 @@ Value offernew(const Array& params, bool fHelp) {
 			<< vchRand << newOffer.sTitle << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
+	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
+    vector< pair<CScript, int64> > vecSend;
+    vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
+	
+	CScript scriptFee;
+	scriptFee << OP_RETURN;
+	vecSend.push_back(make_pair(scriptFee, nNetFee));
+
 	// send the tranasction
-	string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
+	string strError = pwalletMain->SendMoney(vecSend, MIN_AMOUNT, wtx,
 				false, bdata);
 	if (strError != "")
 	{

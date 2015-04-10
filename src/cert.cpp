@@ -51,14 +51,21 @@ bool IsCertOp(int op) {
 int64 GetCertNetworkFee(opcodetype seed) {
 
 	int64 nFee = 0;
-
-    if(seed==OP_CERTISSUER_UPDATE) 
+    if(seed==OP_CERTISSUER_ACTIVATE) 
+	{
+        nFee = 150 * COIN;
+    }
+    else if(seed==OP_CERTISSUER_UPDATE) 
 	{
         nFee = 100 * COIN;
     } 
-	else if(seed==OP_CERT_TRANSFER) 
+	else if(seed==OP_CERT_NEW) 
 	{
         nFee = 150 * COIN;
+    }
+	else if(seed==OP_CERT_TRANSFER) 
+	{
+        nFee = 100 * COIN;
     }
 	// Round up to CENT
 	nFee += CENT - 1;
@@ -1038,7 +1045,16 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 return error("certissueractivate tx tx with guid too big");
 			if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
                 return error("certissueractivate tx with value too long");
+			if (fBlock && !fJustCheck) {
 
+					// check for enough fees
+				nNetFee = GetCertNetFee(tx);
+				if (nNetFee < GetCertNetworkFee(OP_CERTISSUER_ACTIVATE) && HasReachedMainNetForkB2())
+					return error(
+							"CheckOfferInputs() : OP_CERTISSUER_ACTIVATE got tx %s with fee too low %lu",
+							tx.GetHash().GetHex().c_str(),
+							(long unsigned int) nNetFee);		
+			}
             break;
 
         case OP_CERTISSUER_UPDATE:
@@ -1088,6 +1104,13 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
                 if(theCertItem.vchRand != vchCertItemRand)
                     return error("certitem txn contains invalid txncertitem hash");
+			   // check for enough fees
+				nNetFee = GetCertNetFee(tx);
+				if (nNetFee < GetCertNetworkFee(OP_CERT_NEW) && HasReachedMainNetForkB2())
+					return error(
+							"CheckCertInputs() : OP_CERT_NEW got tx %s with fee too low %lu",
+							tx.GetHash().GetHex().c_str(),
+							(long unsigned int) nNetFee);
             }
             break;
 
@@ -1322,14 +1345,15 @@ Value certissuernew(const Array& params, bool fHelp) {
 
 
     EnsureWalletIsUnlocked();
-
+	// calculate network fees
+	int64 nNetFee = GetOfferNetworkFee(OP_ALIAS_ACTIVATE);
 
     // build certissuer object
     CCertIssuer newCertIssuer;
     newCertIssuer.vchRand = vchCertIssuer;
     newCertIssuer.vchTitle = vchTitle;
     newCertIssuer.vchData = vchData;
-    newCertIssuer.nFee = 0;
+    newCertIssuer.nFee = nNetFee;
 
     string bdata = newCertIssuer.SerializeToString();
 
@@ -1343,14 +1367,22 @@ Value certissuernew(const Array& params, bool fHelp) {
             << vchRand << newCertIssuer.vchTitle << OP_2DROP << OP_2DROP;
     scriptPubKey += scriptPubKeyOrig;
 
+
+	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
+    vector< pair<CScript, int64> > vecSend;
+    vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
+	
+	CScript scriptFee;
+	scriptFee << OP_RETURN;
+	vecSend.push_back(make_pair(scriptFee, nNetFee));
+
 	// send the tranasction
-	string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
+	string strError = pwalletMain->SendMoney(vecSend, MIN_AMOUNT, wtx,
 				false, bdata);
 	if (strError != "")
 	{
 		throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}
-
 
     printf("SENT:CERTACTIVATE: title=%s, guid=%s, tx=%s, data:\n%s\n",
             stringFromVch(newCertIssuer.vchTitle).c_str(),
@@ -1522,20 +1554,31 @@ Value certnew(const Array& params, bool fHelp) {
     if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos))
         throw runtime_error("could not read certificate issuer with this key from DB");
     theCertIssuer = vtxPos.back();
-
+		// calculate network fees
+	int64 nNetFee = GetOfferNetworkFee(OP_CERT_NEW);
     // create certitem object
     CCertItem txCertItem;
     txCertItem.vchRand = vchCertItemRand;
     txCertItem.vchTitle = vchTitle;
     txCertItem.vchData = vchData;
+	txCertItem.nFee = nNetFee;
     theCertIssuer.certs.clear();
     theCertIssuer.PutCertItem(txCertItem);
 
     // serialize certissuer object
     string bdata = theCertIssuer.SerializeToString();
 
-    string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
-            false, bdata);
+	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
+    vector< pair<CScript, int64> > vecSend;
+    vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
+	
+	CScript scriptFee;
+	scriptFee << OP_RETURN;
+	vecSend.push_back(make_pair(scriptFee, nNetFee));
+
+	// send the tranasction
+	string strError = pwalletMain->SendMoney(vecSend, MIN_AMOUNT, wtx,
+				false, bdata);
 	if (strError != "")
 	{
 		throw JSONRPCError(RPC_WALLET_ERROR, strError);

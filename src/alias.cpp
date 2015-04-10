@@ -336,7 +336,16 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				return error("aliasactivate tx with incorrect hash length");
 			if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
 				return error("aliasactivate tx with value too long");
+			if (fBlock && !fJustCheck) {
 
+					// check for enough fees
+				nNetFee = GetAliasNetFee(tx);
+				if (nNetFee < GetAliasNetworkFee(OP_ALIAS_ACTIVATE) && HasReachedMainNetForkB2())
+					return error(
+							"CheckOfferInputs() : OP_ALIAS_ACTIVATE got tx %s with fee too low %lu",
+							tx.GetHash().GetHex().c_str(),
+							(long unsigned int) nNetFee);		
+			}
 			break;
 
 		case OP_ALIAS_UPDATE:
@@ -626,8 +635,11 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 
 int64 GetAliasNetworkFee(opcodetype seed) {
 	int64 nFee = 0;
-
-	if(seed==OP_ALIAS_UPDATE)
+	if(seed==OP_ALIAS_ACTIVATE)
+	{
+		nFee = 100 * COIN;
+	}
+	else if(seed==OP_ALIAS_UPDATE)
 	{
 		nFee = 100 * COIN;
 	}
@@ -1258,12 +1270,20 @@ Value aliasnew(const Array& params, bool fHelp) {
 	scriptPubKey += scriptPubKeyOrig;
 
 
+	// calculate network fees
+	int64 nNetFee = GetOfferNetworkFee(OP_ALIAS_ACTIVATE);
+	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
+    vector< pair<CScript, int64> > vecSend;
+    vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
+	
+	CScript scriptFee;
+	scriptFee << OP_RETURN;
+	vecSend.push_back(make_pair(scriptFee, nNetFee));
+
 	// send the tranasction
-	string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
-				false);
+	string strError = pwalletMain->SendMoney(vecSend, MIN_AMOUNT, wtx);
 	if (strError != "")
 	{
-
 		throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}
 	return wtx.GetHash().GetHex();

@@ -189,6 +189,7 @@ public:
                            CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, std::string& strFailReason, 
 						   const CCoinControl *coinControl=NULL, const std::string &txData="");
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
+	std::string SendMoney(const std::vector<std::pair<CScript, int64> >& vecSend, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false, const std::string &txData="");
     std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false, const std::string &txData="");
     std::string SendMoneyToDestination(const CTxDestination &address, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false, const std::string &txData="");
     std::string SendData(CWalletTx& wtxNew, bool fAskFee, const std::string& txData);
