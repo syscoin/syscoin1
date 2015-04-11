@@ -1346,7 +1346,7 @@ Value certissuernew(const Array& params, bool fHelp) {
 
     EnsureWalletIsUnlocked();
 	// calculate network fees
-	int64 nNetFee = GetOfferNetworkFee(OP_ALIAS_ACTIVATE);
+	int64 nNetFee = GetCertNetworkFee(OP_CERTISSUER_NEW);
 
     // build certissuer object
     CCertIssuer newCertIssuer;
@@ -1555,7 +1555,7 @@ Value certnew(const Array& params, bool fHelp) {
         throw runtime_error("could not read certificate issuer with this key from DB");
     theCertIssuer = vtxPos.back();
 		// calculate network fees
-	int64 nNetFee = GetOfferNetworkFee(OP_CERT_NEW);
+	int64 nNetFee = GetCertNetworkFee(OP_CERT_NEW);
     // create certitem object
     CCertItem txCertItem;
     txCertItem.vchRand = vchCertItemRand;

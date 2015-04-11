@@ -1271,7 +1271,7 @@ Value aliasnew(const Array& params, bool fHelp) {
 
 
 	// calculate network fees
-	int64 nNetFee = GetOfferNetworkFee(OP_ALIAS_ACTIVATE);
+	int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE);
 	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
     vector< pair<CScript, int64> > vecSend;
     vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
@@ -1892,7 +1892,6 @@ Value getaliasfees(const Array& params, bool fHelp) {
 	Object oRes;
 	oRes.push_back(Pair("height", nBestHeight ));
 	oRes.push_back(Pair("subsidy", ValueFromAmount(GetAliasFeeSubsidy(nBestHeight) )));
-	oRes.push_back(Pair("new_fee", (double)1.0));
 	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetAliasNetworkFee(OP_ALIAS_ACTIVATE) )));
 	oRes.push_back(Pair("update_fee", ValueFromAmount(GetAliasNetworkFee(OP_ALIAS_UPDATE) )));
 	return oRes;
@@ -1950,11 +1949,20 @@ Value datanew(const Array& params, bool fHelp) {
 	scriptPubKey += scriptPubKeyOrig;
 
 
+	// calculate network fees
+	int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE);
+	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
+    vector< pair<CScript, int64> > vecSend;
+    vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
+	
+	CScript scriptFee;
+	scriptFee << OP_RETURN;
+	vecSend.push_back(make_pair(scriptFee, nNetFee));
+
 	// send the tranasction
-	string strError = pwalletMain->SendMoney(scriptPubKey, MIN_AMOUNT, wtx,
-				false, txdata);
+	string strError = pwalletMain->SendMoney(vecSend, MIN_AMOUNT, wtx);
 	if (strError != "")
-	{	
+	{
 		throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}
 
