@@ -1302,9 +1302,8 @@ Value getcertfees(const Array& params, bool fHelp) {
     Object oRes;
     oRes.push_back(Pair("height", nBestHeight ));
     oRes.push_back(Pair("subsidy", ValueFromAmount(GetCertFeeSubsidy(nBestHeight) )));
-	oRes.push_back(Pair("new_fee", (double)1.0));
     oRes.push_back(Pair("activate_fee", ValueFromAmount(GetCertNetworkFee(OP_CERTISSUER_ACTIVATE) )));
-    oRes.push_back(Pair("cert_fee", ValueFromAmount(GetCertNetworkFee(OP_CERTISSUER_UPDATE) )));
+    oRes.push_back(Pair("update_fee", ValueFromAmount(GetCertNetworkFee(OP_CERTISSUER_UPDATE) )));
     oRes.push_back(Pair("transfer_fee", ValueFromAmount(GetCertNetworkFee(OP_CERT_TRANSFER) )));
     return oRes;
 

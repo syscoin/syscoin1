@@ -71,20 +71,19 @@ public:
         RecvWithAddress,
         RecvFromOther,
         SendToSelf,
-        AliasNew,
+        
         AliasActivate,
         AliasUpdate,
         AliasTransfer,
-        DataNew,
+        
         DataActivate,
         DataUpdate,
         DataTransfer,
-        OfferNew,
+       
         OfferActivate,
         OfferUpdate,
         OfferAccept,
-        OfferPay,
-        CertIssuerNew,
+      
         CertIssuerActivate,
         CertIssuerUpdate,
         CertNew,
