@@ -1493,7 +1493,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 	theOffer.sDescription = vchDesc;
 	uint64 memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if((nQty-memPoolQty) < 0)
-		throw runtime_error("not enough remaining quantity to fulfill this offerupdate");
+		throw runtime_error("not enough remaining quantity to fulfill this offerupdate"); // SS i think needs better msg
 
 	theOffer.nQty = nQty;
 	theOffer.nPrice = price * COIN;
@@ -1580,6 +1580,8 @@ Value offerrenew(const Array& params, bool fHelp) {
 	return wtx.GetHash().GetHex();
 }
 
+/*
+
 Value offeraccept(const Array& params, bool fHelp) {
 	if (fHelp || 1 > params.size() || params.size() > 3)
 		throw runtime_error("offeraccept <guid> [<quantity] [<message>]\n"
@@ -1658,9 +1660,11 @@ Value offeraccept(const Array& params, bool fHelp) {
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos))
 		throw runtime_error("could not read offer with this name from DB");
 	theOffer = vtxPos.back();
+
 	uint64 memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if(theOffer.nQty < (nQty+memPoolQty))
 		throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
+
 	// create accept object
 	COfferAccept txAccept;
 	txAccept.vchRand = vchAcceptRand;
@@ -1671,14 +1675,16 @@ Value offeraccept(const Array& params, bool fHelp) {
 	txAccept.nFee = 0;
 	theOffer.accepts.clear();
 	theOffer.PutOfferAccept(txAccept);
-    // Check for sufficient funds to pay for order
+
+	// Check for sufficient funds to pay for order
     set<pair<const CWalletTx*,unsigned int> > setCoins;
     int64 nValueIn = 0;
     uint64 nTotalValue = ( theOffer.nPrice * nQty );
 
     if (!pwalletMain->SelectCoins(nTotalValue, setCoins, nValueIn)) 
         throw runtime_error("insufficient funds to pay for offer");
-   // add a copy of the offer object with just
+
+    // add a copy of the offer object with just
     // the one accept object to payment txn to identify
     // this txn as an offer payment
     COffer offerCopy = theOffer;
@@ -1695,9 +1701,13 @@ Value offeraccept(const Array& params, bool fHelp) {
 	{
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}
-	txAccept.txPayId = wtxPay.GetHash();
+
+    // set transaction id for payment,
+    // clear other accepts and just store this one
+    txAccept.txPayId = wtxPay.GetHash();
 	theOffer.accepts.clear();
 	theOffer.PutOfferAccept(txAccept);
+
 	// serialize offer object
 	string bdata = theOffer.SerializeToString();
 
@@ -1711,6 +1721,147 @@ Value offeraccept(const Array& params, bool fHelp) {
 	// return results
 	vector<Value> res;
 	res.push_back(wtxPay.GetHash().GetHex());
+	res.push_back(wtx.GetHash().GetHex());
+
+	return res;
+}
+
+*/
+
+Value offeraccept(const Array& params, bool fHelp) {
+	if (fHelp || 1 > params.size() || params.size() > 3)
+		throw runtime_error("offeraccept <guid> [<quantity] [<message>]\n"
+				"Accept&Pay for a confirmed offer.\n"
+				"<guid> guidkey from offer.\n"
+				"<quantity> quantity to buy. Defaults to 1.\n"
+				"<message> payment message to seller, 16 KB max.\n"
+				+ HelpRequiringPassphrase());
+
+	vector<unsigned char> vchOffer = vchFromValue(params[0]);
+
+	vector<unsigned char> vchMessage = vchFromValue(params.size()==3?params[2]:params[0]);
+	uint64 nQty;
+	int64 qty = 1;
+	if (params.size() >= 2) {
+		try {
+			qty=atoi64(params[1].get_str().c_str());
+		} catch (std::exception &e) {
+			throw runtime_error("invalid price and/or quantity values.");
+		}
+		if(qty < 0)
+		{
+			throw runtime_error("invalid quantity value.");
+		}
+
+	}
+	nQty = (uint64)qty;
+    if (vchMessage.size() < 1)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "offeraccept message data < 1 bytes!\n");
+    if (vchMessage.size() > 16 * 1024)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "offeraccept message data > 16384 bytes!\n");
+
+	// this is a syscoin txn
+	CWalletTx wtx;
+	wtx.nVersion = SYSCOIN_TX_VERSION;
+	CScript scriptPubKeyOrig;
+
+	// generate offer accept identifier and hash
+	uint64 rand = GetRand((uint64) -1);
+	vector<unsigned char> vchAcceptRand = CBigNum(rand).getvch();
+	vector<unsigned char> vchAccept = vchFromString(HexStr(vchAcceptRand));
+	vector<unsigned char> vchToHash(vchAcceptRand);
+	vchToHash.insert(vchToHash.end(), vchOffer.begin(), vchOffer.end());
+	uint160 acceptHash = Hash160(vchToHash);
+
+	// get a key from our wallet set dest as ourselves
+	CPubKey newDefaultKey;
+	pwalletMain->GetKeyFromPool(newDefaultKey, false);
+	scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
+
+	// create OFFERACCEPT txn keys
+	CScript scriptPubKey;
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT)
+			<< vchOffer << vchAcceptRand << acceptHash << OP_2DROP << OP_2DROP;
+	scriptPubKey += scriptPubKeyOrig;
+
+	if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_UPDATE)) {
+		throw runtime_error("there are pending operations on that offer");
+	}
+
+	EnsureWalletIsUnlocked();
+
+	// look for a transaction with this key
+	CTransaction tx;
+	if (!GetTxOfOffer(*pofferdb, vchOffer, tx))
+		throw runtime_error("could not find an offer with this identifier");
+
+	// unserialize offer object from txn
+	COffer theOffer;
+	if(!theOffer.UnserializeFromTx(tx))
+		throw runtime_error("could not unserialize offer from txn");
+
+	// get the offer id from DB
+	vector<COffer> vtxPos;
+	if (!pofferdb->ReadOffer(vchOffer, vtxPos))
+		throw runtime_error("could not read offer with this name from DB");
+	theOffer = vtxPos.back();
+
+	uint64 memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
+	if(theOffer.nQty < (nQty+memPoolQty))
+		throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
+
+	// create accept object
+	COfferAccept txAccept;
+	txAccept.vchRand = vchAcceptRand;
+    txAccept.txPayId = wtx.GetHash();
+    txAccept.vchMessage = vchMessage;
+	txAccept.nQty = nQty;
+	txAccept.nPrice = theOffer.nPrice;
+	txAccept.nFee = 0;
+	theOffer.accepts.clear();
+	theOffer.PutOfferAccept(txAccept);
+
+	// Check for sufficient funds to pay for order
+    set<pair<const CWalletTx*,unsigned int> > setCoins;
+    int64 nValueIn = 0;
+    uint64 nTotalValue = ( theOffer.nPrice * nQty );
+
+    if (!pwalletMain->SelectCoins(nTotalValue + (MIN_AMOUNT * 2), setCoins, nValueIn))
+        throw runtime_error("insufficient funds to pay for offer");
+
+    // add a copy of the offer object with just
+    // the one accept object to payment txn to identify
+    // this txn as an offer payment
+    COffer offerCopy = theOffer;
+    COfferAccept offerAcceptCopy = txAccept;
+    offerAcceptCopy.bPaid = true;
+    offerCopy.accepts.clear();
+    offerCopy.PutOfferAccept(offerAcceptCopy);
+
+    vector< pair<CScript, int64> > vecSend;
+    vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
+
+    // send payment to offer address
+    CBitcoinAddress address(stringFromVch(theOffer.vchPaymentAddress));
+
+    // Parse Bitcoin address
+    CScript scriptPayment;
+    scriptPayment.SetDestination(address.Get());
+
+    vecSend.push_back(make_pair(scriptPayment, nTotalValue));
+
+	// serialize offer object
+	string bdata = theOffer.SerializeToString();
+
+	string strError = pwalletMain->SendMoney(vecSend, MIN_AMOUNT + nTotalValue, wtx,
+			false, bdata);
+    if (strError != "")
+	{
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+	}
+
+	// return results
+	vector<Value> res;
 	res.push_back(wtx.GetHash().GetHex());
 
 	return res;
