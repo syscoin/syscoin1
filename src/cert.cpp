@@ -61,11 +61,11 @@ int64 GetCertNetworkFee(opcodetype seed) {
     } 
 	else if(seed==OP_CERT_NEW) 
 	{
-        nFee = 150 * COIN;
+        nFee = 25 * COIN;
     }
 	else if(seed==OP_CERT_TRANSFER) 
 	{
-        nFee = 100 * COIN;
+        nFee = 25 * COIN;
     }
 	// Round up to CENT
 	nFee += CENT - 1;
@@ -1346,7 +1346,7 @@ Value certissuernew(const Array& params, bool fHelp) {
 
     EnsureWalletIsUnlocked();
 	// calculate network fees
-	int64 nNetFee = GetCertNetworkFee(OP_CERTISSUER_NEW);
+	int64 nNetFee = GetCertNetworkFee(OP_CERTISSUER_ACTIVATE);
 
     // build certissuer object
     CCertIssuer newCertIssuer;
