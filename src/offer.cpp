@@ -1864,11 +1864,7 @@ Value offeraccept(const Array& params, bool fHelp) {
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}
 
-	// return results
-	vector<Value> res;
-	res.push_back(wtx.GetHash().GetHex());
-
-	return res;
+	return wtx.GetHash().GetHex();
 }
 
 
