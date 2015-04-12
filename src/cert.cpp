@@ -272,17 +272,18 @@ bool CCertDB::ReconstructCertIndex(CBlockIndex *pindexRescan) {
                 txCertIssuer = serializedCertIssuer;
             }
 
-          
+            if(op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE) {
+                txCertIssuer.txHash = tx.GetHash();
+                txCertIssuer.nHeight = nHeight;
+            }
+
             // txn-specific values to certissuer object
             txCertIssuer.vchRand = vvchArgs[0];
-            txCertIssuer.txHash = tx.GetHash();
-            txCertIssuer.nHeight = nHeight;
             txCertIssuer.nTime = pindex->nTime;
             txCertIssuer.PutToCertIssuerList(vtxPos);
 
             if (!WriteCertIssuer(vchCertIssuer, vtxPos))
                 return error("ReconstructCertIndex() : failed to write to certissuer DB");
-        
 
             if(op == OP_CERT_NEW || op == OP_CERT_TRANSFER)
                 if (!WriteCertItem(vvchArgs[1], vvchArgs[0]))
@@ -1213,12 +1214,13 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					}
                 }
 
-                if(op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE)
+                if(op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE) {
                     theCertIssuer.nHeight = pindexBlock->nHeight;
+                    theCertIssuer.txHash = tx.GetHash();
+                }
 
                 // set the certissuer's txn-dependent values
                 theCertIssuer.vchRand = vvchArgs[0];
-                theCertIssuer.txHash = tx.GetHash();
                 theCertIssuer.nTime = pindexBlock->nTime;
                 theCertIssuer.PutToCertIssuerList(vtxPos);
 				{

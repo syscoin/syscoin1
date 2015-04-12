@@ -262,10 +262,13 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 				txOffer = serializedOffer;
 			}
 
+			if(op == OP_OFFER_ACTIVATE || op == OP_OFFER_UPDATE) {
+				txOffer.txHash = tx.GetHash();
+	            txOffer.nHeight = nHeight;
+			}
+
 			// txn-specific values to offer object
             txOffer.vchRand = vvchArgs[0];
-			txOffer.txHash = tx.GetHash();
-            txOffer.nHeight = nHeight;
             txOffer.nTime = pindex->nTime;
             txOffer.PutToOfferList(vtxPos);
 
@@ -1162,11 +1165,12 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				}
 				
 				// only modify the offer's height on an activate or update
-				if(op == OP_OFFER_ACTIVATE || op == OP_OFFER_UPDATE)
+				if(op == OP_OFFER_ACTIVATE || op == OP_OFFER_UPDATE) {
 					theOffer.nHeight = pindexBlock->nHeight;
+					theOffer.txHash = tx.GetHash();
+				}
 				// set the offer's txn-dependent values
                 theOffer.vchRand = vvchArgs[0];
-				theOffer.txHash = tx.GetHash();
 				theOffer.nTime = pindexBlock->nTime;
 				theOffer.PutToOfferList(vtxPos);
 				{
