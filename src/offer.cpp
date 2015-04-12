@@ -2023,10 +2023,13 @@ Value offerlist(const Array& params, bool fHelp) {
 			if (vtxPos.size() < 1)
 				pending = 1;
 
+			COffer theOffer = vtxPos.back();
+
             // build the output object
             Object oName;
             oName.push_back(Pair("name", stringFromVch(vchName)));
             oName.push_back(Pair("value", stringFromVch(vchValue)));
+            oName.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 
             string strAddress = "";
             GetOfferAddress(tx, strAddress);
