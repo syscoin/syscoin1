@@ -2029,7 +2029,10 @@ Value offerlist(const Array& params, bool fHelp) {
             Object oName;
             oName.push_back(Pair("name", stringFromVch(vchName)));
             oName.push_back(Pair("value", stringFromVch(vchValue)));
+            oName.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
             oName.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
+            oName.push_back(Pair("price", ValueFromAmount(theOffer.nPrice) ) );
+            oName.push_back(Pair("quantity", strprintf("%llu", theOffer.nQty)));
 
             string strAddress = "";
             GetOfferAddress(tx, strAddress);
