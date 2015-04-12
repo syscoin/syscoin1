@@ -329,7 +329,7 @@ int CheckCertIssuerTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
     return -1;
 }
 
-int GetCertTxHashHeight(const uint256 txHash) {
+int64 GetCertTxHashHeight(const uint256 txHash) {
 	CDiskTxPos postx;
 	pblocktree->ReadTxIndex(txHash, postx);
 	return GetCertTxPosHeight(postx);
@@ -1176,7 +1176,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			// if not an certissuernew, load the certissuer data from the DB
 			vector<CCertIssuer> vtxPos;
-			if (pcertdb->ExistsCertIssuer(vvchArgs[0]) && op != OP_CERTISSUER_ACTIVATE && !fJustCheck) {
+			if (pcertdb->ExistsCertIssuer(vvchArgs[0]) && !fJustCheck) {
 				if (!pcertdb->ReadCertIssuer(vvchArgs[0], vtxPos))
 					return error(
 							"CheckCertInputs() : failed to read from certissuer DB");

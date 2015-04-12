@@ -30,7 +30,7 @@ bool IsOfferOp(int op);
 int IndexOfOfferOutput(const CTransaction& tx);
 uint64 GetOfferFeeSubsidy(unsigned int nHeight);
 bool GetValueOfOfferTxHash(const uint256 &txHash, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
-int GetOfferTxHashHeight(const uint256 txHash);
+int64 GetOfferTxHashHeight(const uint256 txHash);
 int GetOfferTxPosHeight(const CDiskTxPos& txPos);
 int GetOfferTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
 int GetOfferDisplayExpirationDepth(int nHeight);

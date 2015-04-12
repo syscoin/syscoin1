@@ -318,7 +318,7 @@ int CheckOfferTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
 	return -1;
 }
 
-int GetOfferTxHashHeight(const uint256 txHash) {
+int64 GetOfferTxHashHeight(const uint256 txHash) {
 	CDiskTxPos postx;
 	pblocktree->ReadTxIndex(txHash, postx);
 	return GetOfferTxPosHeight(postx);
@@ -1106,7 +1106,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			// load the offer data from the DB
 			vector<COffer> vtxPos;
-			if (pofferdb->ExistsOffer(vvchArgs[0]) && op != OP_OFFER_ACTIVATE && !fJustCheck) {
+			if (pofferdb->ExistsOffer(vvchArgs[0]) && !fJustCheck) {
 				if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos))
 					return error(
 							"CheckOfferInputs() : failed to read from offer DB");
@@ -1256,7 +1256,7 @@ Value getofferfees(const Array& params, bool fHelp) {
 	Object oRes;
 	oRes.push_back(Pair("height", nBestHeight ));
 	oRes.push_back(Pair("subsidy", ValueFromAmount(GetOfferFeeSubsidy(nBestHeight) )));
-	oRes.push_back(Pair("new_fee", (double)1.0));
+	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_ACTIVATE) )));
 	oRes.push_back(Pair("update_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_UPDATE) )));
 	return oRes;
 
@@ -1394,6 +1394,8 @@ uint64 QtyOfPendingAcceptsInMempool(std::vector<unsigned char> vchToFind)
 					COffer theOffer(tx);
 					COfferAccept theOfferAccept;
 					if (theOffer.IsNull())
+						continue;
+					if (!GetOfferTxHashHeight(tx.GetHash())) 
 						continue;
 					if(theOffer.GetAcceptByHash(vvch[1], theOfferAccept))
 					{

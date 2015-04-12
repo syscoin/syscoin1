@@ -28,7 +28,7 @@ bool IsCertOp(int op);
 int IndexOfCertIssuerOutput(const CTransaction& tx);
 uint64 GetCertFeeSubsidy(unsigned int nHeight);
 bool GetValueOfCertIssuerTxHash(const uint256 &txHash, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
-int GetCertTxHashHeight(const uint256 txHash);
+int64 GetCertTxHashHeight(const uint256 txHash);
 int GetCertTxPosHeight(const CDiskTxPos& txPos);
 int GetCertTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
 int GetCertDisplayExpirationDepth(int nHeight);

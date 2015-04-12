@@ -59,10 +59,10 @@ void OfferAcceptDialog::acceptOffer()
 
 	    try {
             result = tableRPC.execute(strMethod, params);
-			if (result.type() == array_type)
+			if (result.type() != null_type)
 			{
-				arr = result.get_array();
-				QString offerAcceptTXID = QString::fromStdString(arr[0].get_str());
+				string strResult = result.get_str();
+				QString offerAcceptTXID = QString::fromStdString(strResult);
 				if(offerAcceptTXID != QString(""))
 				{
 					OfferPayDialog dlg(this->title, this->quantity, this->price, this);

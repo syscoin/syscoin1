@@ -388,7 +388,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			// get the alias from the DB
 			vector<CAliasIndex> vtxPos;
-			if (paliasdb->ExistsAlias(vvchArgs[0]) && op != OP_ALIAS_ACTIVATE && !fJustCheck) {
+			if (paliasdb->ExistsAlias(vvchArgs[0]) && !fJustCheck) {
 				if (!paliasdb->ReadAlias(vvchArgs[0], vtxPos))
 					return error(
 							"CheckAliasInputs() : failed to read from alias DB");
