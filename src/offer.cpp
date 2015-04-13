@@ -1917,6 +1917,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("time", sTime));
 			oOfferAccept.push_back(Pair("quantity", strprintf("%llu", ca.nQty)));
 			oOfferAccept.push_back(Pair("price", ValueFromAmount(ca.nPrice)));
+			oOfferAccept.push_back(Pair("total", ValueFromAmount(ca.nPrice * ca.nQty)));
 			oOfferAccept.push_back(Pair("is_mine", IsOfferMine(txA) ? "true" : "false"));
 			if(ca.bPaid) { // always true now
 				oOfferAccept.push_back(Pair("service_fee", ValueFromAmount(ca.nFee)));
