@@ -105,7 +105,7 @@ bool EditAliasDialog::saveCurrentRow()
             return false;
         }
 		activateFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE)/COIN;
-		activateFeeStr = strprintf("%"PRI64d, updateFee);
+		activateFeeStr = strprintf("%"PRI64d, activateFee);
         retval = QMessageBox::question(this, tr("Confirm Alias Activation"),
             tr("Warning: New Alias will cost ") + QString::fromStdString(activateFeeStr) + " SYS<br><br>" + tr("Are you sure you want to create this Alias?"),
 				 QMessageBox::Yes|QMessageBox::Cancel,
