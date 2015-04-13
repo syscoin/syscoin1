@@ -1889,10 +1889,13 @@ Value certissuerlist(const Array& params, bool fHelp) {
             if(!GetValueOfCertIssuerTx(tx, vchValue))
                 continue;
 
+            CCertIssuer theCertIssuerA(tx);
+
             // build the output object
             Object oName;
-            oName.push_back(Pair("name", stringFromVch(vchName)));
-            oName.push_back(Pair("value", stringFromVch(vchValue)));
+            oName.push_back(Pair("id", stringFromVch(vchName)));
+            oName.push_back(Pair("title", stringFromVch(theCertIssuerA.vchTitle)));
+            oName.push_back(Pair("data", stringFromVch(theCertIssuerA.vchData)));
             
             string strAddress = "";
             GetCertAddress(tx, strAddress);

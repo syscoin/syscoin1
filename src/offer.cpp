@@ -2034,16 +2034,17 @@ Value offerlist(const Array& params, bool fHelp) {
 			if (vtxPos.size() < 1)
 				pending = 1;
 
-			COffer theOffer = vtxPos.back();
-
             // build the output object
             Object oName;
             oName.push_back(Pair("name", stringFromVch(vchName)));
             oName.push_back(Pair("value", stringFromVch(vchValue)));
-            oName.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
-            oName.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
-            oName.push_back(Pair("price", ValueFromAmount(theOffer.nPrice) ) );
-            oName.push_back(Pair("quantity", strprintf("%llu", theOffer.nQty)));
+
+            COffer theOfferA(tx);
+
+            oName.push_back(Pair("category", stringFromVch(theOfferA.sCategory)));
+            oName.push_back(Pair("description", stringFromVch(theOfferA.sDescription)));
+            oName.push_back(Pair("price", ValueFromAmount(theOfferA.nPrice) ) );
+            oName.push_back(Pair("quantity", strprintf("%llu", theOfferA.nQty)));
 
             string strAddress = "";
             GetOfferAddress(tx, strAddress);
