@@ -113,7 +113,7 @@ bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 					string vvchFirstStr = stringFromVch(vvch[0]);
 					if(vvchFirstStr == vchToFindStr)
 					{
-						if (!GetAliasTxHashHeight(tx.GetHash())) 
+						if (GetAliasTxHashHeight(tx.GetHash()) <= 0) 
 							return true;
 					}
 					if(vvch.size() > 1)
@@ -121,7 +121,7 @@ bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 						string vvchSecondStr = HexStr(vvch[1]);
 						if(vvchSecondStr == vchToFindStr)
 						{
-							if (!GetAliasTxHashHeight(tx.GetHash())) 
+							if (GetAliasTxHashHeight(tx.GetHash()) <= 0) 
 								return true;
 						}
 					}
@@ -140,7 +140,7 @@ bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 					string vvchFirstStr = stringFromVch(vvch[0]);
 					if(vvchFirstStr == vchToFindStr)
 					{
-						if (!GetOfferTxHashHeight(tx.GetHash())) 
+						if (GetOfferTxHashHeight(tx.GetHash()) <= 0) 
 							return true;
 					}
 					if(vvch.size() > 1)
@@ -148,7 +148,7 @@ bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 						string vvchSecondStr = HexStr(vvch[1]);
 						if(vvchSecondStr == vchToFindStr)
 						{
-							if (!GetOfferTxHashHeight(tx.GetHash()))
+							if (GetOfferTxHashHeight(tx.GetHash()) <= 0)
 								return true;
 						}
 					}
@@ -167,7 +167,7 @@ bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 					string vvchFirstStr = stringFromVch(vvch[0]);
 					if(vvchFirstStr == vchToFindStr)
 					{
-						if (!GetCertTxHashHeight(tx.GetHash()))
+						if (GetCertTxHashHeight(tx.GetHash()) <= 0)
 								return true;
 					}
 					if(vvch.size() > 1)
@@ -175,7 +175,7 @@ bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 						string vvchSecondStr = HexStr(vvch[1]);
 						if(vvchSecondStr == vchToFindStr)
 						{
-							if (!GetCertTxHashHeight(tx.GetHash())) 
+							if (GetCertTxHashHeight(tx.GetHash()) <= 0) 
 								return true;
 						}
 					}

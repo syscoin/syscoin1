@@ -1395,7 +1395,8 @@ uint64 QtyOfPendingAcceptsInMempool(std::vector<unsigned char> vchToFind)
 					COfferAccept theOfferAccept;
 					if (theOffer.IsNull())
 						continue;
-					if (!GetOfferTxHashHeight(tx.GetHash())) 
+					// if offer is already confirmed dont account for it in the mempool
+					if (GetOfferTxHashHeight(tx.GetHash()) > 0) 
 						continue;
 					if(theOffer.GetAcceptByHash(vvch[1], theOfferAccept))
 					{
