@@ -1903,6 +1903,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 			Object oOfferAccept;
 
 	        // get transaction pointed to by offer
+
 	        CTransaction txA;
 	        uint256 blockHashA;
 	        uint256 txHashA= ca.txHash;
