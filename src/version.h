@@ -25,11 +25,13 @@ extern const std::string CLIENT_DATE;
 // network protocol versioning
 //
 
-//70002 = r0.1.1
-//70003 = r0.1.2
-//70004 = r0.1.3
-//70005 = r0.1.4
-static const int PROTOCOL_VERSION = 70005;
+//70002 =  r0.1.1
+//70003 =  r0.1.2
+//70004 =  r0.1.3
+//70005 =  r0.1.4       =   (mandatory update)
+//70005 =  r0.1.5       =   r0.1.5.1 (non-mandatory update - no protocol version change)
+//700051 = r1.5.2 beta4 =   dropped leading "0.", locked to cakenet, BETA not to be used on mainnet
+static const int PROTOCOL_VERSION = 700051;
 
 // intial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
