@@ -1901,6 +1901,14 @@ Value offerinfo(const Array& params, bool fHelp) {
 		for(unsigned int i=0;i<theOffer.accepts.size();i++) {
 			COfferAccept ca = theOffer.accepts[i];
 			Object oOfferAccept;
+
+	        // get transaction pointed to by offer
+	        CTransaction txA;
+	        uint256 blockHashA;
+	        uint256 txHashA= ca.txHash;
+	        if (!GetTransaction(txHashA, txA, blockHashA, true))
+	            throw JSONRPCError(RPC_WALLET_ERROR, "failed to read transaction from disk");
+
 			string sTime = strprintf("%llu", ca.nTime);
             string sHeight = strprintf("%llu", ca.nHeight);
 			oOfferAccept.push_back(Pair("id", HexStr(ca.vchRand)));
@@ -1909,8 +1917,8 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("time", sTime));
 			oOfferAccept.push_back(Pair("quantity", strprintf("%llu", ca.nQty)));
 			oOfferAccept.push_back(Pair("price", ValueFromAmount(ca.nPrice)));
-			oOfferAccept.push_back(Pair("paid", ca.bPaid ? "true" : "false"));
-			if(ca.bPaid) {
+			oOfferAccept.push_back(Pair("is_mine", IsOfferMine(txA) ? "true" : "false"));
+			if(ca.bPaid) { // always true now
 				oOfferAccept.push_back(Pair("service_fee", ValueFromAmount(ca.nFee)));
 				oOfferAccept.push_back(Pair("paytxid", ca.txPayId.GetHex() ));
 				oOfferAccept.push_back(Pair("message", stringFromVch(ca.vchMessage)));
@@ -1939,6 +1947,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
 			oOffer.push_back(Pair("quantity", strprintf("%llu", theOffer.nQty)));
 			oOffer.push_back(Pair("price", ValueFromAmount(theOffer.nPrice) ) );
+			oOffer.push_back(Pair("is_mine", IsOfferMine(tx) ? "true" : "false"));
 			oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 			oOffer.push_back(Pair("accepts", aoOfferAccepts));
 			oLastOffer = oOffer;

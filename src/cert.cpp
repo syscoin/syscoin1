@@ -1719,6 +1719,7 @@ Value certissuerinfo(const Array& params, bool fHelp) {
         for(unsigned int i=0;i<theCertIssuer.certs.size();i++) {
             CCertItem ca = theCertIssuer.certs[i];
             Object oCertItem;
+
             string sTime = strprintf("%llu", ca.nTime);
             string sHeight = strprintf("%llu", ca.nHeight);
 
@@ -1750,6 +1751,7 @@ Value certissuerinfo(const Array& params, bool fHelp) {
             }
             oCertIssuer.push_back(Pair("title", stringFromVch(theCertIssuer.vchTitle)));
             oCertIssuer.push_back(Pair("data", stringFromVch(theCertIssuer.vchData)));
+            oCertIssuer.push_back(Pair("is_mine", IsCertMine(tx) ? "true" : "false"));
             oCertIssuer.push_back(Pair("certificates", aoCertItems));
             oLastCertIssuer = oCertIssuer;
         }
@@ -1760,7 +1762,7 @@ Value certissuerinfo(const Array& params, bool fHelp) {
 
 Value certinfo(const Array& params, bool fHelp) {
     if (fHelp || 1 != params.size())
-        throw runtime_error("certissuerinfo <guid>\n"
+        throw runtime_error("certinfo <guid>\n"
                 "Show stored values of a single certificate and its issuer.\n");
 
     vector<unsigned char> vchCertRand = ParseHex(params[0].get_str());
@@ -1781,8 +1783,14 @@ Value certinfo(const Array& params, bool fHelp) {
 
         Object oCertIssuer;
         vector<unsigned char> vchValue;
-
         CCertItem ca = theCertItem;
+
+        CTransaction txA;
+        uint256 blockHashA;
+        uint256 txHashA = ca.txHash;
+        if (!GetTransaction(txHashA, txA, blockHashA, true))
+            throw JSONRPCError(RPC_WALLET_ERROR, "failed to read transaction from disk");
+
         string sTime = strprintf("%llu", ca.nTime);
         string sHeight = strprintf("%llu", ca.nHeight);
         oCertItem.push_back(Pair("id", HexStr(ca.vchRand)));
@@ -1792,6 +1800,7 @@ Value certinfo(const Array& params, bool fHelp) {
         oCertItem.push_back(Pair("service_fee", ValueFromAmount(ca.nFee)));
         oCertItem.push_back(Pair("title", stringFromVch(ca.vchTitle)));
         oCertItem.push_back(Pair("data", stringFromVch(ca.vchData)));
+        oCertItem.push_back(Pair("is_mine", IsCertMine(txA) ? "true" : "false"));
 
         int nHeight;
         uint256 certissuerHash;
@@ -1888,11 +1897,98 @@ Value certissuerlist(const Array& params, bool fHelp) {
             string strAddress = "";
             GetCertAddress(tx, strAddress);
             oName.push_back(Pair("address", strAddress));
-            oName.push_back(Pair("expires_in", nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight));
-            
-            if(nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
-                oName.push_back(Pair("expired", 1));
 
+            // get last active name only
+            if(vNamesI.find(vchName) != vNamesI.end() && vNamesI[vchName] > nHeight)
+                continue;
+
+            vNamesI[vchName] = nHeight;
+            vNamesO[vchName] = oName;
+        }
+    }
+
+    BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, Object)& item, vNamesO)
+        oRes.push_back(item.second);
+
+    return oRes;
+}
+
+Value certlist(const Array& params, bool fHelp) {
+    if (fHelp || 1 < params.size())
+        throw runtime_error("certlist [<cert>]\n"
+                "list my own certificates");
+
+    vector<unsigned char> vchName;
+
+    if (params.size() == 1)
+        vchName = vchFromValue(params[0]);
+
+    vector<unsigned char> vchNameUniq;
+    if (params.size() == 1)
+        vchNameUniq = vchFromValue(params[0]);
+
+    Array oRes;
+    map< vector<unsigned char>, int > vNamesI;
+    map< vector<unsigned char>, Object > vNamesO;
+
+    {
+        uint256 blockHash;
+        uint256 hash;
+        CTransaction tx;
+
+        vector<unsigned char> vchValue;
+        int nHeight;
+
+        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+        {
+            // get txn hash, read txn index
+            hash = item.second.GetHash();
+
+            if (!GetTransaction(hash, tx, blockHash, true))
+                continue;
+
+            // skip non-syscoin txns
+            if (tx.nVersion != SYSCOIN_TX_VERSION)
+                continue;
+
+            // decode txn, skip non-alias txns
+            vector<vector<unsigned char> > vvch;
+            int op, nOut;
+            if (!DecodeCertTx(tx, op, nOut, vvch, -1) || !IsCertOp(op))
+                continue;
+
+            if(op != OP_CERT_NEW && op != OP_CERT_TRANSFER)
+                continue;
+
+            // get the txn height
+            nHeight = GetCertTxHashHeight(hash);
+
+            // get the txn alias name
+            if(!GetNameOfCertIssuerTx(tx, vchName))
+                continue;
+
+            // skip this alias if it doesn't match the given filter value
+            if(vchNameUniq.size() > 0 && vchNameUniq != vchName)
+                continue;
+
+            // get the value of the alias txn
+            if(!GetValueOfCertIssuerTx(tx, vchValue))
+                continue;
+
+            CCertIssuer theCertIssuerA(tx);
+            CCertItem theCertItemA = theCertIssuerA.certs.back();
+
+            // build the output object
+            Object oName;
+            oName.push_back(Pair("issuer_id", stringFromVch(vchName)));
+            oName.push_back(Pair("issuer_title", stringFromVch(theCertIssuerA.vchTitle)));
+            oName.push_back(Pair("id", HexStr(theCertItemA.vchRand)));
+            oName.push_back(Pair("title", stringFromVch(theCertItemA.vchTitle)));
+            oName.push_back(Pair("data", stringFromVch(theCertItemA.vchData)));
+            
+            string strAddress = "";
+            GetCertAddress(tx, strAddress);
+            oName.push_back(Pair("address", strAddress));
             // get last active name only
             if(vNamesI.find(vchName) != vNamesI.end() && vNamesI[vchName] > nHeight)
                 continue;

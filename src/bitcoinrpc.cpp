@@ -315,6 +315,7 @@ static const CRPCCommand vRPCCommands[] =
   { "certnew",               &certnew,           false,      true,      true },
   { "certtransfer",          &certtransfer,      false,      true,      true },
   { "certissuerlist",        &certissuerlist,    false,      true,      true },
+  { "certlist",              &certlist,          false,      true,      true },
   { "certissuerinfo",        &certissuerinfo,    false,      true,      true },
   { "certinfo",              &certinfo,          false,      true,      true },
   { "certissuerhistory",     &certissuerhistory, false,      true,      true },
