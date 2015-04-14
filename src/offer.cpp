@@ -1085,7 +1085,9 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			if (fBlock && !fJustCheck) {
 				// Check hash
+				const vector<unsigned char> &vchOffer = vvchArgs[0];
 				const vector<unsigned char> &vchAcceptRand = vvchArgs[1];
+				nPrevHeight = GetOfferHeight(vchOffer);
 
 				// check for existence of offeraccept in txn offer obj
 				if(!theOffer.GetAcceptByHash(vchAcceptRand, theOfferAccept))
@@ -1928,6 +1930,13 @@ Value offerinfo(const Array& params, bool fHelp) {
 		}
 		int nHeight;
 		uint256 offerHash;
+		int expired;
+		int expires_in;
+		int expired_block;
+  
+		expired = 0;	
+		expires_in = 0;
+		expired_block = 0;
         if (GetValueOfOfferTxHash(txHash, vchValue, offerHash, nHeight)) {
 			oOffer.push_back(Pair("id", offer));
 			oOffer.push_back(Pair("txid", tx.GetHash().GetHex()));
@@ -1935,14 +1944,21 @@ Value offerinfo(const Array& params, bool fHelp) {
 			string strAddress = "";
 			GetOfferAddress(tx, strAddress);
 			oOffer.push_back(Pair("address", strAddress));
-			oOffer.push_back(
-					Pair("expires_in",
-							nHeight + GetOfferExpirationDepth(nHeight)
-									- pindexBest->nHeight));
-			if (nHeight + GetOfferExpirationDepth(nHeight)
-					- pindexBest->nHeight <= 0) {
-				oOffer.push_back(Pair("expired", 1));
+			
+            if(nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+			{
+				expired = 1;
+				expired_block = nHeight + GetOfferDisplayExpirationDepth(nHeight);
+			}  
+			if(expired == 0)
+			{
+				expires_in = nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
 			}
+			oOffer.push_back(Pair("expires_in", expires_in));
+			oOffer.push_back(Pair("expired_block", expired_block));
+			oOffer.push_back(Pair("expired", expired));
+
+
 			oOffer.push_back(Pair("payment_address", stringFromVch(theOffer.vchPaymentAddress)));
 			oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
 			oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
@@ -1985,15 +2001,14 @@ Value offerlist(const Array& params, bool fHelp) {
 		int pending;
 		int expires_in;
 		int expired_block;
-        vector<unsigned char> vchValue;
         int nHeight;
 
         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
         {
 			expired = 0;
 			pending = 0;
-			expires_in = -1;
-			expired_block -1;
+			expires_in = 0;
+			expired_block = 0;
             // get txn hash, read txn index
             hash = item.second.GetHash();
 
@@ -2023,41 +2038,33 @@ Value offerlist(const Array& params, bool fHelp) {
             if(vchNameUniq.size() > 0 && vchNameUniq != vchName)
                 continue;
 
-            // get the value of the alias txn
-            if(!GetValueOfOfferTx(tx, vchValue))
-                continue;
-
-            uint64 nQty;
 			vector<COffer> vtxPos;
+			COffer theOfferA;
 			if (!pofferdb->ReadOffer(vchName, vtxPos))
+			{
 				pending = 1;
-			if (vtxPos.size() < 1)
-				pending = 1;
-
-            COffer theOfferA(tx);
-			if(pending == 1) {
-	            nQty = theOfferA.nQty;
-			} else {
-				nQty = vtxPos.back().nQty;
+				theOfferA = COffer(tx);
 			}
-
+			if (vtxPos.size() < 1)
+			{
+				pending = 1;
+				theOfferA = COffer(tx);
+			}	
+			if(pending != 1)
+			{
+				theOfferA = vtxPos.back();
+			}
+			
             // build the output object
             Object oName;
             oName.push_back(Pair("name", stringFromVch(vchName)));
-            oName.push_back(Pair("value", stringFromVch(vchValue)));
-
-
             oName.push_back(Pair("category", stringFromVch(theOfferA.sCategory)));
             oName.push_back(Pair("description", stringFromVch(theOfferA.sDescription)));
             oName.push_back(Pair("price", ValueFromAmount(theOfferA.nPrice) ) );
-            oName.push_back(Pair("quantity", strprintf("%llu", nQty)));
+            oName.push_back(Pair("quantity", strprintf("%llu", theOfferA.nQty)));
+            oName.push_back(Pair("address", stringFromVch(theOfferA.vchPaymentAddress)));
 
-            string strAddress = "";
-            GetOfferAddress(tx, strAddress);
-            oName.push_back(Pair("address", strAddress));
-
-            
-
+           
             if(pending == 0 && (nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0))
 			{
 				expired = 1;
