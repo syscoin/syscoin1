@@ -1085,13 +1085,12 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			if (fBlock && !fJustCheck) {
 				// Check hash
-				const vector<unsigned char> &vchOffer = vvchArgs[0];
 				const vector<unsigned char> &vchAcceptRand = vvchArgs[1];
-				nPrevHeight = GetOfferHeight(vchOffer);
 
 				// check for existence of offeraccept in txn offer obj
 				if(!theOffer.GetAcceptByHash(vchAcceptRand, theOfferAccept))
 					return error("could not read accept from offer txn");
+
 	   		}
 			break;
 
@@ -1135,13 +1134,11 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					// get the offer accept qty, validate acceptance. txn is still valid
 					// if qty cannot be fulfilled, first-to-mine makes it
 					if(theOfferAccept.nQty < 1 || theOfferAccept.nQty > theOffer.nQty) {
-						printf("txn %s accepted but offer not fulfilled because desired"
+						return error("Offer not fulfilled because desired"
 							" qty %llu is more than available qty %llu for offer accept %s\n", 
-							tx.GetHash().GetHex().c_str(), 
 							theOfferAccept.nQty, 
 							theOffer.nQty, 
-							stringFromVch(theOfferAccept.vchRand).c_str());
-						return true;
+							HexStr(theOfferAccept.vchRand).c_str());
 					}
 					theOffer.nQty -= theOfferAccept.nQty;
 					
