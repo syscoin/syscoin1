@@ -2027,23 +2027,30 @@ Value offerlist(const Array& params, bool fHelp) {
             if(!GetValueOfOfferTx(tx, vchValue))
                 continue;
 
+            uint64 nQty;
 			vector<COffer> vtxPos;
 			if (!pofferdb->ReadOffer(vchName, vtxPos))
 				pending = 1;
 			if (vtxPos.size() < 1)
 				pending = 1;
 
+            COffer theOfferA(tx);
+			if(pending == 1) {
+	            nQty = theOfferA.nQty;
+			} else {
+				nQty = vtxPos.back().nQty;
+			}
+
             // build the output object
             Object oName;
             oName.push_back(Pair("name", stringFromVch(vchName)));
             oName.push_back(Pair("value", stringFromVch(vchValue)));
 
-            COffer theOfferA(tx);
 
             oName.push_back(Pair("category", stringFromVch(theOfferA.sCategory)));
             oName.push_back(Pair("description", stringFromVch(theOfferA.sDescription)));
             oName.push_back(Pair("price", ValueFromAmount(theOfferA.nPrice) ) );
-            oName.push_back(Pair("quantity", strprintf("%llu", theOfferA.nQty)));
+            oName.push_back(Pair("quantity", strprintf("%llu", nQty)));
 
             string strAddress = "";
             GetOfferAddress(tx, strAddress);
