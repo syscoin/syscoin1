@@ -2057,7 +2057,8 @@ Value offerlist(const Array& params, bool fHelp) {
 			
             // build the output object
             Object oName;
-            oName.push_back(Pair("name", stringFromVch(vchName)));
+            oName.push_back(Pair("guid", stringFromVch(vchName)));
+            oName.push_back(Pair("title", stringFromVch(theOfferA.sTitle)));
             oName.push_back(Pair("category", stringFromVch(theOfferA.sCategory)));
             oName.push_back(Pair("description", stringFromVch(theOfferA.sDescription)));
             oName.push_back(Pair("price", ValueFromAmount(theOfferA.nPrice) ) );
