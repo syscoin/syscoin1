@@ -1347,6 +1347,10 @@ Value aliasnew(const Array& params, bool fHelp) {
 	if (vchName.size() > 255)
 		throw runtime_error("alias name > 255 bytes!\n");
 
+	CBitcoinAddress myAddress = CBitcoinAddress(stringFromVch(vchName));
+	if(myAddress.IsValid())
+		throw runtime_error("alias name cannot be a syscoin address!\n");
+
 	CWalletTx wtx;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 
