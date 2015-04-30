@@ -92,7 +92,7 @@ int64 nTransactionFee = 0;
 int64 nMinimumInputValue = DUST_HARD_LIMIT;
 bool HasReachedMainNetForkB2()
 {
-	return (!fCakeNet && !fTestNet && nBestHeight >= hardforkB2);
+	return fCakeNet || fTestNet || (!fCakeNet && !fTestNet && nBestHeight >= hardforkB2);
 }
 bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 {
@@ -761,7 +761,7 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
     int op;
     int nOut;
 	string err = "";
-  
+	CBitcoinAddress myAddress;
     
     // alias
     if(DecodeAliasTx(*this, op, nOut, vvch, -1)) {
@@ -774,6 +774,12 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 					err = error("aliasactivate tx with rand too big");
 				if (vvch[2].size() > MAX_VALUE_LENGTH)
 					err = error("aliasactivate tx with value too long");
+				if(HasReachedMainNetForkB2())
+				{
+					myAddress = CBitcoinAddress(stringFromVch(vvch[0]));
+            		if(myAddress.IsValid() && !myAddress.isAlias)
+            			err = error("alias name cannot be a syscoin address");
+				}
 				break;
 			case OP_ALIAS_UPDATE:
 				if (vvch[1].size() > MAX_VALUE_LENGTH)

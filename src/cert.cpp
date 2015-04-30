@@ -1052,7 +1052,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				nNetFee = GetCertNetFee(tx);
 				if (nNetFee < GetCertNetworkFee(OP_CERTISSUER_ACTIVATE) && HasReachedMainNetForkB2())
 					return error(
-							"CheckOfferInputs() : OP_CERTISSUER_ACTIVATE got tx %s with fee too low %lu",
+							"CheckCertInputs() : OP_CERTISSUER_ACTIVATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
 							(long unsigned int) nNetFee);		
 			}
@@ -1150,7 +1150,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 nNetFee = GetCertNetFee(tx);
                 if (nNetFee < expectedFee && HasReachedMainNetForkB2())
                     return error(
-                            "CheckCertInputs() : got certtransfer tx %s with fee too low %lu",
+                            "CheckCertInputs() : OP_CERT_TRANSFER got tx %s with fee too low %lu",
                             tx.GetHash().GetHex().c_str(),
                             (long unsigned int) nNetFee);
 

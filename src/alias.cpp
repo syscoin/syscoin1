@@ -342,7 +342,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				nNetFee = GetAliasNetFee(tx);
 				if (nNetFee < GetAliasNetworkFee(OP_ALIAS_ACTIVATE) && HasReachedMainNetForkB2())
 					return error(
-							"CheckOfferInputs() : OP_ALIAS_ACTIVATE got tx %s with fee too low %lu",
+							"CheckAliasInputs() : OP_ALIAS_ACTIVATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
 							(long unsigned int) nNetFee);		
 			}
@@ -1245,6 +1245,11 @@ Value aliasnew(const Array& params, bool fHelp) {
 
 	if (vchValue.size() > MAX_VALUE_LENGTH)
 		throw runtime_error("alias value > 1023 bytes!\n");
+
+
+	CBitcoinAddress myAddress = CBitcoinAddress(stringFromVch(vchName));
+	if(myAddress.IsValid() && !myAddress.isAlias)
+		throw runtime_error("alias name cannot be a syscoin address!\n");
 
 	CWalletTx wtx;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
