@@ -1386,8 +1386,9 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
     return s;
 }
 
-static const int64 nTargetTimespan = 1 * 60 * 60; // Syscoin: 1 hour
-static const int64 nTargetSpacing = 1 * 60; // Syscoin: 1 minute
+static const int64 nTargetTimespan = 3.5 * 24 * 60 * 60; // Syscoin: 3.5 days
+static const int64 nTargetSpacing = 60; // Syscoin: 1 minute
+static const int64 nInterval = nTargetTimespan / nTargetSpacing;
 
 //
 // minimum amount of work that could possibly be required nTime after
@@ -1509,8 +1510,70 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast,
 	return bnNew.GetCompact();
 }
 
+unsigned int static GetNextWorkRequired1(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
+{
+    unsigned int nProofOfWorkLimit = bnProofOfWorkLimit.GetCompact();
+
+    // Genesis block
+    if (pindexLast == NULL)
+        return nProofOfWorkLimit;
+
+    // Only change once per interval
+    if ((pindexLast->nHeight+1) % nInterval != 0)
+    {
+        // Special difficulty rule for testnet:
+        if (fTestNet)
+        {
+            // If the new block's timestamp is more than 2* 10 minutes
+            // then allow mining of a min-difficulty block.
+            if (pblock->nTime > pindexLast->nTime + nTargetSpacing*2)
+                return nProofOfWorkLimit;
+            else
+            {
+                // Return the last non-special-min-difficulty-rules-block
+                const CBlockIndex* pindex = pindexLast;
+                while (pindex->pprev && pindex->nHeight % nInterval != 0 && pindex->nBits == nProofOfWorkLimit)
+                    pindex = pindex->pprev;
+                return pindex->nBits;
+            }
+        }
+
+        return pindexLast->nBits;
+    }
+
+    // Go back by what we want to be 14 days worth of blocks
+    const CBlockIndex* pindexFirst = pindexLast;
+    for (int i = 0; pindexFirst && i < nInterval-1; i++)
+        pindexFirst = pindexFirst->pprev;
+    assert(pindexFirst);
+
+    // Limit adjustment step
+    int64 nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
+    printf("  nActualTimespan = %"PRI64d"  before bounds\n", nActualTimespan);
+    if (nActualTimespan < nTargetTimespan/4)
+        nActualTimespan = nTargetTimespan/4;
+    if (nActualTimespan > nTargetTimespan*4)
+        nActualTimespan = nTargetTimespan*4;
+
+    // Retarget
+    CBigNum bnNew;
+    bnNew.SetCompact(pindexLast->nBits);
+    bnNew *= nActualTimespan;
+    bnNew /= nTargetTimespan;
+
+    if (bnNew > bnProofOfWorkLimit)
+        bnNew = bnProofOfWorkLimit;
+
+    /// debug print
+    printf("GetNextWorkRequired RETARGET\n");
+    printf("nTargetTimespan = %"PRI64d"    nActualTimespan = %"PRI64d"\n", nTargetTimespan, nActualTimespan);
+    printf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString().c_str());
+    printf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
+
+    return bnNew.GetCompact();
+}
 // Using KGW
-unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast,
+unsigned int static GetNextWorkRequired2(const CBlockIndex* pindexLast,
 		const CBlockHeader *pblock) {
 	static const int64 BlocksTargetSpacing = 60;
 	uint64 PastBlocksMin = 7;
@@ -1519,7 +1582,18 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast,
 	return KimotoGravityWell(pindexLast, pblock, BlocksTargetSpacing,
 			PastBlocksMin, PastBlocksMax);
 }
+unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast,
+		const CBlockHeader *pblock) {
+	if(HasReachedMainNetForkB2())
+	{
+		return GetNextWorkRequired1(pindexLast, pblock);
+	}
+	else
+	{
+		return GetNextWorkRequired2(pindexLast, pblock);	
+	}
 
+}
 bool CheckProofOfWork(uint256 hash, unsigned int nBits) {
 	CBigNum bnTarget;
 	bnTarget.SetCompact(nBits);
