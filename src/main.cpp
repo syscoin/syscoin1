@@ -1386,7 +1386,7 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
     return s;
 }
 
-static const int64 nTargetTimespan = 1.4 * 24 * 60 * 60; // Syscoin: 1.4 days
+static const int64 nTargetTimespan = 1 * 24 * 60 * 60; // Syscoin: 1 day
 static const int64 nTargetSpacing = 60; // Syscoin: 1 minute
 static const int64 nInterval = nTargetTimespan / nTargetSpacing;
 
