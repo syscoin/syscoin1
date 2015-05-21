@@ -323,7 +323,8 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		printf("%s : name=%s, tx=%s\n", aliasFromOp(op).c_str(),
 				stringFromVch(vvchArgs[0]).c_str(),
 				tx.GetHash().GetHex().c_str());
-
+		if (vvchArgs[0].size() > MAX_NAME_LENGTH)
+			return error("aliasactivate tx with incorrect hash length");
 		switch (op) {
 
 		case OP_ALIAS_ACTIVATE:
@@ -332,8 +333,9 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if (found)
 				return error(
 						"CheckAliasInputs() : aliasactivate tx pointing to previous syscoin tx");
-			if (vvchArgs[0].size() > 20)
-				return error("aliasactivate tx with incorrect hash length");
+
+			if (vvchArgs[1].size() > 20)
+				return error("aliasactivate tx with rand too big");
 			if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
 				return error("aliasactivate tx with value too long");
 			if (fBlock && !fJustCheck) {

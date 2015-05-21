@@ -1041,9 +1041,8 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
             if (found)
                 return error(
                         "CheckCertInputs() : certissueractivate tx pointing to previous syscoin tx");
-
-            if (vvchArgs[0].size() > 20)
-                return error("certissueractivate tx tx with guid too big");
+			if (vvchArgs[1].size() > 20)
+				return error("cert tx with rand too big");
 			if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
                 return error("certissueractivate tx with value too long");
 			if (fBlock && !fJustCheck) {
@@ -1086,7 +1085,8 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
             break;
 
         case OP_CERT_NEW:
-
+        	if (vvchArgs[0].size() > 20)
+				return error("cert tx with cert rand too big");
             if (vvchArgs[1].size() > 20)
                 return error("certitem tx with guid too big");
 
@@ -1120,10 +1120,8 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
             // validate conditions
             if ( ( !found || (prevOp != OP_CERT_NEW && prevOp != OP_CERT_TRANSFER && prevOp != OP_CERTISSUER_UPDATE) ) && !fJustCheck && HasReachedMainNetForkB2() )
                 return error("certtransfer previous op %s is invalid", certissuerFromOp(prevOp).c_str());
-
-            if (vvchArgs[0].size() > 20)
-                return error("certtransfer tx with certissuer hash too big");
-
+        	if (vvchArgs[0].size() > 20)
+				return error("certtransfer tx with cert rand too big");
             if (vvchArgs[1].size() > 20)
                 return error("certtransfer tx with certissuer certitem hash too big");
 

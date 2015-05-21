@@ -52,7 +52,7 @@ bool fTxIndex = true; // syscoin is using transaction index by default
 unsigned int nCoinCacheSize = 5000;
 
 int hardforkLaunch = 1660;
-int hardforkB2 = 350000;
+int hardforkB2 = 450000;
 
 extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey,
 		uint256 hash, int nHashType, CScript& scriptSigRet,
@@ -844,9 +844,9 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 				break;
 			case OP_CERT_TRANSFER:
         		if (vvch[0].size() > 20)
-					err = error("cert tx with offer rand too big");
+					err = error("cert transfer tx with cert rand too big");
 				if (vvch[1].size() > 20)
-					err = error("cert tx with alias rand too big");
+					err = error("cert transfer tx with invalid hash length");
 				break;
 			default:
 				err = error("cert transaction has unknown op");
@@ -1371,15 +1371,24 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
         nSubsidy = 0;
 
     a = nSubsidy;
-    b = GetAliasFeeSubsidy(nHeight);
-    c = GetOfferFeeSubsidy(nHeight);
-    d = GetCertFeeSubsidy(nHeight);
-    e = nFees;
+
+	e = nFees;
     s = a+e;
 
-    if (nHeight < hardforkLaunch 
-        || nHeight >= MM_FEEREGEN_HARDFORK
-        || (fCakeNet || fTestNet)) s += b+c+d;
+	if(!HasReachedMainNetForkB2())
+	{
+
+		if (nHeight < hardforkLaunch 
+			|| nHeight >= MM_FEEREGEN_HARDFORK
+			|| (fCakeNet || fTestNet)) 
+		{
+			b = GetAliasFeeSubsidy(nHeight);
+			c = GetOfferFeeSubsidy(nHeight);
+			d = GetCertFeeSubsidy(nHeight);
+			s += b+c+d;
+		}
+	}
+
 
     if (fDebug)
 		printf ("GetBlockvalue of Block %d: subsidy=%"PRI64d", fees=%"PRI64d", aliasSubsidy=%"PRI64d", offerSubsidy=%"PRI64d", certSubidy=%"PRI64d", sum=%"PRI64d". \n", nHeight, a,e,b,c,d,s);
