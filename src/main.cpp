@@ -99,7 +99,7 @@ bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 	for (map<uint256, CTransaction>::iterator mi = mempool.mapTx.begin();
 		mi != mempool.mapTx.end(); ++mi) {
 		CTransaction& tx = (*mi).second;
-		if (tx.IsCoinBase() || !tx.IsFinal())
+		if (tx.IsCoinBase()/* || !tx.IsFinal()*/)
 			continue;
 		if(IsAliasOp(type))
 		{
@@ -1202,9 +1202,9 @@ int CMerkleTx::GetBlocksToMaturity() const {
 	if (!IsCoinBase())
 		return 0;
 	if(fTestNet || fCakeNet)
-		return max(0, (8 + 20) - GetDepthInMainChain());
+		return max(0, (8 + 1) - GetDepthInMainChain());
 	else
-		return max(0, (COINBASE_MATURITY + 20) - GetDepthInMainChain());
+		return max(0, (COINBASE_MATURITY + 1) - GetDepthInMainChain());
 }
 
 bool CMerkleTx::AcceptToMemoryPool(bool fCheckInputs, bool fLimitFree) {
