@@ -99,7 +99,7 @@ bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 	for (map<uint256, CTransaction>::iterator mi = mempool.mapTx.begin();
 		mi != mempool.mapTx.end(); ++mi) {
 		CTransaction& tx = (*mi).second;
-		if (tx.IsCoinBase()/* || !tx.IsFinal()*/)
+		if (tx.IsCoinBase() || !tx.IsFinal())
 			continue;
 		if(IsAliasOp(type))
 		{

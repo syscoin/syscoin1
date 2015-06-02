@@ -1379,7 +1379,7 @@ uint64 QtyOfPendingAcceptsInMempool(std::vector<unsigned char> vchToFind)
 	for (map<uint256, CTransaction>::iterator mi = mempool.mapTx.begin();
 		mi != mempool.mapTx.end(); ++mi) {
 		CTransaction& tx = (*mi).second;
-		if (tx.IsCoinBase() /*|| !tx.IsFinal()*/)
+		if (tx.IsCoinBase() || !tx.IsFinal())
 			continue;
 		vector<vector<unsigned char> > vvch;
 		int op, nOut;
