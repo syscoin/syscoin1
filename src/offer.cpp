@@ -5,7 +5,7 @@
 #include "auxpow.h"
 #include "script.h"
 #include "main.h"
-
+#include "bitcoinrpc.h"
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_writer_template.h"
 
@@ -13,7 +13,7 @@
 
 using namespace std;
 using namespace json_spirit;
-
+extern const CRPCTable tableRPC;
 template<typename T> void ConvertTo(Value& value, bool fAllowNull = false);
 
 
@@ -37,6 +37,125 @@ extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey,
 extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
 		const CTransaction& txTo, unsigned int nIn, unsigned int flags,
 		int nHashType);
+// check wallet transactions to see if there was a refund for an accept already
+// need this because during a reorg blocks are disconnected (deleted from db) and we can't rely on looking in db to see if refund was made for an accept
+bool foundRefundAcceptInWallet(const vector<unsigned char> &vchAcceptRand, unsigned char acceptCode)
+{
+    TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
+    BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+    {
+		vector<vector<unsigned char> > vvchArgs;
+		int op, nOut;
+		CWalletTx& wtx = item.second;
+		if (DecodeOfferTx(wtx, op, nOut, vvchArgs, -1))
+		{
+			if(op == OP_OFFER_ACCEPT)
+			{
+				if(vchAcceptRand == vvchArgs[1])
+				{
+					COffer offer(wtx);
+					COfferAccept theOfferAccept;
+					// get the accept out of the offer object in the txn
+					if(!offer.GetAcceptByHash(vvchArgs[1], theOfferAccept))
+						return error("foundRefundAcceptInWallet(): could not read accept from offer txn");
+					if(theOfferAccept.nRefunded == acceptCode)
+						return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+// refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
+Value makeOfferRefundTX(COffer& theOffer, COfferAccept& theOfferAccept, const CTransaction& tx, unsigned char refundCode)
+{
+	if(!pwalletMain)
+	{
+		throw runtime_error("makeOfferRefundTX(): no wallet found");
+	}
+   // decode txn, skip non-offer txns
+    vector<vector<unsigned char> > vvchArgs;
+    int op, nOut;
+    if (!DecodeOfferTx(tx, op, nOut, vvchArgs, -1)) 
+		throw runtime_error("makeOfferRefundTX() : offer output not found");
+	if(op != OP_OFFER_ACCEPT)
+	{
+		throw runtime_error("makeOfferRefundTX(): no offer accept found");
+	}
+	const vector<unsigned char> &vchOffer = vvchArgs[0];
+	const vector<unsigned char> &vchAcceptRand = vvchArgs[1];
+	const vector<unsigned char> &acceptHash = vvchArgs[2];
+	const vector<unsigned char> &vchRefundAddress = vvchArgs[3];
+	// this is a syscoin txn
+	CWalletTx wtx, wtxIn;
+	uint64 nTotalValue = MIN_AMOUNT;
+	wtx.nVersion = SYSCOIN_TX_VERSION;
+	CScript scriptPubKeyOrig, scriptPayment;
+
+	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
+		throw runtime_error("this offer is not in your wallet");
+
+	if(refundCode == OFFER_REFUND_COMPLETE)
+	{
+		string comment = "Refund offer payment, not enough quantity";
+		set<pair<const CWalletTx*,unsigned int> > setCoins;
+		int64 nValueIn = 0;
+		nTotalValue = ( theOfferAccept.nPrice * theOfferAccept.nQty );
+		if (!pwalletMain->SelectCoins(nTotalValue + (MIN_AMOUNT*2), setCoins, nValueIn)) 
+			return error("insufficient funds to pay for offer refund");
+		wtx.mapValue["comment"] = comment;
+
+	}
+	// create OFFERACCEPT txn keys
+	CScript scriptPubKey;
+	CBitcoinAddress offerOwnerAddress(stringFromVch(theOffer.vchPaymentAddress));
+	scriptPubKeyOrig.SetDestination(offerOwnerAddress.Get());
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT)
+			<< vchOffer << vchAcceptRand << acceptHash  << vchRefundAddress << OP_2DROP << OP_2DROP;
+	scriptPubKey += scriptPubKeyOrig;
+	if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_UPDATE)) {
+		throw runtime_error("there are pending operations on that offer");
+	}
+
+	if(foundRefundAcceptInWallet(vchAcceptRand, refundCode))
+	{
+		throw runtime_error("This offer accept has already been refunded");
+	}
+
+    // add a copy of the offer object with just
+    // the one accept object to payment txn to identify
+    // this txn as an offer payment
+    COffer offerCopy = theOffer;
+    COfferAccept offerAcceptCopy = theOfferAccept;
+	offerAcceptCopy.nRefunded = refundCode;
+    offerCopy.accepts.clear();
+    offerCopy.PutOfferAccept(offerAcceptCopy);
+
+    vector< pair<CScript, int64> > vecSend;
+
+    CBitcoinAddress refundAddress(stringFromVch(vchRefundAddress));
+    scriptPayment.SetDestination(refundAddress.Get());
+
+    vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
+	if(refundCode == OFFER_REFUND_COMPLETE)
+	{
+		vecSend.push_back(make_pair(scriptPayment, nTotalValue));
+		nTotalValue += MIN_AMOUNT;
+	}
+
+	// serialize offer object
+	string bdata = offerCopy.SerializeToString();
+
+	string strError = pwalletMain->SendMoney(vecSend, nTotalValue, wtx,
+			false, bdata);
+    if (strError != "")
+	{
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+	}
+
+	return wtx.GetHash().GetHex();
+
+}
 
 bool IsOfferOp(int op) {
 	return op == OP_OFFER_ACTIVATE
@@ -706,7 +825,7 @@ bool DecodeOfferScript(const CScript& script, int& op,
 
 	if ((op == OP_OFFER_ACTIVATE && vvch.size() == 3)
 		|| (op == OP_OFFER_UPDATE && vvch.size() == 2)
-		|| (op == OP_OFFER_ACCEPT && vvch.size() == 3))
+		|| (op == OP_OFFER_ACCEPT && vvch.size() == 4))
 		return true;
 	return false;
 }
@@ -1127,14 +1246,37 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				}
 
 				if (op == OP_OFFER_ACCEPT) {
+					
+					
 					// get the accept out of the offer object in the txn
 					if(!serializedOffer.GetAcceptByHash(vvchArgs[1], theOfferAccept))
 						return error("could not read accept from offer txn");
 
-					
-					// get the offer accept qty, validate acceptance. txn is still valid
-					// if qty cannot be fulfilled, first-to-mine makes it
-					if(theOfferAccept.nQty < 1 || theOfferAccept.nQty > theOffer.nQty) {
+					CTransaction offerTx;
+					if (!GetTxOfOffer(*pofferdb, vvchArgs[0], offerTx))
+						return error("could not find an offer with this name");
+					// 2 step refund: send an offer accept with nRefunded property set to inprogress and then send another with complete later
+					// first step is to send inprogress so that next block we can send a complete (also sends coins during second step to original acceptor)
+					// this is to ensure that the coins sent during accept are available to spend to refund to avoid having to hold double the balance of an accept amount
+					// in order to refund.
+					if(theOfferAccept.nRefunded == OFFER_NOREFUND && (theOfferAccept.nQty < 1 || theOfferAccept.nQty > theOffer.nQty)) {
+
+						if(pwalletMain && IsOfferMine(offerTx) && HasReachedMainNetForkB2())
+						{	
+							try {
+								makeOfferRefundTX(theOffer, theOfferAccept, tx, OFFER_REFUND_PAYMENT_INPROGRESS);
+							}
+							catch (Object& objError)
+							{
+								
+								printf(find_value(objError, "message").get_str().c_str());
+							}
+							catch(std::exception& e)
+							{
+								printf(string(e.what()).c_str());
+							}
+							
+						}
 						printf("txn %s accepted but offer not fulfilled because desired"
 							" qty %llu is more than available qty %llu for offer accept %s\n", 
 							tx.GetHash().GetHex().c_str(), 
@@ -1143,13 +1285,34 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							HexStr(theOfferAccept.vchRand).c_str());
 						return true;
 					}
-					theOffer.nQty -= theOfferAccept.nQty;
+
 					
-					// if the accept exists in the database, great. 
-					// we don't need to use it, however, the serialized
-					// version is just fine
+					if(pwalletMain && IsOfferMine(offerTx) && theOfferAccept.nRefunded == OFFER_REFUND_PAYMENT_INPROGRESS && HasReachedMainNetForkB2()){
+						
+						try {
+							makeOfferRefundTX(theOffer, theOfferAccept, tx, OFFER_REFUND_COMPLETE);
+						}
+						catch (Object& objError)
+						{
+							
+							printf(find_value(objError, "message").get_str().c_str());
+						}
+						catch(std::exception& e)
+						{
+							printf(string(e.what()).c_str());
+						}
+						return true;
+					}
+					
+					if(theOfferAccept.nRefunded == OFFER_NOREFUND)
+					{
+						theOffer.nQty -= theOfferAccept.nQty;
+					}
+
+			
 					theOfferAccept.bPaid = true;
-				 
+					
+
 					// set the offer accept txn-dependent values and add to the txn
 					theOfferAccept.vchRand = vvchArgs[1];
 					theOfferAccept.txHash = tx.GetHash();
@@ -1734,19 +1897,74 @@ Value offeraccept(const Array& params, bool fHelp) {
 }
 
 */
+Value offerrefund(const Array& params, bool fHelp) {
+	if (fHelp || 2 != params.size())
+		throw runtime_error("offerrefund <offerguid> <acceptguid>\n"
+				"Refund an offer accept you control.\n"
+				"<guid> guidkey from offer.\n"
+				"<guid> guidkey from offer accept.\n"
+				+ HelpRequiringPassphrase());
+
+	vector<unsigned char> vchOffer = vchFromValue(params[0]);
+	vector<unsigned char> vchAcceptRand = ParseHex(params[1].get_str());
+
+
+	if (ExistsInMempool(vchAcceptRand, OP_OFFER_ACCEPT) || ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_UPDATE)) {
+		throw runtime_error("there are pending operations on that offer");
+	}
+
+	EnsureWalletIsUnlocked();
+
+	// look for a transaction with this key
+	CTransaction tx;
+	CWalletTx wtxIn;
+	if (!GetTxOfOffer(*pofferdb, vchOffer, tx))
+		throw runtime_error("could not find an offer with this identifier");
+
+	// make sure offer is in wallet
+	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
+		throw runtime_error("this offer is not in your wallet");
+
+	// unserialize ofw	fer object from txn
+	COffer theOffer;
+	if(!theOffer.UnserializeFromTx(tx))
+		throw runtime_error("could not unserialize offer from txn");
+
+	// get the offer id from DB
+	vector<COffer> vtxPos;
+	if (!pofferdb->ReadOffer(vchOffer, vtxPos))
+		throw runtime_error("could not read offer with this name from DB");
+	theOffer = vtxPos.back();
+
+	COfferAccept theOfferAccept;
+	// check for existence of offeraccept in txn offer obj
+	if(!theOffer.GetAcceptByHash(vchAcceptRand, theOfferAccept))
+		throw runtime_error("could not read accept from offer txn");
+
+    uint256 blockHash;
+    if (!GetTransaction(theOfferAccept.txHash, tx, blockHash, true))
+        throw runtime_error("failed to read transaction from disk");
+
+	if(foundRefundAcceptInWallet(vchAcceptRand, OFFER_REFUND_COMPLETE))
+	{
+		throw runtime_error("This offer accept has already been refunded");
+	}
+	return makeOfferRefundTX(theOffer, theOfferAccept, tx, OFFER_REFUND_PAYMENT_INPROGRESS);
+}
 
 Value offeraccept(const Array& params, bool fHelp) {
-	if (fHelp || 1 > params.size() || params.size() > 3)
-		throw runtime_error("offeraccept <guid> [<quantity] [<message>]\n"
+	if (fHelp || 1 > params.size() || params.size() > 4)
+		throw runtime_error("offeraccept <guid> [<quantity] [<message>] [<refund address>]\n"
 				"Accept&Pay for a confirmed offer.\n"
 				"<guid> guidkey from offer.\n"
 				"<quantity> quantity to buy. Defaults to 1.\n"
 				"<message> payment message to seller, 16 KB max.\n"
+				"<refund address> In case offer not accepted refund to this address. Leave empty to use a new address from your wallet. \n"
 				+ HelpRequiringPassphrase());
-
+	vector<unsigned char> vchRefundAddress;	
+	CBitcoinAddress refundAddr;	
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
-
-	vector<unsigned char> vchMessage = vchFromValue(params.size()==3?params[2]:params[0]);
+	vector<unsigned char> vchMessage = vchFromValue(params.size()>=3?params[2]:params[0]);
 	uint64 nQty;
 	int64 qty = 1;
 	if (params.size() >= 2) {
@@ -1761,6 +1979,22 @@ Value offeraccept(const Array& params, bool fHelp) {
 		}
 
 	}
+	if(params.size() < 4)
+	{
+		CPubKey newDefaultKey;
+		pwalletMain->GetKeyFromPool(newDefaultKey, false);
+		refundAddr = CBitcoinAddress(newDefaultKey.GetID());
+		vchRefundAddress = vchFromString(refundAddr.ToString());
+	}
+	else
+	{
+		vchRefundAddress = vchFromValue(params[4]);
+		refundAddr = CBitcoinAddress(stringFromVch(vchRefundAddress));
+	}
+	if (!refundAddr.IsValid())
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
+				"Invalid syscoin address");
+
 	nQty = (uint64)qty;
     if (vchMessage.size() < 1)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "offeraccept message data < 1 bytes!\n");
@@ -1770,7 +2004,6 @@ Value offeraccept(const Array& params, bool fHelp) {
 	// this is a syscoin txn
 	CWalletTx wtx;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
-	wtx.nLockTime = nBestHeight+1;
 	CScript scriptPubKeyOrig;
 
 	// generate offer accept identifier and hash
@@ -1789,7 +2022,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 	// create OFFERACCEPT txn keys
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT)
-			<< vchOffer << vchAcceptRand << acceptHash << OP_2DROP << OP_2DROP;
+			<< vchOffer << vchAcceptRand << acceptHash  << vchRefundAddress << OP_2DROP << OP_2DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
 	if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_UPDATE)) {
@@ -1813,7 +2046,6 @@ Value offeraccept(const Array& params, bool fHelp) {
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos))
 		throw runtime_error("could not read offer with this name from DB");
 	theOffer = vtxPos.back();
-
 	uint64 memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if(theOffer.nQty < (nQty+memPoolQty))
 		throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
@@ -1926,6 +2158,12 @@ Value offerinfo(const Array& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("service_fee", ValueFromAmount(ca.nFee)));
 				oOfferAccept.push_back(Pair("paytxid", ca.txPayId.GetHex() ));
 				oOfferAccept.push_back(Pair("message", stringFromVch(ca.vchMessage)));
+			}
+			if(ca.nRefunded == OFFER_REFUND_PAYMENT_INPROGRESS) { 
+				oOfferAccept.push_back(Pair("refunded", "processing"));
+			}
+			else if(ca.nRefunded == OFFER_REFUND_COMPLETE) { 
+				oOfferAccept.push_back(Pair("refunded", "true"));
 			}
 			aoOfferAccepts.push_back(oOfferAccept);
 		}

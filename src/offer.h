@@ -43,7 +43,9 @@ std::string offerFromOp(int op);
 
 
 class CBitcoinAddress;
-
+static const unsigned char OFFER_NOREFUND = 0;
+static const unsigned char OFFER_REFUND_PAYMENT_INPROGRESS = 1;
+static const unsigned char OFFER_REFUND_COMPLETE = 2;
 class COfferAccept {
 public:
 	std::vector<unsigned char> vchRand;
@@ -56,6 +58,7 @@ public:
 	uint64 nPrice;
 	uint64 nFee;
 	bool bPaid;
+	unsigned char nRefunded;
     uint256 txPayId;
 
 	COfferAccept() {
@@ -74,6 +77,7 @@ public:
     	READWRITE(nPrice);
         READWRITE(nFee);
     	READWRITE(bPaid);
+		READWRITE(nRefunded);
     )
 
     friend bool operator==(const COfferAccept &a, const COfferAccept &b) {
@@ -89,6 +93,7 @@ public:
         && a.nFee == b.nFee
         && a.bPaid == b.bPaid
         && a.txPayId == b.txPayId
+		&& a.nRefunded == b.nRefunded
         );
     }
 
@@ -104,6 +109,7 @@ public:
         nFee = b.nFee;
         bPaid = b.bPaid;
         txPayId = b.txPayId;
+		nRefunded = b.nRefunded;
         return *this;
     }
 
@@ -111,8 +117,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { nHeight = nTime = nPrice = nQty = 0; txHash = 0; bPaid = false; }
-    bool IsNull() const { return (nTime == 0 && txHash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 && bPaid == 0); }
+    void SetNull() { nHeight = nTime = nPrice = nQty = 0; txHash = 0; bPaid = false; nRefunded = OFFER_NOREFUND; }
+    bool IsNull() const { return (nTime == 0 && txHash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 && bPaid == 0 && nRefunded == OFFER_NOREFUND); }
 
 };
 
