@@ -137,6 +137,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 					if (op > 0) {
 						vector<unsigned char> vchName;
 						std::string strGUID;
+						COffer theOffer;
+						COfferAccept theOfferAccept;
 						switch(op)
 						{
 						case OP_ALIAS_ACTIVATE:
@@ -161,8 +163,21 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 							sub.type = TransactionRecord::OfferUpdate;
 							break;
 						case OP_OFFER_ACCEPT:
+							theOffer = COffer(wtx);
 							vchName = vvchArgs[0];
 							sub.type = TransactionRecord::OfferAccept;
+							// check for existence of offeraccept in txn offer obj
+							if(theOffer.GetAcceptByHash(vvchArgs[1], theOfferAccept))
+							{
+								if(theOfferAccept.nRefunded == OFFER_REFUND_PAYMENT_INPROGRESS)
+								{
+									sub.type = TransactionRecord::OfferAcceptRefundInProgress;
+								}
+								else if(theOfferAccept.nRefunded == OFFER_REFUND_COMPLETE)
+								{
+									sub.type = TransactionRecord::OfferAcceptRefundComplete;
+								}
+							}
 							break;
 						case OP_CERTISSUER_ACTIVATE:
 							strGUID += " ("; strGUID += stringFromVch(vvchArgs[0]); strGUID += ")";
@@ -214,6 +229,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 //vector<unsigned char> &vchName = vvchArgs[0];
                 vector<unsigned char> vchName;
                 std::string strGUID;
+				COffer theOffer;
+				COfferAccept theOfferAccept;
                 switch(op)
                 {
                 case OP_ALIAS_ACTIVATE:
@@ -238,8 +255,21 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     sub.type = TransactionRecord::OfferUpdate;
                     break;
                 case OP_OFFER_ACCEPT:
-                    vchName = vvchArgs[0];
-                    sub.type = TransactionRecord::OfferAccept;
+					theOffer = COffer(wtx);
+					vchName = vvchArgs[0];
+					sub.type = TransactionRecord::OfferAccept;
+					// check for existence of offeraccept in txn offer obj
+					if(theOffer.GetAcceptByHash(vvchArgs[1], theOfferAccept))
+					{
+						if(theOfferAccept.nRefunded == OFFER_REFUND_PAYMENT_INPROGRESS)
+						{
+							sub.type = TransactionRecord::OfferAcceptRefundInProgress;
+						}
+						else if(theOfferAccept.nRefunded == OFFER_REFUND_COMPLETE)
+						{
+							sub.type = TransactionRecord::OfferAcceptRefundComplete;
+						}
+					}
                     break;
                 case OP_CERTISSUER_ACTIVATE:
                     strGUID += " ("; strGUID += stringFromVch(vvchArgs[0]); strGUID += ")";

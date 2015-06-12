@@ -136,13 +136,13 @@ Value makeOfferRefundTX(COffer& theOffer, COfferAccept& theOfferAccept, const CT
     CBitcoinAddress refundAddress(stringFromVch(vchRefundAddress));
     scriptPayment.SetDestination(refundAddress.Get());
 
-    vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
+    
 	if(refundCode == OFFER_REFUND_COMPLETE)
 	{
 		vecSend.push_back(make_pair(scriptPayment, nTotalValue));
 		nTotalValue += MIN_AMOUNT;
 	}
-
+	vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
 	// serialize offer object
 	string bdata = offerCopy.SerializeToString();
 
