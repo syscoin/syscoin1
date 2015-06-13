@@ -305,7 +305,16 @@ Value verifychain(const Array& params, bool fHelp)
         nCheckLevel = params[0].get_int();
     if (params.size() > 1)
         nCheckDepth = params[1].get_int();
-
-    return VerifyDB(nCheckLevel, nCheckDepth);
+	fInit = true;
+	bool ret;
+	try
+	{
+		ret = VerifyDB(nCheckLevel, nCheckDepth);
+	}
+	catch(...)
+	{
+	}
+	fInit = false;
+    return ret;
 }
 

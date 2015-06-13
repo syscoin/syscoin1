@@ -37,35 +37,7 @@ extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey,
 extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
 		const CTransaction& txTo, unsigned int nIn, unsigned int flags,
 		int nHashType);
-// check wallet transactions to see if there was a refund for an accept already
-// need this because during a reorg blocks are disconnected (deleted from db) and we can't rely on looking in db to see if refund was made for an accept
-bool foundRefundAcceptInWallet(const vector<unsigned char> &vchAcceptRand, unsigned char acceptCode)
-{
-    TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
-    BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-    {
-		vector<vector<unsigned char> > vvchArgs;
-		int op, nOut;
-		CWalletTx& wtx = item.second;
-		if (DecodeOfferTx(wtx, op, nOut, vvchArgs, -1))
-		{
-			if(op == OP_OFFER_ACCEPT)
-			{
-				if(vchAcceptRand == vvchArgs[1])
-				{
-					COffer offer(wtx);
-					COfferAccept theOfferAccept;
-					// get the accept out of the offer object in the txn
-					if(!offer.GetAcceptByHash(vvchArgs[1], theOfferAccept))
-						return error("foundRefundAcceptInWallet(): could not read accept from offer txn");
-					if(theOfferAccept.nRefunded == acceptCode)
-						return true;
-				}
-			}
-		}
-	}
-	return false;
-}
+
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
 Value makeOfferRefundTX(COffer& theOffer, COfferAccept& theOfferAccept, const CTransaction& tx, unsigned char refundCode)
 {
@@ -102,9 +74,15 @@ Value makeOfferRefundTX(COffer& theOffer, COfferAccept& theOfferAccept, const CT
 		int64 nValueIn = 0;
 		nTotalValue = ( theOfferAccept.nPrice * theOfferAccept.nQty );
 		if (!pwalletMain->SelectCoins(nTotalValue + (MIN_AMOUNT*2), setCoins, nValueIn)) 
-			return error("insufficient funds to pay for offer refund");
+			throw runtime_error("insufficient funds to pay for offer refund");
 		wtx.mapValue["comment"] = comment;
 
+	} else if(refundCode == OFFER_REFUND_PAYMENT_INPROGRESS)
+	{
+		if(theOfferAccept.nRefunded != OFFER_NOREFUND)
+		{
+			throw runtime_error("This offer accept has already been refunded");
+		}
 	}
 	// create OFFERACCEPT txn keys
 	CScript scriptPubKey;
@@ -117,10 +95,7 @@ Value makeOfferRefundTX(COffer& theOffer, COfferAccept& theOfferAccept, const CT
 		throw runtime_error("there are pending operations on that offer");
 	}
 
-	if(foundRefundAcceptInWallet(vchAcceptRand, refundCode))
-	{
-		throw runtime_error("This offer accept has already been refunded");
-	}
+	
 
     // add a copy of the offer object with just
     // the one accept object to payment txn to identify
@@ -1261,7 +1236,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					// in order to refund.
 					if(theOfferAccept.nRefunded == OFFER_NOREFUND && (theOfferAccept.nQty < 1 || theOfferAccept.nQty > theOffer.nQty)) {
 
-						if(pwalletMain && IsOfferMine(offerTx) && HasReachedMainNetForkB2())
+						if(!fInit && pwalletMain && IsOfferMine(offerTx) && HasReachedMainNetForkB2())
 						{	
 							try {
 								makeOfferRefundTX(theOffer, theOfferAccept, tx, OFFER_REFUND_PAYMENT_INPROGRESS);
@@ -1287,7 +1262,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					}
 
 					
-					if(pwalletMain && IsOfferMine(offerTx) && theOfferAccept.nRefunded == OFFER_REFUND_PAYMENT_INPROGRESS && HasReachedMainNetForkB2()){
+					if(!fInit && pwalletMain && IsOfferMine(offerTx) && theOfferAccept.nRefunded == OFFER_REFUND_PAYMENT_INPROGRESS && HasReachedMainNetForkB2()){
 						
 						try {
 							makeOfferRefundTX(theOffer, theOfferAccept, tx, OFFER_REFUND_COMPLETE);
@@ -1944,11 +1919,6 @@ Value offerrefund(const Array& params, bool fHelp) {
     uint256 blockHash;
     if (!GetTransaction(theOfferAccept.txHash, tx, blockHash, true))
         throw runtime_error("failed to read transaction from disk");
-
-	if(foundRefundAcceptInWallet(vchAcceptRand, OFFER_REFUND_COMPLETE))
-	{
-		throw runtime_error("This offer accept has already been refunded");
-	}
 	return makeOfferRefundTX(theOffer, theOfferAccept, tx, OFFER_REFUND_PAYMENT_INPROGRESS);
 }
 

@@ -472,6 +472,7 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
  */
 bool AppInit2(boost::thread_group& threadGroup)
 {
+	fInit = true;
     // ********************************************************* Step 1: setup
 #ifdef _MSC_VER
     // Turn off Microsoft heap dump noise
@@ -1186,6 +1187,6 @@ bool AppInit2(boost::thread_group& threadGroup)
         // Run a thread to flush wallet periodically
         threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
     }
-
+	fInit = false;
     return !fRequestShutdown;
 }

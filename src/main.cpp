@@ -47,6 +47,7 @@ int64 nTimeBestReceived = 0;
 int nScriptCheckThreads = 0;
 bool fImporting = false;
 bool fReindex = false;
+bool fInit= false;
 bool fBenchmark = false;
 bool fTxIndex = true; // syscoin is using transaction index by default
 unsigned int nCoinCacheSize = 5000;
