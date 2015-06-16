@@ -138,6 +138,7 @@ public:
 	uint64 nQty;
 	uint64 nFee;
 	std::vector<COfferAccept>accepts;
+	unsigned char nLinkCommissionPct;
 
 	COffer() { 
         SetNull();
@@ -163,7 +164,8 @@ public:
     	READWRITE(nQty);
     	READWRITE(nFee);
     	READWRITE(accepts);
-    )
+		READWRITE(nLinkCommissionPct);
+	)
 
     bool GetAcceptByHash(std::vector<unsigned char> ahash, COfferAccept &ca) {
     	for(unsigned int i=0;i<accepts.size();i++) {
@@ -226,6 +228,7 @@ public:
         && a.nTime == b.nTime
         && a.accepts == b.accepts
         && a.vchPaymentAddress == b.vchPaymentAddress
+		&& a.nLinkCommissionPct == b.nLinkCommissionPct
         );
     }
 
@@ -244,6 +247,7 @@ public:
         nTime = b.nTime;
         accepts = b.accepts;
         vchPaymentAddress = b.vchPaymentAddress;
+		nLinkCommissionPct = b.nLinkCommissionPct;
         return *this;
     }
 
@@ -251,8 +255,8 @@ public:
         return !(a == b);
     }
     
-    void SetNull() { nHeight = n = nPrice = nQty = 0; txHash = hash = 0; accepts.clear(); vchRand.clear(); sTitle.clear(); sDescription.clear();}
-    bool IsNull() const { return (n == 0 && txHash == 0 && hash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0); }
+    void SetNull() { nHeight = n = nPrice = nQty = 0; txHash = hash = 0; accepts.clear(); vchRand.clear(); sTitle.clear(); sDescription.clear();nLinkCommissionPct=0;}
+    bool IsNull() const { return (n == 0 && txHash == 0 && hash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 && nLinkCommissionPct == 0); }
 
     bool UnserializeFromTx(const CTransaction &tx);
     void SerializeToTx(CTransaction &tx);

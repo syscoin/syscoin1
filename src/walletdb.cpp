@@ -32,55 +32,6 @@ bool CWalletDB::EraseName(const string& strAddress)
     return Erase(make_pair(string("name"), strAddress));
 }
 
-#ifdef GUI
-bool CWalletDB::WriteAliasFirstUpdate(const std::vector<unsigned char>& vchName,
-                                     const uint256& hex,
-                                     const uint64& rand,
-                                     const std::vector<unsigned char>& vchData,
-                                     const CWalletTx &wtx)
-{
-    CDataStream ssValue;
-    ssValue << hex << rand << vchData << wtx;
-
-    nWalletDBUpdated++;
-    return Write(make_pair(string("name_firstupdate"), vchName), ssValue, true);
-}
-bool CWalletDB::WriteAliasFirstUpdate(const std::vector<unsigned char>& vchName,
-                                     const uint256& hex,
-                                     const uint64& rand,
-                                     const std::vector<unsigned char>& vchData,
-                                     const CWalletTx &wtx) {
-    return true;
-}
-bool CWalletDB::WriteOfferFirstUpdate(const std::vector<unsigned char>& vchName,
-                                     const uint256& hex,
-                                     const uint64& rand,
-                                     const std::vector<unsigned char>& vchData,
-                                     const CWalletTx &wtx) {
-    return true;
-}
-bool CWalletDB::WriteCertFirstUpdate(const std::vector<unsigned char>& vchName,
-                                     const uint256& hex,
-                                     const uint64& rand,
-                                     const std::vector<unsigned char>& vchData,
-                                     const CWalletTx &wtx) {
-    return true;
-}
-
-bool CWalletDB::EraseAliasFirstUpdate(const std::vector<unsigned char>& vchName)
-{
-    nWalletDBUpdated++;
-    return Erase(make_pair(string("name_firstupdate"), vchName));
-}
-bool CWalletDB::EraseOfferFirstUpdate(const std::vector<unsigned char>& vchName)
-{
-}
-bool CWalletDB::EraseCertFirstUpdate(const std::vector<unsigned char>& vchName)
-{
-}
-
-#endif
-
 bool CWalletDB::ReadAccount(const string& strAccount, CAccount& account)
 {
     account.SetNull();

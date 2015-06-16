@@ -793,13 +793,13 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
     }
     else if(DecodeOfferTx(*this, op, nOut, vvch, -1)) {
 		if (vvch[0].size() > MAX_NAME_LENGTH) {
-			err = error("offer transaction with offer title too long");
+			err = error("offer transaction with offer guid too long");
 		}
 		switch (op) {
 			case OP_OFFER_ACTIVATE:
 				if (vvch[1].size() > 20)
 					err = error("offeractivate tx with rand too big");
-				if (vvch[2].size() > MAX_VALUE_LENGTH)
+				if (vvch[2].size() > MAX_NAME_LENGTH)
 					err= error("offeractivate tx with value too long");
 				break;
 			case OP_OFFER_UPDATE:
@@ -809,8 +809,8 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 			case OP_OFFER_ACCEPT: 
         		if (vvch[0].size() > 20)
 					err = error("offeraccept tx with offer rand too big");
-				if (vvch[2].size() > 20)
-					err = error("offeraccept tx with invalid hash length");
+				if (vvch[2].size() > MAX_NAME_LENGTH)
+					err = error("offeraccept tx with invalid value length");
 				if (vvch[1].size() > 20)
 					err = error("offeraccept tx with alias rand too big");
 				break;

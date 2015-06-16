@@ -248,6 +248,7 @@ extern json_spirit::Value offerupdate(const json_spirit::Array& params, bool fHe
 extern json_spirit::Value offerrenew(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offeraccept(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerrefund(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value offerlink(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerinfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerlist(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerhistory(const json_spirit::Array& params, bool fHelp);
