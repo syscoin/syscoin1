@@ -222,6 +222,7 @@ const char* GetOpName(opcodetype opcode)
     case OP_OFFER_UPDATE           : return "OP_OFFER_UPDATE";
     case OP_OFFER_ACCEPT           : return "OP_OFFER_ACCEPT";
     case OP_OFFER_PAY              : return "OP_OFFER_PAY";
+	case OP_OFFER_REFUND           : return "OP_OFFER_REFUND";
     case OP_CERTISSUER_NEW         : return "OP_CERTISSUER_NEW";
     case OP_CERTISSUER_ACTIVATE    : return "OP_CERTISSUER_ACTIVATE";
     case OP_CERTISSUER_UPDATE      : return "OP_CERTISSUER_UPDATE";

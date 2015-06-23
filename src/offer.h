@@ -4,6 +4,7 @@
 #include "bitcoinrpc.h"
 #include "leveldb.h"
 #include "script.h"
+#include <vector>
 class CTransaction;
 class CTxOut;
 class CValidationState;
@@ -19,6 +20,8 @@ bool ExtractOfferAddress(const CScript& script, std::string& address);
 bool IsOfferMine(const CTransaction& tx);
 bool IsOfferMine(const CTransaction& tx, const CTxOut& txout);
 std::string SendOfferMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, 
+    bool fAskFee, const std::string& txData = "");
+std::string SendOfferMoneyWithInputTx(const std::vector<std::pair<CScript, int64> >& vecSend, int64 nValue, int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, 
     bool fAskFee, const std::string& txData = "");
 bool CreateOfferTransactionWithInputTx(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxIn, int nTxOut, 
     CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, const std::string& txData);
@@ -39,13 +42,14 @@ int64 GetOfferNetFee(const CTransaction& tx);
 bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue);
 
 std::string offerFromOp(int op);
-
-
+static const char* norefund = "norefund";
+static const char* inprogress = "inprogress";
+static const char* complete = "complete";
+static const std::vector<unsigned char> OFFER_NOREFUND = std::vector<unsigned char>(norefund, norefund + strlen(norefund));
+static const std::vector<unsigned char> OFFER_REFUND_PAYMENT_INPROGRESS = std::vector<unsigned char>(inprogress, inprogress + strlen(inprogress));
+static const std::vector<unsigned char> OFFER_REFUND_COMPLETE = std::vector<unsigned char>(complete, complete + strlen(complete));
 
 class CBitcoinAddress;
-static const unsigned char OFFER_NOREFUND = 0;
-static const unsigned char OFFER_REFUND_PAYMENT_INPROGRESS = 1;
-static const unsigned char OFFER_REFUND_COMPLETE = 2;
 class COfferAccept {
 public:
 	std::vector<unsigned char> vchRand;
@@ -58,9 +62,11 @@ public:
 	uint64 nPrice;
 	uint64 nFee;
 	bool bPaid;
-	unsigned char nRefunded;
+	bool bRefunded;
     uint256 txPayId;
-
+	uint256 txRefundId;
+	std::vector<unsigned char> vchRefundAddress;
+	std::vector<unsigned char> vchLinkOfferAccept;
 	COfferAccept() {
         SetNull();
     }
@@ -77,7 +83,10 @@ public:
     	READWRITE(nPrice);
         READWRITE(nFee);
     	READWRITE(bPaid);
-		READWRITE(nRefunded);
+		READWRITE(bRefunded);
+		READWRITE(txRefundId);
+		READWRITE(vchRefundAddress);
+		READWRITE(vchLinkOfferAccept);
     )
 
     friend bool operator==(const COfferAccept &a, const COfferAccept &b) {
@@ -93,7 +102,10 @@ public:
         && a.nFee == b.nFee
         && a.bPaid == b.bPaid
         && a.txPayId == b.txPayId
-		&& a.nRefunded == b.nRefunded
+		&& a.bRefunded == b.bRefunded
+		&& a.txRefundId == b.txRefundId
+		&& a.vchRefundAddress == b.vchRefundAddress
+		&& a.vchLinkOfferAccept == b.vchLinkOfferAccept
         );
     }
 
@@ -109,7 +121,10 @@ public:
         nFee = b.nFee;
         bPaid = b.bPaid;
         txPayId = b.txPayId;
-		nRefunded = b.nRefunded;
+		bRefunded = b.bRefunded;
+		txRefundId = b.txRefundId;
+		vchRefundAddress = b.vchRefundAddress;
+		vchLinkOfferAccept = b.vchLinkOfferAccept;
         return *this;
     }
 
@@ -117,8 +132,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { nHeight = nTime = nPrice = nQty = 0; txHash = 0; bPaid = false; nRefunded = OFFER_NOREFUND; }
-    bool IsNull() const { return (nTime == 0 && txHash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 && bPaid == 0 && nRefunded == OFFER_NOREFUND); }
+    void SetNull() { nHeight = nTime = nPrice = nQty = 0; txHash = 0; bPaid = false; txPayId = 0; txRefundId=0; bRefunded=false;vchRefundAddress.clear();vchLinkOfferAccept.clear(); }
+    bool IsNull() const { return (nTime == 0 && txHash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 && bPaid == 0 && txPayId == 0 && bRefunded == false && txRefundId == 0); }
 
 };
 
@@ -139,7 +154,7 @@ public:
 	uint64 nFee;
 	std::vector<COfferAccept>accepts;
 	unsigned char nLinkCommissionPct;
-
+	std::vector<unsigned char> vchLinkOffer;
 	COffer() { 
         SetNull();
     }
@@ -165,6 +180,7 @@ public:
     	READWRITE(nFee);
     	READWRITE(accepts);
 		READWRITE(nLinkCommissionPct);
+		READWRITE(vchLinkOffer);
 	)
 
     bool GetAcceptByHash(std::vector<unsigned char> ahash, COfferAccept &ca) {
@@ -229,6 +245,7 @@ public:
         && a.accepts == b.accepts
         && a.vchPaymentAddress == b.vchPaymentAddress
 		&& a.nLinkCommissionPct == b.nLinkCommissionPct
+		&& a.vchLinkOffer == b.vchLinkOffer
         );
     }
 
@@ -248,6 +265,7 @@ public:
         accepts = b.accepts;
         vchPaymentAddress = b.vchPaymentAddress;
 		nLinkCommissionPct = b.nLinkCommissionPct;
+		vchLinkOffer = b.vchLinkOffer;
         return *this;
     }
 
@@ -255,7 +273,7 @@ public:
         return !(a == b);
     }
     
-    void SetNull() { nHeight = n = nPrice = nQty = 0; txHash = hash = 0; accepts.clear(); vchRand.clear(); sTitle.clear(); sDescription.clear();nLinkCommissionPct=0;}
+    void SetNull() { nHeight = n = nPrice = nQty = 0; txHash = hash = 0; accepts.clear(); vchRand.clear(); sTitle.clear(); sDescription.clear();nLinkCommissionPct=0;vchLinkOffer.clear();}
     bool IsNull() const { return (n == 0 && txHash == 0 && hash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 && nLinkCommissionPct == 0); }
 
     bool UnserializeFromTx(const CTransaction &tx);
@@ -366,6 +384,5 @@ public:
 extern std::list<COfferFee> lstOfferFees;
 
 
-bool GetTxOfOffer(COfferDB& dbOffer, const std::vector<unsigned char> &vchOffer, CTransaction& tx);
-
+bool GetTxOfOffer(COfferDB& dbOffer, const std::vector<unsigned char> &vchOffer, COffer& txPos, CTransaction& tx);
 #endif // OFFER_H

@@ -203,7 +203,7 @@ int GetAuxPowStartBlock();
 bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
 
 std::string stringFromVch(const std::vector<unsigned char> &vch);
-
+std::vector<unsigned char> vchFromString(const std::string &str);
 
 struct CDiskBlockPos {
     int nFile;

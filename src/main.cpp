@@ -799,20 +799,20 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 			case OP_OFFER_ACTIVATE:
 				if (vvch[1].size() > 20)
 					err = error("offeractivate tx with rand too big");
-				if (vvch[2].size() > MAX_NAME_LENGTH)
-					err= error("offeractivate tx with value too long");
 				break;
 			case OP_OFFER_UPDATE:
 				if (vvch[1].size() > MAX_VALUE_LENGTH)
 					err = error("offerupdate tx with value too long");
 				break;
 			case OP_OFFER_ACCEPT: 
-        		if (vvch[0].size() > 20)
-					err = error("offeraccept tx with offer rand too big");
-				if (vvch[2].size() > MAX_NAME_LENGTH)
-					err = error("offeraccept tx with invalid value length");
 				if (vvch[1].size() > 20)
-					err = error("offeraccept tx with alias rand too big");
+					err = error("offeraccept tx with accept rand too big");
+				break;
+			case OP_OFFER_REFUND: 
+				if (vvch[1].size() > 20)
+					err = error("offerrefund tx with accept rand too big");
+				if (vvch[2].size() > 20)
+					err = error("offerrefund tx with refund status too long");
 				break;
 			default:
 				err = error("offer transaction has unknown op");

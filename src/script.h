@@ -79,7 +79,7 @@ enum opcodetype {
     OP_OFFER_UPDATE=0x06,
     OP_OFFER_ACCEPT=0x07,
     OP_OFFER_PAY=0x08,
-    OP_OFFERACCEPT_TRANSFER=0x09,
+    OP_OFFER_REFUND=0x09,
 
     // distributed licensing system
     OP_CERTISSUER_NEW=0x0a,
