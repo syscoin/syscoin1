@@ -144,10 +144,10 @@ void ExistsOfferLinkage(vector<unsigned char>& vchOffer, const vector<COffer> &v
 
             vector<vector<unsigned char> > vvchArgs;
             int op, nOut;
-
-            // decode the offer op, params, height
+           // decode the offer op, params, height
             bool o = DecodeOfferTx(tx, op, nOut, vvchArgs, -1);
-            if (!o || !IsOfferOp(op) || op != OP_OFFER_ACTIVATE || op != OP_OFFER_UPDATE) continue;
+            if (!o || !IsOfferOp(op) || (op != OP_OFFER_ACTIVATE && op != OP_OFFER_UPDATE && op != OP_OFFER_REFUND)) continue;
+
 			// weird case where the linked offer matches the current offer guid, causing infinite recursion
 			bool found = false;
 			pair<vector<unsigned char>, vector<COffer> > pairLink;
@@ -160,17 +160,18 @@ void ExistsOfferLinkage(vector<unsigned char>& vchOffer, const vector<COffer> &v
 			{
 				continue;
 			}
-		
+
 			CTransaction linktx;
 			COffer myOffer;
 			// get the transaction, make sure its not expired
             if(!GetTxOfOffer(*pofferdb, vvchArgs[0], myOffer, linktx))
 				continue;
-
+			if(myOffer.vchLinkOffer.empty() || myOffer.vchLinkOffer != vchOffer)
+				continue;
 			// add the guid of this offer to offerLinks
 			vector<COffer> myVtxPos;
-			if (pofferdb->ExistsOffer(myOffer.vchLinkOffer) && !myOffer.vchLinkOffer.empty()) {
-				if (pofferdb->ReadOffer(myOffer.vchLinkOffer, myVtxPos))
+			if (pofferdb->ExistsOffer(vvchArgs[0])) {
+				if (pofferdb->ReadOffer(vvchArgs[0], myVtxPos))
 				{
 					offerLinks.push_back(make_pair(vvchArgs[0], myVtxPos));
 					ExistsOfferLinkage(vvchArgs[0], myVtxPos, offerLinks);
@@ -194,7 +195,8 @@ void makeOfferLinkAcceptTX(COfferAccept& theOfferAccept, const vector<unsigned c
 	
 	if(foundOfferLinkInWallet(vchOffer, vchOfferAcceptLink))
 	{
-		printf("makeOfferLinkAcceptTX() offer linked transaction already exists\n");
+		if(fDebug)
+			printf("makeOfferLinkAcceptTX() offer linked transaction already exists\n");
 		return;
 	}
 	pwalletMain->GetKeyFromPool(newDefaultKey, false);
@@ -233,10 +235,9 @@ string makeOfferRefundTX(const CTransaction& prevTx, const COffer& theOffer, con
 	{
 		return string("makeOfferRefundTX() : could not read offer accept tx from disk");
 	}
-	printf("prevTx.GetHash() %s\n", prevTx.GetHash().ToString().c_str());
 	if (!pwalletMain->GetTransaction(prevTx.GetHash(), wtxPrevIn)) 
 	{
-		//return string("makeOfferRefundTX() : can't find this offer in your wallet");
+		return string("makeOfferRefundTX() : can't find this offer in your wallet");
 	}
 
 
@@ -299,9 +300,9 @@ string makeOfferRefundTX(const CTransaction& prevTx, const COffer& theOffer, con
     COfferAccept offerAcceptCopy = theOfferAccept;
     offerCopy.accepts.clear();
     offerCopy.PutOfferAccept(offerAcceptCopy);
-
+	int64 fNetFee = GetOfferNetworkFee(OP_OFFER_REFUND);
 	string bdata = offerCopy.SerializeToString();
-	string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, 0,
+	string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, fNetFee,
 				wtxPrevIn, wtx, false, bdata);
 	if (strError != "")
 	{
@@ -347,6 +348,9 @@ int64 GetOfferNetworkFee(opcodetype seed) {
     }
     else if(seed==OP_OFFER_UPDATE) {
     	nFee = 100 * COIN;
+    }
+    else if(seed==OP_OFFER_REFUND) {
+    	nFee = 5 * COIN;
     }
 	// Round up to CENT
 	nFee += CENT - 1;
@@ -1375,7 +1379,13 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				if ((fBlock || fMiner) && nDepth < 0)
 					return error(
 							"CheckOfferInputs() : offerrefund on an expired offer, or there is a pending transaction on the offer");
-	
+					// check for enough fees
+				nNetFee = GetOfferNetFee(tx);
+				if (nNetFee < GetOfferNetworkFee(OP_OFFER_REFUND))
+					return error(
+							"CheckOfferInputs() : OP_OFFER_REFUND got tx %s with fee too low %lu",
+							tx.GetHash().GetHex().c_str(),
+							(long unsigned int) nNetFee);			
 			}
 			break;
 		case OP_OFFER_ACCEPT:
@@ -1455,7 +1465,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						if(IsOfferMine(offerTx))
 						{
 							string strError = makeOfferRefundTX(tx, theOffer, theOfferAccept, OFFER_REFUND_COMPLETE);
-							if (strError != "")
+							if (strError != "" && fDebug)
 							{
 								printf("CheckOfferInputs() - OFFER_REFUND_COMPLETE %s\n", strError.c_str());
 							}
@@ -1476,7 +1486,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							if(IsOfferMine(myOfferTx) && !acceptOffer.IsNull() && acceptOffer.GetAcceptByHash(theOfferAccept.vchLinkOfferAccept, linkedOfferAccept))
 							{
 								string strError = makeOfferRefundTX(myOfferTx, acceptOffer, linkedOfferAccept, OFFER_REFUND_PAYMENT_INPROGRESS);
-								if (strError != "")							
+								if (strError != "" && fDebug)							
 									printf("CheckOfferInputs() - OFFER_REFUND_PAYMENT_INPROGRESS %s\n", strError.c_str());
 								
 							}
@@ -1610,8 +1620,8 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					ExistsOfferLinkage(vvchArgs[0], vtxPos, offerLinkages);				
 					pair<vector<unsigned char>, vector<COffer> > pairLink;
 					BOOST_FOREACH(pairLink, offerLinkages) {
-						vector<unsigned char> linkVchOffer = pairLink.first;
-						vector<COffer> myVtxPos = pairLink.second;
+						vector<unsigned char> &linkVchOffer = pairLink.first;
+						vector<COffer> &myVtxPos = pairLink.second;
 						// copy over data to linked offer
 						COffer myLinkOffer = myVtxPos.back();
 						myLinkOffer.nQty = theOffer.nQty;
@@ -2009,14 +2019,13 @@ Value offerupdate(const Array& params, bool fHelp) {
 
 	// look for a transaction with this key
 	CTransaction tx;
-
+	COffer theOffer;
+	if (!GetTxOfOffer(*pofferdb, vchOffer, theOffer, tx))
+		throw runtime_error("could not find an offer with this name");
 	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
 		throw runtime_error("this offer is not in your wallet");
-
-
 	// unserialize offer object from txn
-	COffer theOffer(tx);
-	if(theOffer.IsNull())
+	if(!theOffer.UnserializeFromTx(tx))
 		throw runtime_error("cannot unserialize offer from txn");
 
 	// get the offer from DB
@@ -2158,7 +2167,7 @@ Value offerrefund(const Array& params, bool fHelp) {
 	CWalletTx wtxIn;
 	if (!pwalletMain->GetTransaction(txOffer.GetHash(), wtxIn)) 
 	{
-		//throw runtime_error("can't find this offer in your wallet");
+		throw runtime_error("can't find this offer in your wallet");
 	}
 
 	if (ExistsInMempool(theOffer.vchRand, OP_OFFER_REFUND) || ExistsInMempool(theOffer.vchRand, OP_OFFER_ACTIVATE) || ExistsInMempool(theOffer.vchRand, OP_OFFER_UPDATE)) {
