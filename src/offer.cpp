@@ -45,7 +45,9 @@ bool foundRefundInWallet(const vector<unsigned char> &vchAcceptRand, const vecto
     {
 		vector<vector<unsigned char> > vvchArgs;
 		int op, nOut;
-		CWalletTx& wtx = item.second;
+        const CWalletTx& wtx = item.second;
+        if (wtx.IsCoinBase() || !wtx.IsFinal())
+            continue;
 		if (DecodeOfferTx(wtx, op, nOut, vvchArgs, -1))
 		{
 			if(op == OP_OFFER_REFUND)
@@ -59,7 +61,38 @@ bool foundRefundInWallet(const vector<unsigned char> &vchAcceptRand, const vecto
 	}
 	return false;
 }
+bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchAcceptRandLink)
+{
+    TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
+    BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+    {
+		vector<vector<unsigned char> > vvchArgs;
+		int op, nOut;
+        const CWalletTx& wtx = item.second;
+        if (wtx.IsCoinBase() || !wtx.IsFinal())
+            continue;
+		if (DecodeOfferTx(wtx, op, nOut, vvchArgs, -1))
+		{
+			if(op == OP_OFFER_ACCEPT)
+			{
+				if(vvchArgs[0] == vchOffer)
+				{
+					COffer theOffer(wtx);
+					COfferAccept theOfferAccept;
+					if (theOffer.IsNull())
+						continue;
 
+					if(theOffer.GetAcceptByHash(vvchArgs[1], theOfferAccept))
+					{
+						if(theOfferAccept.vchLinkOfferAccept == vchAcceptRandLink)
+							return true;
+					}
+				}
+			}
+		}
+	}
+	return false;
+}
 uint64 QtyOfPendingAcceptsInMempool(const vector<unsigned char>& vchToFind)
 {
 	uint64 nQty = 0;
@@ -114,7 +147,7 @@ void ExistsOfferLinkage(vector<unsigned char>& vchOffer, const vector<COffer> &v
 
             // decode the offer op, params, height
             bool o = DecodeOfferTx(tx, op, nOut, vvchArgs, -1);
-            if (!o || !IsOfferOp(op) || op != OP_OFFER_ACTIVATE) continue;
+            if (!o || !IsOfferOp(op) || op != OP_OFFER_ACTIVATE || op != OP_OFFER_UPDATE) continue;
 			// weird case where the linked offer matches the current offer guid, causing infinite recursion
 			bool found = false;
 			pair<vector<unsigned char>, vector<COffer> > pairLink;
@@ -159,6 +192,11 @@ void makeOfferLinkAcceptTX(COfferAccept& theOfferAccept, const vector<unsigned c
 	Value result;
 	CPubKey newDefaultKey;
 	
+	if(foundOfferLinkInWallet(vchOffer, vchOfferAcceptLink))
+	{
+		printf("makeOfferLinkAcceptTX() offer linked transaction already exists\n");
+		return;
+	}
 	pwalletMain->GetKeyFromPool(newDefaultKey, false);
 	CBitcoinAddress refundAddr = CBitcoinAddress(newDefaultKey.GetID());
 	const vector<unsigned char> vchRefundAddress = vchFromString(refundAddr.ToString());
@@ -182,7 +220,7 @@ void makeOfferLinkAcceptTX(COfferAccept& theOfferAccept, const vector<unsigned c
 
 }
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
-string makeOfferRefundTX(const CTransaction& prevTx, COffer& theOffer, COfferAccept& theOfferAccept, const vector<unsigned char> &refundCode)
+string makeOfferRefundTX(const CTransaction& prevTx, const COffer& theOffer, const COfferAccept& theOfferAccept, const vector<unsigned char> &refundCode)
 {
 	if(!pwalletMain)
 	{
@@ -198,7 +236,7 @@ string makeOfferRefundTX(const CTransaction& prevTx, COffer& theOffer, COfferAcc
 	printf("prevTx.GetHash() %s\n", prevTx.GetHash().ToString().c_str());
 	if (!pwalletMain->GetTransaction(prevTx.GetHash(), wtxPrevIn)) 
 	{
-		return string("makeOfferRefundTX() : can't find this offer in your wallet");
+		//return string("makeOfferRefundTX() : can't find this offer in your wallet");
 	}
 
 
@@ -222,7 +260,6 @@ string makeOfferRefundTX(const CTransaction& prevTx, COffer& theOffer, COfferAcc
 
 	if(refundCode == OFFER_REFUND_COMPLETE)
 	{
-		string comment = "Refund offer payment, not enough quantity";
 		set<pair<const CWalletTx*,unsigned int> > setCoins;
 		int64 nValueIn = 0;
 		nTotalValue = ( theOfferAccept.nPrice * theOfferAccept.nQty );
@@ -230,8 +267,6 @@ string makeOfferRefundTX(const CTransaction& prevTx, COffer& theOffer, COfferAcc
 		{
 			return string("insufficient funds to pay for offer refund");
 		}
-		wtx2.mapValue["comment"] = comment;
-
 	} else if(refundCode == OFFER_REFUND_PAYMENT_INPROGRESS)
 	{
 		/*if(vchRefunded == OFFER_REFUND_COMPLETE)
@@ -243,7 +278,7 @@ string makeOfferRefundTX(const CTransaction& prevTx, COffer& theOffer, COfferAcc
 	CScript scriptPubKey;
     CPubKey newDefaultKey;
     pwalletMain->GetKeyFromPool(newDefaultKey, false);
-    scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
+	scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
 
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_REFUND)
 			<< vchOffer << vchAcceptRand << refundCode
@@ -258,14 +293,20 @@ string makeOfferRefundTX(const CTransaction& prevTx, COffer& theOffer, COfferAcc
 	{
 		return string("This offer accept has already been refunded");
 	}
-
     // add a copy of the offer object with just
-    // the one accept object to payment txn to identify
-    // this txn as an offer payment
-	theOfferAccept.txRefundId = wtx.GetHash();
-	theOffer.accepts.clear();
-	theOffer.PutOfferAccept(theOfferAccept);
+    // the one accept object to save bandwidth
+    COffer offerCopy = theOffer;
+    COfferAccept offerAcceptCopy = theOfferAccept;
+    offerCopy.accepts.clear();
+    offerCopy.PutOfferAccept(offerAcceptCopy);
 
+	string bdata = offerCopy.SerializeToString();
+	string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, 0,
+				wtxPrevIn, wtx, false, bdata);
+	if (strError != "")
+	{
+		return string(strError);
+	}
 	if(refundCode == OFFER_REFUND_COMPLETE)
 	{
 		vector< pair<CScript, int64> > vecSend;
@@ -278,18 +319,7 @@ string makeOfferRefundTX(const CTransaction& prevTx, COffer& theOffer, COfferAcc
 		{
 			return string(strError);
 		}
-	}
-	else
-	{
-		int64 fNetFee = GetOfferNetworkFee(OP_OFFER_REFUND);
-		string bdata = theOffer.SerializeToString();
-		string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, fNetFee,
-				wtxPrevIn, wtx, false, bdata);
-		if (strError != "")
-		{
-			return string(strError);
-		}
-	}
+	}	
 	return "";
 
 }
@@ -317,9 +347,6 @@ int64 GetOfferNetworkFee(opcodetype seed) {
     }
     else if(seed==OP_OFFER_UPDATE) {
     	nFee = 100 * COIN;
-    }
-    else if(seed==OP_OFFER_REFUND) {
-    	nFee = 10 * COIN;
     }
 	// Round up to CENT
 	nFee += CENT - 1;
@@ -507,10 +534,10 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 	            }
 				if(!bReadOffer && !txOffer.GetAcceptByHash(vchOfferAccept, txCA))
 					printf("ReconstructOfferIndex() : failed to read offer accept from offer\n");
-				
-				// add txn-specific values to offer accept object
-                if(vvchArgs[2] == OFFER_REFUND_COMPLETE)
-					txCA.bRefunded = true; 
+				if(vvchArgs[2] == OFFER_REFUND_COMPLETE){
+					txCA.bRefunded = true;
+					txCA.txRefundId = tx.GetHash();
+				}				
 				txOffer.PutOfferAccept(txCA);
 				
 			}
@@ -1150,41 +1177,7 @@ void EraseOffer(CWalletTx& wtx)
  	pwalletMain->EraseFromWallet(wtx.GetHash());
 
 }
-// nTxOut is the output from wtxIn that we should grab
-string SendOfferMoneyWithInputTx(const vector<pair<CScript, int64> > &vecSend, int64 nValue,
-		int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, bool fAskFee,
-		const string& txData) {
-	int nTxOut = IndexOfOfferOutput(wtxIn);
-	CReserveKey reservekey(pwalletMain);
-	int64 nFeeRequired;
 
-	if (!CreateOfferTransactionWithInputTx(vecSend, wtxIn, nTxOut, wtxNew,
-			reservekey, nFeeRequired, txData)) {
-		string strError;
-		if (nValue + nFeeRequired > pwalletMain->GetBalance())
-			strError = strprintf(_("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds "),
-							FormatMoney(nFeeRequired).c_str());
-		else
-			strError = _("Error: Transaction creation failed  ");
-		printf("SendMoney() : %s", strError.c_str());
-		return strError;
-	}
-
-#ifdef GUI
-	if (fAskFee && !uiInterface.ThreadSafeAskFee(nFeeRequired))
-	return "ABORTED";
-#else
-	if (fAskFee && !true)
-		return "ABORTED";
-#endif
-
-	if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
-	{
-		return _(
-				"Error: The transaction was rejected.");
-	}
-	return "";
-}
 // nTxOut is the output from wtxIn that we should grab
 string SendOfferMoneyWithInputTx(CScript scriptPubKey, int64 nValue,
 		int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, bool fAskFee,
@@ -1208,7 +1201,7 @@ string SendOfferMoneyWithInputTx(CScript scriptPubKey, int64 nValue,
 			strError = strprintf(_("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds "),
 							FormatMoney(nFeeRequired).c_str());
 		else
-			strError = _("Error: Transaction creation failed  ");
+			strError = _("Error: Transaction creation failed, not enough balance.");
 		printf("SendMoney() : %s", strError.c_str());
 		return strError;
 	}
@@ -1369,8 +1362,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			break;
 		case OP_OFFER_REFUND:
 			int nDepth;
-			if ( !found || ( prevOp != OP_OFFER_ACTIVATE && prevOp != OP_OFFER_UPDATE 
-				&& prevOp != OP_OFFER_REFUND ) )
+			if ( !found || ( prevOp != OP_OFFER_ACTIVATE && prevOp != OP_OFFER_UPDATE && prevOp != OP_OFFER_REFUND ))
 				return error("offerrefund previous op %s is invalid", offerFromOp(prevOp).c_str());		
 			if (vvchArgs[1].size() > 20)
 				return error("offerrefund tx with guid too big");
@@ -1383,13 +1375,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				if ((fBlock || fMiner) && nDepth < 0)
 					return error(
 							"CheckOfferInputs() : offerrefund on an expired offer, or there is a pending transaction on the offer");
-					// check for enough fees
-				nNetFee = GetOfferNetFee(tx);
-				if (nNetFee < GetOfferNetworkFee(OP_OFFER_REFUND))
-					return error(
-							"CheckOfferInputs() : OP_OFFER_REFUND got tx %s with fee too low %lu",
-							tx.GetHash().GetHex().c_str(),
-							(long unsigned int) nNetFee);		
+	
 			}
 			break;
 		case OP_OFFER_ACCEPT:
@@ -1455,63 +1441,59 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						}
 
 					}
-					if(!theOffer.GetAcceptByHash(vchOfferAccept, theOfferAccept))
-					{
-						return error("CheckOfferInputs()- OP_OFFER_REFUND: failed to read offer accept from offer\n");
-					}
-					if(pwalletMain && vvchArgs[2] == OFFER_REFUND_PAYMENT_INPROGRESS){
+					if(!serializedOffer.GetAcceptByHash(vchOfferAccept, theOfferAccept))
+						return error("could not read accept from offer txn");	
+
+					if(!fInit && pwalletMain && vvchArgs[2] == OFFER_REFUND_PAYMENT_INPROGRESS){
 						CTransaction offerTx;
 						COffer tmpOffer;
 						if(!GetTxOfOffer(*pofferdb, vvchArgs[0], tmpOffer, offerTx))	
 						{
 							return error("CheckOfferInputs() - OP_OFFER_REFUND: failed to get offer transaction");
 						}
-						// make sure the transaction is coming from your node (someone else can't refund your offer) and that the offer is yours aswell, we want to refund my offer accepts and any linked offeraccepts of my offer	
-						//printf("ismine(tx) %d isoffermine(offertx) %d ismine(tx.vin[0]) %d\n",  pwalletMain->IsMine(tx), IsOfferMine(offerTx), pwalletMain->IsMine(tx.vin[0]));
-												
+						// we want to refund my offer accepts and any linked offeraccepts of my offer						
 						if(IsOfferMine(offerTx))
 						{
-							printf("makeOfferRefundTX\n");
 							string strError = makeOfferRefundTX(tx, theOffer, theOfferAccept, OFFER_REFUND_COMPLETE);
 							if (strError != "")
 							{
-								return error(strError.c_str());
+								printf("CheckOfferInputs() - OFFER_REFUND_COMPLETE %s\n", strError.c_str());
 							}
-							CTransaction myOfferTx, activateTx;
-							COffer acceptOffer, activateOffer;
 
-							// if this accept was done via offer linking (makeOfferLinkAcceptTX) then walk back up and refund
-							if(GetTxOfOfferAccept(*pofferdb, theOfferAccept.vchLinkOfferAccept, activateOffer, activateTx))
-							{
-								if (!GetTxOfOffer(*pofferdb, activateOffer.vchRand, acceptOffer, myOfferTx))
-									return error("CheckOfferInputs() - OP_OFFER_REFUND: could not find an offer with this name");
-	
-								COfferAccept linkedOfferAccept;
-								// get the linked offer accept
-								if(!acceptOffer.IsNull() && acceptOffer.GetAcceptByHash(theOfferAccept.vchLinkOfferAccept, linkedOfferAccept))
-								{
-									printf("makeOfferRefundTX2\n");
-									strError = makeOfferRefundTX(myOfferTx, acceptOffer, linkedOfferAccept, OFFER_REFUND_PAYMENT_INPROGRESS);
-									if (strError != "")
-									{
-										return error(strError.c_str());
-									}
-								}
-							}
 						}
-					}					
-					// add txn-specific values to offer accept object
-					else if(vvchArgs[2] == OFFER_REFUND_COMPLETE)
-					{
-						theOfferAccept.bRefunded = true; 
-						theOffer.PutOfferAccept(theOfferAccept);
+
+						CTransaction myOfferTx, activateTx;
+						COffer acceptOffer, activateOffer;
+
+						// if this accept was done via offer linking (makeOfferLinkAcceptTX) then walk back up and refund
+						if(GetTxOfOfferAccept(*pofferdb, theOfferAccept.vchLinkOfferAccept, activateOffer, activateTx))
 						{
-						TRY_LOCK(cs_main, cs_trymain);
-						// write the offer / offer accept mapping to the database
-						if (!pofferdb->WriteOfferAccept(vvchArgs[1], vvchArgs[0]))
-							return error( "CheckOfferInputs() : failed to write to offer DB");
+							if (!GetTxOfOffer(*pofferdb, activateOffer.vchRand, acceptOffer, myOfferTx))
+								return error("CheckOfferInputs() - OP_OFFER_REFUND: could not find an offer with this name");
+
+							COfferAccept linkedOfferAccept;
+							// get the linked offer accept
+							if(IsOfferMine(myOfferTx) && !acceptOffer.IsNull() && acceptOffer.GetAcceptByHash(theOfferAccept.vchLinkOfferAccept, linkedOfferAccept))
+							{
+								string strError = makeOfferRefundTX(myOfferTx, acceptOffer, linkedOfferAccept, OFFER_REFUND_PAYMENT_INPROGRESS);
+								if (strError != "")							
+									printf("CheckOfferInputs() - OFFER_REFUND_PAYMENT_INPROGRESS %s\n", strError.c_str());
+								
+							}
 						}
 					}
+					else if(vvchArgs[2] == OFFER_REFUND_COMPLETE){
+						theOfferAccept.bRefunded = true;
+						theOfferAccept.txRefundId = tx.GetHash();
+					}
+					theOffer.PutOfferAccept(theOfferAccept);
+					{
+					TRY_LOCK(cs_main, cs_trymain);
+					// write the offer / offer accept mapping to the database
+					if (!pofferdb->WriteOfferAccept(vvchArgs[1], vvchArgs[0]))
+						return error( "CheckOfferInputs() : failed to write to offer DB");
+					}
+					
 				}
 				else if (op == OP_OFFER_ACCEPT) {
 					
@@ -1542,9 +1524,8 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						{	
 							string strError = makeOfferRefundTX(offerTx, theOffer, theOfferAccept, OFFER_REFUND_PAYMENT_INPROGRESS);
 							if (strError != "")
-							{
-								return error(strError.c_str());
-							}
+								printf(strError.c_str());
+							
 						}
 						if(fDebug)
 							printf("txn %s accepted but offer not fulfilled because desired"
@@ -1625,7 +1606,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				if(HasReachedMainNetForkB2() && (op == OP_OFFER_UPDATE || op == OP_OFFER_ACCEPT))
 				{
 					// if this offer has linked offers to it and it is an update or accept, then copy over necessary updates to offer linking to it
-					/*vector<pair<vector<unsigned char>, vector<COffer> > > offerLinkages;
+					vector<pair<vector<unsigned char>, vector<COffer> > > offerLinkages;
 					ExistsOfferLinkage(vvchArgs[0], vtxPos, offerLinkages);				
 					pair<vector<unsigned char>, vector<COffer> > pairLink;
 					BOOST_FOREACH(pairLink, offerLinkages) {
@@ -1652,7 +1633,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							return error( "CheckOfferInputs() : failed to write to offer link to DB");
 						}
 
-					}*/
+					}
 
 				}
 
@@ -2173,14 +2154,14 @@ Value offerrefund(const Array& params, bool fHelp) {
 
 	if (!GetTxOfOffer(*pofferdb, activateOffer.vchRand, theOffer, txOffer))
 		throw runtime_error("could not find an offer with this name");
-	
+		
 	CWalletTx wtxIn;
 	if (!pwalletMain->GetTransaction(txOffer.GetHash(), wtxIn)) 
 	{
-		throw runtime_error("can't find this offer in your wallet");
+		//throw runtime_error("can't find this offer in your wallet");
 	}
 
-	if (ExistsInMempool(activateOffer.vchRand, OP_OFFER_REFUND) || ExistsInMempool(activateOffer.vchRand, OP_OFFER_ACTIVATE) || ExistsInMempool(activateOffer.vchRand, OP_OFFER_UPDATE)) {
+	if (ExistsInMempool(theOffer.vchRand, OP_OFFER_REFUND) || ExistsInMempool(theOffer.vchRand, OP_OFFER_ACTIVATE) || ExistsInMempool(theOffer.vchRand, OP_OFFER_UPDATE)) {
 		throw runtime_error("there are pending operations or refunds on that offer");
 	}
 	// check for existence of offeraccept in txn offer obj

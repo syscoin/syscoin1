@@ -21,8 +21,6 @@ bool IsOfferMine(const CTransaction& tx);
 bool IsOfferMine(const CTransaction& tx, const CTxOut& txout);
 std::string SendOfferMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, 
     bool fAskFee, const std::string& txData = "");
-std::string SendOfferMoneyWithInputTx(const std::vector<std::pair<CScript, int64> >& vecSend, int64 nValue, int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, 
-    bool fAskFee, const std::string& txData = "");
 bool CreateOfferTransactionWithInputTx(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxIn, int nTxOut, 
     CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, const std::string& txData);
 
