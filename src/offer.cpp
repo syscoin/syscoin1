@@ -2418,7 +2418,6 @@ Value offerinfo(const Array& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("refunded", "true"));
 				oOfferAccept.push_back(Pair("refund_txid", ca.txRefundId.GetHex()));
 			}
-	\
 			aoOfferAccepts.push_back(oOfferAccept);
 		}
 		int nHeight;
@@ -2451,13 +2450,17 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOffer.push_back(Pair("expired_block", expired_block));
 			oOffer.push_back(Pair("expired", expired));
 
-
 			oOffer.push_back(Pair("payment_address", stringFromVch(theOffer.vchPaymentAddress)));
 			oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
 			oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
 			oOffer.push_back(Pair("quantity", strprintf("%llu", theOffer.nQty)));
 			oOffer.push_back(Pair("price", ValueFromAmount(theOffer.nPrice) ) );
 			oOffer.push_back(Pair("is_mine", IsOfferMine(tx) ? "true" : "false"));
+			if(!theOffer.vchLinkOffer.empty() && IsOfferMine(tx)) { 
+				oOffer.push_back(Pair("offerlink", "true"));
+				oOffer.push_back(Pair("offerlink_guid", stringFromVch(theOffer.vchLinkOffer)));
+				oOffer.push_back(Pair("offerlink_commission", strprintf("%u%%", theOffer.nLinkCommissionPct)));
+			}
 			oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 			oOffer.push_back(Pair("accepts", aoOfferAccepts));
 			oLastOffer = oOffer;
