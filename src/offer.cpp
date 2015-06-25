@@ -229,30 +229,19 @@ string makeOfferRefundTX(const CTransaction& prevTx, const COffer& theOffer, con
 	{
 		return string("makeOfferRefundTX(): no wallet found");
 	}
-	CTransaction tx;
-	CWalletTx wtxPrevIn;
-	uint256 hashBlock;
-	if (!GetTransaction(theOfferAccept.txHash, tx, hashBlock, true))
+	if(theOfferAccept.bRefunded)
 	{
-		return string("makeOfferRefundTX() : could not read offer accept tx from disk");
-	}
+		return string("This offer accept has already been refunded");
+	}	
+	CWalletTx wtxPrevIn;
+
 	if (!pwalletMain->GetTransaction(prevTx.GetHash(), wtxPrevIn)) 
 	{
 		return string("makeOfferRefundTX() : can't find this offer in your wallet");
 	}
 
-
-   // decode txn, skip non-offer txns
-    vector<vector<unsigned char> > vvchArgs;
-    int op, nOut;
-    if (!DecodeOfferTx(tx, op, nOut, vvchArgs, -1)) 
-		return string("makeOfferRefundTX() : offer output not found");
-	if(op != OP_OFFER_ACCEPT)
-	{
-		return string("makeOfferRefundTX(): no offer accept found");
-	}
-	const vector<unsigned char> &vchOffer = vvchArgs[0];
-	const vector<unsigned char> &vchAcceptRand = vvchArgs[1];
+	const vector<unsigned char> &vchOffer = theOffer.vchRand;
+	const vector<unsigned char> &vchAcceptRand = theOfferAccept.vchRand;
 
 	// this is a syscoin txn
 	CWalletTx wtx, wtx2;
@@ -269,13 +258,9 @@ string makeOfferRefundTX(const CTransaction& prevTx, const COffer& theOffer, con
 		{
 			return string("insufficient funds to pay for offer refund");
 		}
-	} else if(refundCode == OFFER_REFUND_PAYMENT_INPROGRESS)
-	{
-		/*if(vchRefunded == OFFER_REFUND_COMPLETE)
-		{
-			return string("This offer accept has already been refunded");
-		}*/
-	}
+	} 
+
+
 	// create OFFERACCEPT txn keys
 	CScript scriptPubKey;
     CPubKey newDefaultKey;
@@ -293,7 +278,7 @@ string makeOfferRefundTX(const CTransaction& prevTx, const COffer& theOffer, con
 
 	if(foundRefundInWallet(vchAcceptRand, refundCode))
 	{
-		return string("This offer accept has already been refunded");
+		return string("foundRefundInWallet - This offer accept has already been refunded");
 	}
     // add a copy of the offer object with just
     // the one accept object to save bandwidth
@@ -537,9 +522,13 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 	                    printf("ReconstructOfferIndex() : warning - failed to read offer accept from offer DB\n");
 	                else bReadOffer = true;
 	            }
-				if(!bReadOffer && !txOffer.GetAcceptByHash(vchOfferAccept, txCA))
-					 return error("ReconstructOfferIndex() : failed to read offer accept from offer\n");
-				if(vvchArgs[2] == OFFER_REFUND_COMPLETE){
+				if(vvchArgs[2] == OFFER_REFUND_PAYMENT_INPROGRESS){
+					if(!bReadOffer && !serializedOffer.GetAcceptByHash(vchOfferAccept, txCA))
+						 return error("ReconstructOfferIndex() OP_OFFER_REFUND: failed to read offer accept from serializedOffer\n");
+				}
+				else if(vvchArgs[2] == OFFER_REFUND_COMPLETE){
+					if(!bReadOffer && !txOffer.GetAcceptByHash(vchOfferAccept, txCA))
+						 return error("ReconstructOfferIndex() OP_OFFER_REFUND: failed to read offer accept from txOffer\n");
 					txCA.bRefunded = true;
 					txCA.txRefundId = tx.GetHash();
 				}				
@@ -556,9 +545,10 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 	                else bReadOffer = true;
 	            }
 				if(!bReadOffer && !txOffer.GetAcceptByHash(vchOfferAccept, txCA))
-					 return error("ReconstructOfferIndex() : failed to read offer accept from offer\n");
+					 return error("ReconstructOfferIndex() OP_OFFER_ACCEPT: failed to read offer accept from offer\n");
 
 				// add txn-specific values to offer accept object
+				txCA.bPaid = true;
                 txCA.vchRand = vvchArgs[1];
 		        txCA.nTime = pindex->nTime;
 		        txCA.txHash = tx.GetHash();
@@ -568,7 +558,7 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 
 			// use the txn offer as master on updates,
 			// but grab the accepts from the DB first
-			if(op == OP_OFFER_UPDATE || op == OP_OFFER_REFUND) {
+			if(op == OP_OFFER_UPDATE) {
 				serializedOffer.accepts = txOffer.accepts;
 				txOffer = serializedOffer;
 			}
@@ -1382,6 +1372,13 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if (vvchArgs[2].size() > 20)
 				return error("offerrefund refund status too long");
 			if (fBlock && !fJustCheck) {
+				// Check hash
+				const vector<unsigned char> &vchOffer = vvchArgs[0];
+				const vector<unsigned char> &vchAcceptRand = vvchArgs[1];
+				
+				// check for existence of offeraccept in txn offer obj
+				if(!theOffer.GetAcceptByHash(vchAcceptRand, theOfferAccept))
+					return error("OP_OFFER_REFUND could not read accept from offer txn");
 				// TODO CPU intensive
 				nDepth = CheckOfferTransactionAtRelativeDepth(pindexBlock,
 						prevCoins, GetOfferExpirationDepth(pindexBlock->nHeight));
@@ -1408,7 +1405,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				
 				// check for existence of offeraccept in txn offer obj
 				if(!theOffer.GetAcceptByHash(vchAcceptRand, theOfferAccept))
-					return error("could not read accept from offer txn");
+					return error("OP_OFFER_ACCEPT could not read accept from offer txn");
 	   		}
 			break;
 
@@ -1449,10 +1446,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				}
 				else if(op == OP_OFFER_REFUND)
 				{
-					serializedOffer.accepts = theOffer.accepts;
-					theOffer = serializedOffer;
-
-            		vector<unsigned char> vchOfferAccept = vvchArgs[1];
+					vector<unsigned char> vchOfferAccept = vvchArgs[1];
 					if (pofferdb->ExistsOfferAccept(vchOfferAccept)) {
 						if (!pofferdb->ReadOfferAccept(vchOfferAccept, vvchArgs[0]))
 						{
@@ -1460,10 +1454,13 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						}
 
 					}
-					if(!serializedOffer.GetAcceptByHash(vchOfferAccept, theOfferAccept))
-						return error("could not read accept from offer txn");	
+
 
 					if(!fInit && pwalletMain && vvchArgs[2] == OFFER_REFUND_PAYMENT_INPROGRESS){
+						
+						if(!serializedOffer.GetAcceptByHash(vchOfferAccept, theOfferAccept))
+							return error("CheckOfferInputs()- OP_OFFER_REFUND: could not read accept from serializedOffer txn");	
+            		
 						CTransaction offerTx;
 						COffer tmpOffer;
 						if(!GetTxOfOffer(*pofferdb, vvchArgs[0], tmpOffer, offerTx))	
@@ -1481,27 +1478,28 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 						}
 
-						CTransaction myOfferTx, activateTx;
-						COffer acceptOffer, activateOffer;
-
+						CTransaction myOfferTx;
+						COffer activateOffer;
+						COfferAccept myAccept;
 						// if this accept was done via offer linking (makeOfferLinkAcceptTX) then walk back up and refund
-						if(GetTxOfOfferAccept(*pofferdb, theOfferAccept.vchLinkOfferAccept, activateOffer, activateTx))
+						if(GetTxOfOfferAccept(*pofferdb, theOfferAccept.vchLinkOfferAccept, activateOffer, myOfferTx))
 						{
-							if (!GetTxOfOffer(*pofferdb, activateOffer.vchRand, acceptOffer, myOfferTx))
-								return error("CheckOfferInputs() - OP_OFFER_REFUND: could not find an offer with this name");
-
-							COfferAccept linkedOfferAccept;
-							// get the linked offer accept
-							if(IsOfferMine(myOfferTx) && !acceptOffer.IsNull() && acceptOffer.GetAcceptByHash(theOfferAccept.vchLinkOfferAccept, linkedOfferAccept))
+							if(!activateOffer.GetAcceptByHash(theOfferAccept.vchLinkOfferAccept, myAccept))
+								return error("CheckOfferInputs()- OFFER_REFUND_PAYMENT_INPROGRESS: could not read accept from offer txn");	
+							if(IsOfferMine(myOfferTx))
 							{
-								string strError = makeOfferRefundTX(myOfferTx, acceptOffer, linkedOfferAccept, OFFER_REFUND_PAYMENT_INPROGRESS);
+								string strError = makeOfferRefundTX(myOfferTx, activateOffer, myAccept, OFFER_REFUND_PAYMENT_INPROGRESS);
 								if (strError != "" && fDebug)							
 									printf("CheckOfferInputs() - OFFER_REFUND_PAYMENT_INPROGRESS %s\n", strError.c_str());
-								
+									
 							}
 						}
 					}
 					else if(vvchArgs[2] == OFFER_REFUND_COMPLETE){
+
+						if(!theOffer.GetAcceptByHash(vchOfferAccept, theOfferAccept))
+							return error("CheckOfferInputs()- OP_OFFER_REFUND: could not read accept from theOffer txn");	
+            		
 						theOfferAccept.bRefunded = true;
 						theOfferAccept.txRefundId = tx.GetHash();
 					}
@@ -1520,7 +1518,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					CTransaction offerTx, linkedTx;
 
 					if (!GetTxOfOffer(*pofferdb, vvchArgs[0], myOffer, offerTx))
-						return error("CheckOfferInputs() : could not find an offer with this name");
+						return error("CheckOfferInputs() OP_OFFER_ACCEPT: could not find an offer with this name");
 
 					if(!myOffer.vchLinkOffer.empty())
 					{
@@ -1530,7 +1528,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						
 					// check for existence of offeraccept in txn offer obj
 					if(!serializedOffer.GetAcceptByHash(vvchArgs[1], theOfferAccept))
-						return error("could not read accept from offer txn");					
+						return error("CheckOfferInputs() OP_OFFER_ACCEPT: could not read accept from offer txn");					
 
 
 					// 2 step refund: send an offer accept with nRefunded property set to inprogress and then send another with complete later
@@ -1543,7 +1541,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						{	
 							string strError = makeOfferRefundTX(offerTx, theOffer, theOfferAccept, OFFER_REFUND_PAYMENT_INPROGRESS);
 							if (strError != "" && fDebug)
-								printf(strError.c_str());
+								printf("CheckOfferInputs() - OP_OFFER_ACCEPT %s\n", strError.c_str());
 							
 						}
 						if(fDebug)
@@ -1555,7 +1553,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							HexStr(theOfferAccept.vchRand).c_str());
 						return true;
 					}
-
+				
 					theOffer.nQty -= theOfferAccept.nQty;
 
 					if (!fInit && pwalletMain && !linkOffer.IsNull() && IsOfferMine(offerTx) )
@@ -1569,7 +1567,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					
 					theOfferAccept.bPaid = true;
 					
-
+				
 					// set the offer accept txn-dependent values and add to the txn
 					theOfferAccept.vchRand = vvchArgs[1];
 					theOfferAccept.txHash = tx.GetHash();
@@ -2164,15 +2162,13 @@ Value offerrefund(const Array& params, bool fHelp) {
 
 	// look for a transaction with this key
 	COffer activateOffer, theOffer;
-	CTransaction tmpTx, txOffer;
+	CTransaction tmpTx, txOffer, txAccept;
 	COfferAccept theOfferAccept;
+	uint256 hashBlock;
 
-	if (!GetTxOfOfferAccept(*pofferdb, vchAcceptRand, activateOffer, tmpTx))
+	if (!GetTxOfOfferAccept(*pofferdb, vchAcceptRand, theOffer, txOffer))
 		throw runtime_error("could not find an offer accept with this identifier");
 
-	if (!GetTxOfOffer(*pofferdb, activateOffer.vchRand, theOffer, txOffer))
-		throw runtime_error("could not find an offer with this name");
-		
 	CWalletTx wtxIn;
 	if (!pwalletMain->GetTransaction(txOffer.GetHash(), wtxIn)) 
 	{
