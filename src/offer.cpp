@@ -513,6 +513,13 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
                 	txOffer.GetOfferFromList(vtxPos);
                 }
             }
+			// use the txn offer as master on updates,
+			// but grab the accepts from the DB first
+			if(op == OP_OFFER_UPDATE || op == OP_OFFER_REFUND) {
+				serializedOffer.accepts = txOffer.accepts;
+				txOffer = serializedOffer;
+			}
+
 			if(op == OP_OFFER_REFUND)
 			{
             	bool bReadOffer = false;
@@ -522,16 +529,18 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 	                    printf("ReconstructOfferIndex() : warning - failed to read offer accept from offer DB\n");
 	                else bReadOffer = true;
 	            }
-				if(vvchArgs[2] == OFFER_REFUND_PAYMENT_INPROGRESS){
-					if(!bReadOffer && !serializedOffer.GetAcceptByHash(vchOfferAccept, txCA))
-						 return error("ReconstructOfferIndex() OP_OFFER_REFUND: failed to read offer accept from serializedOffer\n");
-				}
-				else if(vvchArgs[2] == OFFER_REFUND_COMPLETE){
-					if(!bReadOffer && !txOffer.GetAcceptByHash(vchOfferAccept, txCA))
-						 return error("ReconstructOfferIndex() OP_OFFER_REFUND: failed to read offer accept from txOffer\n");
+				if(!bReadOffer && !txOffer.GetAcceptByHash(vchOfferAccept, txCA))
+					 return error("ReconstructOfferIndex() OP_OFFER_REFUND: failed to read offer accept from serializedOffer\n");
+
+				if(vvchArgs[2] == OFFER_REFUND_COMPLETE){
 					txCA.bRefunded = true;
 					txCA.txRefundId = tx.GetHash();
-				}				
+				}	
+				txCA.bPaid = true;
+                txCA.vchRand = vvchArgs[1];
+		        txCA.nTime = pindex->nTime;
+		        txCA.txHash = tx.GetHash();
+		        txCA.nHeight = nHeight;
 				txOffer.PutOfferAccept(txCA);
 				
 			}
@@ -556,12 +565,6 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 				txOffer.PutOfferAccept(txCA);
 			}
 
-			// use the txn offer as master on updates,
-			// but grab the accepts from the DB first
-			if(op == OP_OFFER_UPDATE) {
-				serializedOffer.accepts = txOffer.accepts;
-				txOffer = serializedOffer;
-			}
 
 			if(op == OP_OFFER_ACTIVATE || op == OP_OFFER_UPDATE || op == OP_OFFER_REFUND) {
 				txOffer.txHash = tx.GetHash();
@@ -1446,6 +1449,8 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				}
 				else if(op == OP_OFFER_REFUND)
 				{
+					serializedOffer.accepts = theOffer.accepts;
+					theOffer = serializedOffer;
 					vector<unsigned char> vchOfferAccept = vvchArgs[1];
 					if (pofferdb->ExistsOfferAccept(vchOfferAccept)) {
 						if (!pofferdb->ReadOfferAccept(vchOfferAccept, vvchArgs[0]))
@@ -1455,12 +1460,10 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 					}
 
-
-					if(!fInit && pwalletMain && vvchArgs[2] == OFFER_REFUND_PAYMENT_INPROGRESS){
-						
-						if(!serializedOffer.GetAcceptByHash(vchOfferAccept, theOfferAccept))
-							return error("CheckOfferInputs()- OP_OFFER_REFUND: could not read accept from serializedOffer txn");	
+					if(!theOffer.GetAcceptByHash(vchOfferAccept, theOfferAccept))
+						return error("CheckOfferInputs()- OP_OFFER_REFUND: could not read accept from serializedOffer txn");	
             		
+					if(!fInit && pwalletMain && vvchArgs[2] == OFFER_REFUND_PAYMENT_INPROGRESS){
 						CTransaction offerTx;
 						COffer tmpOffer;
 						if(!GetTxOfOffer(*pofferdb, vvchArgs[0], tmpOffer, offerTx))	
@@ -1496,10 +1499,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						}
 					}
 					else if(vvchArgs[2] == OFFER_REFUND_COMPLETE){
-
-						if(!theOffer.GetAcceptByHash(vchOfferAccept, theOfferAccept))
-							return error("CheckOfferInputs()- OP_OFFER_REFUND: could not read accept from theOffer txn");	
-            		
 						theOfferAccept.bRefunded = true;
 						theOfferAccept.txRefundId = tx.GetHash();
 					}
