@@ -77,9 +77,7 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
 	addressBookPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab);
 
 
-    certIssuerListPage = new CertIssuerListPage(CertIssuerListPage::ForEditing, CertIssuerListPage::CertIssuerTab);
-
-    certListPage = new CertIssuerListPage(CertIssuerListPage::ForEditing, CertIssuerListPage::CertItemTab);
+    certListPage = new CertListPage(CertListPage::ForEditing, CertListPage::CertTab);
 
     receiveCoinsPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::ReceivingTab);
 
@@ -93,7 +91,6 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
     addWidget(addressBookPage);
     addWidget(aliasListPage);
     addWidget(dataAliasListPage);
-    addWidget(certIssuerListPage);
     addWidget(certListPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
@@ -139,7 +136,6 @@ void WalletView::setClientModel(ClientModel *clientModel)
         addressBookPage->setOptionsModel(clientModel->getOptionsModel());
         aliasView->setClientModel(clientModel);
 		dataAliasView->setClientModel(clientModel);
-        certIssuerListPage->setOptionsModel(clientModel->getOptionsModel());
         certListPage->setOptionsModel(clientModel->getOptionsModel());
         receiveCoinsPage->setOptionsModel(clientModel->getOptionsModel());
     }
@@ -158,8 +154,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
         overviewPage->setWalletModel(walletModel);
         aliasView->setWalletModel(walletModel);
 		dataAliasView->setWalletModel(walletModel);
-        certIssuerListPage->setModel(walletModel->getCertIssuerTableModel());
-        certListPage->setModel(walletModel->getCertIssuerTableModel());
+        certListPage->setModel(walletModel->getCertTableModel());
         addressBookPage->setModel(walletModel->getAddressTableModel());
         receiveCoinsPage->setModel(walletModel->getAddressTableModel());
         sendCoinsPage->setModel(walletModel);
@@ -221,11 +216,6 @@ void WalletView::gotoOfferListPage()
 {
 	gui->getOfferListAction()->setChecked(true);
 	setCurrentWidget(offerListPage);  
-}
-void WalletView::gotoCertIssuerListPage()
-{
-    gui->getCertIssuerListAction()->setChecked(true);
-    setCurrentWidget(certIssuerListPage);
 }
 
 void WalletView::gotoCertListPage()

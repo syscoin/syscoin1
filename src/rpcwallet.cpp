@@ -1084,8 +1084,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
 				}
 				else if(DecodeCertTx(wtx, op, nOut, vvchArgs, -1))
 				{
-                    nTxOut = IndexOfCertIssuerOutput(wtx);
-                    ExtractCertIssuerAddress(wtx.vout[nTxOut].scriptPubKey, strAddress);					
+                    nTxOut = IndexOfCertOutput(wtx);
+                    ExtractCertAddress(wtx.vout[nTxOut].scriptPubKey, strAddress);					
 				}
 			}     
             entry.push_back(Pair("address", strAddress));

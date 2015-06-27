@@ -86,9 +86,8 @@ public:
 		OfferAcceptRefundInProgress,
 		OfferAcceptRefundComplete,
       
-        CertIssuerActivate,
-        CertIssuerUpdate,
-        CertNew,
+        CertActivate,
+        CertUpdate,
         CertTransfer
 
     };

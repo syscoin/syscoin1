@@ -119,19 +119,14 @@ void WalletStack::gotoOfferListPage()
 
 
 
-void WalletStack::gotoCertIssuerListPage()
-{
-    QMap<QString, WalletView*>::const_iterator i;
-    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        i.value()->gotoCertIssuerListPage();
-}
-
 void WalletStack::gotoCertListPage()
 {
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoCertListPage();
 }
+
+
 
 
 void WalletStack::gotoReceiveCoinsPage()

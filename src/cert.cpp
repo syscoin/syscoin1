@@ -16,7 +16,7 @@ using namespace json_spirit;
 
 template<typename T> void ConvertTo(Value& value, bool fAllowNull = false);
 
-std::list<CCertFee> lstCertIssuerFees;
+std::list<CCertFee> lstCertFees;
 extern bool ExistsInMempool(std::vector<unsigned char> vchNameOrRand, opcodetype type);
 extern bool HasReachedMainNetForkB2();
 extern CCertDB *pcertdb;
@@ -24,7 +24,7 @@ extern CCertDB *pcertdb;
 extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo,
         unsigned int nIn, int nHashType);
 
-CScript RemoveCertIssuerScriptPrefix(const CScript& scriptIn);
+CScript RemoveCertScriptPrefix(const CScript& scriptIn);
 bool DecodeCertScript(const CScript& script, int& op,
         std::vector<std::vector<unsigned char> > &vvch,
         CScript::const_iterator& pc);
@@ -36,33 +36,43 @@ extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
         const CTransaction& txTo, unsigned int nIn, unsigned int flags,
         int nHashType);
 
+void PutToCertList(std::vector<CCert> &certList, CCert& index) {
+	int i = certList.size() - 1;
+	BOOST_REVERSE_FOREACH(CCert &o, certList) {
+        if(index.nHeight != 0 && o.nHeight == index.nHeight) {
+        	certList[i] = index;
+            return;
+        }
+        else if(o.txHash != 0 && o.txHash == index.txHash) {
+        	certList[i] = index;
+            return;
+        }
+        i--;
+	}
+    certList.push_back(index);
+}
 bool IsCertOp(int op) {
-    return op == OP_CERTISSUER_ACTIVATE
-        || op == OP_CERTISSUER_UPDATE
-        || op == OP_CERT_NEW
+    return op == OP_CERT_ACTIVATE
+        || op == OP_CERT_UPDATE
         || op == OP_CERT_TRANSFER;
 }
 
 // 10080 blocks = 1 week
-// certificate issuer expiration time is ~ 6 months or 26 weeks
+// certificate  expiration time is ~ 6 months or 26 weeks
 // expiration blocks is 262080 (final)
 // expiration starts at 87360, increases by 1 per block starting at
 // block 174721 until block 349440
 int64 GetCertNetworkFee(opcodetype seed) {
 
 	int64 nFee = 0;
-    if(seed==OP_CERTISSUER_ACTIVATE) 
+    if(seed==OP_CERT_ACTIVATE) 
 	{
         nFee = 150 * COIN;
     }
-    else if(seed==OP_CERTISSUER_UPDATE) 
+    else if(seed==OP_CERT_UPDATE) 
 	{
         nFee = 100 * COIN;
     } 
-	else if(seed==OP_CERT_NEW) 
-	{
-        nFee = 25 * COIN;
-    }
 	else if(seed==OP_CERT_TRANSFER) 
 	{
         nFee = 25 * COIN;
@@ -102,7 +112,7 @@ int GetCertDisplayExpirationDepth(int nHeight) {
 }
 
 bool IsMyCert(const CTransaction& tx, const CTxOut& txout) {
-    const CScript& scriptPubKey = RemoveCertIssuerScriptPrefix(txout.scriptPubKey);
+    const CScript& scriptPubKey = RemoveCertScriptPrefix(txout.scriptPubKey);
     CScript scriptSig;
     txnouttype whichTypeRet;
     if (!Solver(*pwalletMain, scriptPubKey, 0, 0, scriptSig, whichTypeRet))
@@ -110,52 +120,50 @@ bool IsMyCert(const CTransaction& tx, const CTxOut& txout) {
     return true;
 }
 
-string certissuerFromOp(int op) {
+string certFromOp(int op) {
     switch (op) {
-    case OP_CERTISSUER_ACTIVATE:
-        return "certissueractivate";
-    case OP_CERTISSUER_UPDATE:
-        return "certissuerupdate";
-    case OP_CERT_NEW:
-        return "certnew";
+    case OP_CERT_ACTIVATE:
+        return "certactivate";
+    case OP_CERT_UPDATE:
+        return "certupdate";
     case OP_CERT_TRANSFER:
         return "certtransfer";
     default:
-        return "<unknown certissuer op>";
+        return "<unknown cert op>";
     }
 }
 
-bool CCertIssuer::UnserializeFromTx(const CTransaction &tx) {
+bool CCert::UnserializeFromTx(const CTransaction &tx) {
     try {
-        CDataStream dsCertIssuer(vchFromString(DecodeBase64(stringFromVch(tx.data))), SER_NETWORK, PROTOCOL_VERSION);
-        dsCertIssuer >> *this;
+        CDataStream dsCert(vchFromString(DecodeBase64(stringFromVch(tx.data))), SER_NETWORK, PROTOCOL_VERSION);
+        dsCert >> *this;
     } catch (std::exception &e) {
         return false;
     }
     return true;
 }
 
-void CCertIssuer::SerializeToTx(CTransaction &tx) {
+void CCert::SerializeToTx(CTransaction &tx) {
     vector<unsigned char> vchData = vchFromString(SerializeToString());
     tx.data = vchData;
 }
 
-string CCertIssuer::SerializeToString() {
-    // serialize certissuer object
-    CDataStream dsCertIssuer(SER_NETWORK, PROTOCOL_VERSION);
-    dsCertIssuer << *this;
-    vector<unsigned char> vchData(dsCertIssuer.begin(), dsCertIssuer.end());
+string CCert::SerializeToString() {
+    // serialize cert object
+    CDataStream dsCert(SER_NETWORK, PROTOCOL_VERSION);
+    dsCert << *this;
+    vector<unsigned char> vchData(dsCert.begin(), dsCert.end());
     return EncodeBase64(vchData.data(), vchData.size());
 }
 
 //TODO implement
-bool CCertDB::ScanCertIssuers(const std::vector<unsigned char>& vchCertIssuer, unsigned int nMax,
-        std::vector<std::pair<std::vector<unsigned char>, CCertIssuer> >& certissuerScan) {
+bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCert, unsigned int nMax,
+        std::vector<std::pair<std::vector<unsigned char>, CCert> >& certScan) {
 
     leveldb::Iterator *pcursor = pcertdb->NewIterator();
 
     CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
-    ssKeySet << make_pair(string("certissueri"), vchCertIssuer);
+    ssKeySet << make_pair(string("certi"), vchCert);
     string sType;
     pcursor->Seek(ssKeySet.str());
 
@@ -166,19 +174,19 @@ bool CCertDB::ScanCertIssuers(const std::vector<unsigned char>& vchCertIssuer, u
             CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
 
             ssKey >> sType;
-            if(sType == "certissueri") {
-                vector<unsigned char> vchCertIssuer;
-                ssKey >> vchCertIssuer;
+            if(sType == "certi") {
+                vector<unsigned char> vchCert;
+                ssKey >> vchCert;
                 leveldb::Slice slValue = pcursor->value();
                 CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-                vector<CCertIssuer> vtxPos;
+                vector<CCert> vtxPos;
                 ssValue >> vtxPos;
-                CCertIssuer txPos;
+                CCert txPos;
                 if (!vtxPos.empty())
                     txPos = vtxPos.back();
-                certissuerScan.push_back(make_pair(vchCertIssuer, txPos));
+                certScan.push_back(make_pair(vchCert, txPos));
             }
-            if (certissuerScan.size() >= nMax)
+            if (certScan.size() >= nMax)
                 break;
 
             pcursor->Next();
@@ -215,96 +223,58 @@ bool CCertDB::ReconstructCertIndex(CBlockIndex *pindexRescan) {
             vector<vector<unsigned char> > vvchArgs;
             int op, nOut;
 
-            // decode the certissuer op, params, height
+            // decode the cert op, params, height
             bool o = DecodeCertTx(tx, op, nOut, vvchArgs, -1);
             if (!o || !IsCertOp(op)) continue;
 
-            vector<unsigned char> vchCertIssuer = vvchArgs[0];
+            vector<unsigned char> vchCert = vvchArgs[0];
 
             // get the transaction
             if(!GetTransaction(tx.GetHash(), tx, txblkhash, true))
                 continue;
 
-            // attempt to read certissuer from txn
-            CCertIssuer txCertIssuer;
-            CCertItem txCA;
-            if(!txCertIssuer.UnserializeFromTx(tx))
-                return error("ReconstructCertIndex() : failed to unserialize certissuer from tx");
+            // attempt to read cert from txn
+            CCert txCert;
+            CCert txCA;
+            if(!txCert.UnserializeFromTx(tx))
+                return error("ReconstructCertIndex() : failed to unserialize cert from tx");
 
-            // save serialized certissuer
-            CCertIssuer serializedCertIssuer = txCertIssuer;
+            // save serialized cert
+            CCert serializedCert = txCert;
 
-            // read certissuer from DB if it exists
-            vector<CCertIssuer> vtxPos;
-            if (ExistsCertIssuer(vchCertIssuer)) {
-                if (!ReadCertIssuer(vchCertIssuer, vtxPos))
-                    return error("ReconstructCertIndex() : failed to read certissuer from DB");
-                if(vtxPos.size()!=0) {
-                    txCertIssuer.nHeight = nHeight;
-                    txCertIssuer.GetCertFromList(vtxPos);
-                }
+            // read cert from DB if it exists
+            vector<CCert> vtxPos;
+            if (ExistsCert(vchCert)) {
+                if (!ReadCert(vchCert, vtxPos))
+                    return error("ReconstructCertIndex() : failed to read cert from DB");
             }
 
-            // read the certissuer certitem from db if exists
-            if(op == OP_CERT_NEW || op == OP_CERT_TRANSFER) {
-                bool bReadCertIssuer = false;
-                vector<unsigned char> vchCertItem = vvchArgs[1];
-                if (ExistsCertItem(vchCertItem)) {
-                    if (!ReadCertItem(vchCertItem, vchCertIssuer))
-                        printf("ReconstructCertIndex() : warning - failed to read certissuer certitem from certissuer DB\n");
-                    else bReadCertIssuer = true;
-                }
-                if(!bReadCertIssuer && !txCertIssuer.GetCertItemByHash(vchCertItem, txCA))
-                    printf("ReconstructCertIndex() : failed to read certissuer certitem from certissuer\n");
+            txCert.txHash = tx.GetHash();
+            txCert.nHeight = nHeight;
+            // txn-specific values to cert object
+            txCert.vchRand = vvchArgs[0];
+            txCert.nTime = pindex->nTime;
+            PutToCertList(vtxPos, txCert);
 
-                // add txn-specific values to certissuer certitem object
-                txCA.vchRand = vvchArgs[1];
-                txCA.nTime = pindex->nTime;
-                txCA.txHash = tx.GetHash();
-                txCA.nHeight = nHeight;
-                txCertIssuer.PutCertItem(txCA);
-            }
+            if (!WriteCert(vchCert, vtxPos))
+                return error("ReconstructCertIndex() : failed to write to cert DB");
 
-            // use the txn certissuer as master on updates,
-            // but grab the certitems from the DB first
-            if(op == OP_CERTISSUER_UPDATE) {
-                serializedCertIssuer.certs = txCertIssuer.certs;
-                txCertIssuer = serializedCertIssuer;
-            }
-
-            if(op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE) {
-                txCertIssuer.txHash = tx.GetHash();
-                txCertIssuer.nHeight = nHeight;
-            }
-
-            // txn-specific values to certissuer object
-            txCertIssuer.vchRand = vvchArgs[0];
-            txCertIssuer.nTime = pindex->nTime;
-            txCertIssuer.PutToCertIssuerList(vtxPos);
-
-            if (!WriteCertIssuer(vchCertIssuer, vtxPos))
-                return error("ReconstructCertIndex() : failed to write to certissuer DB");
-
-            if(op == OP_CERT_NEW || op == OP_CERT_TRANSFER)
-                if (!WriteCertItem(vvchArgs[1], vvchArgs[0]))
-                    return error("ReconstructCertIndex() : failed to write to certissuer DB");
-
-            // insert certissuers fees to regenerate list, write certissuer to
+            // insert certs fees to regenerate list, write cert to
             // master index
             int64 nTheFee = GetCertNetFee(tx);
 			if(nTheFee > 0)
 			{
 				InsertCertFee(pindex, tx.GetHash(), nTheFee);
-				vector<CCertFee> vCertFees(lstCertIssuerFees.begin(),
-					lstCertIssuerFees.end());
+				vector<CCertFee> vCertFees(lstCertFees.begin(),
+					lstCertFees.end());
 				if (!pcertdb->WriteCertFees(vCertFees))
 					return error("ReconstructCertIndex() : failed to write fees to alias DB");
 			}
 
-            printf( "RECONSTRUCT CERT: op=%s certissuer=%s title=%s hash=%s height=%d fees=%llu\n",
-                    certissuerFromOp(op).c_str(),
+            printf( "RECONSTRUCT CERT: op=%s cert=%s title=%s hash=%s height=%d fees=%llu\n",
+                    certFromOp(op).c_str(),
                     stringFromVch(vvchArgs[0]).c_str(),
-                    stringFromVch(txCertIssuer.vchTitle).c_str(),
+                    stringFromVch(txCert.vchTitle).c_str(),
                     tx.GetHash().ToString().c_str(),
                     nHeight,
                     nTheFee);
@@ -319,7 +289,7 @@ bool CCertDB::ReconstructCertIndex(CBlockIndex *pindexRescan) {
 
 // get the depth of transaction txnindex relative to block at index pIndexBlock, looking
 // up to maxdepth. Return relative depth if found, or -1 if not found and maxdepth reached.
-int CheckCertIssuerTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
+int CheckCertTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
         const CCoins *txindex, int maxDepth) {
     for (CBlockIndex* pindex = pindexBlock;
             pindex && pindexBlock->nHeight - pindex->nHeight < maxDepth;
@@ -346,7 +316,7 @@ uint64 GetCertFeeSubsidy(unsigned int nHeight) {
 		unsigned int blk12hrht = nHeight - 1;
 		bool bFound = false;
 
-		BOOST_FOREACH(CCertFee &nmFee, lstCertIssuerFees) {
+		BOOST_FOREACH(CCertFee &nmFee, lstCertFees) {
 			if(nmFee.nHeight <= nHeight)
 				bFound = true;
 			if(bFound) {
@@ -375,8 +345,8 @@ bool RemoveCertFee(CCertFee &txnVal) {
 	TRY_LOCK(cs_main, cs_trymain);
 
 	CCertFee *theval = NULL;
-	if(lstCertIssuerFees.size()==0) return false;
-	BOOST_FOREACH(CCertFee &nmTxnValue, lstCertIssuerFees) {
+	if(lstCertFees.size()==0) return false;
+	BOOST_FOREACH(CCertFee &nmTxnValue, lstCertFees) {
 		if (txnVal.hash == nmTxnValue.hash
 		 && txnVal.nHeight == nmTxnValue.nHeight) {
 			theval = &nmTxnValue;
@@ -385,7 +355,7 @@ bool RemoveCertFee(CCertFee &txnVal) {
 	}
 
 	if(theval)
-		lstCertIssuerFees.remove(*theval);
+		lstCertFees.remove(*theval);
 
 	return theval != NULL;
 }
@@ -399,7 +369,7 @@ bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
     txnVal.nFee = nValue;
 	bool bFound = false;
 
-	BOOST_FOREACH(CCertFee &nmTxnValue, lstCertIssuerFees) {
+	BOOST_FOREACH(CCertFee &nmTxnValue, lstCertFees) {
 		if (txnVal.hash == nmTxnValue.hash
 				&& txnVal.nHeight == nmTxnValue.nHeight) {
 			nmTxnValue = txnVal;
@@ -408,7 +378,7 @@ bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
 		}
 	}
     if (!bFound)
-        lstCertIssuerFees.push_front(txnVal);
+        lstCertFees.push_front(txnVal);
 
     return bFound;
 }
@@ -423,67 +393,59 @@ int64 GetCertNetFee(const CTransaction& tx) {
     return nFee;
 }
 
-int GetCertHeight(vector<unsigned char> vchCertIssuer) {
-    vector<CCertIssuer> vtxPos;
-    if (pcertdb->ExistsCertIssuer(vchCertIssuer)) {
-        if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos))
-            return error("GetCertHeight() : failed to read from certissuer DB");
+int GetCertHeight(vector<unsigned char> vchCert) {
+    vector<CCert> vtxPos;
+    if (pcertdb->ExistsCert(vchCert)) {
+        if (!pcertdb->ReadCert(vchCert, vtxPos))
+            return error("GetCertHeight() : failed to read from cert DB");
         if (vtxPos.empty()) return -1;
-        CCertIssuer& txPos = vtxPos.back();
+        CCert& txPos = vtxPos.back();
         return txPos.nHeight;
     }
     return -1;
 }
 
-// Check that the last entry in certissuer history matches the given tx pos
-bool CheckCertIssuerTxPos(const vector<CCertIssuer> &vtxPos, const int txPos) {
-    if (vtxPos.empty()) return false;
-    CCertIssuer certissuer;
-    certissuer.nHeight = txPos;
-    return certissuer.GetCertFromList(vtxPos);
-}
 
-int IndexOfCertIssuerOutput(const CTransaction& tx) {
+int IndexOfCertOutput(const CTransaction& tx) {
     vector<vector<unsigned char> > vvch;
     int op, nOut;
     if (!DecodeCertTx(tx, op, nOut, vvch, -1))
-        throw runtime_error("IndexOfCertIssuerOutput() : certissuer output not found");
+        throw runtime_error("IndexOfCertOutput() : cert output not found");
     return nOut;
 }
 
-bool GetNameOfCertIssuerTx(const CTransaction& tx, vector<unsigned char>& certissuer) {
+bool GetNameOfCertTx(const CTransaction& tx, vector<unsigned char>& cert) {
     if (tx.nVersion != SYSCOIN_TX_VERSION)
         return false;
     vector<vector<unsigned char> > vvchArgs;
     int op, nOut;
     if (!DecodeCertTx(tx, op, nOut, vvchArgs, -1))
-        return error("GetNameOfCertIssuerTx() : could not decode a syscoin tx");
+        return error("GetNameOfCertTx() : could not decode a syscoin tx");
 
     switch (op) {
-        case OP_CERT_NEW:
-        case OP_CERTISSUER_ACTIVATE:
-        case OP_CERTISSUER_UPDATE:
+        case OP_CERT_ACTIVATE:
+        case OP_CERT_UPDATE:
         case OP_CERT_TRANSFER:
-            certissuer = vvchArgs[0];
+            cert = vvchArgs[0];
             return true;
     }
     return false;
 }
 
 //TODO come back here check to see how / where this is used
-bool IsConflictedCertIssuerTx(CBlockTreeDB& txdb, const CTransaction& tx,
-        vector<unsigned char>& certissuer) {
+bool IsConflictedCertTx(CBlockTreeDB& txdb, const CTransaction& tx,
+        vector<unsigned char>& cert) {
     if (tx.nVersion != SYSCOIN_TX_VERSION)
         return false;
     vector<vector<unsigned char> > vvchArgs;
     int op, nOut, nPrevHeight;
     if (!DecodeCertTx(tx, op, nOut, vvchArgs, -1))
-        return error("IsConflictedCertIssuerTx() : could not decode a syscoin tx");
+        return error("IsConflictedCertTx() : could not decode a syscoin tx");
 
     switch (op) {
-    case OP_CERTISSUER_UPDATE:
+    case OP_CERT_UPDATE:
         nPrevHeight = GetCertHeight(vvchArgs[0]);
-        certissuer = vvchArgs[0];
+        cert = vvchArgs[0];
         if (nPrevHeight >= 0
                 && pindexBest->nHeight - nPrevHeight
                         < GetCertExpirationDepth(pindexBest->nHeight))
@@ -492,7 +454,7 @@ bool IsConflictedCertIssuerTx(CBlockTreeDB& txdb, const CTransaction& tx,
     return false;
 }
 
-bool GetValueOfCertIssuerTx(const CTransaction& tx, vector<unsigned char>& value) {
+bool GetValueOfCertTx(const CTransaction& tx, vector<unsigned char>& value) {
     vector<vector<unsigned char> > vvch;
     int op, nOut;
 
@@ -500,11 +462,10 @@ bool GetValueOfCertIssuerTx(const CTransaction& tx, vector<unsigned char>& value
         return false;
 
     switch (op) {
-    case OP_CERTISSUER_ACTIVATE:
-    case OP_CERT_NEW:
+    case OP_CERT_ACTIVATE:
         value = vvch[2];
         return true;
-    case OP_CERTISSUER_UPDATE:
+    case OP_CERT_UPDATE:
     case OP_CERT_TRANSFER:
         value = vvch[1];
         return true;
@@ -559,73 +520,52 @@ bool IsCertMine(const CTransaction& tx, const CTxOut& txout) {
     return false;
 }
 
-bool GetValueOfCertIssuerTxHash(const uint256 &txHash,
+bool GetValueOfCertTxHash(const uint256 &txHash,
         vector<unsigned char>& vchValue, uint256& hash, int& nHeight) {
     nHeight = GetCertTxHashHeight(txHash);
     CTransaction tx;
     uint256 blockHash;
     if (!GetTransaction(txHash, tx, blockHash, true))
-        return error("GetValueOfCertIssuerTxHash() : could not read tx from disk");
-    if (!GetValueOfCertIssuerTx(tx, vchValue))
-        return error("GetValueOfCertIssuerTxHash() : could not decode value from tx");
+        return error("GetValueOfCertTxHash() : could not read tx from disk");
+    if (!GetValueOfCertTx(tx, vchValue))
+        return error("GetValueOfCertTxHash() : could not decode value from tx");
     hash = tx.GetHash();
     return true;
 }
 
-bool GetValueOfCertIssuer(CCertDB& dbCert, const vector<unsigned char> &vchCertIssuer,
+bool GetValueOfCert(CCertDB& dbCert, const vector<unsigned char> &vchCert,
         vector<unsigned char>& vchValue, int& nHeight) {
-    vector<CCertIssuer> vtxPos;
-    if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos) || vtxPos.empty())
+    vector<CCert> vtxPos;
+    if (!pcertdb->ReadCert(vchCert, vtxPos) || vtxPos.empty())
         return false;
 
-    CCertIssuer& txPos = vtxPos.back();
+    CCert& txPos = vtxPos.back();
     nHeight = txPos.nHeight;
     vchValue = txPos.vchRand;
     return true;
 }
 
-bool GetTxOfCertIssuer(CCertDB& dbCert, const vector<unsigned char> &vchCertIssuer,
-        CTransaction& tx) {
-    vector<CCertIssuer> vtxPos;
-    if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos) || vtxPos.empty())
+bool GetTxOfCert(CCertDB& dbCert, const vector<unsigned char> &vchCert,
+        CCert& txPos, CTransaction& tx) {
+    vector<CCert> vtxPos;
+    if (!pcertdb->ReadCert(vchCert, vtxPos) || vtxPos.empty())
         return false;
-    CCertIssuer& txPos = vtxPos.back();
-    int nHeight = txPos.nHeight;
-    if (nHeight + GetCertExpirationDepth(pindexBest->nHeight)
-            < pindexBest->nHeight) {
-        string certissuer = stringFromVch(vchCertIssuer);
-        printf("GetTxOfCertIssuer(%s) : expired", certissuer.c_str());
-        return false;
-    }
-
-    uint256 hashBlock;
-    if (!GetTransaction(txPos.txHash, tx, hashBlock, true))
-        return error("GetTxOfCertIssuer() : could not read tx from disk");
-
-    return true;
-}
-
-bool GetTxOfCertItem(CCertDB& dbCert, const vector<unsigned char> &vchCertItem,
-        CCertIssuer &txPos, CTransaction& tx) {
-    vector<CCertIssuer> vtxPos;
-    vector<unsigned char> vchCertIssuer;
-    if (!pcertdb->ReadCertItem(vchCertItem, vchCertIssuer)) return false;
-    if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos)) return false;
     txPos = vtxPos.back();
     int nHeight = txPos.nHeight;
     if (nHeight + GetCertExpirationDepth(pindexBest->nHeight)
             < pindexBest->nHeight) {
-        string certissuer = stringFromVch(vchCertItem);
-        printf("GetTxOfCertItem(%s) : expired", certissuer.c_str());
+        string cert = stringFromVch(vchCert);
+        printf("GetTxOfCert(%s) : expired", cert.c_str());
         return false;
     }
 
     uint256 hashBlock;
     if (!GetTransaction(txPos.txHash, tx, hashBlock, true))
-        return error("GetTxOfCertItem() : could not read tx from disk");
+        return error("GetTxOfCert() : could not read tx from disk");
 
     return true;
 }
+
 
 bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut,
         vector<vector<unsigned char> >& vvch, int nHeight) {
@@ -645,7 +585,7 @@ bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut,
     return found && IsCertOp(op);
 }
 
-bool GetValueOfCertIssuerTx(const CCoins& tx, vector<unsigned char>& value) {
+bool GetValueOfCertTx(const CCoins& tx, vector<unsigned char>& value) {
     vector<vector<unsigned char> > vvch;
 
     int op, nOut;
@@ -654,11 +594,10 @@ bool GetValueOfCertIssuerTx(const CCoins& tx, vector<unsigned char>& value) {
         return false;
 
     switch (op) {
-    case OP_CERTISSUER_ACTIVATE:
-    case OP_CERT_NEW:
+    case OP_CERT_ACTIVATE:
         value = vvch[2];
         return true;
-    case OP_CERTISSUER_UPDATE:
+    case OP_CERT_UPDATE:
     case OP_CERT_TRANSFER:
         value = vvch[1];
         return true;
@@ -718,15 +657,14 @@ bool DecodeCertScript(const CScript& script, int& op,
 
     pc--;
 
-    if ((op == OP_CERTISSUER_ACTIVATE && vvch.size() == 3)
-        || (op == OP_CERTISSUER_UPDATE && vvch.size() == 2)
-        || (op == OP_CERT_NEW && vvch.size() == 3)
+    if ((op == OP_CERT_ACTIVATE && vvch.size() == 3)
+        || (op == OP_CERT_UPDATE && vvch.size() == 2)
         || (op == OP_CERT_TRANSFER && vvch.size() == 2))
         return true;
     return false;
 }
 
-bool SignCertIssuerSignature(const CTransaction& txFrom, CTransaction& txTo,
+bool SignCertSignature(const CTransaction& txFrom, CTransaction& txTo,
         unsigned int nIn, int nHashType = SIGHASH_ALL, CScript scriptPrereq =
                 CScript()) {
     assert(nIn < txTo.vin.size());
@@ -736,7 +674,7 @@ bool SignCertIssuerSignature(const CTransaction& txFrom, CTransaction& txTo,
 
     // Leave out the signature from the hash, since a signature can't sign itself.
     // The checksig op will also drop the signatures from its hash.
-    const CScript& scriptPubKey = RemoveCertIssuerScriptPrefix(txout.scriptPubKey);
+    const CScript& scriptPubKey = RemoveCertScriptPrefix(txout.scriptPubKey);
     uint256 hash = SignatureHash(scriptPrereq + txout.scriptPubKey, txTo, nIn,
             nHashType);
     txnouttype whichTypeRet;
@@ -857,8 +795,8 @@ bool CreateCertTransactionWithInputTx(
         BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int)& coin, vecCoins) {
             if (coin.first == &wtxIn
                     && coin.second == (unsigned int) nTxOut) {
-                if (!SignCertIssuerSignature(*coin.first, wtxNew, nIn++))
-                    throw runtime_error("could not sign certissuer coin output");
+                if (!SignCertSignature(*coin.first, wtxNew, nIn++))
+                    throw runtime_error("could not sign cert coin output");
             } else {
                 if (!SignSignature(*pwalletMain, *coin.first, wtxNew, nIn++))
                     return false;
@@ -905,7 +843,7 @@ void EraseCert(CWalletTx& wtx)
 string SendCertMoneyWithInputTx(CScript scriptPubKey, int64 nValue,
         int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, bool fAskFee,
         const string& txData) {
-    int nTxOut = IndexOfCertIssuerOutput(wtxIn);
+    int nTxOut = IndexOfCertOutput(wtxIn);
     CReserveKey reservekey(pwalletMain);
     int64 nFeeRequired;
     vector<pair<CScript, int64> > vecSend;
@@ -950,11 +888,11 @@ bool GetCertAddress(const CTransaction& tx, std::string& strAddress) {
     vector<vector<unsigned char> > vvch;
 
     if (!DecodeCertTx(tx, op, nOut, vvch, -1))
-        return error("GetCertAddress() : could not decode certissuer tx.");
+        return error("GetCertAddress() : could not decode cert tx.");
 
     const CTxOut& txout = tx.vout[nOut];
 
-    const CScript& scriptPubKey = RemoveCertIssuerScriptPrefix(txout.scriptPubKey);
+    const CScript& scriptPubKey = RemoveCertScriptPrefix(txout.scriptPubKey);
     strAddress = CBitcoinAddress(scriptPubKey.GetID()).ToString();
     return true;
 }
@@ -966,15 +904,15 @@ bool GetCertAddress(const CDiskTxPos& txPos, std::string& strAddress) {
     return GetCertAddress(tx, strAddress);
 }
 
-CScript RemoveCertIssuerScriptPrefix(const CScript& scriptIn) {
+CScript RemoveCertScriptPrefix(const CScript& scriptIn) {
     int op;
     vector<vector<unsigned char> > vvch;
     CScript::const_iterator pc = scriptIn.begin();
 
     if (!DecodeCertScript(scriptIn, op, vvch, pc))
         //throw runtime_error(
-        //        "RemoveCertIssuerScriptPrefix() : could not decode certissuer script");
-	printf ("RemoveCertIssuerScriptPrefix() : Could not decode certissuer script (softfail). This is is known to happen for some OPs annd prevents those from getting displayed or accounted for.");
+        //        "RemoveCertScriptPrefix() : could not decode cert script");
+	printf ("RemoveCertScriptPrefix() : Could not decode cert script (softfail). This is is known to happen for some OPs annd prevents those from getting displayed or accounted for.");
     return CScript(pc, scriptIn.end());
 }
 
@@ -1007,7 +945,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
             if(!found)vvchPrevArgs.clear();
         }
 
-        // Make sure certissuer outputs are not spent by a regular transaction, or the certissuer would be lost
+        // Make sure cert outputs are not spent by a regular transaction, or the cert would be lost
         if (tx.nVersion != SYSCOIN_TX_VERSION) {
             if (found)
                 return error(
@@ -1025,123 +963,89 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         int nDepth;
         int64 nNetFee;
 
-        // unserialize certissuer object from txn, check for valid
-        CCertIssuer theCertIssuer;
-        CCertItem theCertItem;
-        theCertIssuer.UnserializeFromTx(tx);
-        if (theCertIssuer.IsNull())
-            error("CheckCertInputs() : null certissuer object");
+        // unserialize cert object from txn, check for valid
+        CCert theCert;
+        theCert.UnserializeFromTx(tx);
+        if (theCert.IsNull())
+            error("CheckCertInputs() : null cert object");
 
         if (vvchArgs[0].size() > MAX_NAME_LENGTH)
-            return error("certissuer hex guid too long");
+            return error("cert hex guid too long");
 
         switch (op) {
-        case OP_CERTISSUER_ACTIVATE:
+        case OP_CERT_ACTIVATE:
 
             if (found)
                 return error(
-                        "CheckCertInputs() : certissueractivate tx pointing to previous syscoin tx");
+                        "CheckCertInputs() : certactivate tx pointing to previous syscoin tx");
 			if (vvchArgs[1].size() > 20)
 				return error("cert tx with rand too big");
 			if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
-                return error("certissueractivate tx with value too long");
+                return error("certactivate tx with value too long");
 			if (fBlock && !fJustCheck) {
 
 					// check for enough fees
 				nNetFee = GetCertNetFee(tx);
-				if (nNetFee < GetCertNetworkFee(OP_CERTISSUER_ACTIVATE) && HasReachedMainNetForkB2())
+				if (nNetFee < GetCertNetworkFee(OP_CERT_ACTIVATE) && HasReachedMainNetForkB2())
 					return error(
-							"CheckCertInputs() : OP_CERTISSUER_ACTIVATE got tx %s with fee too low %lu",
+							"CheckCertInputs() : OP_CERT_ACTIVATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
 							(long unsigned int) nNetFee);		
 			}
             break;
 
-        case OP_CERTISSUER_UPDATE:
-            if ( !found || ( prevOp != OP_CERTISSUER_ACTIVATE && prevOp != OP_CERTISSUER_UPDATE 
-                && prevOp != OP_CERT_NEW  && prevOp != OP_CERT_TRANSFER ) )
-                return error("certissuerupdate previous op %s is invalid", certissuerFromOp(prevOp).c_str());
+        case OP_CERT_UPDATE:
+            if ( !found || !IsCertOp(prevOp))
+                return error("certupdate previous op %s is invalid", certFromOp(prevOp).c_str());
 
             if (vvchArgs[1].size() > MAX_VALUE_LENGTH)
-                return error("certissuerupdate tx with value too long");
+                return error("certupdate tx with value too long");
 
             if (vvchPrevArgs[0] != vvchArgs[0])
-                return error("CheckCertInputs() : certissuerupdate certissuer mismatch");
+                return error("CheckCertInputs() : certupdate cert mismatch");
 			if (fBlock && !fJustCheck) {
 				// TODO CPU intensive
-				nDepth = CheckCertIssuerTransactionAtRelativeDepth(pindexBlock,
+				nDepth = CheckCertTransactionAtRelativeDepth(pindexBlock,
 						prevCoins, GetCertExpirationDepth(pindexBlock->nHeight));
 				if ((fBlock || fMiner) && nDepth < 0)
 					return error(
-							"CheckCertInputs() : certissuerupdate on an expired certissuer, or there is a pending transaction on the certissuer");
+							"CheckCertInputs() : certupdate on an expired cert, or there is a pending transaction on the cert");
 			   // check for enough fees
 				nNetFee = GetCertNetFee(tx);
-				if (nNetFee < GetCertNetworkFee(OP_CERTISSUER_UPDATE) && HasReachedMainNetForkB2())
+				if (nNetFee < GetCertNetworkFee(OP_CERT_UPDATE) && HasReachedMainNetForkB2())
 					return error(
-							"CheckCertInputs() : OP_CERTISSUER_UPDATE got tx %s with fee too low %lu",
+							"CheckCertInputs() : OP_CERT_UPDATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
 							(long unsigned int) nNetFee);
 			}
             break;
 
-        case OP_CERT_NEW:
-        	if (vvchArgs[0].size() > 20)
-				return error("cert tx with cert rand too big");
-            if (vvchArgs[1].size() > 20)
-                return error("certitem tx with guid too big");
-
-            if (vvchArgs[2].size() > 20)
-                return error("certitem tx with value too long");
-
-            if (fBlock && !fJustCheck) {
-                // Check hash
-                const vector<unsigned char> &vchCertIssuer = vvchArgs[0];
-                const vector<unsigned char> &vchCertItemRand = vvchArgs[1];
-
-                nPrevHeight = GetCertHeight(vchCertIssuer);
-
-                if(!theCertIssuer.GetCertItemByHash(vchCertItemRand, theCertItem))
-                    return error("could not read certitem from certissuer txn");
-
-                if(theCertItem.vchRand != vchCertItemRand)
-                    return error("certitem txn contains invalid txncertitem hash");
-			   // check for enough fees
-				nNetFee = GetCertNetFee(tx);
-				if (nNetFee < GetCertNetworkFee(OP_CERT_NEW) && HasReachedMainNetForkB2())
-					return error(
-							"CheckCertInputs() : OP_CERT_NEW got tx %s with fee too low %lu",
-							tx.GetHash().GetHex().c_str(),
-							(long unsigned int) nNetFee);
-            }
-            break;
+        
 
         case OP_CERT_TRANSFER:
 
             // validate conditions
-            if ( ( !found || (prevOp != OP_CERT_NEW && prevOp != OP_CERT_TRANSFER && prevOp != OP_CERTISSUER_UPDATE) ) && !fJustCheck && HasReachedMainNetForkB2() )
-                return error("certtransfer previous op %s is invalid", certissuerFromOp(prevOp).c_str());
+            if ( !found || !IsCertOp(prevOp))
+                return error("certtransfer previous op %s is invalid", certFromOp(prevOp).c_str());
         	if (vvchArgs[0].size() > 20)
 				return error("certtransfer tx with cert rand too big");
             if (vvchArgs[1].size() > 20)
-                return error("certtransfer tx with certissuer certitem hash too big");
-
+                return error("certtransfer tx with cert Cert hash too big");
+            if (vvchPrevArgs[0] != vvchArgs[0])
+                return error("CheckCertInputs() : certtransfer cert mismatch");
             if (fBlock && !fJustCheck) {
                 // Check hash
-                const vector<unsigned char> &vchCertIssuer = vvchArgs[0];
-                const vector<unsigned char> &vchCertItem = vvchArgs[1];
+                const vector<unsigned char> &vchCert = vvchArgs[0];
 
-                // check for previous certitem
-                nDepth = CheckCertIssuerTransactionAtRelativeDepth(pindexBlock,
+                // check for previous Cert
+                nDepth = CheckCertTransactionAtRelativeDepth(pindexBlock,
                         prevCoins, pindexBlock->nHeight);
                 if (nDepth == -1)
                     return error(
-                            "CheckCertInputs() : certtransfer cannot be mined if certitem/certtransfer is not already in chain");
+                            "CheckCertInputs() : certtransfer cannot be mined if Cert/certtransfer is not already in chain");
 
 
-                nPrevHeight = GetCertHeight(vchCertIssuer);
-
-                if(!theCertIssuer.GetCertItemByHash(vchCertItem, theCertItem))
-                    return error("could not read certitem from certissuer txn");
+                nPrevHeight = GetCertHeight(vchCert);
 
                 // check for enough fees
                 int64 expectedFee = GetCertNetworkFee(OP_CERT_TRANSFER);
@@ -1152,8 +1056,8 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                             tx.GetHash().GetHex().c_str(),
                             (long unsigned int) nNetFee);
 
-                if(theCertItem.vchRand != vchCertItem)
-                    return error("certitem txn contains invalid txncertitem hash");
+                if(theCert.vchRand != vchCert)
+                    return error("Cert txn contains invalid txnCert hash");
 
 
             }
@@ -1161,70 +1065,37 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
             break;
 
         default:
-            return error( "CheckCertInputs() : certissuer transaction has unknown op");
+            return error( "CheckCertInputs() : cert transaction has unknown op");
         }
 
 
 
-        // these ifs are problably total bullshit except for the certissuernew
+        // these ifs are problably total bullshit except for the certnew
         if (fBlock || (!fBlock && !fMiner && !fJustCheck)) {
             
-			// save serialized certissuer for later use
-			CCertIssuer serializedCertIssuer = theCertIssuer;
+			// save serialized cert for later use
+			CCert serializedCert = theCert;
 
-			// if not an certissuernew, load the certissuer data from the DB
-			vector<CCertIssuer> vtxPos;
-			if (pcertdb->ExistsCertIssuer(vvchArgs[0]) && !fJustCheck) {
-				if (!pcertdb->ReadCertIssuer(vvchArgs[0], vtxPos))
+			// if not an certnew, load the cert data from the DB
+			vector<CCert> vtxPos;
+			if (pcertdb->ExistsCert(vvchArgs[0]) && !fJustCheck) {
+				if (!pcertdb->ReadCert(vvchArgs[0], vtxPos))
 					return error(
-							"CheckCertInputs() : failed to read from certissuer DB");
+							"CheckCertInputs() : failed to read from cert DB");
 			}
             if (!fMiner && !fJustCheck && pindexBlock->nHeight != pindexBest->nHeight) {
-                int nHeight = pindexBlock->nHeight;
-
-                // get the latest certissuer from the db
-                theCertIssuer.nHeight = nHeight;
-                theCertIssuer.GetCertFromList(vtxPos);
-
-                // If update, we make the serialized certissuer the master
-                // but first we assign the certitems from the DB since
-                // they are not shipped in an update txn to keep size down
-                if(op == OP_CERTISSUER_UPDATE) {
-                    serializedCertIssuer.certs = theCertIssuer.certs;
-                    theCertIssuer = serializedCertIssuer;
-                }
-
-                if (op == OP_CERT_NEW || op == OP_CERT_TRANSFER) {
-                    // get the certitem out of the certissuer object in the txn
-                    if(!serializedCertIssuer.GetCertItemByHash(vvchArgs[1], theCertItem))
-                        return error("could not read certitem from certissuer txn");
-
-                    // set the certissuer certitem txn-dependent values and add to the txn
-                    theCertItem.vchRand = vvchArgs[1];
-                    theCertItem.txHash = tx.GetHash();
-                    theCertItem.nTime = pindexBlock->nTime;
-                    theCertItem.nHeight = nHeight;
-                    theCertIssuer.PutCertItem(theCertItem);
-					{
-					TRY_LOCK(cs_main, cs_trymain);
-                    if (!pcertdb->WriteCertItem(vvchArgs[1], vvchArgs[0]))
-                        return error( "CheckCertInputs() : failed to write to cert DB");
-					}
-                }
-
-                if(op == OP_CERTISSUER_ACTIVATE || op == OP_CERTISSUER_UPDATE) {
-                    theCertIssuer.nHeight = pindexBlock->nHeight;
-                    theCertIssuer.txHash = tx.GetHash();
-                }
-
-                // set the certissuer's txn-dependent values
-                theCertIssuer.vchRand = vvchArgs[0];
-                theCertIssuer.nTime = pindexBlock->nTime;
-                theCertIssuer.PutToCertIssuerList(vtxPos);
+                int nHeight = pindexBlock->nHeight;     
+				
+                // set the cert's txn-dependent values
+				theCert.nHeight = pindexBlock->nHeight;
+				theCert.txHash = tx.GetHash();
+                theCert.vchRand = vvchArgs[0];
+                theCert.nTime = pindexBlock->nTime;
+				PutToCertList(vtxPos, theCert);
 				{
 				TRY_LOCK(cs_main, cs_trymain);
-                // write cert issuer 
-                if (!pcertdb->WriteCertIssuer(vvchArgs[0], vtxPos))
+                // write cert  
+                if (!pcertdb->WriteCert(vvchArgs[0], vtxPos))
                     return error( "CheckCertInputs() : failed to write to cert DB");
 
                 // compute verify and write fee data to DB
@@ -1233,16 +1104,16 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				{
 					InsertCertFee(pindexBlock, tx.GetHash(), nTheFee);
 					printf("CERT FEES: Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
-					vector<CCertFee> vCertIssuerFees(lstCertIssuerFees.begin(), lstCertIssuerFees.end());
-					if (!pcertdb->WriteCertFees(vCertIssuerFees))
-						return error( "CheckCertInputs() : failed to write fees to certissuer DB");
+					vector<CCertFee> vCertFees(lstCertFees.begin(), lstCertFees.end());
+					if (!pcertdb->WriteCertFees(vCertFees))
+						return error( "CheckCertInputs() : failed to write fees to cert DB");
 				}
 				
                 // debug
-                printf( "CONNECTED CERT: op=%s certissuer=%s title=%s hash=%s height=%d fees=%llu\n",
-                        certissuerFromOp(op).c_str(),
+                printf( "CONNECTED CERT: op=%s cert=%s title=%s hash=%s height=%d fees=%llu\n",
+                        certFromOp(op).c_str(),
                         stringFromVch(vvchArgs[0]).c_str(),
-                        stringFromVch(theCertIssuer.vchTitle).c_str(),
+                        stringFromVch(theCert.vchTitle).c_str(),
                         tx.GetHash().ToString().c_str(),
                         nHeight, nTheFee / COIN);
 				}
@@ -1253,7 +1124,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
     return true;
 }
 
-bool ExtractCertIssuerAddress(const CScript& script, string& address) {
+bool ExtractCertAddress(const CScript& script, string& address) {
     if (script.size() == 1 && script[0] == OP_RETURN) {
         address = string("network fee");
         return true;
@@ -1263,17 +1134,17 @@ bool ExtractCertIssuerAddress(const CScript& script, string& address) {
     if (!DecodeCertScript(script, op, vvch))
         return false;
 
-    string strOp = certissuerFromOp(op);
-    string strCertIssuer;
+    string strOp = certFromOp(op);
+    string strCert;
 
-    strCertIssuer = stringFromVch(vvch[0]);
+    strCert = stringFromVch(vvch[0]);
 
-    address = strOp + ": " + strCertIssuer;
+    address = strOp + ": " + strCert;
     return true;
 }
 
-void rescanforcertissuers(CBlockIndex *pindexRescan) {
-    printf("Scanning blockchain for certissuers to create fast index...\n");
+void rescanforcerts(CBlockIndex *pindexRescan) {
+    printf("Scanning blockchain for certs to create fast index...\n");
     pcertdb->ReconstructCertIndex(pindexRescan);
 }
 
@@ -1302,18 +1173,18 @@ Value getcertfees(const Array& params, bool fHelp) {
     Object oRes;
     oRes.push_back(Pair("height", nBestHeight ));
     oRes.push_back(Pair("subsidy", ValueFromAmount(GetCertFeeSubsidy(nBestHeight) )));
-    oRes.push_back(Pair("activate_fee", ValueFromAmount(GetCertNetworkFee(OP_CERTISSUER_ACTIVATE) )));
-    oRes.push_back(Pair("update_fee", ValueFromAmount(GetCertNetworkFee(OP_CERTISSUER_UPDATE) )));
+    oRes.push_back(Pair("activate_fee", ValueFromAmount(GetCertNetworkFee(OP_CERT_ACTIVATE) )));
+    oRes.push_back(Pair("update_fee", ValueFromAmount(GetCertNetworkFee(OP_CERT_UPDATE) )));
     oRes.push_back(Pair("transfer_fee", ValueFromAmount(GetCertNetworkFee(OP_CERT_TRANSFER) )));
     return oRes;
 
 }
 
 
-Value certissuernew(const Array& params, bool fHelp) {
+Value certnew(const Array& params, bool fHelp) {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-                "certissuernew <title> <data>\n"
+                "certnew <title> <data>\n"
                         "<title> title, 255 bytes max."
                         "<data> data, 64KB max."
                         + HelpRequiringPassphrase());
@@ -1336,7 +1207,7 @@ Value certissuernew(const Array& params, bool fHelp) {
     // gather inputs
     uint64 rand = GetRand((uint64) -1);
     vector<unsigned char> vchRand = CBigNum(rand).getvch();
-    vector<unsigned char> vchCertIssuer = vchFromValue(HexStr(vchRand));
+    vector<unsigned char> vchCert = vchFromValue(HexStr(vchRand));
 
     // this is a syscoin transaction
     CWalletTx wtx;
@@ -1345,25 +1216,25 @@ Value certissuernew(const Array& params, bool fHelp) {
 
     EnsureWalletIsUnlocked();
 	// calculate network fees
-	int64 nNetFee = GetCertNetworkFee(OP_CERTISSUER_ACTIVATE);
+	int64 nNetFee = GetCertNetworkFee(OP_CERT_ACTIVATE);
 
-    // build certissuer object
-    CCertIssuer newCertIssuer;
-    newCertIssuer.vchRand = vchCertIssuer;
-    newCertIssuer.vchTitle = vchTitle;
-    newCertIssuer.vchData = vchData;
-    newCertIssuer.nFee = nNetFee;
+    // build cert object
+    CCert newCert;
+    newCert.vchRand = vchCert;
+    newCert.vchTitle = vchTitle;
+    newCert.vchData = vchData;
+    newCert.nFee = nNetFee;
 
-    string bdata = newCertIssuer.SerializeToString();
+    string bdata = newCert.SerializeToString();
 
-    //create certissueractivate txn keys
+    //create certactivate txn keys
     CPubKey newDefaultKey;
     pwalletMain->GetKeyFromPool(newDefaultKey, false);
     CScript scriptPubKeyOrig;
     scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
     CScript scriptPubKey;
-    scriptPubKey << CScript::EncodeOP_N(OP_CERTISSUER_ACTIVATE) << vchCertIssuer
-            << vchRand << newCertIssuer.vchTitle << OP_2DROP << OP_2DROP;
+    scriptPubKey << CScript::EncodeOP_N(OP_CERT_ACTIVATE) << vchCert
+            << vchRand << newCert.vchTitle << OP_2DROP << OP_2DROP;
     scriptPubKey += scriptPubKeyOrig;
 
 
@@ -1383,123 +1254,26 @@ Value certissuernew(const Array& params, bool fHelp) {
 		throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}
 
-    printf("SENT:CERTACTIVATE: title=%s, guid=%s, tx=%s, data:\n%s\n",
-            stringFromVch(newCertIssuer.vchTitle).c_str(),
-            stringFromVch(vchCertIssuer).c_str(), wtx.GetHash().GetHex().c_str() );
-
-
 	vector<Value> res;
 	res.push_back(wtx.GetHash().GetHex());
 	res.push_back(HexStr(vchRand));
 	return res;
 }
 
-Value certissuerupdate(const Array& params, bool fHelp) {
+Value certupdate(const Array& params, bool fHelp) {
     if (fHelp || params.size() != 3)
         throw runtime_error(
-                "certissuerupdate <guid> <title> <data>\n"
-                        "Perform an update on an certificate issuer you control.\n"
-                        "<guid> certificate issuer guidkey.\n"
-                        "<title> certificate issuer title, 255 bytes max.\n"
-                        "<data> certificate issuer data, 64 KB max.\n"
+                "certupdate <guid> <title> <data>\n"
+                        "Perform an update on an certificate you control.\n"
+                        "<guid> certificate guidkey.\n"
+                        "<title> certificate title, 255 bytes max.\n"
+                        "<data> certificate data, 64 KB max.\n"
                         + HelpRequiringPassphrase());
 
     // gather & validate inputs
-    vector<unsigned char> vchCertIssuer = vchFromValue(params[0]);
+    vector<unsigned char> vchCert = vchFromValue(params[0]);
     vector<unsigned char> vchTitle = vchFromValue(params[1]);
     vector<unsigned char> vchData = vchFromValue(params[2]);
-
-    if(vchTitle.size() < 1)
-        throw runtime_error("certificate issuer title < 1 bytes!\n");
-
-    if(vchTitle.size() > 255)
-        throw runtime_error("certificate issuer title > 255 bytes!\n");
-
-    if (vchData.size() < 1)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate issuer data < 1 bytes!\n");
-
-    if (vchData.size() > 64 * 1024)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate issuer data > 65536 bytes!\n");
-
-    // this is a syscoind txn
-    CWalletTx wtx, wtxIn;
-    wtx.nVersion = SYSCOIN_TX_VERSION;
-    CScript scriptPubKeyOrig;
-
-    // get a key from our wallet set dest as ourselves
-    CPubKey newDefaultKey;
-    pwalletMain->GetKeyFromPool(newDefaultKey, false);
-    scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
-
-    // create CERTUPDATE txn keys
-    CScript scriptPubKey;
-    scriptPubKey << CScript::EncodeOP_N(OP_CERTISSUER_UPDATE) << vchCertIssuer << vchTitle
-            << OP_2DROP << OP_DROP;
-    scriptPubKey += scriptPubKeyOrig;
-
-
-  	// check for existing cert issuer's
-	if (ExistsInMempool(vchCertIssuer, OP_CERTISSUER_ACTIVATE) || ExistsInMempool(vchCertIssuer, OP_CERTISSUER_UPDATE) || ExistsInMempool(vchCertIssuer, OP_CERT_TRANSFER)) {
-		throw runtime_error("there are pending operations on that certissuer");
-	}
-    EnsureWalletIsUnlocked();
-
-    // look for a transaction with this key
-    CTransaction tx;
-    if (!GetTxOfCertIssuer(*pcertdb, vchCertIssuer, tx))
-        throw runtime_error("could not find a certificate issuer with this key");
-
-    // make sure certissuer is in wallet
-	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
-		throw runtime_error("this certissuer is not in your wallet");
-
-    // unserialize certissuer object from txn
-    CCertIssuer theCertIssuer;
-    if(!theCertIssuer.UnserializeFromTx(tx))
-        throw runtime_error("cannot unserialize certissuer from txn");
-
-    // get the certissuer from DB
-    vector<CCertIssuer> vtxPos;
-    if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos))
-        throw runtime_error("could not read certissuer from DB");
-    theCertIssuer = vtxPos.back();
-    theCertIssuer.certs.clear();
-
-    // calculate network fees
-    int64 nNetFee = GetCertNetworkFee(OP_CERTISSUER_UPDATE);
-
-    // update certissuer values
-    theCertIssuer.vchTitle = vchTitle;
-    theCertIssuer.vchData = vchData;
-    theCertIssuer.nFee = nNetFee;
-
-    // serialize certissuer object
-    string bdata = theCertIssuer.SerializeToString();
-
-    string strError = SendCertMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
-            wtxIn, wtx, false, bdata);
-    if (strError != "")
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
-    
-    return wtx.GetHash().GetHex();
-}
-
-Value certnew(const Array& params, bool fHelp) {
-    if (fHelp || params.size() != 4)
-        throw runtime_error("certnew <issuerkey> <address> <title> <data>\n"
-                "Issue a new certificate.\n" 
-                "<issuerkey> certificate issuer guidkey.\n"
-                "<title> certificate title, 255 bytes max.\n"
-                "<data> certificate data, 64 KB max.\n"
-                + HelpRequiringPassphrase());
-
-    vector<unsigned char> vchCertIssuer = vchFromValue(params[0]);
-    vector<unsigned char> vchAddress = vchFromValue(params[1]);
-    vector<unsigned char> vchTitle = vchFromValue(params[2]);
-    vector<unsigned char> vchData = vchFromValue(params[3]);
-    CBitcoinAddress sendAddr(stringFromVch(vchAddress));
-    if(!sendAddr.IsValid())
-        throw runtime_error("Invalid Syscoin address.");
 
     if(vchTitle.size() < 1)
         throw runtime_error("certificate title < 1 bytes!\n");
@@ -1513,82 +1287,70 @@ Value certnew(const Array& params, bool fHelp) {
     if (vchData.size() > 64 * 1024)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data > 65536 bytes!\n");
 
-    // this is a syscoin txn
-    CWalletTx wtx;
+    // this is a syscoind txn
+    CWalletTx wtx, wtxIn;
     wtx.nVersion = SYSCOIN_TX_VERSION;
-
-    // generate certissuer certitem identifier and hash
-    uint64 rand = GetRand((uint64) -1);
-    vector<unsigned char> vchCertItemRand = CBigNum(rand).getvch();
-    vector<unsigned char> vchToHash(vchCertItemRand);
-    vchToHash.insert(vchToHash.end(), vchCertIssuer.begin(), vchCertIssuer.end());
-    uint160 certitemHash = Hash160(vchToHash);
-
     CScript scriptPubKeyOrig;
-    scriptPubKeyOrig.SetDestination(sendAddr.Get());
+
+    // get a key from our wallet set dest as ourselves
+    CPubKey newDefaultKey;
+    pwalletMain->GetKeyFromPool(newDefaultKey, false);
+    scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
+
+    // create CERTUPDATE txn keys
     CScript scriptPubKey;
-    scriptPubKey << CScript::EncodeOP_N(OP_CERT_NEW)
-            << vchCertIssuer << vchCertItemRand << certitemHash << OP_2DROP << OP_2DROP;
+    scriptPubKey << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << vchTitle
+            << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
 
-  	// check for existing cert issuer's
-	if (ExistsInMempool(vchCertIssuer, OP_CERTISSUER_ACTIVATE) || ExistsInMempool(vchCertIssuer, OP_CERTISSUER_UPDATE)) {
-		throw runtime_error("there are pending operations on that certissuer");
-	}
 
+  	// check for existing cert 's
+	if (ExistsInMempool(vchCert, OP_CERT_ACTIVATE) || ExistsInMempool(vchCert, OP_CERT_UPDATE) || ExistsInMempool(vchCert, OP_CERT_TRANSFER)) {
+		throw runtime_error("there are pending operations on that cert");
+	}
     EnsureWalletIsUnlocked();
 
     // look for a transaction with this key
     CTransaction tx;
-    if (!GetTxOfCertIssuer(*pcertdb, vchCertIssuer, tx))
-        throw runtime_error("could not find a certificate issuer with this identifier");
+	CCert cert;
+    if (!GetTxOfCert(*pcertdb, vchCert, cert, tx))
+        throw runtime_error("could not find a certificate with this key");
 
-    // unserialize certissuer object from txn
-    CCertIssuer theCertIssuer;
-    if(!theCertIssuer.UnserializeFromTx(tx))
-        throw runtime_error("could not unserialize certificate issuer from txn");
+    // make sure cert is in wallet
+	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn) || !IsCertMine(tx)) 
+		throw runtime_error("this cert is not in your wallet");
+	printf("update cert.txHash %s vs tx.GetHash() %s\n", cert.txHash.ToString().c_str(), tx.GetHash().ToString().c_str());
+    // unserialize cert object from txn
+    CCert theCert;
+    if(!theCert.UnserializeFromTx(tx))
+        throw runtime_error("cannot unserialize cert from txn");
 
-    // get the certissuer id from DB
-    vector<CCertIssuer> vtxPos;
-    if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos))
-        throw runtime_error("could not read certificate issuer with this key from DB");
-    theCertIssuer = vtxPos.back();
-		// calculate network fees
-	int64 nNetFee = GetCertNetworkFee(OP_CERT_NEW);
-    // create certitem object
-    CCertItem txCertItem;
-    txCertItem.vchRand = vchCertItemRand;
-    txCertItem.vchTitle = vchTitle;
-    txCertItem.vchData = vchData;
-	txCertItem.nFee = nNetFee;
-    theCertIssuer.certs.clear();
-    theCertIssuer.PutCertItem(txCertItem);
+    // get the cert from DB
+    vector<CCert> vtxPos;
+    if (!pcertdb->ReadCert(vchCert, vtxPos))
+        throw runtime_error("could not read cert from DB");
+    theCert = vtxPos.back();
 
-    // serialize certissuer object
-    string bdata = theCertIssuer.SerializeToString();
 
-	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
-    vector< pair<CScript, int64> > vecSend;
-    vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
-	
-	CScript scriptFee;
-	scriptFee << OP_RETURN;
-	vecSend.push_back(make_pair(scriptFee, nNetFee));
+    // calculate network fees
+    int64 nNetFee = GetCertNetworkFee(OP_CERT_UPDATE);
 
-	// send the tranasction
-	string strError = pwalletMain->SendMoney(vecSend, MIN_AMOUNT, wtx,
-				false, bdata);
-	if (strError != "")
-	{
-		throw JSONRPCError(RPC_WALLET_ERROR, strError);
-	}
-    // return results
-    vector<Value> res;
-    res.push_back(wtx.GetHash().GetHex());
-    res.push_back(HexStr(vchCertItemRand));
+    // update cert values
+    theCert.vchTitle = vchTitle;
+    theCert.vchData = vchData;
+    theCert.nFee = nNetFee;
 
-    return res;
+    // serialize cert object
+    string bdata = theCert.SerializeToString();
+
+    string strError = SendCertMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
+            wtxIn, wtx, false, bdata);
+    if (strError != "")
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    
+    return wtx.GetHash().GetHex();
 }
+
 
 Value certtransfer(const Array& params, bool fHelp) {
     if (fHelp || 2 != params.size())
@@ -1616,41 +1378,18 @@ Value certtransfer(const Array& params, bool fHelp) {
     EnsureWalletIsUnlocked();
 
     // look for a transaction with this key, also returns
-    // an certissuer object if it is found
+    // an cert object if it is found
     CTransaction tx;
-    CCertIssuer theCertIssuer;
-    CCertItem theCertItem;
-    if (!GetTxOfCertItem(*pcertdb, vchCertKey, theCertIssuer, tx))
+    CCert theCert;
+    if (!GetTxOfCert(*pcertdb, vchCert, theCert, tx))
         throw runtime_error("could not find a certificate with this key");
 
-    // check to see if certificate in wallet
-	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
+	// check to see if certificate in wallet
+	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn) || !IsCertMine(tx)) 
 		throw runtime_error("this certificate is not in your wallet");
 
-    // get the certissuer certitem from certissuer
-    if(!theCertIssuer.GetCertItemByHash(vchCertKey, theCertItem))
-        throw runtime_error("could not find a certificate with this name");
-
-    // get the certissuer id from DB
-    vector<unsigned char> vchCertIssuer;
-    vector<CCertIssuer> vtxPos;
-    if (!pcertdb->ReadCertItem(vchCertKey, vchCertIssuer))
-        throw runtime_error("could not read certificate from DB");
-    if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos))
-        throw runtime_error("could not read certificate issuer with this key from DB");
-
-    // hashes should match
-    if(vtxPos.back().vchRand != theCertIssuer.vchRand)
-        throw runtime_error("certificate issuer hash mismatch.");
-
-    // use the certissuer and certificate from the DB as basis
-    theCertIssuer = vtxPos.back();
-    if(!theCertIssuer.GetCertItemByHash(vchCertKey, theCertItem))
-        throw runtime_error("could not find a certificate with this hash in DB");
-
-  	// check for existing cert issuer's or cert transfer already in progress for this cert issuer, can only transfer a cert of a certissuer one at a time for now!
-	if (ExistsInMempool(vchCertIssuer, OP_CERTISSUER_UPDATE) || ExistsInMempool(vchCert, OP_CERT_NEW) || ExistsInMempool(vchCertIssuer, OP_CERT_TRANSFER)) {
-		throw runtime_error("there are pending operations on that cert or certissuer");
+	if (ExistsInMempool(theCert.vchRand, OP_CERT_TRANSFER)) {
+		throw runtime_error("there are pending operations on that cert ");
 	}
 
     // get a key from our wallet set dest as ourselves
@@ -1658,23 +1397,17 @@ Value certtransfer(const Array& params, bool fHelp) {
     pwalletMain->GetKeyFromPool(newDefaultKey, false);
     scriptPubKeyOrig.SetDestination(sendAddr.Get());
     CScript scriptPubKey;
-    scriptPubKey << CScript::EncodeOP_N(OP_CERT_TRANSFER) << vchCertIssuer << vchCertKey << OP_2DROP << OP_DROP;
+    scriptPubKey << CScript::EncodeOP_N(OP_CERT_TRANSFER) << theCert.vchRand << vchCertKey << OP_2DROP << OP_DROP;
     scriptPubKey += scriptPubKeyOrig;
-
-    // make sure wallet is unlocked
-    if (pwalletMain->IsLocked()) throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED,
-        "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
     // calculate network fees
     int64 nNetFee = GetCertNetworkFee(OP_CERT_TRANSFER);
 
-    theCertItem.nFee = nNetFee;
-    theCertIssuer.certs.clear();
-    theCertIssuer.PutCertItem(theCertItem);
+    theCert.nFee = nNetFee;
 
-    // send the certissuer pay txn
+    // send the cert pay txn
     string strError = SendCertMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
-            wtxIn, wtx, false, theCertIssuer.SerializeToString());
+            wtxIn, wtx, false, theCert.SerializeToString());
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     
@@ -1686,243 +1419,67 @@ Value certtransfer(const Array& params, bool fHelp) {
     return res;
 }
 
-Value certissuerinfo(const Array& params, bool fHelp) {
-    if (fHelp || 1 != params.size())
-        throw runtime_error("certissuerinfo <guid>\n"
-                "Show stored values of an certificate issuer.\n");
-
-    Object oLastCertIssuer;
-    vector<unsigned char> vchCertIssuer = vchFromValue(params[0]);
-    string certissuer = stringFromVch(vchCertIssuer);
-    {
-        vector<CCertIssuer> vtxPos;
-        if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos))
-            throw JSONRPCError(RPC_WALLET_ERROR,
-                    "failed to read from certissuer DB");
-        if (vtxPos.size() < 1)
-            throw JSONRPCError(RPC_WALLET_ERROR, "no result returned");
-
-        // get transaction pointed to by alias
-        CTransaction tx;
-        uint256 blockHash;
-        uint256 txHash = vtxPos.back().txHash;
-        if (!GetTransaction(txHash, tx, blockHash, true))
-            throw JSONRPCError(RPC_WALLET_ERROR, "failed to read transaction from disk");
-
-        CCertIssuer theCertIssuer = vtxPos.back();
-
-        Object oCertIssuer;
-        vector<unsigned char> vchValue;
-        Array aoCertItems;
-        for(unsigned int i=0;i<theCertIssuer.certs.size();i++) {
-            CCertItem ca = theCertIssuer.certs[i];
-            Object oCertItem;
-
-            string sTime = strprintf("%llu", ca.nTime);
-            string sHeight = strprintf("%llu", ca.nHeight);
-
-            oCertItem.push_back(Pair("id", HexStr(ca.vchRand)));
-            oCertItem.push_back(Pair("txid", ca.txHash.GetHex()));
-            oCertItem.push_back(Pair("height", sHeight));
-            oCertItem.push_back(Pair("time", sTime));
-            oCertItem.push_back(Pair("fee", ValueFromAmount(ca.nFee)));
-            oCertItem.push_back(Pair("title", stringFromVch(ca.vchTitle)));
-            oCertItem.push_back(Pair("data", stringFromVch(ca.vchData)));
-            aoCertItems.push_back(oCertItem);
-        }
-        int nHeight;
-        uint256 certissuerHash;
-        if (GetValueOfCertIssuerTxHash(txHash, vchValue, certissuerHash, nHeight)) {
-            oCertIssuer.push_back(Pair("id", certissuer));
-            oCertIssuer.push_back(Pair("txid", tx.GetHash().GetHex()));
-            oCertIssuer.push_back(Pair("service_fee", ValueFromAmount(theCertIssuer.nFee) ));
-            string strAddress = "";
-            GetCertAddress(tx, strAddress);
-            oCertIssuer.push_back(Pair("address", strAddress));
-            oCertIssuer.push_back(
-                    Pair("expires_in",
-                            nHeight + GetCertDisplayExpirationDepth(nHeight)
-                                    - pindexBest->nHeight));
-            if (nHeight + GetCertDisplayExpirationDepth(nHeight)
-                    - pindexBest->nHeight <= 0) {
-                oCertIssuer.push_back(Pair("expired", 1));
-            }
-            oCertIssuer.push_back(Pair("title", stringFromVch(theCertIssuer.vchTitle)));
-            oCertIssuer.push_back(Pair("data", stringFromVch(theCertIssuer.vchData)));
-            oCertIssuer.push_back(Pair("is_mine", IsCertMine(tx) ? "true" : "false"));
-            oCertIssuer.push_back(Pair("certificates", aoCertItems));
-            oLastCertIssuer = oCertIssuer;
-        }
-    }
-    return oLastCertIssuer;
-
-}
 
 Value certinfo(const Array& params, bool fHelp) {
     if (fHelp || 1 != params.size())
         throw runtime_error("certinfo <guid>\n"
-                "Show stored values of a single certificate and its issuer.\n");
+                "Show stored values of a single certificate and its .\n");
 
-    vector<unsigned char> vchCertRand = ParseHex(params[0].get_str());
-    Object oCertItem;
+    vector<unsigned char> vchCert = vchFromValue(params[0]);
 
     // look for a transaction with this key, also returns
-    // an certissuer object if it is found
+    // an cert object if it is found
     CTransaction tx;
-    CCertIssuer theCertIssuer;
-    CCertItem theCertItem;
-    if (!GetTxOfCertItem(*pcertdb, vchCertRand, theCertIssuer, tx))
+    CCert theCert;
+    if (!GetTxOfCert(*pcertdb, vchCert, theCert, tx))
         throw runtime_error("could not find a certificate with this key");
     uint256 txHash = tx.GetHash();
 
-    {
-        if(!theCertIssuer.GetCertItemByHash(vchCertRand, theCertItem))
-            throw runtime_error("could not find a certificate with this hash in DB");
+	int expired = 0;
+	int expires_in = 0;
+	int expired_block = 0;
+    Object oCert;
+    vector<unsigned char> vchValue;
+    CCert ca = theCert;
 
-        Object oCertIssuer;
-        vector<unsigned char> vchValue;
-        CCertItem ca = theCertItem;
+    string sTime = strprintf("%llu", ca.nTime);
+    string sHeight = strprintf("%llu", ca.nHeight);
+    oCert.push_back(Pair("id", HexStr(ca.vchRand)));
+    oCert.push_back(Pair("txid", ca.txHash.GetHex()));
+    oCert.push_back(Pair("height", sHeight));
+    oCert.push_back(Pair("time", sTime));
+    oCert.push_back(Pair("service_fee", ValueFromAmount(ca.nFee)));
+    oCert.push_back(Pair("title", stringFromVch(ca.vchTitle)));
+    oCert.push_back(Pair("data", stringFromVch(ca.vchData)));
+    oCert.push_back(Pair("is_mine", IsCertMine(tx) ? "true" : "false"));
 
-        CTransaction txA;
-        uint256 blockHashA;
-        uint256 txHashA = ca.txHash;
-        if (!GetTransaction(txHashA, txA, blockHashA, true))
-            throw JSONRPCError(RPC_WALLET_ERROR, "failed to read transaction from disk");
-
-        string sTime = strprintf("%llu", ca.nTime);
-        string sHeight = strprintf("%llu", ca.nHeight);
-        oCertItem.push_back(Pair("id", HexStr(ca.vchRand)));
-        oCertItem.push_back(Pair("txid", ca.txHash.GetHex()));
-        oCertItem.push_back(Pair("height", sHeight));
-        oCertItem.push_back(Pair("time", sTime));
-        oCertItem.push_back(Pair("service_fee", ValueFromAmount(ca.nFee)));
-        oCertItem.push_back(Pair("title", stringFromVch(ca.vchTitle)));
-        oCertItem.push_back(Pair("data", stringFromVch(ca.vchData)));
-        oCertItem.push_back(Pair("is_mine", IsCertMine(txA) ? "true" : "false"));
-
-        int nHeight;
-        uint256 certissuerHash;
-        if (GetValueOfCertIssuerTxHash(txHash, vchValue, certissuerHash, nHeight)) {
-            oCertIssuer.push_back(Pair("id", stringFromVch(theCertIssuer.vchRand) ));
-            oCertIssuer.push_back(Pair("txid", tx.GetHash().GetHex()));
-            oCertIssuer.push_back(Pair("service_fee", ValueFromAmount(theCertIssuer.nFee)));
-            string strAddress = "";
-            GetCertAddress(tx, strAddress);
-            oCertIssuer.push_back(Pair("address", strAddress));
-            oCertIssuer.push_back(
-                    Pair("expires_in",
-                            nHeight + GetCertDisplayExpirationDepth(nHeight)
-                                    - pindexBest->nHeight));
-            if (nHeight + GetCertDisplayExpirationDepth(nHeight)
-                    - pindexBest->nHeight <= 0) {
-                oCertIssuer.push_back(Pair("expired", 1));
-            }
-            oCertIssuer.push_back(Pair("title", stringFromVch(theCertIssuer.vchTitle)));
-            oCertIssuer.push_back(Pair("data", stringFromVch(theCertIssuer.vchData)));
-            oCertItem.push_back(Pair("issuer", oCertIssuer));
-        }
+    int nHeight;
+    uint256 certHash;
+    if (GetValueOfCertTxHash(txHash, vchValue, certHash, nHeight)) {
+        string strAddress = "";
+        GetCertAddress(tx, strAddress);
+        oCert.push_back(Pair("address", strAddress));
+        if(theCert.nHeight + GetCertDisplayExpirationDepth(theCert.nHeight) - pindexBest->nHeight <= 0)
+		{
+			expired = 1;
+			expired_block = theCert.nHeight + GetCertDisplayExpirationDepth(theCert.nHeight);
+		}  
+		if(expired == 0)
+		{
+			expires_in = theCert.nHeight + GetCertDisplayExpirationDepth(theCert.nHeight) - pindexBest->nHeight;
+		}
+		oCert.push_back(Pair("expires_in", expires_in));
+		oCert.push_back(Pair("expired_block", expired_block));
+		oCert.push_back(Pair("expired", expired));
+    
     }
-    return oCertItem;
-}
-
-Value certissuerlist(const Array& params, bool fHelp) {
-    if (fHelp || 1 < params.size())
-        throw runtime_error("certissuerlist [<certissuer>]\n"
-                "list my own certificate issuers");
-
-    vector<unsigned char> vchName;
-
-    if (params.size() == 1)
-        vchName = vchFromValue(params[0]);
-
-    vector<unsigned char> vchNameUniq;
-    if (params.size() == 1)
-        vchNameUniq = vchFromValue(params[0]);
-
-    Array oRes;
-    map< vector<unsigned char>, int > vNamesI;
-    map< vector<unsigned char>, Object > vNamesO;
-
-    {
-        uint256 blockHash;
-        uint256 hash;
-        CTransaction tx;
-
-        vector<unsigned char> vchValue;
-        int nHeight;
-
-        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-        {
-            // get txn hash, read txn index
-            hash = item.second.GetHash();
-
-            if (!GetTransaction(hash, tx, blockHash, true))
-                continue;
-
-            // skip non-syscoin txns
-            if (tx.nVersion != SYSCOIN_TX_VERSION)
-                continue;
-
-            // decode txn, skip non-alias txns
-            vector<vector<unsigned char> > vvch;
-            int op, nOut;
-            if (!DecodeCertTx(tx, op, nOut, vvch, -1) || !IsCertOp(op)) 
-                continue;
-
-            if(op == OP_CERT_NEW || op == OP_CERT_TRANSFER)
-                continue;
-
-            // get the txn height
-            nHeight = GetCertTxHashHeight(hash);
-
-            // get the txn alias name
-            if(!GetNameOfCertIssuerTx(tx, vchName))
-                continue;
-
-            // skip this alias if it doesn't match the given filter value
-            if(vchNameUniq.size() > 0 && vchNameUniq != vchName)
-                continue;
-
-            // get the value of the alias txn
-            if(!GetValueOfCertIssuerTx(tx, vchValue))
-                continue;
-
-            CCertIssuer theCertIssuerA(tx);
-
-            // build the output object
-            Object oName;
-            oName.push_back(Pair("id", stringFromVch(vchName)));
-            oName.push_back(Pair("title", stringFromVch(theCertIssuerA.vchTitle)));
-            oName.push_back(Pair("data", stringFromVch(theCertIssuerA.vchData)));
-            
-            string strAddress = "";
-            GetCertAddress(tx, strAddress);
-            oName.push_back(Pair("address", strAddress));
-
-            // get last active name only
-            if(vNamesI.find(vchName) != vNamesI.end() && vNamesI[vchName] > nHeight)
-                continue;
-
-            vNamesI[vchName] = nHeight;
-            vNamesO[vchName] = oName;
-        }
-    }
-
-    BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, Object)& item, vNamesO)
-        oRes.push_back(item.second);
-
-    return oRes;
+    return oCert;
 }
 
 Value certlist(const Array& params, bool fHelp) {
     if (fHelp || 1 < params.size())
         throw runtime_error("certlist [<cert>]\n"
-                "list my own certificates");
-
-    vector<unsigned char> vchName;
-
-    if (params.size() == 1)
-        vchName = vchFromValue(params[0]);
+                "list my own Certificates");
 
     vector<unsigned char> vchNameUniq;
     if (params.size() == 1)
@@ -1932,95 +1489,89 @@ Value certlist(const Array& params, bool fHelp) {
     map< vector<unsigned char>, int > vNamesI;
     map< vector<unsigned char>, Object > vNamesO;
 
+    uint256 blockHash;
+    uint256 hash;
+    CTransaction tx;
+
+    vector<unsigned char> vchValue;
+    int nHeight;
+
+    BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
     {
-        uint256 blockHash;
-        uint256 hash;
-        CTransaction tx;
+		int expired = 0;
+		int expires_in = 0;
+		int expired_block = 0;
+        // get txn hash, read txn index
+        hash = item.second.GetHash();
 
-        vector<unsigned char> vchValue;
-        int nHeight;
+        if (!GetTransaction(hash, tx, blockHash, true))
+            continue;
 
-        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-        {
-            // get txn hash, read txn index
-            hash = item.second.GetHash();
+        // skip non-syscoin txns
+        if (tx.nVersion != SYSCOIN_TX_VERSION)
+            continue;
 
-            if (!GetTransaction(hash, tx, blockHash, true))
-                continue;
+        // decode txn, skip non-alias txns
+        vector<vector<unsigned char> > vvch;
+        int op, nOut;
+        if (!DecodeCertTx(tx, op, nOut, vvch, -1) || !IsCertOp(op)) 
+            continue;
 
-            // skip non-syscoin txns
-            if (tx.nVersion != SYSCOIN_TX_VERSION)
-                continue;
+		CCert cert(tx);
+		
+         // skip this cert if it doesn't match the given filter value
+        if(vchNameUniq.size() > 0 && vchNameUniq != vvch[0])
+            continue;	
+		nHeight = GetCertTxHashHeight(hash);
+        // build the output object
+        Object oName;
+        oName.push_back(Pair("id", stringFromVch(vvch[0])));
+		oName.push_back(Pair("is_mine", IsCertMine(tx)? "true": "false"));
+        string strAddress = "";
+        GetCertAddress(tx, strAddress);
+        oName.push_back(Pair("address", strAddress));
+        if(nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+		{
+			expired = 1;
+			expired_block = nHeight + GetCertDisplayExpirationDepth(nHeight);
+		}  
+		if(expired == 0)
+		{
+			expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+		}
+		oName.push_back(Pair("expires_in", expires_in));
+		oName.push_back(Pair("expired_block", expired_block));
+		oName.push_back(Pair("expired", expired));
+        // get last active name only
+        if(vNamesI.find(vvch[0]) != vNamesI.end() && vNamesI[vvch[0]] > nHeight)
+            continue;
 
-            // decode txn, skip non-alias txns
-            vector<vector<unsigned char> > vvch;
-            int op, nOut;
-            if (!DecodeCertTx(tx, op, nOut, vvch, -1) || !IsCertOp(op))
-                continue;
-
-            if(op != OP_CERT_NEW && op != OP_CERT_TRANSFER)
-                continue;
-
-            // get the txn height
-            nHeight = GetCertTxHashHeight(hash);
-
-            // get the txn alias name
-            if(!GetNameOfCertIssuerTx(tx, vchName))
-                continue;
-
-            // skip this alias if it doesn't match the given filter value
-            if(vchNameUniq.size() > 0 && vchNameUniq != vchName)
-                continue;
-
-            // get the value of the alias txn
-            if(!GetValueOfCertIssuerTx(tx, vchValue))
-                continue;
-
-            CCertIssuer theCertIssuerA(tx);
-            CCertItem theCertItemA = theCertIssuerA.certs.back();
-
-            // build the output object
-            Object oName;
-            oName.push_back(Pair("issuer_id", stringFromVch(vchName)));
-            oName.push_back(Pair("issuer_title", stringFromVch(theCertIssuerA.vchTitle)));
-            oName.push_back(Pair("id", HexStr(theCertItemA.vchRand)));
-            oName.push_back(Pair("title", stringFromVch(theCertItemA.vchTitle)));
-            oName.push_back(Pair("data", stringFromVch(theCertItemA.vchData)));
-            
-            string strAddress = "";
-            GetCertAddress(tx, strAddress);
-            oName.push_back(Pair("address", strAddress));
-            // get last active name only
-            if(vNamesI.find(vchName) != vNamesI.end() && vNamesI[vchName] > nHeight)
-                continue;
-
-            vNamesI[vchName] = nHeight;
-            vNamesO[vchName] = oName;
-        }
-    }
-
+        vNamesI[vvch[0]] = nHeight;
+        vNamesO[vvch[0]] = oName;
+    
+	}
     BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, Object)& item, vNamesO)
         oRes.push_back(item.second);
-
     return oRes;
 }
 
-Value certissuerhistory(const Array& params, bool fHelp) {
+
+Value certhistory(const Array& params, bool fHelp) {
     if (fHelp || 1 != params.size())
-        throw runtime_error("certissuerhistory <certissuer>\n"
-                "List all stored values of an certissuer.\n");
+        throw runtime_error("certhistory <cert>\n"
+                "List all stored values of an cert.\n");
 
     Array oRes;
-    vector<unsigned char> vchCertIssuer = vchFromValue(params[0]);
-    string certissuer = stringFromVch(vchCertIssuer);
+    vector<unsigned char> vchCert = vchFromValue(params[0]);
+    string cert = stringFromVch(vchCert);
 
     {
-        vector<CCertIssuer> vtxPos;
-        if (!pcertdb->ReadCertIssuer(vchCertIssuer, vtxPos))
+        vector<CCert> vtxPos;
+        if (!pcertdb->ReadCert(vchCert, vtxPos))
             throw JSONRPCError(RPC_WALLET_ERROR,
-                    "failed to read from certissuer DB");
+                    "failed to read from cert DB");
 
-        CCertIssuer txPos2;
+        CCert txPos2;
         uint256 txHash;
         uint256 blockHash;
         BOOST_FOREACH(txPos2, vtxPos) {
@@ -2031,46 +1582,46 @@ Value certissuerhistory(const Array& params, bool fHelp) {
                 continue;
             }
 
-            Object oCertIssuer;
+            Object oCert;
             vector<unsigned char> vchValue;
             int nHeight;
             uint256 hash;
-            if (GetValueOfCertIssuerTxHash(txHash, vchValue, hash, nHeight)) {
-                oCertIssuer.push_back(Pair("certissuer", certissuer));
+            if (GetValueOfCertTxHash(txHash, vchValue, hash, nHeight)) {
+                oCert.push_back(Pair("cert", cert));
                 string value = stringFromVch(vchValue);
-                oCertIssuer.push_back(Pair("value", value));
-                oCertIssuer.push_back(Pair("txid", tx.GetHash().GetHex()));
+                oCert.push_back(Pair("value", value));
+                oCert.push_back(Pair("txid", tx.GetHash().GetHex()));
                 string strAddress = "";
                 GetCertAddress(tx, strAddress);
-                oCertIssuer.push_back(Pair("address", strAddress));
-                oCertIssuer.push_back(
+                oCert.push_back(Pair("address", strAddress));
+                oCert.push_back(
                         Pair("expires_in",
                                 nHeight + GetCertDisplayExpirationDepth(nHeight)
                                         - pindexBest->nHeight));
                 if (nHeight + GetCertDisplayExpirationDepth(nHeight)
                         - pindexBest->nHeight <= 0) {
-                    oCertIssuer.push_back(Pair("expired", 1));
+                    oCert.push_back(Pair("expired", 1));
                 }
-                oRes.push_back(oCertIssuer);
+                oRes.push_back(oCert);
             }
         }
     }
     return oRes;
 }
 
-Value certissuerfilter(const Array& params, bool fHelp) {
+Value certfilter(const Array& params, bool fHelp) {
     if (fHelp || params.size() > 5)
         throw runtime_error(
-                "certissuerfilter [[[[[regexp] maxage=36000] from=0] nb=0] stat]\n"
-                        "scan and filter certissueres\n"
-                        "[regexp] : apply [regexp] on certissueres, empty means all certissueres\n"
+                "certfilter [[[[[regexp] maxage=36000] from=0] nb=0] stat]\n"
+                        "scan and filter certes\n"
+                        "[regexp] : apply [regexp] on certes, empty means all certes\n"
                         "[maxage] : look in last [maxage] blocks\n"
                         "[from] : show results from number [from]\n"
                         "[nb] : show [nb] results, 0 means all\n"
                         "[stats] : show some stats instead of results\n"
-                        "certissuerfilter \"\" 5 # list certissueres updated in last 5 blocks\n"
-                        "certissuerfilter \"^certissuer\" # list all certissueres starting with \"certissuer\"\n"
-                        "certissuerfilter 36000 0 0 stat # display stats (number of certissuers) on active certissueres\n");
+                        "certfilter \"\" 5 # list certes updated in last 5 blocks\n"
+                        "certfilter \"^cert\" # list all certes starting with \"cert\"\n"
+                        "certfilter 36000 0 0 stat # display stats (number of certs) on active certes\n");
 
     string strRegexp;
     int nFrom = 0;
@@ -2098,24 +1649,24 @@ Value certissuerfilter(const Array& params, bool fHelp) {
     //CCertDB dbCert("r");
     Array oRes;
 
-    vector<unsigned char> vchCertIssuer;
-    vector<pair<vector<unsigned char>, CCertIssuer> > certissuerScan;
-    if (!pcertdb->ScanCertIssuers(vchCertIssuer, 100000000, certissuerScan))
+    vector<unsigned char> vchCert;
+    vector<pair<vector<unsigned char>, CCert> > certScan;
+    if (!pcertdb->ScanCerts(vchCert, 100000000, certScan))
         throw JSONRPCError(RPC_WALLET_ERROR, "scan failed");
 
-    pair<vector<unsigned char>, CCertIssuer> pairScan;
-    BOOST_FOREACH(pairScan, certissuerScan) {
-        string certissuer = stringFromVch(pairScan.first);
+    pair<vector<unsigned char>, CCert> pairScan;
+    BOOST_FOREACH(pairScan, certScan) {
+        string cert = stringFromVch(pairScan.first);
 
         // regexp
         using namespace boost::xpressive;
-        smatch certissuerparts;
+        smatch certparts;
         sregex cregex = sregex::compile(strRegexp);
-        if (strRegexp != "" && !regex_search(certissuer, certissuerparts, cregex))
+        if (strRegexp != "" && !regex_search(cert, certparts, cregex))
             continue;
 
-        CCertIssuer txCertIssuer = pairScan.second;
-        int nHeight = txCertIssuer.nHeight;
+        CCert txCert = pairScan.second;
+        int nHeight = txCert.nHeight;
 
         // max age
         if (nMaxAge != 0 && pindexBest->nHeight - nHeight >= nMaxAge)
@@ -2126,24 +1677,24 @@ Value certissuerfilter(const Array& params, bool fHelp) {
         if (nCountFrom < nFrom + 1)
             continue;
 
-        Object oCertIssuer;
-        oCertIssuer.push_back(Pair("certissuer", certissuer));
+        Object oCert;
+        oCert.push_back(Pair("cert", cert));
         CTransaction tx;
         uint256 blockHash;
-        uint256 txHash = txCertIssuer.txHash;
+        uint256 txHash = txCert.txHash;
         if ((nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight
                 <= 0) || !GetTransaction(txHash, tx, blockHash, true)) {
-            oCertIssuer.push_back(Pair("expired", 1));
+            oCert.push_back(Pair("expired", 1));
         } else {
-            vector<unsigned char> vchValue = txCertIssuer.vchTitle;
+            vector<unsigned char> vchValue = txCert.vchTitle;
             string value = stringFromVch(vchValue);
-            oCertIssuer.push_back(Pair("value", value));
-            oCertIssuer.push_back(
+            oCert.push_back(Pair("value", value));
+            oCert.push_back(
                     Pair("expires_in",
                             nHeight + GetCertDisplayExpirationDepth(nHeight)
                                     - pindexBest->nHeight));
         }
-        oRes.push_back(oCertIssuer);
+        oRes.push_back(oCert);
 
         nCountNb++;
         // nb limits
@@ -2162,16 +1713,16 @@ Value certissuerfilter(const Array& params, bool fHelp) {
     return oRes;
 }
 
-Value certissuerscan(const Array& params, bool fHelp) {
+Value certscan(const Array& params, bool fHelp) {
     if (fHelp || 2 > params.size())
         throw runtime_error(
-                "certissuerscan [<start-certissuer>] [<max-returned>]\n"
-                        "scan all certissuers, starting at start-certissuer and returning a maximum number of entries (default 500)\n");
+                "certscan [<start-cert>] [<max-returned>]\n"
+                        "scan all certs, starting at start-cert and returning a maximum number of entries (default 500)\n");
 
-    vector<unsigned char> vchCertIssuer;
+    vector<unsigned char> vchCert;
     int nMax = 500;
     if (params.size() > 0) {
-        vchCertIssuer = vchFromValue(params[0]);
+        vchCert = vchFromValue(params[0]);
     }
 
     if (params.size() > 1) {
@@ -2183,47 +1734,47 @@ Value certissuerscan(const Array& params, bool fHelp) {
     //CCertDB dbCert("r");
     Array oRes;
 
-    vector<pair<vector<unsigned char>, CCertIssuer> > certissuerScan;
-    if (!pcertdb->ScanCertIssuers(vchCertIssuer, nMax, certissuerScan))
+    vector<pair<vector<unsigned char>, CCert> > certScan;
+    if (!pcertdb->ScanCerts(vchCert, nMax, certScan))
         throw JSONRPCError(RPC_WALLET_ERROR, "scan failed");
 
-    pair<vector<unsigned char>, CCertIssuer> pairScan;
-    BOOST_FOREACH(pairScan, certissuerScan) {
-        Object oCertIssuer;
-        string certissuer = stringFromVch(pairScan.first);
-        oCertIssuer.push_back(Pair("certissuer", certissuer));
+    pair<vector<unsigned char>, CCert> pairScan;
+    BOOST_FOREACH(pairScan, certScan) {
+        Object oCert;
+        string cert = stringFromVch(pairScan.first);
+        oCert.push_back(Pair("cert", cert));
         CTransaction tx;
-        CCertIssuer txCertIssuer = pairScan.second;
+        CCert txCert = pairScan.second;
         uint256 blockHash;
 
-        int nHeight = txCertIssuer.nHeight;
-        vector<unsigned char> vchValue = txCertIssuer.vchTitle;
+        int nHeight = txCert.nHeight;
+        vector<unsigned char> vchValue = txCert.vchTitle;
         if ((nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight
-                <= 0) || !GetTransaction(txCertIssuer.txHash, tx, blockHash, true)) {
-            oCertIssuer.push_back(Pair("expired", 1));
+                <= 0) || !GetTransaction(txCert.txHash, tx, blockHash, true)) {
+            oCert.push_back(Pair("expired", 1));
         } else {
             string value = stringFromVch(vchValue);
             //string strAddress = "";
             //GetCertAddress(tx, strAddress);
-            oCertIssuer.push_back(Pair("value", value));
-            //oCertIssuer.push_back(Pair("txid", tx.GetHash().GetHex()));
-            //oCertIssuer.push_back(Pair("address", strAddress));
-            oCertIssuer.push_back(
+            oCert.push_back(Pair("value", value));
+            //oCert.push_back(Pair("txid", tx.GetHash().GetHex()));
+            //oCert.push_back(Pair("address", strAddress));
+            oCert.push_back(
                     Pair("expires_in",
                             nHeight + GetCertDisplayExpirationDepth(nHeight)
                                     - pindexBest->nHeight));
         }
-        oRes.push_back(oCertIssuer);
+        oRes.push_back(oCert);
     }
 
     return oRes;
 }
 
 
- Value certissuerclean(const Array& params, bool fHelp)
+ Value certclean(const Array& params, bool fHelp)
  {
      if (fHelp || params.size())
-     throw runtime_error("certissuer_clean\nClean unsatisfiable transactions from the wallet\n");
+     throw runtime_error("cert_clean\nClean unsatisfiable transactions from the wallet\n");
 
 
 
@@ -2235,8 +1786,8 @@ Value certissuerscan(const Array& params, bool fHelp) {
          BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
          {
              CWalletTx& wtx = item.second;
-             vector<unsigned char> vchCertIssuer;
-             if (wtx.GetDepthInMainChain() < 1 && IsConflictedCertIssuerTx(*pblocktree, wtx, vchCertIssuer))
+             vector<unsigned char> vchCert;
+             if (wtx.GetDepthInMainChain() < 1 && IsConflictedCertTx(*pblocktree, wtx, vchCert))
              {
                  uint256 hash = wtx.GetHash();
                  mapRemove[hash] = wtx;

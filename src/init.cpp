@@ -32,7 +32,7 @@ extern CCertDB *pcertdb;
 
 void rescanforaliases(CBlockIndex *pindexRescan);
 void rescanforoffers(CBlockIndex *pindexRescan);
-void rescanforcertissuers(CBlockIndex *pindexRescan);
+void rescanforcerts(CBlockIndex *pindexRescan);
 
 CWallet* pwalletMain;
 CClientUIInterface uiInterface;
@@ -1110,7 +1110,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             pwalletMain->SetBestChain(CBlockLocator(pindexBest));
     		rescanforaliases(pindexRescan);
     		rescanforoffers(pindexRescan);
-    		rescanforcertissuers(pindexRescan);
+    		rescanforcerts(pindexRescan);
             nWalletDBUpdated++;
         }
     } // (!fDisableWallet)

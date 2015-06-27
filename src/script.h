@@ -82,10 +82,8 @@ enum opcodetype {
     OP_OFFER_REFUND=0x09,
 
     // distributed licensing system
-    OP_CERTISSUER_NEW=0x0a,
-    OP_CERTISSUER_ACTIVATE=0x0b,
-    OP_CERTISSUER_UPDATE=0x0c,
-    OP_CERT_NEW=0x0d,
+    OP_CERT_ACTIVATE=0x0b,
+    OP_CERT_UPDATE=0x0c,
     OP_CERT_TRANSFER=0x0e,
 
     // assets

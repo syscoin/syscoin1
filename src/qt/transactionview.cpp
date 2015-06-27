@@ -90,10 +90,9 @@ TransactionView::TransactionView(QWidget *parent) :
 	typeWidget->addItem(tr("Offer Refund In Progress"), TransactionFilterProxy::TYPE(TransactionRecord::OfferAcceptRefundInProgress));
 	typeWidget->addItem(tr("Offer Refund Complete"), TransactionFilterProxy::TYPE(TransactionRecord::OfferAcceptRefundComplete));
   
-    typeWidget->addItem(tr("Cert. Issuer Activated"), TransactionFilterProxy::TYPE(TransactionRecord::CertIssuerActivate));
-    typeWidget->addItem(tr("Cert. Issuer updated"), TransactionFilterProxy::TYPE(TransactionRecord::CertIssuerUpdate));
-    typeWidget->addItem(tr("New Certificate"), TransactionFilterProxy::TYPE(TransactionRecord::CertNew));
-    typeWidget->addItem(tr("Certificate Transfer"), TransactionFilterProxy::TYPE(TransactionRecord::CertTransfer));
+    typeWidget->addItem(tr("Cert. Activated"), TransactionFilterProxy::TYPE(TransactionRecord::CertActivate));
+    typeWidget->addItem(tr("Cert. Updated"), TransactionFilterProxy::TYPE(TransactionRecord::CertUpdate));
+    typeWidget->addItem(tr("Cert. Transfer"), TransactionFilterProxy::TYPE(TransactionRecord::CertTransfer));
 
 
     hlayout->addWidget(typeWidget);

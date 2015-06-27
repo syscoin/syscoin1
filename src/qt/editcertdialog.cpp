@@ -7,9 +7,9 @@
 #include <QDataWidgetMapper>
 #include <QMessageBox>
 
-EditCertIssuerDialog::EditCertIssuerDialog(Mode mode, QWidget *parent) :
+EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::EditCertIssuerDialog), mapper(0), mode(mode), model(0)
+    ui(new Ui::EditCertDialog), mapper(0), mode(mode), model(0)
 {
     ui->setupUi(this);
 
@@ -17,18 +17,12 @@ EditCertIssuerDialog::EditCertIssuerDialog(Mode mode, QWidget *parent) :
 
     switch(mode)
     {
-    case NewCertItem:
+    case NewCert:
         setWindowTitle(tr("New certificate"));
         //ui->certEdit->setEnabled(false);
         break;
-    case NewCertIssuer:
-        setWindowTitle(tr("New cert"));
-        break;
-    case EditCertItem:
+    case EditCert:
         setWindowTitle(tr("Edit certificate"));
-        break;
-    case EditCertIssuer:
-        setWindowTitle(tr("Edit cert"));
         break;
     }
 
@@ -36,42 +30,40 @@ EditCertIssuerDialog::EditCertIssuerDialog(Mode mode, QWidget *parent) :
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 }
 
-EditCertIssuerDialog::~EditCertIssuerDialog()
+EditCertDialog::~EditCertDialog()
 {
     delete ui;
 }
 
-void EditCertIssuerDialog::setModel(CertIssuerTableModel *model)
+void EditCertDialog::setModel(CertTableModel *model)
 {
     this->model = model;
     if(!model) return;
 
     mapper->setModel(model);
-    mapper->addMapping(ui->labelEdit, CertIssuerTableModel::Title);
-    mapper->addMapping(ui->certEdit, CertIssuerTableModel::Name);
+    mapper->addMapping(ui->labelEdit, CertTableModel::Title);
+    mapper->addMapping(ui->certEdit, CertTableModel::Name);
 }
 
-void EditCertIssuerDialog::loadRow(int row)
+void EditCertDialog::loadRow(int row)
 {
     mapper->setCurrentIndex(row);
 }
 
-bool EditCertIssuerDialog::saveCurrentRow()
+bool EditCertDialog::saveCurrentRow()
 {
     if(!model) return false;
 
     switch(mode)
     {
-    case NewCertItem:
-    case NewCertIssuer:
+    case NewCert:
         cert = model->addRow(
-                mode == NewCertIssuer ? CertIssuerTableModel::CertIssuer : CertIssuerTableModel::CertItem,
+                CertTableModel::Cert,
                 ui->labelEdit->text(),
                 ui->certEdit->text(),
                 ui->certEdit->text());
         break;
-    case EditCertItem:
-    case EditCertIssuer:
+    case EditCert:
         if(mapper->submit())
         {
             cert = ui->certEdit->text();
@@ -81,7 +73,7 @@ bool EditCertIssuerDialog::saveCurrentRow()
     return !cert.isEmpty();
 }
 
-void EditCertIssuerDialog::accept()
+void EditCertDialog::accept()
 {
     if(!model) return;
 
@@ -89,23 +81,23 @@ void EditCertIssuerDialog::accept()
     {
         switch(model->getEditStatus())
         {
-        case CertIssuerTableModel::OK:
+        case CertTableModel::OK:
             // Failed with unknown reason. Just reject.
             break;
-        case CertIssuerTableModel::NO_CHANGES:
+        case CertTableModel::NO_CHANGES:
             // No changes were made during edit operation. Just reject.
             break;
-        case CertIssuerTableModel::INVALID_CERT:
+        case CertTableModel::INVALID_CERT:
             QMessageBox::warning(this, windowTitle(),
                 tr("The entered cert \"%1\" is not a valid Syscoin cert.").arg(ui->certEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
-        case CertIssuerTableModel::DUPLICATE_CERT:
+        case CertTableModel::DUPLICATE_CERT:
             QMessageBox::warning(this, windowTitle(),
                 tr("The entered cert \"%1\" is already taken.").arg(ui->certEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
-        case CertIssuerTableModel::WALLET_UNLOCK_FAILURE:
+        case CertTableModel::WALLET_UNLOCK_FAILURE:
             QMessageBox::critical(this, windowTitle(),
                 tr("Could not unlock wallet."),
                 QMessageBox::Ok, QMessageBox::Ok);
@@ -117,12 +109,12 @@ void EditCertIssuerDialog::accept()
     QDialog::accept();
 }
 
-QString EditCertIssuerDialog::getCertIssuer() const
+QString EditCertDialog::getCert() const
 {
     return cert;
 }
 
-void EditCertIssuerDialog::setCertIssuer(const QString &cert)
+void EditCertDialog::setCert(const QString &cert)
 {
     this->cert = cert;
     ui->certEdit->setText(cert);

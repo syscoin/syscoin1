@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CertIssuerListPage</class>
- <widget class="QWidget" name="CertIssuerListPage">
+ <class>CertListPage</class>
+ <widget class="QWidget" name="CertListPage">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Certificate Issuers</string>
+   <string>Certificates</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -55,12 +55,12 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="newCertIssuer">
+      <widget class="QPushButton" name="newCert">
        <property name="toolTip">
-        <string>Create a new certificate issuer</string>
+        <string>Create a new certificate </string>
        </property>
        <property name="text">
-        <string>&amp;New Certificate Issuer</string>
+        <string>&amp;New Certificate </string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
@@ -69,12 +69,12 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="copyCertIssuer">
+      <widget class="QPushButton" name="copyCert">
        <property name="toolTip">
-        <string>Copy the currently selected certificate issuer to the system clipboard</string>
+        <string>Copy the currently selected certificate  to the system clipboard</string>
        </property>
        <property name="text">
-        <string>&amp;Copy CertIssuer</string>
+        <string>&amp;Copy Cert</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">

@@ -17,7 +17,7 @@ class OverviewPage;
 class AddressBookPage;
 class AliasView;
 class OfferView;
-class CertIssuerListPage;
+class CertListPage;
 class SendCoinsDialog;
 class SignVerifyMessageDialog;
 class RPCConsole;
@@ -71,8 +71,7 @@ private:
     AddressBookPage *receiveCoinsPage;
     OfferView *offerView;
 	QStackedWidget* offerListPage;
-    CertIssuerListPage *certIssuerListPage;
-    CertIssuerListPage *certListPage;
+    CertListPage *certListPage;
     SendCoinsDialog *sendCoinsPage;
     SignVerifyMessageDialog *signVerifyMessageDialog;
 
@@ -91,9 +90,7 @@ public slots:
     void gotoDataAliasListPage();
     /** Switch to offer page */
     void gotoOfferListPage();
-    /** Switch to cert issuer page */
-    void gotoCertIssuerListPage();
-    /** Switch to cert page */
+    /** Switch to cert  page */
     void gotoCertListPage();
     /** Switch to cert page */
     void gotoReceiveCoinsPage();

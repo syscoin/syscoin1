@@ -177,19 +177,15 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 							vchName = vvchArgs[0];
 							sub.type = TransactionRecord::OfferAccept;
 							break;
-						case OP_CERTISSUER_ACTIVATE:
+						case OP_CERT_ACTIVATE:
 							strGUID += " ("; strGUID += stringFromVch(vvchArgs[0]); strGUID += ")";
 							vchName = vvchArgs[0];
-							sub.type = TransactionRecord::CertIssuerActivate;
+							sub.type = TransactionRecord::CertActivate;
 							break;
-						case OP_CERTISSUER_UPDATE:
+						case OP_CERT_UPDATE:
 							strGUID += " ("; strGUID += stringFromVch(vvchArgs[0]); strGUID += ")";
 							vchName = vvchArgs[0];
-							sub.type = TransactionRecord::CertIssuerUpdate;
-							break;
-						case OP_CERT_NEW:
-							vchName = vvchArgs[0];
-							sub.type = TransactionRecord::CertNew;
+							sub.type = TransactionRecord::CertUpdate;
 							break;
 						case OP_CERT_TRANSFER:
 							vchName = vvchArgs[1];
@@ -267,19 +263,15 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 					vchName = vvchArgs[0];
 					sub.type = TransactionRecord::OfferAccept;
                     break;
-                case OP_CERTISSUER_ACTIVATE:
+                case OP_CERT_ACTIVATE:
                     strGUID += " ("; strGUID += stringFromVch(vvchArgs[0]); strGUID += ")";
                     vchName = vvchArgs[0];
-                    sub.type = TransactionRecord::CertIssuerActivate;
+                    sub.type = TransactionRecord::CertActivate;
                     break;
-				case OP_CERT_NEW:
-					vchName = vvchArgs[0];
-					sub.type = TransactionRecord::CertNew;
-					break;
-                case OP_CERTISSUER_UPDATE:
+                case OP_CERT_UPDATE:
                     strGUID += " ("; strGUID += stringFromVch(vvchArgs[0]); strGUID += ")";
                     vchName = vvchArgs[0];
-                    sub.type = TransactionRecord::CertIssuerUpdate;
+                    sub.type = TransactionRecord::CertUpdate;
                     break;
                 case OP_CERT_TRANSFER:
                     vchName = vvchArgs[1];

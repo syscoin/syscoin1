@@ -69,7 +69,6 @@ public:
     QAction * getAliasListAction() { return aliasListAction; }
     QAction * getDataAliasListAction() { return dataAliasListAction; }
     QAction * getOfferListAction() { return offerListAction; }
-    QAction * getCertIssuerListAction() { return certIssuerListAction; }
     QAction * getCertListAction() { return certListAction; }
     QAction * getReceiveCoinsAction() { return receiveCoinsAction; }
     QAction * getSendCoinsAction() { return sendCoinsAction; }
@@ -100,7 +99,6 @@ private:
     QAction *aliasListAction;
     QAction *dataAliasListAction;
     QAction *offerListAction;
-    QAction *certIssuerListAction;
     QAction *certListAction;
     QAction *signMessageAction;
     QAction *verifyMessageAction;
@@ -186,9 +184,7 @@ private slots:
     void gotoDataAliasListPage();
     /** Switch to offers page */
     void gotoOfferListPage();
-    /** Switch to certificate issuer page */
-    void gotoCertIssuerListPage();
-     /** Switch to certificate page */
+    /** Switch to certificate  page */
     void gotoCertListPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();

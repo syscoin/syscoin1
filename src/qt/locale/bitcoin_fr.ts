@@ -141,7 +141,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+27"/>
-        <source>Copy the currently selected certificate issuer to the system clipboard</source>
+        <source>Copy the currently selected certificate  to the system clipboard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -496,7 +496,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+27"/>
-        <source>Copy the currently selected certificate issuer to the system clipboard</source>
+        <source>Copy the currently selected certificate  to the system clipboard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -880,12 +880,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+7"/>
-        <source>Certificate &amp;Issuers</source>
+        <source>Certificate &amp;s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Manage certificate issuers</source>
+        <source>Manage Certificates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1108,10 +1108,10 @@ Adresse : %4
     </message>
 </context>
 <context>
-    <name>CertIssuerListPage</name>
+    <name>CertListPage</name>
     <message>
         <location filename="../forms/certlistpage.ui" line="+14"/>
-        <source>Certificate Issuers</source>
+        <source>Certificates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1121,22 +1121,22 @@ Adresse : %4
     </message>
     <message>
         <location line="+27"/>
-        <source>Create a new certificate issuer</source>
+        <source>Create a new certificate </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>&amp;New Certificate Issuer</source>
+        <source>&amp;New Certificate </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+11"/>
-        <source>Copy the currently selected certificate issuer to the system clipboard</source>
+        <source>Copy the currently selected certificate  to the system clipboard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>&amp;Copy CertIssuer</source>
+        <source>&amp;Copy Cert</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1171,12 +1171,12 @@ Adresse : %4
     </message>
     <message>
         <location line="+1"/>
-        <source>&amp;Transfer CertIssuer</source>
+        <source>&amp;Transfer Cert</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+183"/>
-        <source>Export CertIssuer Data</source>
+        <source>Export Cert Data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1196,10 +1196,10 @@ Adresse : %4
     </message>
 </context>
 <context>
-    <name>CertIssuerTableModel</name>
+    <name>CertTableModel</name>
     <message>
         <location filename="../certtablemodel.cpp" line="+197"/>
-        <source>CertIssuer</source>
+        <source>Cert</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1741,7 +1741,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
 </context>
 <context>
-    <name>EditCertIssuerDialog</name>
+    <name>EditCertDialog</name>
     <message>
         <location filename="../forms/editcertdialog.ui" line="+14"/>
         <source>Edit Cert</source>
@@ -3620,17 +3620,17 @@ Aimez-nous sur Facebook:</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>New Cert. Issuer</source>
+        <source>New Cert. </source>
         <translation>Nouveau émetteur du Cert.</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Cert. Issuer Activated</source>
+        <source>Cert. Activated</source>
         <translation>L&apos;émetteur du Cert. Activé</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Cert. Issuer Updated</source>
+        <source>Cert. Updated</source>
         <translation>L&apos;émetteur du Cert de modification</translation>
     </message>
     <message>
@@ -3804,17 +3804,17 @@ Aimez-nous sur Facebook:</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>New Cert. Issuer</source>
+        <source>New Cert. </source>
         <translation>Nouveau émetteur du Cert.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Cert. Issuer Activated</source>
+        <source>Cert. Activated</source>
         <translation>L&apos;émetteur du Cert. Activé</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Cert. Issuer updated</source>
+        <source>Cert. Updated</source>
         <translation>L&apos;émetteur du Cert de modification</translation>
     </message>
     <message>

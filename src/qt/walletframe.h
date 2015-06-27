@@ -54,11 +54,9 @@ public slots:
     void gotoDataAliasListPage();
     /** Switch to offer list page */
     void gotoOfferListPage();
-        /** Switch to cert issuer list page */
-    void gotoCertIssuerListPage();
-        /** Switch to cert list page */
+        /** Switch to cert  list page */
     void gotoCertListPage();
-    /** Switch to receive coins page */
+        /** Switch to cert list page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");

@@ -116,13 +116,6 @@ void WalletFrame::gotoOfferListPage()
         walletStack->gotoOfferListPage();
 }
 
-void WalletFrame::gotoCertIssuerListPage()
-{
-    WalletView *walletView = currentWalletView();
-    if (walletView)
-        walletStack->gotoCertIssuerListPage();
-}
-
 void WalletFrame::gotoCertListPage()
 {
     WalletView *walletView = currentWalletView();

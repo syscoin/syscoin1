@@ -344,7 +344,7 @@ public:
     /** Cert list entry changed.
      * @note called with lock cs_wallet held.
      */
-    boost::signals2::signal<void (CWallet *wallet, const CTransaction *txn,  CCertIssuer &certi, ChangeType status)> NotifyCertIssuerListChanged;
+    boost::signals2::signal<void (CWallet *wallet, const CTransaction *txn,  CCert &certi, ChangeType status)> NotifyCertListChanged;
 
     /** Wallet transaction added, removed or updated.
      * @note called with lock cs_wallet held.

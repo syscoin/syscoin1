@@ -13,9 +13,9 @@
 #include <QMessageBox>
 #include <QMenu>
 
-CertIssuerListPage::CertIssuerListPage(Mode mode, Tabs tab, QWidget *parent) :
+CertListPage::CertListPage(Mode mode, Tabs tab, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::CertIssuerListPage),
+    ui(new Ui::CertListPage),
     model(0),
     optionsModel(0),
     mode(mode),
@@ -24,8 +24,8 @@ CertIssuerListPage::CertIssuerListPage(Mode mode, Tabs tab, QWidget *parent) :
     ui->setupUi(this);
 
 #ifdef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
-    ui->newCertIssuer->setIcon(QIcon());
-    ui->copyCertIssuer->setIcon(QIcon());
+    ui->newCert->setIcon(QIcon());
+    ui->copyCert->setIcon(QIcon());
     ui->exportButton->setIcon(QIcon());
 #endif
 
@@ -43,31 +43,28 @@ CertIssuerListPage::CertIssuerListPage(Mode mode, Tabs tab, QWidget *parent) :
     }
     switch(tab)
     {
-    case CertIssuerTab:
+    case CertTab:
         ui->labelExplanation->setText(tr("These are your registered Syscoin certs. Remember to check the expiration depth of your certs regularly."));
-        break;
-    case CertItemTab:
-        ui->labelExplanation->setText(tr("These are your registered Syscoin certificates."));
         break;
     }
 
     // Context menu actions
-    QAction *copyCertIssuerAction = new QAction(ui->copyCertIssuer->text(), this);
-    QAction *copyCertIssuerValueAction = new QAction(tr("Copy Va&lue"), this);
+    QAction *copyCertAction = new QAction(ui->copyCert->text(), this);
+    QAction *copyCertValueAction = new QAction(tr("Copy Va&lue"), this);
     QAction *editAction = new QAction(tr("&Edit"), this);
-    QAction *transferCertIssuerAction = new QAction(tr("&Transfer CertIssuer"), this);
+    QAction *transferCertAction = new QAction(tr("&Transfer Cert"), this);
 
     // Build context menu
     contextMenu = new QMenu();
-    contextMenu->addAction(copyCertIssuerAction);
-    contextMenu->addAction(copyCertIssuerValueAction);
+    contextMenu->addAction(copyCertAction);
+    contextMenu->addAction(copyCertValueAction);
     contextMenu->addAction(editAction);
     contextMenu->addSeparator();
-    contextMenu->addAction(transferCertIssuerAction);
+    contextMenu->addAction(transferCertAction);
 
     // Connect signals for context menu actions
-    connect(copyCertIssuerAction, SIGNAL(triggered()), this, SLOT(on_copyCertIssuer_clicked()));
-    connect(copyCertIssuerValueAction, SIGNAL(triggered()), this, SLOT(onCopyCertIssuerValueAction()));
+    connect(copyCertAction, SIGNAL(triggered()), this, SLOT(on_copyCert_clicked()));
+    connect(copyCertValueAction, SIGNAL(triggered()), this, SLOT(onCopyCertValueAction()));
     connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
 
 
@@ -77,12 +74,12 @@ CertIssuerListPage::CertIssuerListPage(Mode mode, Tabs tab, QWidget *parent) :
     connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
 }
 
-CertIssuerListPage::~CertIssuerListPage()
+CertListPage::~CertListPage()
 {
     delete ui;
 }
 
-void CertIssuerListPage::setModel(CertIssuerTableModel *model)
+void CertListPage::setModel(CertTableModel *model)
 {
     this->model = model;
     if(!model) return;
@@ -94,15 +91,10 @@ void CertIssuerListPage::setModel(CertIssuerTableModel *model)
     proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     switch(tab)
     {
-    case CertIssuerTab:
+    case CertTab:
         // Receive filter
-        proxyModel->setFilterRole(CertIssuerTableModel::TypeRole);
-        proxyModel->setFilterFixedString(CertIssuerTableModel::CertIssuer);
-        break;
-    case CertItemTab:
-        // Send filter
-        proxyModel->setFilterRole(CertIssuerTableModel::TypeRole);
-        proxyModel->setFilterFixedString(CertIssuerTableModel::CertItem);
+        proxyModel->setFilterRole(CertTableModel::TypeRole);
+        proxyModel->setFilterFixedString(CertTableModel::Cert);
         break;
     }
     ui->tableView->setModel(proxyModel);
@@ -110,40 +102,40 @@ void CertIssuerListPage::setModel(CertIssuerTableModel *model)
 
     // Set column widths
 #if QT_VERSION < 0x050000
-    ui->tableView->horizontalHeader()->setResizeMode(CertIssuerTableModel::Name, QHeaderView::ResizeToContents);
-    ui->tableView->horizontalHeader()->setResizeMode(CertIssuerTableModel::Title, QHeaderView::Stretch);
-    ui->tableView->horizontalHeader()->setResizeMode(CertIssuerTableModel::ExpirationDepth, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::Name, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::Title, QHeaderView::Stretch);
+    ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::ExpirationDepth, QHeaderView::ResizeToContents);
 #else
-    ui->tableView->horizontalHeader()->setSectionResizeMode(CertIssuerTableModel::Name, QHeaderView::ResizeToContents);
-    ui->tableView->horizontalHeader()->setSectionResizeMode(CertIssuerTableModel::Title, QHeaderView::Stretch);
-    ui->tableView->horizontalHeader()->setSectionResizeMode(CertIssuerTableModel::ExpirationDepth, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::Name, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::Title, QHeaderView::Stretch);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::ExpirationDepth, QHeaderView::ResizeToContents);
 #endif
 
     connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
             this, SLOT(selectionChanged()));
 
     // Select row for newly created cert
-    connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(selectNewCertIssuer(QModelIndex,int,int)));
+    connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(selectNewCert(QModelIndex,int,int)));
 
     selectionChanged();
 }
 
-void CertIssuerListPage::setOptionsModel(OptionsModel *optionsModel)
+void CertListPage::setOptionsModel(OptionsModel *optionsModel)
 {
     this->optionsModel = optionsModel;
 }
 
-void CertIssuerListPage::on_copyCertIssuer_clicked()
+void CertListPage::on_copyCert_clicked()
 {
-    GUIUtil::copyEntryData(ui->tableView, CertIssuerTableModel::Name);
+    GUIUtil::copyEntryData(ui->tableView, CertTableModel::Name);
 }
 
-void CertIssuerListPage::onCopyCertIssuerValueAction()
+void CertListPage::onCopyCertValueAction()
 {
-    GUIUtil::copyEntryData(ui->tableView, CertIssuerTableModel::Title);
+    GUIUtil::copyEntryData(ui->tableView, CertTableModel::Title);
 }
 
-void CertIssuerListPage::onEditAction()
+void CertListPage::onEditAction()
 {
     if(!ui->tableView->selectionModel())
         return;
@@ -151,45 +143,45 @@ void CertIssuerListPage::onEditAction()
     if(indexes.isEmpty())
         return;
 
-    EditCertIssuerDialog dlg(
-            tab == CertIssuerTab ?
-            EditCertIssuerDialog::EditCertIssuer :
-            EditCertIssuerDialog::EditCertItem);
+    EditCertDialog dlg(
+            tab == CertTab ?
+            EditCertDialog::EditCert :
+            EditCertDialog::EditCert);
     dlg.setModel(model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
     dlg.loadRow(origIndex.row());
     dlg.exec();
 }
 
-void CertIssuerListPage::onTransferCertIssuerAction()
+void CertListPage::onTransferCertAction()
 {
     QTableView *table = ui->tableView;
-    QModelIndexList indexes = table->selectionModel()->selectedRows(CertIssuerTableModel::Name);
+    QModelIndexList indexes = table->selectionModel()->selectedRows(CertTableModel::Name);
 
     foreach (QModelIndex index, indexes)
     {
         QString cert = index.data().toString();
-        emit transferCertIssuer(cert);
+        emit transferCert(cert);
     }
 }
 
-void CertIssuerListPage::on_newCertIssuer_clicked()
+void CertListPage::on_newCert_clicked()
 {
     if(!model)
         return;
 
-    EditCertIssuerDialog dlg(
-            tab == CertIssuerTab ?
-            EditCertIssuerDialog::NewCertIssuer :
-            EditCertIssuerDialog::NewCertItem, this);
+    EditCertDialog dlg(
+            tab == CertTab ?
+            EditCertDialog::NewCert :
+            EditCertDialog::NewCert, this);
     dlg.setModel(model);
     if(dlg.exec())
     {
-        newCertIssuerToSelect = dlg.getCertIssuer();
+        newCertToSelect = dlg.getCert();
     }
 }
 
-void CertIssuerListPage::selectionChanged()
+void CertListPage::selectionChanged()
 {
     // Set button states based on selected tab and selection
     QTableView *table = ui->tableView;
@@ -198,15 +190,15 @@ void CertIssuerListPage::selectionChanged()
 
     if(table->selectionModel()->hasSelection())
     {
-        ui->copyCertIssuer->setEnabled(true);
+        ui->copyCert->setEnabled(true);
     }
     else
     {
-        ui->copyCertIssuer->setEnabled(false);
+        ui->copyCert->setEnabled(false);
     }
 }
 
-void CertIssuerListPage::done(int retval)
+void CertListPage::done(int retval)
 {
     QTableView *table = ui->tableView;
     if(!table->selectionModel() || !table->model())
@@ -216,7 +208,7 @@ void CertIssuerListPage::done(int retval)
         return;
 
     // Figure out which cert was selected, and return it
-    QModelIndexList indexes = table->selectionModel()->selectedRows(CertIssuerTableModel::Name);
+    QModelIndexList indexes = table->selectionModel()->selectedRows(CertTableModel::Name);
 
     foreach (QModelIndex index, indexes)
     {
@@ -233,12 +225,12 @@ void CertIssuerListPage::done(int retval)
     QDialog::done(retval);
 }
 
-void CertIssuerListPage::on_exportButton_clicked()
+void CertListPage::on_exportButton_clicked()
 {
     // CSV is currently the only supported format
     QString filename = GUIUtil::getSaveFileName(
             this,
-            tr("Export CertIssuer Data"), QString(),
+            tr("Export Cert Data"), QString(),
             tr("Comma separated file (*.csv)"));
 
     if (filename.isNull()) return;
@@ -247,9 +239,9 @@ void CertIssuerListPage::on_exportButton_clicked()
 
     // name, column, role
     writer.setModel(proxyModel);
-    writer.addColumn("Key", CertIssuerTableModel::Name, Qt::EditRole);
-    writer.addColumn("Title", CertIssuerTableModel::Title, Qt::EditRole);
-    writer.addColumn("Expiration Depth", CertIssuerTableModel::ExpirationDepth, Qt::EditRole);
+    writer.addColumn("Key", CertTableModel::Name, Qt::EditRole);
+    writer.addColumn("Title", CertTableModel::Title, Qt::EditRole);
+    writer.addColumn("Expiration Depth", CertTableModel::ExpirationDepth, Qt::EditRole);
     if(!writer.write())
     {
         QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
@@ -259,7 +251,7 @@ void CertIssuerListPage::on_exportButton_clicked()
 
 
 
-void CertIssuerListPage::contextualMenu(const QPoint &point)
+void CertListPage::contextualMenu(const QPoint &point)
 {
     QModelIndex index = ui->tableView->indexAt(point);
     if(index.isValid()) {
@@ -267,14 +259,14 @@ void CertIssuerListPage::contextualMenu(const QPoint &point)
     }
 }
 
-void CertIssuerListPage::selectNewCertIssuer(const QModelIndex &parent, int begin, int /*end*/)
+void CertListPage::selectNewCert(const QModelIndex &parent, int begin, int /*end*/)
 {
-    QModelIndex idx = proxyModel->mapFromSource(model->index(begin, CertIssuerTableModel::Name, parent));
-    if(idx.isValid() && (idx.data(Qt::EditRole).toString() == newCertIssuerToSelect))
+    QModelIndex idx = proxyModel->mapFromSource(model->index(begin, CertTableModel::Name, parent));
+    if(idx.isValid() && (idx.data(Qt::EditRole).toString() == newCertToSelect))
     {
         // Select row of newly created cert, once
         ui->tableView->setFocus();
         ui->tableView->selectRow(idx.row());
-        newCertIssuerToSelect.clear();
+        newCertToSelect.clear();
     }
 }

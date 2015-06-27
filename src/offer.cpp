@@ -21,7 +21,7 @@ extern bool ExistsInMempool(std::vector<unsigned char> vchNameOrRand, opcodetype
 extern bool HasReachedMainNetForkB2();
 
 extern COfferDB *pofferdb;
-
+extern CCertDB *pcertdb;
 extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo,
 		unsigned int nIn, int nHashType);
 
@@ -36,6 +36,10 @@ extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey,
 extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
 		const CTransaction& txTo, unsigned int nIn, unsigned int flags,
 		int nHashType);
+
+extern bool GetTxOfCert(CCertDB& dbCert, const vector<unsigned char> &vchCert,
+        CCert &txPos, CTransaction& tx);
+extern bool GetCertAddress(const CTransaction& tx, std::string& strAddress);
 // check wallet transactions to see if there was a refund for an accept already
 // need this because during a reorg blocks are disconnected (deleted from db) and we can't rely on looking in db to see if refund was made for an accept
 bool foundRefundInWallet(const vector<unsigned char> &vchAcceptRand, const vector<unsigned char>& acceptCode)
@@ -185,7 +189,7 @@ void ExistsOfferLinkage(vector<unsigned char>& vchOffer, const vector<COffer> &v
 }
 
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
-void makeOfferLinkAcceptTX(COfferAccept& theOfferAccept, const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchOfferAcceptLink)
+string makeOfferLinkAcceptTX(COfferAccept& theOfferAccept, const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchOfferAcceptLink)
 {
 	string strError;
 	string strMethod = string("offeraccept");
@@ -197,7 +201,7 @@ void makeOfferLinkAcceptTX(COfferAccept& theOfferAccept, const vector<unsigned c
 	{
 		if(fDebug)
 			printf("makeOfferLinkAcceptTX() offer linked transaction already exists\n");
-		return;
+		return "";
 	}
 	pwalletMain->GetKeyFromPool(newDefaultKey, false);
 	CBitcoinAddress refundAddr = CBitcoinAddress(newDefaultKey.GetID());
@@ -212,14 +216,13 @@ void makeOfferLinkAcceptTX(COfferAccept& theOfferAccept, const vector<unsigned c
 	}
 	catch (Object& objError)
 	{
-		if(fDebug)
-			printf(find_value(objError, "message").get_str().c_str());
+		return find_value(objError, "message").get_str().c_str();
 	}
 	catch(std::exception& e)
 	{
-		if(fDebug)
-			printf(string(e.what()).c_str());
+		return string(e.what()).c_str();
 	}
+	return "";
 
 }
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
@@ -286,9 +289,8 @@ string makeOfferRefundTX(const CTransaction& prevTx, const COffer& theOffer, con
     COfferAccept offerAcceptCopy = theOfferAccept;
     offerCopy.accepts.clear();
     offerCopy.PutOfferAccept(offerAcceptCopy);
-	int64 fNetFee = GetOfferNetworkFee(OP_OFFER_REFUND);
 	string bdata = offerCopy.SerializeToString();
-	string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, fNetFee,
+	string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, 0,
 				wtxPrevIn, wtx, false, bdata);
 	if (strError != "")
 	{
@@ -334,9 +336,6 @@ int64 GetOfferNetworkFee(opcodetype seed) {
     }
     else if(seed==OP_OFFER_UPDATE) {
     	nFee = 100 * COIN;
-    }
-    else if(seed==OP_OFFER_REFUND) {
-    	nFee = 5 * COIN;
     }
 	// Round up to CENT
 	nFee += CENT - 1;
@@ -1319,11 +1318,10 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 		switch (op) {
 		case OP_OFFER_ACTIVATE:
-
-			if (found)
-				return error(
-						"CheckOfferInputs() : offernew tx pointing to previous syscoin tx");
-
+			if ( found && ( prevOp != OP_CERT_ACTIVATE && prevOp != OP_CERT_UPDATE  ) )
+				return error("offeractivate previous op is invalid");		
+			if (found && vvchPrevArgs[0] != vvchArgs[0])
+				return error("CheckOfferInputs() : offernew cert mismatch");
 			if (vvchArgs[1].size() > 20)
 				return error("offeractivate tx with guid too big");
 
@@ -1374,6 +1372,8 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				return error("offerrefund tx with guid too big");
 			if (vvchArgs[2].size() > 20)
 				return error("offerrefund refund status too long");
+			if (vvchPrevArgs[0] != vvchArgs[0])
+				return error("CheckOfferInputs() : offerrefund offer mismatch");
 			if (fBlock && !fJustCheck) {
 				// Check hash
 				const vector<unsigned char> &vchOffer = vvchArgs[0];
@@ -1388,13 +1388,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				if ((fBlock || fMiner) && nDepth < 0)
 					return error(
 							"CheckOfferInputs() : offerrefund on an expired offer, or there is a pending transaction on the offer");
-					// check for enough fees
-				nNetFee = GetOfferNetFee(tx);
-				if (nNetFee < GetOfferNetworkFee(OP_OFFER_REFUND))
-					return error(
-							"CheckOfferInputs() : OP_OFFER_REFUND got tx %s with fee too low %lu",
-							tx.GetHash().GetHex().c_str(),
-							(long unsigned int) nNetFee);			
+		
 			}
 			break;
 		case OP_OFFER_ACCEPT:
@@ -1555,12 +1549,24 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				
 					theOffer.nQty -= theOfferAccept.nQty;
 
-					if (!fInit && pwalletMain && !linkOffer.IsNull() && IsOfferMine(offerTx) )
+					if (!fInit && pwalletMain && !linkOffer.IsNull() && IsOfferMine(offerTx) && HasReachedMainNetForkB2())
 					{	
 						// myOffer.vchLinkOffer is the linked offer guid
 						// vvchArgs[1] is this offer accept rand used to walk back up and refund offers in the linked chain
 						// we are now accepting the linked	 offer, up the link offer stack.
-						makeOfferLinkAcceptTX(theOfferAccept, myOffer.vchLinkOffer, vvchArgs[1]);					
+						string strError = makeOfferLinkAcceptTX(theOfferAccept, myOffer.vchLinkOffer, vvchArgs[1]);
+						if(strError != "")
+						{
+							if(fDebug)
+							{
+								printf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeOfferLinkAcceptTX %s\n", strError.c_str());
+							}
+							// if there is a problem refund this accept
+							strError = makeOfferRefundTX(offerTx, theOffer, theOfferAccept, OFFER_REFUND_PAYMENT_INPROGRESS);
+							if (strError != "" && fDebug)
+								printf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeOfferLinkAcceptTX(makeOfferRefundTX) %s\n", strError.c_str());
+
+						}
 					}
 					
 					
@@ -1717,26 +1723,26 @@ Value getofferfees(const Array& params, bool fHelp) {
 }
 
 Value offernew(const Array& params, bool fHelp) {
-	if (fHelp || params.size() < 5 || params.size() > 6)
+	if (fHelp || params.size() < 5 || params.size() > 7)
 		throw runtime_error(
-		"offernew <category> <title> <quantity> <price> <description> <[address]>\n"
+		"offernew <category> <title> <quantity> <price> <description> [exclusive resell=0] [address]\n"
 						"<category> category, 255 chars max.\n"
 						"<title> title, 255 chars max.\n"
 						"<quantity> quantity, > 0\n"
 						"<price> price in syscoin, > 0\n"
 						"<description> description, 64 KB max.\n"
-						"<address> offeraccept receive address. Defaults to an address in your wallet.\n"
+						"<exclusive resell> set to 1 if you only want those who control the whitelist certificates to be able to resell this offer via offerlink. Defaults to 0.\n"
+						"<address> offeraccept receive alias or address. Defaults to an address in your wallet.\n"
 						+ HelpRequiringPassphrase());
 	// gather inputs
 	string baSig;
 	unsigned int nParamIdx = 0;
 	uint64 nQty, nPrice;
-
+	bool bExclusiveResell = false;
 	vector<unsigned char> vchPaymentAddress;
 	vector<unsigned char> vchCat = vchFromValue(params[0]);
 	vector<unsigned char> vchTitle = vchFromValue(params[1]);
 	vector<unsigned char> vchDesc;
-
 	int64 qty = atoi64(params[2].get_str().c_str());
 	if(qty < 0)
 	{
@@ -1757,10 +1763,13 @@ Value offernew(const Array& params, bool fHelp) {
     // 64Kbyte offer desc. maxlen
 	if (vchDesc.size() > 1024 * 64)
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description > 65536 bytes!\n");
-
-	if(params.size() == 6)
+	if(params.size() >= 6)
 	{
-		vchPaymentAddress = vchFromValue(params[5]);
+		bExclusiveResell = atoi(params[5].get_str().c_str()) == 1? true: false;
+	}
+	if(params.size() == 7)
+	{
+		vchPaymentAddress = vchFromValue(params[6]);
 		CBitcoinAddress payAddr = CBitcoinAddress(stringFromVch(vchPaymentAddress));
 		if (!payAddr.IsValid())
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
@@ -1773,6 +1782,8 @@ Value offernew(const Array& params, bool fHelp) {
 		CBitcoinAddress payAddr = CBitcoinAddress(newDefaultKey.GetID());
 		vchPaymentAddress = vchFromString(payAddr.ToString());
 	}
+
+	
 	// this is a syscoin transaction
 	CWalletTx wtx;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
@@ -1797,6 +1808,7 @@ Value offernew(const Array& params, bool fHelp) {
 	newOffer.nQty = nQty;
 	newOffer.nPrice = nPrice * COIN;
 	newOffer.nFee = nNetFee;
+	newOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
 	string bdata = newOffer.SerializeToString();
 	
 	//create offeractivate txn keys
@@ -1838,16 +1850,18 @@ Value offernew(const Array& params, bool fHelp) {
 Value offerlink(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 2 || params.size() > 4)
 		throw runtime_error(
-		"offerlink <guid> <commission> [<address>] [<description>]\n"
+		"offerlink <guid> <commission> [address] [description]\n"
 						"<guid> offer guid that you are linking to\n"
 						"<commission> percentage of profit desired over original offer price, > 0, ie: 5 for 5%\n"
-						"<address> new offeraccept receive address or alias. Defaults to an address in your wallet\n"
-						"<description> description, 64 KB max. Defaults to original description\n"
+						"<address> new offeraccept receive address or alias. Defaults to an address in your wallet. Leave as '' to use default.\n"
+						"<description> description, 64 KB max. Defaults to original description. Leave as '' to use default.\n"
 						+ HelpRequiringPassphrase());
 	// gather inputs
 	string baSig;
-	uint64 nQty, nPrice;
-
+	uint64 nQty;
+	uint64 nPrice = UINT64_MAX;
+	CWalletTx wtxCertIn;
+	COfferLinkWhitelistEntry whiteListEntry;
 	vector<unsigned char> vchPaymentAddress;
 
 	vector<unsigned char> vchLinkOffer = vchFromValue(params[0]);
@@ -1863,10 +1877,20 @@ Value offerlink(const Array& params, bool fHelp) {
 	if(params.size() > 2)
 	{
 		vchPaymentAddress = vchFromValue(params[2]);
-		CBitcoinAddress payAddr = CBitcoinAddress(stringFromVch(vchPaymentAddress));
-		if (!payAddr.IsValid())
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-					"Invalid syscoin address");
+		if(vchPaymentAddress.size() > 0)
+		{
+			CBitcoinAddress payAddr = CBitcoinAddress(stringFromVch(vchPaymentAddress));
+			if (!payAddr.IsValid())
+				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
+						"Invalid syscoin address");
+		}
+		else
+		{
+			CPubKey newDefaultKey;
+			pwalletMain->GetKeyFromPool(newDefaultKey, false);
+			CBitcoinAddress payAddr = CBitcoinAddress(newDefaultKey.GetID());
+			vchPaymentAddress = vchFromString(payAddr.ToString());
+		}
 	}
 	else
 	{
@@ -1884,14 +1908,56 @@ Value offerlink(const Array& params, bool fHelp) {
 	if(params.size() == 4)
 	{
 		vchDesc = vchFromValue(params[3]);
-		// 64Kbyte offer desc. maxlen
-		if (vchDesc.size() > 1024 * 64)
-			throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description > 65536 bytes!\n");
+		if(vchDesc.size() > 0)
+		{
+			// 64Kbyte offer desc. maxlen
+			if (vchDesc.size() > 1024 * 64)
+				throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description > 65536 bytes!\n");
+		}
+		else
+		{
+			vchDesc = linkOffer.sDescription;
+		}
 	}
 	else
 	{
 		vchDesc = linkOffer.sDescription;
 	}
+	COfferLinkWhitelistEntry foundEntry;
+	nPrice = linkOffer.nPrice;
+	// go through the whitelist and see if you own any of the certs to apply to this offer for a discount
+	// find the one with the biggest discount if there are more than one that you own from the list
+	for(unsigned int i=0;i<linkOffer.linkWhitelist.entries.size();i++) {
+		CTransaction txCert;
+		CWalletTx wtxCertIn;
+		CCert theCert;
+		COfferLinkWhitelistEntry& entry = linkOffer.linkWhitelist.entries[i];
+		// make sure this cert is still valid
+		if (GetTxOfCert(*pcertdb, entry.certLinkVchRand, theCert, txCert))
+		{
+			// make sure its in your wallet (you control this cert)		
+			if (IsCertMine(txCert) && pwalletMain->GetTransaction(txCert.GetHash(), wtxCertIn)) 
+			{
+				if(entry.nPrice <= nPrice)
+				{
+					nPrice = entry.nPrice;
+					foundEntry = entry;
+				}
+			}
+			
+		}
+
+	}
+	if(!foundEntry.IsNull())
+		nPrice = foundEntry.nPrice;
+	
+
+	// if the whitelist is non-empty and you dont have a cert in the whitelist, you cannot link to this offer
+	if(foundEntry.IsNull() && linkOffer.linkWhitelist.entries.size() > 0)
+	{
+		throw runtime_error("cannot link to this offer because you don't own a cert from its whitelist");
+	}
+
 	vchCat = linkOffer.sCategory;
 	vchTitle = linkOffer.sTitle;
 	nQty = linkOffer.nQty;
@@ -1920,7 +1986,7 @@ Value offerlink(const Array& params, bool fHelp) {
 	newOffer.sTitle = vchTitle;
 	newOffer.sDescription = vchDesc;
 	newOffer.nQty = nQty;
-	newOffer.nPrice = (float)roundf((linkOffer.nPrice*nCommission) * 100) / 100;
+	newOffer.nPrice = (float)roundf((nPrice*nCommission) * 100) / 100;
 	newOffer.vchLinkOffer = vchLinkOffer;
 	newOffer.nLinkCommissionPct = commissionInteger;
 	newOffer.nHeight = linkOffer.nHeight;
@@ -1937,17 +2003,26 @@ Value offerlink(const Array& params, bool fHelp) {
 			<< vchRand << OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 
-	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
-    vector< pair<CScript, int64> > vecSend;
-    vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
-	
-	CScript scriptFee;
-	scriptFee << OP_RETURN;
-	vecSend.push_back(make_pair(scriptFee, nNetFee));
 
-	// send the tranasction
-	string strError = pwalletMain->SendMoney(vecSend, MIN_AMOUNT, wtx,
+	string strError;
+	//if(wtxCertIn.IsNull())
+	//{
+		// send the tranasction
+		// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
+		vector< pair<CScript, int64> > vecSend;
+		vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
+		
+		CScript scriptFee;
+		scriptFee << OP_RETURN;
+		vecSend.push_back(make_pair(scriptFee, nNetFee));
+		strError = pwalletMain->SendMoney(vecSend, MIN_AMOUNT, wtx,
 				false, bdata);
+	/*}
+	else
+	{
+		strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
+			wtxCertIn, wtx, false, bdata);
+	}*/
 	if (strError != "")
 	{
 		throw JSONRPCError(RPC_WALLET_ERROR, strError);
@@ -1962,15 +2037,291 @@ Value offerlink(const Array& params, bool fHelp) {
 	res.push_back(HexStr(vchRand));
 	return res;
 }
+Value offeraddwhitelist(const Array& params, bool fHelp) {
+	if (fHelp || params.size() < 2 || params.size() > 3)
+		throw runtime_error(
+		"offeraddwhitelist <offer guid> <cert guid> [wholesale price]\n"
+		"Add to the whitelist of your offer(controls who can resell).\n"
+						"<offer guid> offer guid that you are adding to\n"
+						"<cert guid> cert guid representing a certificate that you control (transfer it to reseller after)\n"
+						"<wholesale price> price that the reseller pays to you for this offer. Defaults to the offer price.\n"
+						
+						+ HelpRequiringPassphrase());
+
+	// gather & validate inputs
+	vector<unsigned char> vchOffer = vchFromValue(params[0]);
+	vector<unsigned char> vchCert =  vchFromValue(params[1]);
+	uint64 nWholesalePrice = 0;
+	
+	if(params.size() >= 3)
+		nWholesalePrice = (uint64)atoi64(params[2].get_str().c_str());
+
+
+	CTransaction txCert;
+	CCert theCert;
+	CWalletTx wtx, wtxIn, wtxCertIn;
+	if (!GetTxOfCert(*pcertdb, vchCert, theCert, txCert))
+		throw runtime_error("could not find a certificate with this key");
+
+	// check to see if certificate in wallet
+	if (!pwalletMain->GetTransaction(txCert.GetHash(), wtxCertIn)) 
+		throw runtime_error("this certificate is not in your wallet");
+
+
+	// this is a syscoind txn
+	wtx.nVersion = SYSCOIN_TX_VERSION;
+	CScript scriptPubKeyOrig;
+
+	// get a key from our wallet set dest as ourselves
+	CPubKey newDefaultKey;
+	pwalletMain->GetKeyFromPool(newDefaultKey, false);
+	scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
+
+
+	// check for existing pending offers
+	if (ExistsInMempool(vchOffer, OP_OFFER_REFUND) || ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_UPDATE)) {
+		throw runtime_error("there are pending operations or refunds on that offer");
+	}
+	EnsureWalletIsUnlocked();
+
+	// look for a transaction with this key
+	CTransaction tx;
+	COffer theOffer;
+	if (!GetTxOfOffer(*pofferdb, vchOffer, theOffer, tx))
+		throw runtime_error("could not find an offer with this name");
+	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
+		throw runtime_error("this offer is not in your wallet");
+	// unserialize offer object from txn
+	if(!theOffer.UnserializeFromTx(tx))
+		throw runtime_error("cannot unserialize offer from txn");
+
+	// get the offer from DB
+	vector<COffer> vtxPos;
+	if (!pofferdb->ReadOffer(vchOffer, vtxPos))
+		throw runtime_error("could not read offer from DB");
+
+	theOffer = vtxPos.back();
+	// create OFFERUPDATE txn keys
+	CScript scriptPubKey;
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << theOffer.sTitle
+			<< OP_2DROP << OP_DROP;
+	scriptPubKey += scriptPubKeyOrig;
+	// calculate network fees
+	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_UPDATE);
+	
+
+	theOffer.accepts.clear();
+
+	COfferLinkWhitelistEntry entry;
+	entry.certLinkVchRand = theCert.vchRand;
+	if(nWholesalePrice == 0)
+		entry.nPrice = theOffer.nPrice;
+	else
+		entry.nPrice = nWholesalePrice * COIN;
+	theOffer.linkWhitelist.PutWhitelistEntry(entry);
+
+	// serialize offer object
+	string bdata = theOffer.SerializeToString();
+
+	string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
+			wtxIn, wtx, false, bdata);
+	if (strError != "")
+		throw JSONRPCError(RPC_WALLET_ERROR, strError);
+
+	return wtx.GetHash().GetHex();
+}
+Value offerremovewhitelist(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 2)
+		throw runtime_error(
+		"offerremovewhitelist <offer guid> <cert guid>\n"
+		"Remove from the whitelist of your offer(controls who can resell).\n"
+						+ HelpRequiringPassphrase());
+
+	// gather & validate inputs
+	vector<unsigned char> vchOffer = vchFromValue(params[0]);
+	vector<unsigned char> vchCert = vchFromValue(params[1]);
+
+
+	CCert theCert;
+
+	// this is a syscoind txn
+	CWalletTx wtx, wtxIn;
+	wtx.nVersion = SYSCOIN_TX_VERSION;
+	CScript scriptPubKeyOrig;
+
+	// get a key from our wallet set dest as ourselves
+	CPubKey newDefaultKey;
+	pwalletMain->GetKeyFromPool(newDefaultKey, false);
+	scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
+
+	
+	// check for existing pending offers
+	if (ExistsInMempool(vchOffer, OP_OFFER_REFUND) || ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_UPDATE)) {
+		throw runtime_error("there are pending operations or refunds on that offer");
+	}
+	EnsureWalletIsUnlocked();
+
+	// look for a transaction with this key
+	CTransaction tx;
+	COffer theOffer;
+	if (!GetTxOfOffer(*pofferdb, vchOffer, theOffer, tx))
+		throw runtime_error("could not find an offer with this name");
+	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
+		throw runtime_error("this offer is not in your wallet");
+	// unserialize offer object from txn
+	if(!theOffer.UnserializeFromTx(tx))
+		throw runtime_error("cannot unserialize offer from txn");
+
+	// get the offer from DB
+	vector<COffer> vtxPos;
+	if (!pofferdb->ReadOffer(vchOffer, vtxPos))
+		throw runtime_error("could not read offer from DB");
+
+	theOffer = vtxPos.back();
+	// create OFFERUPDATE txn keys
+	CScript scriptPubKey;
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << theOffer.sTitle
+			<< OP_2DROP << OP_DROP;
+	scriptPubKey += scriptPubKeyOrig;
+	// calculate network fees
+	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_UPDATE);
+	
+	
+	theOffer.accepts.clear();
+
+
+	if(!theOffer.linkWhitelist.RemoveWhitelistEntry(vchCert))
+	{
+		throw runtime_error("could not find remove this whitelist entry");
+	}
+
+	// serialize offer object
+	string bdata = theOffer.SerializeToString();
+
+	string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
+			wtxIn, wtx, false, bdata);
+	if (strError != "")
+		throw JSONRPCError(RPC_WALLET_ERROR, strError);
+
+	return wtx.GetHash().GetHex();
+}
+Value offerclearwhitelist(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 2)
+		throw runtime_error(
+		"offerclearwhitelist <offer guid> <cert guid>\n"
+		"Clear the whitelist of your offer(controls who can resell).\n"
+						+ HelpRequiringPassphrase());
+
+	// gather & validate inputs
+	vector<unsigned char> vchOffer = vchFromValue(params[0]);
+	vector<unsigned char> vchCert = vchFromValue(params[1]);
+
+	int64 nWholesalePrice = (int64)atoi64(params[2].get_str().c_str());
+
+
+	CCert theCert;
+
+	// this is a syscoind txn
+	CWalletTx wtx, wtxIn;
+	wtx.nVersion = SYSCOIN_TX_VERSION;
+	CScript scriptPubKeyOrig;
+
+	// get a key from our wallet set dest as ourselves
+	CPubKey newDefaultKey;
+	pwalletMain->GetKeyFromPool(newDefaultKey, false);
+	scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
+
+
+	// check for existing pending offers
+	if (ExistsInMempool(vchOffer, OP_OFFER_REFUND) || ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_UPDATE)) {
+		throw runtime_error("there are pending operations or refunds on that offer");
+	}
+	EnsureWalletIsUnlocked();
+
+	// look for a transaction with this key
+	CTransaction tx;
+	COffer theOffer;
+	if (!GetTxOfOffer(*pofferdb, vchOffer, theOffer, tx))
+		throw runtime_error("could not find an offer with this name");
+	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
+		throw runtime_error("this offer is not in your wallet");
+	// unserialize offer object from txn
+	if(!theOffer.UnserializeFromTx(tx))
+		throw runtime_error("cannot unserialize offer from txn");
+
+	// get the offer from DB
+	vector<COffer> vtxPos;
+	if (!pofferdb->ReadOffer(vchOffer, vtxPos))
+		throw runtime_error("could not read offer from DB");
+
+	theOffer = vtxPos.back();
+	// create OFFERUPDATE txn keys
+	CScript scriptPubKey;
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << theOffer.sTitle
+			<< OP_2DROP << OP_DROP;
+	scriptPubKey += scriptPubKeyOrig;
+	// calculate network fees
+	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_UPDATE);
+	
+	theOffer.accepts.clear();
+	theOffer.linkWhitelist.entries.clear();
+
+	// serialize offer object
+	string bdata = theOffer.SerializeToString();
+
+	string strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
+			wtxIn, wtx, false, bdata);
+	if (strError != "")
+		throw JSONRPCError(RPC_WALLET_ERROR, strError);
+
+	return wtx.GetHash().GetHex();
+}
+
+Value offerwhitelist(const Array& params, bool fHelp) {
+    if (fHelp || 1 != params.size())
+        throw runtime_error("offerwhitelist <offer guid>\n"
+                "List all whitelist entries for this offer.\n");
+
+    Array oRes;
+    vector<unsigned char> vchOffer = vchFromValue(params[0]);
+	// look for a transaction with this key
+	CTransaction tx;
+	COffer theOffer;
+	if (!GetTxOfOffer(*pofferdb, vchOffer, theOffer, tx))
+		throw runtime_error("could not find an offer with this name");
+	
+	for(unsigned int i=0;i<theOffer.linkWhitelist.entries.size();i++) {
+		CTransaction txCert;
+		CCert theCert;
+		COfferLinkWhitelistEntry& entry = theOffer.linkWhitelist.entries[i];
+		uint256 hashBlock;
+		if (GetTxOfCert(*pcertdb, entry.certLinkVchRand, theCert, txCert))
+		{
+			Object oList;
+			oList.push_back(Pair("cert_guid", stringFromVch(theCert.vchRand)));
+			oList.push_back(Pair("cert_title", stringFromVch(theCert.vchTitle)));
+			oList.push_back(Pair("cert_is_mine", IsCertMine(txCert) ? "true" : "false"));
+			string strAddress = "";
+			GetCertAddress(txCert, strAddress);
+			oList.push_back(Pair("cert_address", strAddress));
+			oList.push_back(
+					Pair("cert_expiresin",
+							theCert.nHeight + GetCertDisplayExpirationDepth(theCert.nHeight)
+									- pindexBest->nHeight));
+			oList.push_back(Pair("offer_price", ValueFromAmount(entry.nPrice)));
+			oRes.push_back(oList);
+		}  
+    }
+    return oRes;
+}
 Value offerupdate(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 5 || params.size() > 6)
 		throw runtime_error(
-				"offerupdate <guid> <category> <title> <quantity> <price> [<description>]\n"
+		"offerupdate <guid> <category> <title> <quantity> <price> [description]\n"
 						"Perform an update on an offer you control.\n"
 						+ HelpRequiringPassphrase());
 
 	// gather & validate inputs
-	vector<unsigned char> vchRand = ParseHex(params[0].get_str());
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	vector<unsigned char> vchCat = vchFromValue(params[1]);
 	vector<unsigned char> vchTitle = vchFromValue(params[2]);
@@ -2191,7 +2542,7 @@ Value offerrefund(const Array& params, bool fHelp) {
 
 Value offeraccept(const Array& params, bool fHelp) {
 	if (fHelp || 1 > params.size() || params.size() > 5)
-		throw runtime_error("offeraccept <guid> [<quantity] [<message>] [<refund address>] [<linkedguid>]\n"
+		throw runtime_error("offeraccept <guid> [quantity] [message] [refund address] [linkedguid]\n"
 				"Accept&Pay for a confirmed offer.\n"
 				"<guid> guidkey from offer.\n"
 				"<quantity> quantity to buy. Defaults to 1.\n"
@@ -2202,7 +2553,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 	vector<unsigned char> vchRefundAddress;	
 	CBitcoinAddress refundAddr;	
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
-	vector<unsigned char> vchLinkOfferAccept = vchFromValue(params.size()>= 5? params[4]:params[0]);
+	vector<unsigned char> vchLinkOfferAccept = vchFromValue(params.size()>= 5? params[4]:"");
 	vector<unsigned char> vchMessage = vchFromValue(params.size()>=3?params[2]:params[0]);
 	uint64 nQty;
 	int64 qty = 1;
@@ -2294,8 +2645,33 @@ Value offeraccept(const Array& params, bool fHelp) {
 		else
 			break;
 	}
-	
+	uint64 nPrice = theOffer.nPrice;
+	bool found = false;
+	// go through the whitelist and see if you own any of the certs to apply to this offer for a discount
+	for(unsigned int i=0;i<theOffer.linkWhitelist.entries.size();i++) {
+		CTransaction txCert;
+		CWalletTx wtxCertIn;
+		CCert theCert;
+		COfferLinkWhitelistEntry& entry = theOffer.linkWhitelist.entries[i];
+		// make sure this cert is still valid
+		if (GetTxOfCert(*pcertdb, entry.certLinkVchRand, theCert, txCert))
+		{
+			// make sure its in your wallet (you control this cert)
+			
+			if (IsCertMine(txCert) && pwalletMain->GetTransaction(txCert.GetHash(), wtxCertIn)) 
+			{
+				nPrice = entry.nPrice;
+				found = true;
+			}
+			
+		}
 
+	}
+	// if this is an accept for a linked offer and the whitelist is non-empty and you dont have a cert in the whitelist, you cannot accept this offer
+	if(vchLinkOfferAccept.size() > 0 && !found && theOffer.linkWhitelist.bExclusiveResell && theOffer.linkWhitelist.entries.size() > 0)
+	{
+		throw runtime_error("cannot pay for this linked offer because you don't own a cert from its whitelist");
+	}
 	uint64 memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if(theOffer.nQty < (nQty+memPoolQty))
 		throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
@@ -2306,18 +2682,21 @@ Value offeraccept(const Array& params, bool fHelp) {
     txAccept.txPayId = wtx.GetHash();
     txAccept.vchMessage = vchMessage;
 	txAccept.nQty = nQty;
-	txAccept.nPrice = theOffer.nPrice;
+	txAccept.nPrice = nPrice;
 	txAccept.vchLinkOfferAccept = vchLinkOfferAccept;
 	txAccept.vchRefundAddress = vchRefundAddress;
 	txAccept.nFee = 0;
 	txAccept.bPaid = true;
 	theOffer.accepts.clear();
 	theOffer.PutOfferAccept(txAccept);
-
+	
+	
 	// Check for sufficient funds to pay for order
     set<pair<const CWalletTx*,unsigned int> > setCoins;
     int64 nValueIn = 0;
-    uint64 nTotalValue = ( theOffer.nPrice * nQty );
+
+
+    uint64 nTotalValue = ( nPrice * nQty );
 
     if (!pwalletMain->SelectCoins(nTotalValue, setCoins, nValueIn))
         throw runtime_error("insufficient funds to pay for offer");
@@ -2467,7 +2846,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 
 Value offerlist(const Array& params, bool fHelp) {
     if (fHelp || 1 < params.size())
-		throw runtime_error("offerlist [<offer>]\n"
+		throw runtime_error("offerlist [offer]\n"
 				"list my own offers");
 
     vector<unsigned char> vchName;

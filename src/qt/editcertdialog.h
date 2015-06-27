@@ -4,9 +4,9 @@
 #include <QDialog>
 
 namespace Ui {
-    class EditCertIssuerDialog;
+    class EditCertDialog;
 }
-class CertIssuerTableModel;
+class CertTableModel;
 
 QT_BEGIN_NAMESPACE
 class QDataWidgetMapper;
@@ -14,26 +14,24 @@ QT_END_NAMESPACE
 
 /** Dialog for editing an address and associated information.
  */
-class EditCertIssuerDialog : public QDialog
+class EditCertDialog : public QDialog
 {
     Q_OBJECT
 
 public:
     enum Mode {
-        NewCertItem,
-        NewCertIssuer,
-        EditCertItem,
-        EditCertIssuer
+        NewCert,
+        EditCert
     };
 
-    explicit EditCertIssuerDialog(Mode mode, QWidget *parent = 0);
-    ~EditCertIssuerDialog();
+    explicit EditCertDialog(Mode mode, QWidget *parent = 0);
+    ~EditCertDialog();
 
-    void setModel(CertIssuerTableModel *model);
+    void setModel(CertTableModel *model);
     void loadRow(int row);
 
-    QString getCertIssuer() const;
-    void setCertIssuer(const QString &cert);
+    QString getCert() const;
+    void setCert(const QString &cert);
 
 public slots:
     void accept();
@@ -41,10 +39,10 @@ public slots:
 private:
     bool saveCurrentRow();
 
-    Ui::EditCertIssuerDialog *ui;
+    Ui::EditCertDialog *ui;
     QDataWidgetMapper *mapper;
     Mode mode;
-    CertIssuerTableModel *model;
+    CertTableModel *model;
 
     QString cert;
 };

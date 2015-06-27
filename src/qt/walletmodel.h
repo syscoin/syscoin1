@@ -10,7 +10,7 @@
 class OptionsModel;
 class AddressTableModel;
 class AliasTableModel;
-class CertIssuerTableModel;
+class CertTableModel;
 class TransactionTableModel;
 class CWallet;
 class CKeyID;
@@ -66,7 +66,7 @@ public:
     AddressTableModel *getAddressTableModel();
     AliasTableModel *getAliasTableModelMine();
     AliasTableModel *getAliasTableModelAll();
-    CertIssuerTableModel *getCertIssuerTableModel();
+    CertTableModel *getCertTableModel();
     TransactionTableModel *getTransactionTableModel();
     
     qint64 getBalance(const CCoinControl *coinControl=NULL) const;
@@ -146,7 +146,7 @@ private:
     TransactionTableModel *transactionTableModel;
     AliasTableModel *aliasTableModelMine;
     AliasTableModel *aliasTableModelAll;
-    CertIssuerTableModel *certIssuerTableModel;
+    CertTableModel *certTableModel;
 
     // Cache some values to be able to detect changes
     qint64 cachedBalance;
@@ -190,9 +190,9 @@ public slots:
     /* New, updated or removed alias */
     void updateAlias(const QString &alias, const QString &value, const QString &expDepth, int status);
    
-    /* New, updated or removed cert issuer / cert */
-    void updateCertIssuer(const QString &cert, const QString &title, const QString &expDepth,int status);
-    /* New, updated or removed cert issuer / cert */
+    /* New, updated or removed cert  / cert */
+    void updateCert(const QString &cert, const QString &title, const QString &expDepth,int status);
+    /* New, updated or removed cert  / cert */
 
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();

@@ -379,8 +379,8 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx)
 //                    }
 					else if(DecodeCertTx(tx, op, nOut, vvchArgs, -1))
 					{
-						CCertIssuer theCI(tx);
-						NotifyCertIssuerListChanged(this, &tx, theCI, CT_UPDATED);
+						CCert theCI(tx);
+						NotifyCertListChanged(this, &tx, theCI, CT_UPDATED);
 					} 
 				}
 			}
@@ -529,8 +529,8 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
 //        }
 		else if(DecodeCertTx(wtx, op, nOut, vvchArgs, -1))
 		{
-			CCertIssuer theCI(wtx);
-            NotifyCertIssuerListChanged(this, &wtx, theCI, fInsertedNew ? CT_NEW : CT_UPDATED);
+			CCert theCI(wtx);
+            NotifyCertListChanged(this, &wtx, theCI, fInsertedNew ? CT_NEW : CT_UPDATED);
 		} 
         
 
@@ -746,7 +746,7 @@ void CWalletTx::GetAmounts(list<pair<CTxDestination, int64> >& listReceived,
         if(!ExtractDestination(txout.scriptPubKey, address)
         && !ExtractAliasAddress(txout.scriptPubKey, saddress)
         && !ExtractOfferAddress(txout.scriptPubKey, saddress)
-        && !ExtractCertIssuerAddress(txout.scriptPubKey, saddress)) {
+        && !ExtractCertAddress(txout.scriptPubKey, saddress)) {
             printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
                this->GetHash().ToString().c_str());            
         }
@@ -1415,7 +1415,6 @@ bool CWallet::CreateTransaction(const std::vector<std::pair<CScript, int64> >& v
                 // Fill vin
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
                     wtxNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second));
-
                 // Sign
                 int nIn = 0;
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
@@ -1478,11 +1477,9 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
 
             // Take key pair from key pool so it won't be used again
             reservekey.KeepKey();
-
             // Add tx to wallet, because if it has change it's also ours,
             // otherwise just for transaction history.
             AddToWallet(wtxNew);
-
             // Mark old coins as spent
             set<CWalletTx*> setCoins;
             BOOST_FOREACH(const CTxIn& txin, wtxNew.vin)
@@ -1509,8 +1506,8 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
 //                }
 				else if(DecodeCertTx(wtxNew, op, nOut, vvchArgs, -1))
 				{
-                    CCertIssuer theCI(wtxNew);
-                    NotifyCertIssuerListChanged(this, &wtxNew, theCI, CT_UPDATED);
+                    CCert theCI(wtxNew);
+                    NotifyCertListChanged(this, &wtxNew, theCI, CT_UPDATED);
 				} 
 			}
             if (fFileBacked)
@@ -2108,8 +2105,8 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx)
 //            }
 			else if(DecodeCertTx(wtx, op, nOut, vvchArgs, -1))
 			{
-                CCertIssuer theCI(wtx);
-                NotifyCertIssuerListChanged(this, &wtx, theCI, CT_UPDATED);
+                CCert theCI(wtx);
+                NotifyCertListChanged(this, &wtx, theCI, CT_UPDATED);
 			}
         }
     }

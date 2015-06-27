@@ -134,7 +134,102 @@ public:
     bool IsNull() const { return (nTime == 0 && txHash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 && bPaid == 0 && txPayId == 0 && bRefunded == false && txRefundId == 0); }
 
 };
+class COfferLinkWhitelistEntry {
+public:
+	std::vector<unsigned char> certLinkVchRand;
+	uint64 nPrice;
+	COfferLinkWhitelistEntry() {
+		SetNull();
+	}
 
+    IMPLEMENT_SERIALIZE (
+        READWRITE(certLinkVchRand);
+		READWRITE(nPrice);
+	)
+
+    friend bool operator==(const COfferLinkWhitelistEntry &a, const COfferLinkWhitelistEntry &b) {
+        return (
+           a.certLinkVchRand == b.certLinkVchRand
+		&& a.nPrice == b.nPrice
+        );
+    }
+
+    COfferLinkWhitelistEntry operator=(const COfferLinkWhitelistEntry &b) {
+    	certLinkVchRand = b.certLinkVchRand;
+		nPrice = b.nPrice;
+        return *this;
+    }
+
+    friend bool operator!=(const COfferLinkWhitelistEntry &a, const COfferLinkWhitelistEntry &b) {
+        return !(a == b);
+    }
+    
+    void SetNull() { certLinkVchRand.clear(); nPrice = 0;}
+    bool IsNull() const { return (certLinkVchRand.empty() && nPrice == 0); }
+
+};
+class COfferLinkWhitelist {
+public:
+	std::vector<COfferLinkWhitelistEntry> entries;
+	bool bExclusiveResell;
+	COfferLinkWhitelist() {
+		SetNull();
+	}
+
+    IMPLEMENT_SERIALIZE (
+        READWRITE(entries);
+		READWRITE(bExclusiveResell);
+
+	)
+    bool GetLinkEntryByHash(std::vector<unsigned char> ahash, COfferLinkWhitelistEntry &entry) {
+    	for(unsigned int i=0;i<entries.size();i++) {
+    		if(entries[i].certLinkVchRand == ahash) {
+    			entry = entries[i];
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+    bool RemoveWhitelistEntry(std::vector<unsigned char> ahash) {
+    	for(unsigned int i=0;i<entries.size();i++) {
+    		if(entries[i].certLinkVchRand == ahash) {
+    			return entries.erase(entries.begin()+i) != entries.end();
+    		}
+    	}
+    	return false;
+    }	
+    void PutWhitelistEntry(COfferLinkWhitelistEntry &theEntry) {
+    	for(unsigned int i=0;i<entries.size();i++) {
+    		COfferLinkWhitelistEntry entry = entries[i];
+    		if(theEntry.certLinkVchRand == entry.certLinkVchRand) {
+    			entries[i] = theEntry;
+    			return;
+    		}
+    	}
+    	entries.push_back(theEntry);
+    }
+    friend bool operator==(const COfferLinkWhitelist &a, const COfferLinkWhitelist &b) {
+        return (
+           a.entries == b.entries
+		&& a.bExclusiveResell == b.bExclusiveResell
+
+        );
+    }
+
+    COfferLinkWhitelist operator=(const COfferLinkWhitelist &b) {
+    	entries = b.entries;
+		bExclusiveResell = b.bExclusiveResell;
+        return *this;
+    }
+
+    friend bool operator!=(const COfferLinkWhitelist &a, const COfferLinkWhitelist &b) {
+        return !(a == b);
+    }
+    
+    void SetNull() { entries.clear();bExclusiveResell = false;}
+    bool IsNull() const { return (entries.empty() && bExclusiveResell == false);}
+
+};
 class COffer {
 public:
 	std::vector<unsigned char> vchRand;
@@ -153,6 +248,7 @@ public:
 	std::vector<COfferAccept>accepts;
 	unsigned char nLinkCommissionPct;
 	std::vector<unsigned char> vchLinkOffer;
+	COfferLinkWhitelist linkWhitelist;
 	COffer() { 
         SetNull();
     }
@@ -179,6 +275,7 @@ public:
     	READWRITE(accepts);
 		READWRITE(nLinkCommissionPct);
 		READWRITE(vchLinkOffer);
+		READWRITE(linkWhitelist);
 	)
 
     bool GetAcceptByHash(std::vector<unsigned char> ahash, COfferAccept &ca) {
@@ -244,6 +341,7 @@ public:
         && a.vchPaymentAddress == b.vchPaymentAddress
 		&& a.nLinkCommissionPct == b.nLinkCommissionPct
 		&& a.vchLinkOffer == b.vchLinkOffer
+		&& a.linkWhitelist == b.linkWhitelist
         );
     }
 
@@ -264,6 +362,7 @@ public:
         vchPaymentAddress = b.vchPaymentAddress;
 		nLinkCommissionPct = b.nLinkCommissionPct;
 		vchLinkOffer = b.vchLinkOffer;
+		linkWhitelist = b.linkWhitelist;
         return *this;
     }
 
@@ -271,8 +370,8 @@ public:
         return !(a == b);
     }
     
-    void SetNull() { nHeight = n = nPrice = nQty = 0; txHash = hash = 0; accepts.clear(); vchRand.clear(); sTitle.clear(); sDescription.clear();nLinkCommissionPct=0;vchLinkOffer.clear();}
-    bool IsNull() const { return (n == 0 && txHash == 0 && hash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 && nLinkCommissionPct == 0); }
+    void SetNull() { nHeight = n = nPrice = nQty = 0; txHash = hash = 0; accepts.clear(); vchRand.clear(); sTitle.clear(); sDescription.clear();nLinkCommissionPct=0;vchLinkOffer.clear();linkWhitelist.SetNull();}
+    bool IsNull() const { return (n == 0 && txHash == 0 && hash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 && nLinkCommissionPct == 0 && linkWhitelist.IsNull()); }
 
     bool UnserializeFromTx(const CTransaction &tx);
     void SerializeToTx(CTransaction &tx);

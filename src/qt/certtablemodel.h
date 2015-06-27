@@ -4,22 +4,22 @@
 #include <QAbstractTableModel>
 #include <QStringList>
 
-class CertIssuerTablePriv;
+class CertTablePriv;
 class CWallet;
 class WalletModel;
 
 
-class CertIssuerTableModel : public QAbstractTableModel
+class CertTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 public:
-    explicit CertIssuerTableModel(CWallet *wallet, WalletModel *parent = 0);
-    ~CertIssuerTableModel();
+    explicit CertTableModel(CWallet *wallet, WalletModel *parent = 0);
+    ~CertTableModel();
 
     enum ColumnIndex {
         Name = 0,   /**< cert name */
-        Title = 1,  /**< CertIssuer value */
+        Title = 1,  /**< Cert value */
         ExpirationDepth = 2
     };
 
@@ -32,12 +32,11 @@ public:
         OK,                     /**< Everything ok */
         NO_CHANGES,             /**< No changes were made during edit operation */
         INVALID_CERT,        /**< Unparseable cert */
-        DUPLICATE_CERT,      /**< CertIssuer already in cert book */
+        DUPLICATE_CERT,      /**< Cert already in cert book */
         WALLET_UNLOCK_FAILURE  /**< Wallet could not be unlocked */
     };
 
-    static const QString CertIssuer;      /**< Specifies certificate issuer */
-    static const QString CertItem;   /**< Specifies certificate */
+    static const QString Cert;      /**< Specifies certificate  */
 
     /** @name Methods overridden from QAbstractTableModel
         @{*/
@@ -58,19 +57,19 @@ public:
 
     /* Look up label for cert in cert book, if not found return empty string.
      */
-    QString valueForCertIssuer(const QString &cert) const;
+    QString valueForCert(const QString &cert) const;
 
     /* Look up row index of an cert in the model.
        Return -1 if not found.
      */
-    int lookupCertIssuer(const QString &cert) const;
+    int lookupCert(const QString &cert) const;
 
     EditStatus getEditStatus() const { return editStatus; }
 
 private:
     WalletModel *walletModel;
     CWallet *wallet;
-    CertIssuerTablePriv *priv;
+    CertTablePriv *priv;
     QStringList columns;
     EditStatus editStatus;
 
@@ -80,9 +79,9 @@ private:
 public slots:
     /* Update cert list from core.
      */
-    void updateEntry(const QString &cert, const QString &title, const QString &expdepth, bool isCertItem, int status);
+    void updateEntry(const QString &cert, const QString &title, const QString &expdepth, bool isCert, int status);
 
-    friend class CertIssuerTablePriv;
+    friend class CertTablePriv;
 };
 
 #endif // CERTTABLEMODEL_H

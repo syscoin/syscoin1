@@ -36,7 +36,7 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     transactionTableModel(0),
     aliasTableModelMine(0),
 	aliasTableModelAll(0),
-	certIssuerTableModel(0),
+	certTableModel(0),
     cachedBalance(0),
     cachedUnconfirmedBalance(0),
     cachedImmatureBalance(0),
@@ -48,7 +48,7 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
   
     //do not load SYS service data this way at the moment, need more efficient load mechanism.
 	/*
-    certIssuerTableModel = new CertIssuerTableModel(wallet, this);*/
+    certTableModel = new CertTableModel(wallet, this);*/
 
     transactionTableModel = new TransactionTableModel(wallet, this);
     aliasTableModelMine = new AliasTableModel(wallet, this, MyAlias);
@@ -179,10 +179,10 @@ void WalletModel::updateAlias(const QString &alias, const QString &value, const 
 }
 
 
-void WalletModel::updateCertIssuer(const QString &cert, const QString &title, const QString &expDepth, int status)
+void WalletModel::updateCert(const QString &cert, const QString &title, const QString &expDepth, int status)
 {
-    if(certIssuerTableModel)
-        certIssuerTableModel->updateEntry(cert, title, expDepth, false, status);
+    if(certTableModel)
+        certTableModel->updateEntry(cert, title, expDepth, false, status);
 }
 
 
@@ -320,9 +320,9 @@ AliasTableModel *WalletModel::getAliasTableModelAll()
 }
 
 
-CertIssuerTableModel *WalletModel::getCertIssuerTableModel()
+CertTableModel *WalletModel::getCertTableModel()
 {
-    return certIssuerTableModel;
+    return certTableModel;
 }
 
 TransactionTableModel *WalletModel::getTransactionTableModel()
@@ -428,48 +428,19 @@ static void NotifyAliasListChanged(WalletModel *walletmodel, CWallet *wallet, co
 
 }
 
-//static void NotifyOfferListChanged(WalletModel *walletmodel, CWallet *wallet, const CTransaction *tx, COffer offer, ChangeType status)
-//{
-    // CCertItem theCert;
-    // unsigned long nExpDepth = issuer.nHeight + GetCertExpirationDepth(issuer.nHeight);
-    // std::vector<unsigned char> vchRand, vchTitle;
-    // vchRand = issuer.vchRand;
-    // vchTitle = issuer.vchTitle;
-    // if(issuer.certs.size()) {
-    //     theCert = issuer.certs.back();
-    //     vchRand = theCert.vchRand;
-    //     vchTitle = theCert.vchTitle;
-    //     nExpDepth = 0;
-    // }
-
-    // OutputDebugStringF("NotifyCertIssuerListChanged %s %s status=%i\n",
-    //                    stringFromVch(vchRand).c_str(),
-    //                    stringFromVch(vchTitle).c_str(), status);
-    // QMetaObject::invokeMethod(walletmodel, "updateCertIssuer", Qt::QueuedConnection,
-    //                           Q_ARG(QString, QString::fromStdString(stringFromVch(vchRand))),
-    //                           Q_ARG(QString, QString::fromStdString(stringFromVch(vchTitle))),
-    //                           Q_ARG(QString, QString::fromStdString(strprintf("%lu", nExpDepth))),
-    //                           Q_ARG(int, status));
-//}
-
-static void NotifyCertIssuerListChanged(WalletModel *walletmodel, CWallet *wallet, const CTransaction *tx, CCertIssuer issuer, ChangeType status)
+static void NotifyCertListChanged(WalletModel *walletmodel, CWallet *wallet, const CTransaction *tx, const CCert &c, ChangeType status)
 {
-    CCertItem theCert;
-    unsigned long nExpDepth = issuer.nHeight + GetCertExpirationDepth(issuer.nHeight);
+    CCert theCert;
+    unsigned long nExpDepth = c.nHeight + GetCertExpirationDepth(c.nHeight);
     std::vector<unsigned char> vchRand, vchTitle;
-    vchRand = issuer.vchRand;
-    vchTitle = issuer.vchTitle;
-    if(issuer.certs.size()) {
-        theCert = issuer.certs.back();
-        vchRand = theCert.vchRand;
-        vchTitle = theCert.vchTitle;
-        nExpDepth = 0;
-    }
+    vchRand = c.vchRand;
+    vchTitle = c.vchTitle;
+   
 
-    OutputDebugStringF("NotifyCertIssuerListChanged %s %s status=%i\n",
+    OutputDebugStringF("NotifyCertListChanged %s %s status=%i\n",
                        stringFromVch(vchRand).c_str(),
                        stringFromVch(vchTitle).c_str(), status);
-    QMetaObject::invokeMethod(walletmodel, "updateCertIssuer", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(walletmodel, "updateCert", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(stringFromVch(vchRand))),
                               Q_ARG(QString, QString::fromStdString(stringFromVch(vchTitle))),
                               Q_ARG(QString, QString::fromStdString(strprintf("%lu", nExpDepth))),
@@ -491,7 +462,7 @@ void WalletModel::subscribeToCoreSignals()
     wallet->NotifyAddressBookChanged.connect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5));
     wallet->NotifyAliasListChanged.connect(boost::bind(NotifyAliasListChanged, this, _1, _2, _3));
     
-    wallet->NotifyCertIssuerListChanged.connect(boost::bind(NotifyCertIssuerListChanged, this, _1, _2, _3, _4));
+    wallet->NotifyCertListChanged.connect(boost::bind(NotifyCertListChanged, this, _1, _2, _3, _4));
     wallet->NotifyTransactionChanged.connect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
 }
 
@@ -501,7 +472,7 @@ void WalletModel::unsubscribeFromCoreSignals()
     wallet->NotifyStatusChanged.disconnect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
     wallet->NotifyAddressBookChanged.disconnect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5));
     wallet->NotifyAliasListChanged.disconnect(boost::bind(NotifyAliasListChanged, this, _1, _2, _3));
-    wallet->NotifyCertIssuerListChanged.disconnect(boost::bind(NotifyCertIssuerListChanged, this, _1, _2, _3, _4));
+    wallet->NotifyCertListChanged.disconnect(boost::bind(NotifyCertListChanged, this, _1, _2, _3, _4));
     wallet->NotifyTransactionChanged.disconnect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
 }
 

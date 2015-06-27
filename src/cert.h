@@ -25,9 +25,9 @@ bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::v
 bool DecodeCertTx(const CCoins& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, int nHeight);
 bool DecodeCertScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 bool IsCertOp(int op);
-int IndexOfCertIssuerOutput(const CTransaction& tx);
+int IndexOfCertOutput(const CTransaction& tx);
 uint64 GetCertFeeSubsidy(unsigned int nHeight);
-bool GetValueOfCertIssuerTxHash(const uint256 &txHash, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
+bool GetValueOfCertTxHash(const uint256 &txHash, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
 int64 GetCertTxHashHeight(const uint256 txHash);
 int GetCertTxPosHeight(const CDiskTxPos& txPos);
 int GetCertTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
@@ -35,14 +35,14 @@ int GetCertDisplayExpirationDepth(int nHeight);
 int64 GetCertNetworkFee(opcodetype seed);
 int64 GetCertNetFee(const CTransaction& tx);
 bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue);
-bool ExtractCertIssuerAddress(const CScript& script, std::string& address);
+bool ExtractCertAddress(const CScript& script, std::string& address);
 
-std::string certissuerFromOp(int op);
+std::string certFromOp(int op);
 
 
 class CBitcoinAddress;
 
-class CCertItem {
+class CCert {
 public:
     std::vector<unsigned char> vchRand;
     std::vector<unsigned char> vchTitle;
@@ -53,8 +53,12 @@ public:
     uint64 nFee;
     uint256 txPayId;
 
-    CCertItem() {
+    CCert() {
         SetNull();
+    }
+    CCert(const CTransaction &tx) {
+        SetNull();
+        UnserializeFromTx(tx);
     }
     IMPLEMENT_SERIALIZE (
         READWRITE(vchRand);
@@ -67,7 +71,7 @@ public:
         READWRITE(nFee);
     )
 
-    friend bool operator==(const CCertItem &a, const CCertItem &b) {
+    friend bool operator==(const CCert &a, const CCert &b) {
         return (
         a.vchRand == b.vchRand
         && a.vchTitle == b.vchTitle
@@ -80,7 +84,7 @@ public:
         );
     }
 
-    CCertItem operator=(const CCertItem &b) {
+    CCert operator=(const CCert &b) {
         vchRand = b.vchRand;
         vchTitle = b.vchTitle;
         vchData = b.vchData;
@@ -92,135 +96,17 @@ public:
         return *this;
     }
 
-    friend bool operator!=(const CCertItem &a, const CCertItem &b) {
+    friend bool operator!=(const CCert &a, const CCert &b) {
         return !(a == b);
     }
 
     void SetNull() { nHeight = nTime = 0; txHash = 0; nFee = 0; vchRand.clear(); }
     bool IsNull() const { return (nTime == 0 && txHash == 0 && nFee == 0 && nHeight == 0 && vchRand.size() == 0); }
-
-};
-
-class CCertIssuer {
-public:
-    std::vector<unsigned char> vchRand;
-    std::vector<unsigned char> vchTitle;
-    std::vector<unsigned char> vchData;
-    uint256 txHash;
-    uint64 nHeight;
-    uint64 nTime;
-    uint256 hash;
-    uint64 n;
-    uint64 nFee;
-    std::vector<CCertItem>certs;
-
-    CCertIssuer() {
-        SetNull();
-    }
-    
-    CCertIssuer(const CTransaction &tx) {
-        SetNull();
-        UnserializeFromTx(tx);
-    }
-        
-    IMPLEMENT_SERIALIZE (
-        READWRITE(vchRand);
-        READWRITE(vchTitle);
-        READWRITE(vchData);
-        READWRITE(txHash);
-        READWRITE(nHeight);
-        READWRITE(nTime);
-        READWRITE(hash);
-        READWRITE(n);
-        READWRITE(nFee);
-        READWRITE(certs);
-    )
-
-    bool GetCertItemByHash(std::vector<unsigned char> ahash, CCertItem &ca) {
-        for(unsigned int i=0;i<certs.size();i++) {
-            if(certs[i].vchRand == ahash) {
-                ca = certs[i];
-                return true;
-            }
-        }
-        return false;
-    }
-
-    void PutCertItem(CCertItem &theOA) {
-        for(unsigned int i=0;i<certs.size();i++) {
-            CCertItem oa = certs[i];
-            if(theOA.vchRand == oa.vchRand) {
-                certs[i] = theOA;
-                return;
-            }
-        }
-        certs.push_back(theOA);
-    }
-
-    void PutToCertIssuerList(std::vector<CCertIssuer> &certIssuerList) {
-        for(unsigned int i=0;i<certIssuerList.size();i++) {
-            CCertIssuer o = certIssuerList[i];
-            if(o.nHeight == nHeight) {
-                certIssuerList[i] = *this;
-                return;
-            }
-        }
-        certIssuerList.push_back(*this);
-    }
-
-    bool GetCertFromList(const std::vector<CCertIssuer> &certIssuerList) {
-        if(certIssuerList.size() == 0) return false;
-        for(unsigned int i=0;i<certIssuerList.size();i++) {
-            CCertIssuer o = certIssuerList[i];
-            if(o.nHeight == nHeight) {
-                *this = certIssuerList[i];
-                return true;
-            }
-        }
-        *this = certIssuerList.back();
-        return false;
-    }
-
-    friend bool operator==(const CCertIssuer &a, const CCertIssuer &b) {
-        return (
-           a.vchRand == b.vchRand
-        && a.vchTitle==b.vchTitle
-        && a.vchData==b.vchData
-        && a.nFee == b.nFee
-        && a.n == b.n
-        && a.hash == b.hash
-        && a.txHash == b.txHash
-        && a.nHeight == b.nHeight
-        && a.nTime == b.nTime
-        && a.certs == b.certs
-        );
-    }
-
-    CCertIssuer operator=(const CCertIssuer &b) {
-        vchRand = b.vchRand;
-        vchTitle = b.vchTitle;
-        vchData = b.vchData;
-        nFee = b.nFee;
-        n = b.n;
-        hash = b.hash;
-        txHash = b.txHash;
-        nHeight = b.nHeight;
-        nTime = b.nTime;
-        certs = b.certs;
-        return *this;
-    }
-
-    friend bool operator!=(const CCertIssuer &a, const CCertIssuer &b) {
-        return !(a == b);
-    }
-
-    void SetNull() { nHeight = n = 0; txHash = hash = 0; certs.clear(); vchRand.clear(); vchTitle.clear(); vchData.clear(); }
-    bool IsNull() const { return (n == 0 && txHash == 0 && hash == 0 && nHeight == 0 && vchRand.size() == 0); }
-
     bool UnserializeFromTx(const CTransaction &tx);
     void SerializeToTx(CTransaction &tx);
     std::string SerializeToString();
 };
+
 
 class CCertFee {
 public:
@@ -267,56 +153,40 @@ class CCertDB : public CLevelDB {
 public:
     CCertDB(size_t nCacheSize, bool fMemory, bool fWipe) : CLevelDB(GetDataDir() / "certificates", nCacheSize, fMemory, fWipe) {}
 
-    bool WriteCertIssuer(const std::vector<unsigned char>& name, std::vector<CCertIssuer>& vtxPos) {
-        return Write(make_pair(std::string("certissueri"), name), vtxPos);
+    bool WriteCert(const std::vector<unsigned char>& name, std::vector<CCert>& vtxPos) {
+        return Write(make_pair(std::string("certi"), name), vtxPos);
     }
 
-    bool EraseCertIssuer(const std::vector<unsigned char>& name) {
-        return Erase(make_pair(std::string("certissueri"), name));
+    bool EraseCert(const std::vector<unsigned char>& name) {
+        return Erase(make_pair(std::string("certi"), name));
     }
 
-    bool ReadCertIssuer(const std::vector<unsigned char>& name, std::vector<CCertIssuer>& vtxPos) {
-        return Read(make_pair(std::string("certissueri"), name), vtxPos);
+    bool ReadCert(const std::vector<unsigned char>& name, std::vector<CCert>& vtxPos) {
+        return Read(make_pair(std::string("certi"), name), vtxPos);
     }
 
-    bool ExistsCertIssuer(const std::vector<unsigned char>& name) {
-        return Exists(make_pair(std::string("certissueri"), name));
-    }
-
-    bool WriteCertItem(const std::vector<unsigned char>& name, std::vector<unsigned char>& vchValue) {
-        return Write(make_pair(std::string("certissuera"), name), vchValue);
-    }
-
-    bool EraseCertItem(const std::vector<unsigned char>& name) {
-        return Erase(make_pair(std::string("certissuera"), name));
-    }
-
-    bool ReadCertItem(const std::vector<unsigned char>& name, std::vector<unsigned char>& vchValue) {
-        return Read(make_pair(std::string("certissuera"), name), vchValue);
-    }
-
-    bool ExistsCertItem(const std::vector<unsigned char>& name) {
-        return Exists(make_pair(std::string("certissuera"), name));
+    bool ExistsCert(const std::vector<unsigned char>& name) {
+        return Exists(make_pair(std::string("certi"), name));
     }
 
     bool WriteCertFees(std::vector<CCertFee>& vtxPos) {
-        return Write(make_pair(std::string("certissuera"), std::string("certissuertxf")), vtxPos);
+        return Write(make_pair(std::string("certa"), std::string("certtxf")), vtxPos);
     }
 
     bool ReadCertFees(std::vector<CCertFee>& vtxPos) {
-        return Read(make_pair(std::string("certissuera"), std::string("certissuertxf")), vtxPos);
+        return Read(make_pair(std::string("certa"), std::string("certtxf")), vtxPos);
     }
 
-    bool ScanCertIssuers(
+    bool ScanCerts(
             const std::vector<unsigned char>& vchName,
             unsigned int nMax,
-            std::vector<std::pair<std::vector<unsigned char>, CCertIssuer> >& certIssuerScan);
+            std::vector<std::pair<std::vector<unsigned char>, CCert> >& certScan);
 
     bool ReconstructCertIndex(CBlockIndex *pindexRescan);
 };
-extern std::list<CCertFee> lstCertIssuerFees;
+extern std::list<CCertFee> lstCertFees;
 
 
-bool GetTxOfCertIssuer(CCertDB& dbCertIssuer, const std::vector<unsigned char> &vchCertIssuer, CTransaction& tx);
+bool GetTxOfCert(CCertDB& dbCert, const std::vector<unsigned char> &vchCert, CTransaction& tx);
 
 #endif // CERT_H

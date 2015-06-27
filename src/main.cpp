@@ -825,23 +825,15 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 		}
 		switch (op) {
 
-			case OP_CERTISSUER_ACTIVATE:
+			case OP_CERT_ACTIVATE:
 				if (vvch[1].size() > 20)
 					err = error("cert tx with rand too big");
 				if (vvch[2].size() > MAX_VALUE_LENGTH)
 					err = error("cert tx with value too long");
 				break;
-			case OP_CERTISSUER_UPDATE:
+			case OP_CERT_UPDATE:
 				if (vvch[1].size() > MAX_VALUE_LENGTH)
 					err = error("cert tx with value too long");
-				break;
-			case OP_CERT_NEW: 
-        		if (vvch[0].size() > 20)
-					err = error("cert tx with cert rand too big");
-				if (vvch[2].size() > 20)
-					err = error("cert tx with invalid hash length");
-				if (vvch[1].size() > 20)
-					err = error("cert tx with cert rand too big");
 				break;
 			case OP_CERT_TRANSFER:
         		if (vvch[0].size() > 20)
@@ -1698,13 +1690,13 @@ bool LoadSyscoinFees() {
 		printf("Offer Fee - height: %llu \t value: %llu\n", fee.nHeight, fee.nFee);
 	}
 
-    // read cert issuer network fees
-    lstCertIssuerFees.clear();
+    // read cert  network fees
+    lstCertFees.clear();
     vector<CCertFee> vc;
     pcertdb->ReadCertFees(vc);
     list<CCertFee> lCF(vc.begin(), vc.end());
-    lstCertIssuerFees = lCF;
-	BOOST_FOREACH(CCertFee& fee, lstCertIssuerFees) {
+    lstCertFees = lCF;
+	BOOST_FOREACH(CCertFee& fee, lstCertFees) {
 		printf("Cert Fee - height: %llu \t value: %llu\n", fee.nHeight, fee.nFee);
 	}
 
@@ -2086,35 +2078,19 @@ bool DisconnectOffer( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
 }
 
 bool DisconnectCertificate( CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs ) {
-	string opName = certissuerFromOp(op);
+	string opName = certFromOp(op);
 	
-	CCertIssuer theIssuer(tx);
-	if (theIssuer.IsNull())
-		error("CheckOfferInputs() : null issuer object");
+	CCert theCert(tx);
+	if (theCert.IsNull())
+		error("CheckOfferInputs() : null  object");
 
 
 	TRY_LOCK(cs_main, cs_maintry);
 	// make sure a DB record exists for this cert
-	vector<CCertIssuer> vtxPos;
-	if (!pcertdb->ReadCertIssuer(vvchArgs[0], vtxPos))
+	vector<CCert> vtxPos;
+	if (!pcertdb->ReadCert(vvchArgs[0], vtxPos))
 		return error("DisconnectBlock() : failed to read from certificate DB for %s %s\n",
 				opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
-
-	if( op == OP_CERT_NEW || op == OP_CERT_TRANSFER ) {
-		vector<unsigned char> vvchCert = vvchArgs[1];
-		CCertItem theCert;
-
-		// make sure the offeraccept is also in the serialized offer in the txn
-		if(!theIssuer.GetCertItemByHash(vvchCert, theCert))
-			return error("DisconnectBlock() : not found in offer for offer accept %s %s\n",
-					opName.c_str(), HexStr(vvchCert).c_str());
-		
-		
-		// make sure offer accept db record already exists
-		if (pcertdb->ExistsCertItem(vvchCert))
-			pcertdb->EraseCertItem(vvchCert);
-		
-	}
 
 	// vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
 	// be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
@@ -2129,7 +2105,7 @@ bool DisconnectCertificate( CBlockIndex *pindex, const CTransaction &tx, int op,
 	}
 
 	// write new offer state to db
-	if(!pcertdb->WriteCertIssuer(vvchArgs[0], vtxPos))
+	if(!pcertdb->WriteCert(vvchArgs[0], vtxPos))
 		return error("DisconnectBlock() : failed to write to offer DB");
 
 	CCertFee theFeeObject;

@@ -4,9 +4,9 @@
 #include <QDialog>
 
 namespace Ui {
-    class CertIssuerListPage;
+    class CertListPage;
 }
-class CertIssuerTableModel;
+class CertTableModel;
 class OptionsModel;
 
 QT_BEGIN_NAMESPACE
@@ -19,14 +19,13 @@ QT_END_NAMESPACE
 
 /** Widget that shows a list of owned certes.
   */
-class CertIssuerListPage : public QDialog
+class CertListPage : public QDialog
 {
     Q_OBJECT
 
 public:
     enum Tabs {
-        CertIssuerTab = 0,
-        CertItemTab = 1
+        CertTab = 0
     };
 
     enum Mode {
@@ -34,10 +33,10 @@ public:
         ForEditing  /**< Open cert book for editing */
     };
 
-    explicit CertIssuerListPage(Mode mode, Tabs tab, QWidget *parent = 0);
-    ~CertIssuerListPage();
+    explicit CertListPage(Mode mode, Tabs tab, QWidget *parent = 0);
+    ~CertListPage();
 
-    void setModel(CertIssuerTableModel *model);
+    void setModel(CertTableModel *model);
     void setOptionsModel(OptionsModel *optionsModel);
     const QString &getReturnValue() const { return returnValue; }
 
@@ -45,8 +44,8 @@ public slots:
     void done(int retval);
 
 private:
-    Ui::CertIssuerListPage *ui;
-    CertIssuerTableModel *model;
+    Ui::CertListPage *ui;
+    CertTableModel *model;
     OptionsModel *optionsModel;
     Mode mode;
     Tabs tab;
@@ -54,32 +53,32 @@ private:
     QSortFilterProxyModel *proxyModel;
     QMenu *contextMenu;
     QAction *deleteAction; // to be able to explicitly disable it
-    QString newCertIssuerToSelect;
+    QString newCertToSelect;
 
 private slots:
     /** Create a new cert for receiving coins and / or add a new cert book entry */
-    void on_newCertIssuer_clicked();
+    void on_newCert_clicked();
     /** Copy cert of currently selected cert entry to clipboard */
-    void on_copyCertIssuer_clicked();
+    void on_copyCert_clicked();
 
     /** Copy value of currently selected cert entry to clipboard (no button) */
-    void onCopyCertIssuerValueAction();
+    void onCopyCertValueAction();
     /** Edit currently selected cert entry (no button) */
     void onEditAction();
     /** Export button clicked */
     void on_exportButton_clicked();
     /** transfer the cert to a syscoin address  */
-    void onTransferCertIssuerAction();
+    void onTransferCertAction();
 
     /** Set button states based on selected tab and selection */
     void selectionChanged();
     /** Spawn contextual menu (right mouse menu) for cert book entry */
     void contextualMenu(const QPoint &point);
     /** New entry/entries were added to cert table */
-    void selectNewCertIssuer(const QModelIndex &parent, int begin, int /*end*/);
+    void selectNewCert(const QModelIndex &parent, int begin, int /*end*/);
 
 signals:
-    void transferCertIssuer(QString addr);
+    void transferCert(QString addr);
 };
 
 #endif // CERTLISTPAGE_H
