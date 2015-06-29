@@ -51,7 +51,6 @@ public:
     uint64 nHeight;
     uint64 nTime;
     uint64 nFee;
-    uint256 txPayId;
 
     CCert() {
         SetNull();
@@ -65,7 +64,6 @@ public:
         READWRITE(vchTitle);
         READWRITE(vchData);
         READWRITE(txHash);
-        READWRITE(txPayId);
         READWRITE(nHeight);
         READWRITE(nTime);
         READWRITE(nFee);
@@ -80,7 +78,6 @@ public:
         && a.nHeight == b.nHeight
         && a.nTime == b.nTime
         && a.nFee == b.nFee
-        && a.txPayId == b.txPayId
         );
     }
 
@@ -91,7 +88,6 @@ public:
         txHash = b.txHash;
         nHeight = b.nHeight;
         nTime = b.nTime;
-        txPayId = b.txPayId;
         nFee = b.nFee;
         return *this;
     }

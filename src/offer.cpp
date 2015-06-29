@@ -1368,6 +1368,10 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			int nDepth;
 			if ( !found || ( prevOp != OP_OFFER_ACTIVATE && prevOp != OP_OFFER_UPDATE && prevOp != OP_OFFER_REFUND ))
 				return error("offerrefund previous op %s is invalid", offerFromOp(prevOp).c_str());		
+			if(op == OP_OFFER_REFUND && vvchArgs[2] == OFFER_REFUND_COMPLETE && vvchPrevArgs[2] != OFFER_REFUND_PAYMENT_INPROGRESS)
+			{
+				return  error("offerrefund complete tx must be linked to an inprogress tx");
+			}
 			if (vvchArgs[1].size() > 20)
 				return error("offerrefund tx with guid too big");
 			if (vvchArgs[2].size() > 20)
@@ -1429,14 +1433,14 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				// get the latest offer from the db
             	theOffer.nHeight = nHeight;
             	theOffer.GetOfferFromList(vtxPos);
-				
+
 				// If update, we make the serialized offer the master
 				// but first we assign the accepts from the DB since
 				// they are not shipped in an update txn to keep size down
 				if(op == OP_OFFER_UPDATE) {
 					serializedOffer.accepts = theOffer.accepts;
 					theOffer = serializedOffer;
-					if(!linkOffer.IsNull())
+					if(!theOffer.vchLinkOffer.empty())
 					{
 						return error("could not update linked offer");
 					}
@@ -1546,8 +1550,8 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							HexStr(theOfferAccept.vchRand).c_str());
 						return true;
 					}
-				
-					theOffer.nQty -= theOfferAccept.nQty;
+					if(theOffer.vchLinkOffer.empty())
+						theOffer.nQty -= theOfferAccept.nQty;
 
 					if (!fInit && pwalletMain && !linkOffer.IsNull() && IsOfferMine(offerTx) && HasReachedMainNetForkB2())
 					{	
@@ -1625,7 +1629,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						nHeight, (double)nTheFee / COIN);
 				}
 				
-				if(HasReachedMainNetForkB2() && (op == OP_OFFER_UPDATE || op == OP_OFFER_ACCEPT))
+				if(HasReachedMainNetForkB2() && (op == OP_OFFER_UPDATE || op == OP_OFFER_ACCEPT) && theOffer.vchLinkOffer.empty())
 				{
 					// if this offer has linked offers to it and it is an update or accept, then copy over necessary updates to offer linking to it
 					vector<pair<vector<unsigned char>, vector<COffer> > > offerLinkages;
@@ -2315,9 +2319,9 @@ Value offerwhitelist(const Array& params, bool fHelp) {
     return oRes;
 }
 Value offerupdate(const Array& params, bool fHelp) {
-	if (fHelp || params.size() < 5 || params.size() > 6)
+	if (fHelp || params.size() < 5 || params.size() > 7)
 		throw runtime_error(
-		"offerupdate <guid> <category> <title> <quantity> <price> [description]\n"
+		"offerupdate <guid> <category> <title> <quantity> <price> [description] [exclusive resell=0]\n"
 						"Perform an update on an offer you control.\n"
 						+ HelpRequiringPassphrase());
 
@@ -2326,9 +2330,11 @@ Value offerupdate(const Array& params, bool fHelp) {
 	vector<unsigned char> vchCat = vchFromValue(params[1]);
 	vector<unsigned char> vchTitle = vchFromValue(params[2]);
 	vector<unsigned char> vchDesc;
+	bool bExclusiveResell = false;
 	int64 qty=0;
 	uint64 price,nQty;
-	if (params.size() == 6) vchDesc = vchFromValue(params[5]);
+	if (params.size() >= 6) vchDesc = vchFromValue(params[5]);
+	if(params.size() == 7) bExclusiveResell = atoi(params[6].get_str().c_str()) == 1? true: false;
 	try {
 		qty = atoi64(params[3].get_str().c_str());
 		price = atoi64(params[4].get_str().c_str());
@@ -2415,6 +2421,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 	theOffer.nPrice = price * COIN;
 	theOffer.nFee = nNetFee;
 	theOffer.accepts.clear();
+	theOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
 	// serialize offer object
 	string bdata = theOffer.SerializeToString();
 
@@ -2592,9 +2599,8 @@ Value offeraccept(const Array& params, bool fHelp) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "offeraccept message data > 16384 bytes!\n");
 
 	// this is a syscoin txn
-	CWalletTx wtx, wtx2;
+	CWalletTx wtx;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
-	wtx2.nVersion = SYSCOIN_TX_VERSION;
 	CScript scriptPubKeyOrig;
 
 	// generate offer accept identifier and hash
@@ -2698,7 +2704,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 
     uint64 nTotalValue = ( nPrice * nQty );
 
-    if (!pwalletMain->SelectCoins(nTotalValue, setCoins, nValueIn))
+    if (!pwalletMain->SelectCoins(nTotalValue + (MIN_AMOUNT * 2), setCoins, nValueIn))
         throw runtime_error("insufficient funds to pay for offer");
 
 
@@ -2706,18 +2712,17 @@ Value offeraccept(const Array& params, bool fHelp) {
     vector< pair<CScript, int64> > vecSend;
     vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
 
+    CScript scriptPayment;
+	CBitcoinAddress address(stringFromVch(theOffer.vchPaymentAddress));
+    scriptPayment.SetDestination(address.Get());
+
+    vecSend.push_back(make_pair(scriptPayment, nTotalValue));
+
 	// serialize offer object
 	string bdata = theOffer.SerializeToString();
 
 	string strError = pwalletMain->SendMoney(vecSend, MIN_AMOUNT, wtx,
 			false, bdata);
-    if (strError != "")
-	{
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
-	}
-    // send payment to offer address
-    CBitcoinAddress address(stringFromVch(theOffer.vchPaymentAddress));
-	strError = pwalletMain->SendMoneyToDestination(address.Get(), nTotalValue, wtx2, false);
     if (strError != "")
 	{
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
