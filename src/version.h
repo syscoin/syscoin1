@@ -30,8 +30,9 @@ extern const std::string CLIENT_DATE;
 //70004 =  r0.1.3
 //70005 =  r0.1.4       =   (mandatory update)
 //70005 =  r0.1.5       =   r0.1.5.1 (non-mandatory update - no protocol version change)
-//700051 = r1.5.2 beta4 =   dropped leading "0.", locked to cakenet, BETA not to be used on mainnet
-static const int PROTOCOL_VERSION = 70051;
+//700051 = r1.5.2 beta4 =   dropped leading "0." on versioning, locked to cakenet. BETA not to be used on mainnet
+//700052 = r1.5.3 beta =    number of improvements and upgrades to offers and certificates. Locked to cakenet for testing. BETA not to be used on mainnet
+static const int PROTOCOL_VERSION = 700052;
 
 // intial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
