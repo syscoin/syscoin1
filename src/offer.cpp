@@ -545,6 +545,28 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 			}
             // read the offer accept from db if exists
             if(op == OP_OFFER_ACCEPT) {
+				bool foundPayment = false;
+				// find the payment from the tx outputs (make sure right amount of coins were paid for this offer accept), the payment amount found has to be exact
+				if(tx.vout.size() > 1)
+				{	
+					for(int i=0;i<tx.vout.size();i++)
+					{
+						if(tx.vout[i].nValue == txOffer.nPrice)
+						{
+							foundPayment = true;
+							break;
+						}
+					}
+					if(!foundPayment)
+					{
+						continue;
+					}
+				}
+				else
+				{
+					continue;
+				}
+
             	bool bReadOffer = false;
             	vector<unsigned char> vchOfferAccept = vvchArgs[1];
 	            if (ExistsOfferAccept(vchOfferAccept)) {
@@ -1329,7 +1351,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 					// check for enough fees
 				nNetFee = GetOfferNetFee(tx);
-				if (nNetFee < GetOfferNetworkFee(OP_OFFER_ACTIVATE) && HasReachedMainNetForkB2())
+				if (nNetFee < GetOfferNetworkFee(OP_OFFER_ACTIVATE))
 					return error(
 							"CheckOfferInputs() : OP_OFFER_ACTIVATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -1357,7 +1379,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							"CheckOfferInputs() : offerupdate on an expired offer, or there is a pending transaction on the offer");
 					// check for enough fees
 				nNetFee = GetOfferNetFee(tx);
-				if (nNetFee < GetOfferNetworkFee(OP_OFFER_UPDATE) && HasReachedMainNetForkB2())
+				if (nNetFee < GetOfferNetworkFee(OP_OFFER_UPDATE))
 					return error(
 							"CheckOfferInputs() : OP_OFFER_UPDATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -1369,9 +1391,8 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if ( !found || ( prevOp != OP_OFFER_ACTIVATE && prevOp != OP_OFFER_UPDATE && prevOp != OP_OFFER_REFUND ))
 				return error("offerrefund previous op %s is invalid", offerFromOp(prevOp).c_str());		
 			if(op == OP_OFFER_REFUND && vvchArgs[2] == OFFER_REFUND_COMPLETE && vvchPrevArgs[2] != OFFER_REFUND_PAYMENT_INPROGRESS)
-			{
-				return  error("offerrefund complete tx must be linked to an inprogress tx");
-			}
+				return error("offerrefund complete tx must be linked to an inprogress tx");
+			
 			if (vvchArgs[1].size() > 20)
 				return error("offerrefund tx with guid too big");
 			if (vvchArgs[2].size() > 20)
@@ -1513,7 +1534,31 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					
 					COffer myOffer,linkOffer;
 					CTransaction offerTx, linkedTx;
-
+					bool foundPayment = false;
+					// find the payment from the tx outputs (make sure right amount of coins were paid for this offer accept), the payment amount found has to be exact
+					if(tx.vout.size() > 1)
+					{	
+						for(int i=0;i<tx.vout.size();i++)
+						{
+							if(tx.vout[i].nValue == theOffer.nPrice)
+							{
+								foundPayment = true;
+								break;
+							}
+						}
+						if(!foundPayment)
+						{
+							if(fDebug)
+								printf("CheckOfferInputs() OP_OFFER_ACCEPT: this offer accept does not pay enough according to the offer price\n");
+							return true;
+						}
+					}
+					else
+					{
+						if(fDebug)
+							printf("CheckOfferInputs() OP_OFFER_ACCEPT: offer payment not found in accept tx\n");
+						return true;
+					}
 					if (!GetTxOfOffer(*pofferdb, vvchArgs[0], myOffer, offerTx))
 						return error("CheckOfferInputs() OP_OFFER_ACCEPT: could not find an offer with this name");
 
@@ -1522,7 +1567,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						if(!GetTxOfOffer(*pofferdb, myOffer.vchLinkOffer, linkOffer, linkedTx))
 							linkOffer.SetNull();
 					}
-						
+											
 					// check for existence of offeraccept in txn offer obj
 					if(!serializedOffer.GetAcceptByHash(vvchArgs[1], theOfferAccept))
 						return error("CheckOfferInputs() OP_OFFER_ACCEPT: could not read accept from offer txn");					
@@ -1534,7 +1579,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					// in order to refund.
 					if(theOfferAccept.nQty <= 0 || (theOfferAccept.nQty > theOffer.nQty || (!linkOffer.IsNull() && theOfferAccept.nQty > linkOffer.nQty))) {
 
-						if(pwalletMain && IsOfferMine(offerTx) && HasReachedMainNetForkB2() && theOfferAccept.nQty > 0)
+						if(pwalletMain && IsOfferMine(offerTx) && theOfferAccept.nQty > 0)
 						{	
 							string strError = makeOfferRefundTX(offerTx, theOffer, theOfferAccept, OFFER_REFUND_PAYMENT_INPROGRESS);
 							if (strError != "" && fDebug)
@@ -1553,7 +1598,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					if(theOffer.vchLinkOffer.empty())
 						theOffer.nQty -= theOfferAccept.nQty;
 
-					if (!fInit && pwalletMain && !linkOffer.IsNull() && IsOfferMine(offerTx) && HasReachedMainNetForkB2())
+					if (!fInit && pwalletMain && !linkOffer.IsNull() && IsOfferMine(offerTx))
 					{	
 						// myOffer.vchLinkOffer is the linked offer guid
 						// vvchArgs[1] is this offer accept rand used to walk back up and refund offers in the linked chain
@@ -1629,7 +1674,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						nHeight, (double)nTheFee / COIN);
 				}
 				
-				if(HasReachedMainNetForkB2() && (op == OP_OFFER_UPDATE || op == OP_OFFER_ACCEPT) && theOffer.vchLinkOffer.empty())
+				if((op == OP_OFFER_UPDATE || op == OP_OFFER_ACCEPT) && theOffer.vchLinkOffer.empty())
 				{
 					// if this offer has linked offers to it and it is an update or accept, then copy over necessary updates to offer linking to it
 					vector<pair<vector<unsigned char>, vector<COffer> > > offerLinkages;
@@ -2721,7 +2766,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 	// serialize offer object
 	string bdata = theOffer.SerializeToString();
 
-	string strError = pwalletMain->SendMoney(vecSend, MIN_AMOUNT, wtx,
+	string strError = pwalletMain->SendMoney(vecSend, MIN_AMOUNT+nTotalValue, wtx,
 			false, bdata);
     if (strError != "")
 	{
