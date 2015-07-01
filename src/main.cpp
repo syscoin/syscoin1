@@ -775,12 +775,6 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 					err = error("aliasactivate tx with rand too big");
 				if (vvch[2].size() > MAX_VALUE_LENGTH)
 					err = error("aliasactivate tx with value too long");
-				if(HasReachedMainNetForkB2())
-				{
-					myAddress = CBitcoinAddress(stringFromVch(vvch[0]));
-            		if(myAddress.IsValid() && !myAddress.isAlias)
-            			err = error("alias name cannot be a syscoin address");
-				}
 				break;
 			case OP_ALIAS_UPDATE:
 				if (vvch[1].size() > MAX_VALUE_LENGTH)

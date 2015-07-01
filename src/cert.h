@@ -17,6 +17,8 @@ class CDiskTxPos;
 bool CheckCertInputs(CBlockIndex *pindex, const CTransaction &tx, CValidationState &state, CCoinsViewCache &inputs, bool fBlock, bool fMiner, bool fJustCheck);
 bool IsCertMine(const CTransaction& tx);
 bool IsCertMine(const CTransaction& tx, const CTxOut& txout);
+std::string SendCertMoneyWithInputTx(std::vector<std::pair<CScript, int64> >& vecSend, int64 nValue, int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, 
+    bool fAskFee, const std::string& txData = "");
 std::string SendCertMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, CWalletTx& wtxIn,
                                      CWalletTx& wtxNew, bool fAskFee, const std::string& txData = "");
 bool CreateCertTransactionWithInputTx(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxIn,

@@ -840,6 +840,47 @@ void EraseCert(CWalletTx& wtx)
 	 pwalletMain->EraseFromWallet(wtx.GetHash());
 }
 // nTxOut is the output from wtxIn that we should grab
+string SendCertMoneyWithInputTx(vector<pair<CScript, int64> > &vecSend, int64 nValue,
+        int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, bool fAskFee,
+        const string& txData) {
+    int nTxOut = IndexOfCertOutput(wtxIn);
+    CReserveKey reservekey(pwalletMain);
+    int64 nFeeRequired;
+
+    if (nNetFee) {
+        CScript scriptFee;
+        scriptFee << OP_RETURN;
+        vecSend.push_back(make_pair(scriptFee, nNetFee));
+    }
+
+    if (!CreateCertTransactionWithInputTx(vecSend, wtxIn, nTxOut, wtxNew,
+            reservekey, nFeeRequired, txData)) {
+        string strError;
+        if (nValue + nFeeRequired > pwalletMain->GetBalance())
+            strError = strprintf(_("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds "),
+                            FormatMoney(nFeeRequired).c_str());
+        else
+            strError = _("Error: Transaction creation failed  ");
+        printf("SendMoney() : %s", strError.c_str());
+        return strError;
+    }
+
+#ifdef GUI
+    if (fAskFee && !uiInterface.ThreadSafeAskFee(nFeeRequired))
+    return "ABORTED";
+#else
+    if (fAskFee && !true)
+        return "ABORTED";
+#endif
+
+    if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
+	{
+        return _(
+                "Error: The transaction was rejected.");
+	}
+    return "";
+}
+// nTxOut is the output from wtxIn that we should grab
 string SendCertMoneyWithInputTx(CScript scriptPubKey, int64 nValue,
         int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, bool fAskFee,
         const string& txData) {
@@ -929,22 +970,53 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         bool found = false;
         const COutPoint *prevOutput = NULL;
         const CCoins *prevCoins = NULL;
-        int prevOp;
-        vector<vector<unsigned char> > vvchPrevArgs;
+        const COutPoint *prevOutput1 = NULL;
+        const CCoins *prevCoins1 = NULL;
+        int prevOp, prevOp1;
+        vector<vector<unsigned char> > vvchPrevArgs, vvchPrevArgs1;
 
         // Strict check - bug disallowed
         for (int i = 0; i < (int) tx.vin.size(); i++) {
             prevOutput = &tx.vin[i].prevout;
             prevCoins = &inputs.GetCoins(prevOutput->hash);
-            vector<vector<unsigned char> > vvch;
-            if (DecodeCertScript(prevCoins->vout[prevOutput->n].scriptPubKey,
-                    prevOp, vvch)) {
-                found = true; vvchPrevArgs = vvch;
-                break;
-            }
+            vector<vector<unsigned char> > vvch;			
+			if (DecodeCertScript(prevCoins->vout[prevOutput->n].scriptPubKey,
+					prevOp, vvch)) {
+				found = true; vvchPrevArgs = vvch;
+				break;
+			}
+			else 
+			{
+				// try to get the previous tx as an offer (offeraccept)
+				vector<vector<unsigned char> > vvch2;
+				uint256 blockHash;
+				if (DecodeOfferScript(prevCoins->vout[prevOutput->n].scriptPubKey,
+						prevOp, vvch2)) {
+					found = true; vvchPrevArgs = vvch2;
+					CTransaction prevTx, prevPrevTx;
+					// try to get the previous of the previous tx as a cert (certupdate in offeraccept)
+					if (GetTransaction(prevOutput->hash, prevTx, blockHash, true))
+					{
+						for (int j = 0; j < (int) prevTx.vin.size(); j++) {
+							prevOutput1 = &prevTx.vin[j].prevout;
+							if(prevOutput1->IsNull())
+								continue;
+							if (GetTransaction(prevOutput1->hash, prevPrevTx, blockHash, true))
+							{
+								int nOut;
+								if(DecodeCertTx(prevPrevTx, prevOp1, nOut, vvchPrevArgs1, -1))
+								{
+									break;
+								}
+							}
+						
+						}
+					}
+				}
+			}
             if(!found)vvchPrevArgs.clear();
-        }
 
+        }
         // Make sure cert outputs are not spent by a regular transaction, or the cert would be lost
         if (tx.nVersion != SYSCOIN_TX_VERSION) {
             if (found)
@@ -986,7 +1058,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 					// check for enough fees
 				nNetFee = GetCertNetFee(tx);
-				if (nNetFee < GetCertNetworkFee(OP_CERT_ACTIVATE) && HasReachedMainNetForkB2())
+				if (nNetFee < GetCertNetworkFee(OP_CERT_ACTIVATE))
 					return error(
 							"CheckCertInputs() : OP_CERT_ACTIVATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -995,13 +1067,23 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
             break;
 
         case OP_CERT_UPDATE:
-            if ( !found || !IsCertOp(prevOp))
-                return error("certupdate previous op %s is invalid", certFromOp(prevOp).c_str());
-
+			// if previous op was a cert or an offeraccept its ok
+            if ( !found || (!IsCertOp(prevOp) && prevOp != OP_OFFER_ACCEPT))
+                return error("certupdate previous op %s is invalid", offerFromOp(prevOp).c_str());
+			// previous op was an accept, check to make sure the previous op to the accept was a cert again and its guid matched this guid 
+			// (incase you are trying to update a cert that isn't yours by using an accept as an input)
+			// the accept as an input comes from offeraccept because we need to use the cert as an input to the offer accept for resellers with whitelist certs
+			// and thus we did a manual certupdate in offeraccept to ensure we have inputs for future cert transactions like this one
+			if(prevOp == OP_OFFER_ACCEPT && vvchPrevArgs1[0] != vvchArgs[0])
+			{
+				// stops the hacker in his tracks
+				return error("CheckCertInputs() : certupdate prev cert mismatch");
+			}
             if (vvchArgs[1].size() > MAX_VALUE_LENGTH)
                 return error("certupdate tx with value too long");
 
-            if (vvchPrevArgs[0] != vvchArgs[0])
+			// aslong as previous op is not an accept then make sure previous guid and this guid match for the cert
+            if (vvchPrevArgs[0] != vvchArgs[0] && prevOp != OP_OFFER_ACCEPT)
                 return error("CheckCertInputs() : certupdate cert mismatch");
 			if (fBlock && !fJustCheck) {
 				// TODO CPU intensive
@@ -1012,7 +1094,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							"CheckCertInputs() : certupdate on an expired cert, or there is a pending transaction on the cert");
 			   // check for enough fees
 				nNetFee = GetCertNetFee(tx);
-				if (nNetFee < GetCertNetworkFee(OP_CERT_UPDATE) && HasReachedMainNetForkB2())
+				if (nNetFee < GetCertNetworkFee(OP_CERT_UPDATE))
 					return error(
 							"CheckCertInputs() : OP_CERT_UPDATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -1050,7 +1132,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 // check for enough fees
                 int64 expectedFee = GetCertNetworkFee(OP_CERT_TRANSFER);
                 nNetFee = GetCertNetFee(tx);
-                if (nNetFee < expectedFee && HasReachedMainNetForkB2())
+                if (nNetFee < expectedFee)
                     return error(
                             "CheckCertInputs() : OP_CERT_TRANSFER got tx %s with fee too low %lu",
                             tx.GetHash().GetHex().c_str(),

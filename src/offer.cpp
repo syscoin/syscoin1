@@ -26,6 +26,7 @@ extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo,
 		unsigned int nIn, int nHashType);
 
 CScript RemoveOfferScriptPrefix(const CScript& scriptIn);
+extern CScript RemoveCertScriptPrefix(const CScript& scriptIn);
 bool DecodeOfferScript(const CScript& script, int& op,
 		std::vector<std::vector<unsigned char> > &vvch,
 		CScript::const_iterator& pc);
@@ -1029,7 +1030,7 @@ bool SignOfferSignature(const CTransaction& txFrom, CTransaction& txTo,
 
 	// Leave out the signature from the hash, since a signature can't sign itself.
 	// The checksig op will also drop the signatures from its hash.
-	const CScript& scriptPubKey = RemoveOfferScriptPrefix(txout.scriptPubKey);
+	const CScript &scriptPubKey = RemoveOfferScriptPrefix(txout.scriptPubKey);
 	uint256 hash = SignatureHash(scriptPrereq + txout.scriptPubKey, txTo, nIn,
 			nHashType);
 	txnouttype whichTypeRet;
@@ -1154,6 +1155,7 @@ bool CreateOfferTransactionWithInputTx(
 					&& coin.second == (unsigned int) nTxOut) {
 				if (!SignOfferSignature(*coin.first, wtxNew, nIn++))
 					throw runtime_error("could not sign offer coin output");
+
 			} else {
 				if (!SignSignature(*pwalletMain, *coin.first, wtxNew, nIn++))
 					return false;
@@ -1274,10 +1276,13 @@ CScript RemoveOfferScriptPrefix(const CScript& scriptIn) {
 	int op;
 	vector<vector<unsigned char> > vvch;
 	CScript::const_iterator pc = scriptIn.begin();
-
+	
 	if (!DecodeOfferScript(scriptIn, op, vvch, pc))
+	{
 		throw runtime_error(
-				"RemoveOfferScriptPrefix() : could not decode offer script");
+			"RemoveOfferScriptPrefix() : could not decode offer script");
+	}
+
 	return CScript(pc, scriptIn.end());
 }
 
@@ -1307,6 +1312,15 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					prevOp, vvch)) {
 				found = true; vvchPrevArgs = vvch;
 				break;
+			}
+			else 
+			{
+				vector<vector<unsigned char> > vvch2;
+				if (DecodeCertScript(prevCoins->vout[prevOutput->n].scriptPubKey,
+						prevOp, vvch2)) {
+					found = true; vvchPrevArgs = vvch2;
+					break;
+				}
 			}
 			if(!found)vvchPrevArgs.clear();
 		}
@@ -1417,6 +1431,8 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			}
 			break;
 		case OP_OFFER_ACCEPT:
+			if (found && !IsCertOp(prevOp))
+				return error("CheckOfferInputs() : offeraccept cert mismatch");
 			if (vvchArgs[1].size() > 20)
 				return error("offeraccept tx with guid too big");
 
@@ -1538,9 +1554,21 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					// find the payment from the tx outputs (make sure right amount of coins were paid for this offer accept), the payment amount found has to be exact
 					if(tx.vout.size() > 1)
 					{	
+						uint64 nPrice = theOffer.nPrice;
+						if(IsCertOp(prevOp) && found)
+						{	
+							COfferLinkWhitelistEntry entry;
+							if(theOffer.linkWhitelist.GetLinkEntryByHash(vvchPrevArgs[0], entry))
+							{
+								float nCommission = (float)theOffer.nLinkCommissionPct / 100;
+								nCommission += 1.0f;
+								nPrice = (float)roundf((entry.nPrice*nCommission) * 100) / 100;
+							}
+						}
+
 						for(int i=0;i<tx.vout.size();i++)
 						{
-							if(tx.vout[i].nValue == theOffer.nPrice)
+							if(tx.vout[i].nValue == nPrice)
 							{
 								foundPayment = true;
 								break;
@@ -2054,24 +2082,18 @@ Value offerlink(const Array& params, bool fHelp) {
 
 
 	string strError;
-	//if(wtxCertIn.IsNull())
-	//{
-		// send the tranasction
-		// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
-		vector< pair<CScript, int64> > vecSend;
-		vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
-		
-		CScript scriptFee;
-		scriptFee << OP_RETURN;
-		vecSend.push_back(make_pair(scriptFee, nNetFee));
-		strError = pwalletMain->SendMoney(vecSend, MIN_AMOUNT, wtx,
-				false, bdata);
-	/*}
-	else
-	{
-		strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
-			wtxCertIn, wtx, false, bdata);
-	}*/
+
+	// send the tranasction
+	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
+	vector< pair<CScript, int64> > vecSend;
+	vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
+	
+	CScript scriptFee;
+	scriptFee << OP_RETURN;
+	vecSend.push_back(make_pair(scriptFee, nNetFee));
+	strError = pwalletMain->SendMoney(vecSend, MIN_AMOUNT, wtx,
+			false, bdata);
+
 	if (strError != "")
 	{
 		throw JSONRPCError(RPC_WALLET_ERROR, strError);
@@ -2697,11 +2719,12 @@ Value offeraccept(const Array& params, bool fHelp) {
 			break;
 	}
 	uint64 nPrice = theOffer.nPrice;
-	bool found = false;
+	COfferLinkWhitelistEntry foundCert;
+	CWalletTx wtxCertIn;
 	// go through the whitelist and see if you own any of the certs to apply to this offer for a discount
 	for(unsigned int i=0;i<theOffer.linkWhitelist.entries.size();i++) {
 		CTransaction txCert;
-		CWalletTx wtxCertIn;
+		
 		CCert theCert;
 		COfferLinkWhitelistEntry& entry = theOffer.linkWhitelist.entries[i];
 		// make sure this cert is still valid
@@ -2712,14 +2735,15 @@ Value offeraccept(const Array& params, bool fHelp) {
 			if (IsCertMine(txCert) && pwalletMain->GetTransaction(txCert.GetHash(), wtxCertIn)) 
 			{
 				nPrice = entry.nPrice;
-				found = true;
+				foundCert = entry;
+				break;
 			}
 			
 		}
 
 	}
 	// if this is an accept for a linked offer and the whitelist is non-empty and you dont have a cert in the whitelist, you cannot accept this offer
-	if(vchLinkOfferAccept.size() > 0 && !found && theOffer.linkWhitelist.bExclusiveResell && theOffer.linkWhitelist.entries.size() > 0)
+	if(vchLinkOfferAccept.size() > 0 && !foundCert.IsNull() && theOffer.linkWhitelist.bExclusiveResell && theOffer.linkWhitelist.entries.size() > 0)
 	{
 		throw runtime_error("cannot pay for this linked offer because you don't own a cert from its whitelist");
 	}
@@ -2755,24 +2779,65 @@ Value offeraccept(const Array& params, bool fHelp) {
 
 
     vector< pair<CScript, int64> > vecSend;
-    vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
+    
 
     CScript scriptPayment;
 	CBitcoinAddress address(stringFromVch(theOffer.vchPaymentAddress));
     scriptPayment.SetDestination(address.Get());
 
     vecSend.push_back(make_pair(scriptPayment, nTotalValue));
-
+	vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
 	// serialize offer object
 	string bdata = theOffer.SerializeToString();
+	string strError;
+	if(!foundCert.IsNull())
+	{
+		strError = SendCertMoneyWithInputTx(vecSend, MIN_AMOUNT+nTotalValue, 0, wtxCertIn,
+			wtx, false, bdata);
+		if (strError != "")
+			throw JSONRPCError(RPC_WALLET_ERROR, strError);		
+		// create a certupdate passing in wtx (offeraccept) as input to keep chain of inputs going for next cert transaction (since we used the last cert tx as input to sendoffermoneywithinputtx)
+		CWalletTx wtxCert;
+		wtxCert.nVersion = SYSCOIN_TX_VERSION;
+		CScript scriptPubKeyOrig;
+		CCert cert;
+		CTransaction tx;
+		if (!GetTxOfCert(*pcertdb, foundCert.certLinkVchRand, cert, tx))
+			throw runtime_error("could not find a certificate with this key");
 
-	string strError = pwalletMain->SendMoney(vecSend, MIN_AMOUNT+nTotalValue, wtx,
+
+		// get a key from our wallet set dest as ourselves
+		CPubKey newDefaultKey;
+		pwalletMain->GetKeyFromPool(newDefaultKey, false);
+		scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
+
+		// create CERTUPDATE txn keys
+		CScript scriptPubKey;
+		scriptPubKey << CScript::EncodeOP_N(OP_CERT_UPDATE) << cert.vchRand << cert.vchTitle
+				<< OP_2DROP << OP_DROP;
+		scriptPubKey += scriptPubKeyOrig;
+
+		int64 nNetFee = GetCertNetworkFee(OP_CERT_UPDATE);
+		cert.nFee = nNetFee;
+		printf("sending second tx\n");
+		strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
+				wtx, wtxCert, false, cert.SerializeToString());
+		if (strError != "")
+			throw JSONRPCError(RPC_WALLET_ERROR, strError);
+
+
+	}
+	else
+	{
+		strError = pwalletMain->SendMoney(vecSend, MIN_AMOUNT+nTotalValue, wtx,
 			false, bdata);
+	}
+
     if (strError != "")
 	{
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}
-
+	
 	return wtx.GetHash().GetHex();
 }
 
