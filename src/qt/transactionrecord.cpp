@@ -188,7 +188,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 							sub.type = TransactionRecord::CertUpdate;
 							break;
 						case OP_CERT_TRANSFER:
-							vchName = vvchArgs[1];
+							vchName = vvchArgs[0];
 							sub.type = TransactionRecord::CertTransfer;
 							break;
 						}
@@ -274,7 +274,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     sub.type = TransactionRecord::CertUpdate;
                     break;
                 case OP_CERT_TRANSFER:
-                    vchName = vvchArgs[1];
+                    vchName = vvchArgs[0];
                     sub.type = TransactionRecord::CertTransfer;
                     break;
                 }

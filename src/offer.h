@@ -137,26 +137,26 @@ public:
 class COfferLinkWhitelistEntry {
 public:
 	std::vector<unsigned char> certLinkVchRand;
-	uint64 nPrice;
+	int nDiscountPct;
 	COfferLinkWhitelistEntry() {
 		SetNull();
 	}
 
     IMPLEMENT_SERIALIZE (
         READWRITE(certLinkVchRand);
-		READWRITE(nPrice);
+		READWRITE(nDiscountPct);
 	)
 
     friend bool operator==(const COfferLinkWhitelistEntry &a, const COfferLinkWhitelistEntry &b) {
         return (
            a.certLinkVchRand == b.certLinkVchRand
-		&& a.nPrice == b.nPrice
+		&& a.nDiscountPct == b.nDiscountPct
         );
     }
 
     COfferLinkWhitelistEntry operator=(const COfferLinkWhitelistEntry &b) {
     	certLinkVchRand = b.certLinkVchRand;
-		nPrice = b.nPrice;
+		nDiscountPct = b.nDiscountPct;
         return *this;
     }
 
@@ -164,8 +164,8 @@ public:
         return !(a == b);
     }
     
-    void SetNull() { certLinkVchRand.clear(); nPrice = 0;}
-    bool IsNull() const { return (certLinkVchRand.empty() && nPrice == 0); }
+    void SetNull() { certLinkVchRand.clear(); nDiscountPct = 0;}
+    bool IsNull() const { return (certLinkVchRand.empty() && nDiscountPct == 0); }
 
 };
 class COfferLinkWhitelist {
@@ -277,7 +277,18 @@ public:
 		READWRITE(vchLinkOffer);
 		READWRITE(linkWhitelist);
 	)
+	uint64 GetPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry()){
+		double price = (double)nPrice;
+		if(!entry.IsNull())
+		{
+			if(entry.nDiscountPct < -500 || entry.nDiscountPct > 99)
+				return (uint64)price;
+			double fDiscount = (double)entry.nDiscountPct / 100.0;
+			price -= fDiscount*price;
 
+		}
+		return (uint64)price;
+	}
     bool GetAcceptByHash(std::vector<unsigned char> ahash, COfferAccept &ca) {
     	for(unsigned int i=0;i<accepts.size();i++) {
     		if(accepts[i].vchRand == ahash) {

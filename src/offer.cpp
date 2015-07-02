@@ -1466,7 +1466,8 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			if (!fMiner && !fJustCheck && pindexBlock->nHeight != pindexBest->nHeight) {
 				int nHeight = pindexBlock->nHeight;
-
+				// used to update linked offer prices with discounts from whitelist by an offset of owner offer updated price
+				double nPriceDiffRatio = 1.0;
 				// get the latest offer from the db
             	theOffer.nHeight = nHeight;
             	theOffer.GetOfferFromList(vtxPos);
@@ -1475,6 +1476,11 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				// but first we assign the accepts from the DB since
 				// they are not shipped in an update txn to keep size down
 				if(op == OP_OFFER_UPDATE) {
+					// we do this so we dont have to recalculate the entire linked offer tree of prices if the offer owner changes his price
+					// especially for those that use whitelists because they have applied discounts to their price, a recalculation would be expensive for bandwidht
+					// so we simply apply a ratio to each price down the tree instead of recalculating... works mathematically because price is multiplicative
+					// so we can multiply a ratio to maintain the discount/commission ratio's between the levels of the offer tree
+					nPriceDiffRatio = (double)serializedOffer.nPrice / (double)theOffer.nPrice;
 					serializedOffer.accepts = theOffer.accepts;
 					theOffer = serializedOffer;
 					if(!theOffer.vchLinkOffer.empty())
@@ -1549,23 +1555,17 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				else if (op == OP_OFFER_ACCEPT) {
 					
 					COffer myOffer,linkOffer;
-					CTransaction offerTx, linkedTx;
-					bool foundPayment = false;
+					CTransaction offerTx, linkedTx;			
 					// find the payment from the tx outputs (make sure right amount of coins were paid for this offer accept), the payment amount found has to be exact
 					if(tx.vout.size() > 1)
 					{	
-						uint64 nPrice = theOffer.nPrice;
+						bool foundPayment = false;
+						COfferLinkWhitelistEntry entry;
 						if(IsCertOp(prevOp) && found)
 						{	
-							COfferLinkWhitelistEntry entry;
-							if(theOffer.linkWhitelist.GetLinkEntryByHash(vvchPrevArgs[0], entry))
-							{
-								float nCommission = (float)theOffer.nLinkCommissionPct / 100;
-								nCommission += 1.0f;
-								nPrice = (float)roundf((entry.nPrice*nCommission) * 100) / 100;
-							}
+							theOffer.linkWhitelist.GetLinkEntryByHash(vvchPrevArgs[0], entry);						
 						}
-
+						uint64 nPrice = theOffer.GetPrice(entry)*theOfferAccept.nQty;
 						for(int i=0;i<tx.vout.size();i++)
 						{
 							if(tx.vout[i].nValue == nPrice)
@@ -1577,7 +1577,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						if(!foundPayment)
 						{
 							if(fDebug)
-								printf("CheckOfferInputs() OP_OFFER_ACCEPT: this offer accept does not pay enough according to the offer price\n");
+								printf("CheckOfferInputs() OP_OFFER_ACCEPT: this offer accept does not pay enough according to the offer price %llu\n", nPrice);
 							return true;
 						}
 					}
@@ -1717,9 +1717,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						if(op == OP_OFFER_UPDATE)
 						{
 							myLinkOffer.nHeight = theOffer.nHeight;
-							float nCommission = (float)myLinkOffer.nLinkCommissionPct / 100;
-							nCommission += 1.0f;
-							myLinkOffer.nPrice = (float)roundf((theOffer.nPrice*nCommission) * 100) / 100;
+							myLinkOffer.nPrice = (uint64)(nPriceDiffRatio*(double)myLinkOffer.nPrice);
 							myLinkOffer.sTitle = theOffer.sTitle;
 							myLinkOffer.sCategory = theOffer.sCategory;
 						}
@@ -2001,9 +1999,8 @@ Value offerlink(const Array& params, bool fHelp) {
 		vchDesc = linkOffer.sDescription;
 	}
 	COfferLinkWhitelistEntry foundEntry;
-	nPrice = linkOffer.nPrice;
+
 	// go through the whitelist and see if you own any of the certs to apply to this offer for a discount
-	// find the one with the biggest discount if there are more than one that you own from the list
 	for(unsigned int i=0;i<linkOffer.linkWhitelist.entries.size();i++) {
 		CTransaction txCert;
 		CWalletTx wtxCertIn;
@@ -2015,19 +2012,14 @@ Value offerlink(const Array& params, bool fHelp) {
 			// make sure its in your wallet (you control this cert)		
 			if (IsCertMine(txCert) && pwalletMain->GetTransaction(txCert.GetHash(), wtxCertIn)) 
 			{
-				if(entry.nPrice <= nPrice)
-				{
-					nPrice = entry.nPrice;
-					foundEntry = entry;
-				}
+				foundEntry = entry;
+				break;	
 			}
 			
 		}
 
 	}
-	if(!foundEntry.IsNull())
-		nPrice = foundEntry.nPrice;
-	
+
 
 	// if the whitelist is non-empty and you dont have a cert in the whitelist, you cannot link to this offer
 	if(foundEntry.IsNull() && linkOffer.linkWhitelist.entries.size() > 0)
@@ -2054,8 +2046,6 @@ Value offerlink(const Array& params, bool fHelp) {
 	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_ACTIVATE);	
 	// unserialize offer object from txn, serialize back
 	// build offer object
-	float nCommission = (float)commissionInteger / 100;
-	nCommission += 1.0f;
 	COffer newOffer;
 	newOffer.vchRand = vchOffer;
 	newOffer.vchPaymentAddress = vchPaymentAddress;
@@ -2063,7 +2053,10 @@ Value offerlink(const Array& params, bool fHelp) {
 	newOffer.sTitle = vchTitle;
 	newOffer.sDescription = vchDesc;
 	newOffer.nQty = nQty;
-	newOffer.nPrice = (float)roundf((nPrice*nCommission) * 100) / 100;
+	newOffer.nPrice = linkOffer.GetPrice(foundEntry);
+	// add commission
+	double fCommission = (double)commissionInteger / 100.0;
+	newOffer.nPrice += (uint64)((double)newOffer.nPrice*fCommission);
 	newOffer.vchLinkOffer = vchLinkOffer;
 	newOffer.nLinkCommissionPct = commissionInteger;
 	newOffer.nHeight = linkOffer.nHeight;
@@ -2111,23 +2104,23 @@ Value offerlink(const Array& params, bool fHelp) {
 Value offeraddwhitelist(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 2 || params.size() > 3)
 		throw runtime_error(
-		"offeraddwhitelist <offer guid> <cert guid> [wholesale price]\n"
+		"offeraddwhitelist <offer guid> <cert guid> [discount percentage]\n"
 		"Add to the whitelist of your offer(controls who can resell).\n"
 						"<offer guid> offer guid that you are adding to\n"
 						"<cert guid> cert guid representing a certificate that you control (transfer it to reseller after)\n"
-						"<wholesale price> price that the reseller pays to you for this offer. Defaults to the offer price.\n"
-						
+						"<discount percentage> percentage of discount given to reseller for this offer. Negative discount adds on top of offer price, acts as an extra commission. -500 to 99.\n"						
 						+ HelpRequiringPassphrase());
 
 	// gather & validate inputs
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	vector<unsigned char> vchCert =  vchFromValue(params[1]);
-	uint64 nWholesalePrice = 0;
+	int nDiscountPctInteger = 0;
 	
 	if(params.size() >= 3)
-		nWholesalePrice = (uint64)atoi64(params[2].get_str().c_str());
+		nDiscountPctInteger = atoi(params[2].get_str().c_str());
 
-
+	if(nDiscountPctInteger < -500 || nDiscountPctInteger > 99)
+		throw runtime_error("Invalid discount amount");
 	CTransaction txCert;
 	CCert theCert;
 	CWalletTx wtx, wtxIn, wtxCertIn;
@@ -2185,10 +2178,7 @@ Value offeraddwhitelist(const Array& params, bool fHelp) {
 
 	COfferLinkWhitelistEntry entry;
 	entry.certLinkVchRand = theCert.vchRand;
-	if(nWholesalePrice == 0)
-		entry.nPrice = theOffer.nPrice;
-	else
-		entry.nPrice = nWholesalePrice * COIN;
+	entry.nDiscountPct = nDiscountPctInteger;
 	theOffer.linkWhitelist.PutWhitelistEntry(entry);
 
 	// serialize offer object
@@ -2287,9 +2277,6 @@ Value offerclearwhitelist(const Array& params, bool fHelp) {
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	vector<unsigned char> vchCert = vchFromValue(params[1]);
 
-	int64 nWholesalePrice = (int64)atoi64(params[2].get_str().c_str());
-
-
 	CCert theCert;
 
 	// this is a syscoind txn
@@ -2379,7 +2366,7 @@ Value offerwhitelist(const Array& params, bool fHelp) {
 					Pair("cert_expiresin",
 							theCert.nHeight + GetCertDisplayExpirationDepth(theCert.nHeight)
 									- pindexBest->nHeight));
-			oList.push_back(Pair("offer_price", ValueFromAmount(entry.nPrice)));
+			oList.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
 			oRes.push_back(oList);
 		}  
     }
@@ -2718,7 +2705,6 @@ Value offeraccept(const Array& params, bool fHelp) {
 		else
 			break;
 	}
-	uint64 nPrice = theOffer.nPrice;
 	COfferLinkWhitelistEntry foundCert;
 	CWalletTx wtxCertIn;
 	// go through the whitelist and see if you own any of the certs to apply to this offer for a discount
@@ -2734,7 +2720,6 @@ Value offeraccept(const Array& params, bool fHelp) {
 			
 			if (IsCertMine(txCert) && pwalletMain->GetTransaction(txCert.GetHash(), wtxCertIn)) 
 			{
-				nPrice = entry.nPrice;
 				foundCert = entry;
 				break;
 			}
@@ -2757,7 +2742,7 @@ Value offeraccept(const Array& params, bool fHelp) {
     txAccept.txPayId = wtx.GetHash();
     txAccept.vchMessage = vchMessage;
 	txAccept.nQty = nQty;
-	txAccept.nPrice = nPrice;
+	txAccept.nPrice = theOffer.GetPrice(foundCert);
 	txAccept.vchLinkOfferAccept = vchLinkOfferAccept;
 	txAccept.vchRefundAddress = vchRefundAddress;
 	txAccept.nFee = 0;
@@ -2771,7 +2756,7 @@ Value offeraccept(const Array& params, bool fHelp) {
     int64 nValueIn = 0;
 
 
-    uint64 nTotalValue = ( nPrice * nQty );
+    uint64 nTotalValue = ( txAccept.nPrice * nQty );
 
     if (!pwalletMain->SelectCoins(nTotalValue + (MIN_AMOUNT * 2), setCoins, nValueIn))
         throw runtime_error("insufficient funds to pay for offer");
