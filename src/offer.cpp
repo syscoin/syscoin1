@@ -2108,7 +2108,7 @@ Value offeraddwhitelist(const Array& params, bool fHelp) {
 		"Add to the whitelist of your offer(controls who can resell).\n"
 						"<offer guid> offer guid that you are adding to\n"
 						"<cert guid> cert guid representing a certificate that you control (transfer it to reseller after)\n"
-						"<discount percentage> percentage of discount given to reseller for this offer. Negative discount adds on top of offer price, acts as an extra commission. -500 to 99.\n"						
+						"<discount percentage> percentage of discount given to reseller for this offer. Negative discount adds on top of offer price, acts as an extra commission. -99 to 99.\n"						
 						+ HelpRequiringPassphrase());
 
 	// gather & validate inputs
@@ -2119,7 +2119,7 @@ Value offeraddwhitelist(const Array& params, bool fHelp) {
 	if(params.size() >= 3)
 		nDiscountPctInteger = atoi(params[2].get_str().c_str());
 
-	if(nDiscountPctInteger < -500 || nDiscountPctInteger > 99)
+	if(nDiscountPctInteger < -99 || nDiscountPctInteger > 99)
 		throw runtime_error("Invalid discount amount");
 	CTransaction txCert;
 	CCert theCert;
@@ -2130,7 +2130,6 @@ Value offeraddwhitelist(const Array& params, bool fHelp) {
 	// check to see if certificate in wallet
 	if (!pwalletMain->GetTransaction(txCert.GetHash(), wtxCertIn)) 
 		throw runtime_error("this certificate is not in your wallet");
-
 
 	// this is a syscoind txn
 	wtx.nVersion = SYSCOIN_TX_VERSION;
@@ -2180,7 +2179,6 @@ Value offeraddwhitelist(const Array& params, bool fHelp) {
 	entry.certLinkVchRand = theCert.vchRand;
 	entry.nDiscountPct = nDiscountPctInteger;
 	theOffer.linkWhitelist.PutWhitelistEntry(entry);
-
 	// serialize offer object
 	string bdata = theOffer.SerializeToString();
 
@@ -2246,8 +2244,6 @@ Value offerremovewhitelist(const Array& params, bool fHelp) {
 	scriptPubKey += scriptPubKeyOrig;
 	// calculate network fees
 	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_UPDATE);
-	
-	
 	theOffer.accepts.clear();
 
 
@@ -2804,7 +2800,6 @@ Value offeraccept(const Array& params, bool fHelp) {
 
 		int64 nNetFee = GetCertNetworkFee(OP_CERT_UPDATE);
 		cert.nFee = nNetFee;
-		printf("sending second tx\n");
 		strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
 				wtx, wtxCert, false, cert.SerializeToString());
 		if (strError != "")

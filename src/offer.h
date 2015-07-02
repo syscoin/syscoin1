@@ -281,7 +281,7 @@ public:
 		double price = (double)nPrice;
 		if(!entry.IsNull())
 		{
-			if(entry.nDiscountPct < -500 || entry.nDiscountPct > 99)
+			if(entry.nDiscountPct < -99 || entry.nDiscountPct > 99)
 				return (uint64)price;
 			double fDiscount = (double)entry.nDiscountPct / 100.0;
 			price -= fDiscount*price;
