@@ -246,7 +246,6 @@ public:
 	uint64 nQty;
 	uint64 nFee;
 	std::vector<COfferAccept>accepts;
-	unsigned char nLinkCommissionPct;
 	std::vector<unsigned char> vchLinkOffer;
 	COfferLinkWhitelist linkWhitelist;
 	COffer() { 
@@ -273,7 +272,6 @@ public:
     	READWRITE(nQty);
     	READWRITE(nFee);
     	READWRITE(accepts);
-		READWRITE(nLinkCommissionPct);
 		READWRITE(vchLinkOffer);
 		READWRITE(linkWhitelist);
 	)
@@ -350,7 +348,6 @@ public:
         && a.nTime == b.nTime
         && a.accepts == b.accepts
         && a.vchPaymentAddress == b.vchPaymentAddress
-		&& a.nLinkCommissionPct == b.nLinkCommissionPct
 		&& a.vchLinkOffer == b.vchLinkOffer
 		&& a.linkWhitelist == b.linkWhitelist
         );
@@ -371,7 +368,6 @@ public:
         nTime = b.nTime;
         accepts = b.accepts;
         vchPaymentAddress = b.vchPaymentAddress;
-		nLinkCommissionPct = b.nLinkCommissionPct;
 		vchLinkOffer = b.vchLinkOffer;
 		linkWhitelist = b.linkWhitelist;
         return *this;
@@ -381,8 +377,8 @@ public:
         return !(a == b);
     }
     
-    void SetNull() { nHeight = n = nPrice = nQty = 0; txHash = hash = 0; accepts.clear(); vchRand.clear(); sTitle.clear(); sDescription.clear();nLinkCommissionPct=0;vchLinkOffer.clear();linkWhitelist.SetNull();}
-    bool IsNull() const { return (n == 0 && txHash == 0 && hash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 && nLinkCommissionPct == 0 && linkWhitelist.IsNull()); }
+    void SetNull() { nHeight = n = nPrice = nQty = 0; txHash = hash = 0; accepts.clear(); vchRand.clear(); sTitle.clear(); sDescription.clear();vchLinkOffer.clear();linkWhitelist.SetNull();}
+    bool IsNull() const { return (n == 0 && txHash == 0 && hash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 &&  linkWhitelist.IsNull()); }
 
     bool UnserializeFromTx(const CTransaction &tx);
     void SerializeToTx(CTransaction &tx);

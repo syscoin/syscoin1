@@ -1483,10 +1483,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					nPriceDiffRatio = (double)serializedOffer.nPrice / (double)theOffer.nPrice;
 					serializedOffer.accepts = theOffer.accepts;
 					theOffer = serializedOffer;
-					if(!theOffer.vchLinkOffer.empty())
-					{
-						return error("could not update linked offer");
-					}
 				}
 				else if(op == OP_OFFER_REFUND)
 				{
@@ -1702,7 +1698,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						nHeight, (double)nTheFee / COIN);
 				}
 				
-				if((op == OP_OFFER_UPDATE || op == OP_OFFER_ACCEPT) && theOffer.vchLinkOffer.empty())
+				if(op == OP_OFFER_UPDATE || (op == OP_OFFER_ACCEPT && theOffer.vchLinkOffer.empty()))
 				{
 					// if this offer has linked offers to it and it is an update or accept, then copy over necessary updates to offer linking to it
 					vector<pair<vector<unsigned char>, vector<COffer> > > offerLinkages;
@@ -1713,13 +1709,11 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						vector<COffer> &myVtxPos = pairLink.second;
 						// copy over data to linked offer
 						COffer myLinkOffer = myVtxPos.back();
-						myLinkOffer.nQty = theOffer.nQty;
+						myLinkOffer.nQty = theOffer.nQty;	
 						if(op == OP_OFFER_UPDATE)
 						{
 							myLinkOffer.nHeight = theOffer.nHeight;
 							myLinkOffer.nPrice = (uint64)(nPriceDiffRatio*(double)myLinkOffer.nPrice);
-							myLinkOffer.sTitle = theOffer.sTitle;
-							myLinkOffer.sCategory = theOffer.sCategory;
 						}
 						
 						myLinkOffer.PutToOfferList(myVtxPos);
@@ -1729,13 +1723,9 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						if (!pofferdb->WriteOffer(linkVchOffer, myVtxPos))
 							return error( "CheckOfferInputs() : failed to write to offer link to DB");
 						}
-
 					}
-
+					
 				}
-
-				
-				
 			}
 		}
 	}
@@ -2058,7 +2048,6 @@ Value offerlink(const Array& params, bool fHelp) {
 	double fCommission = (double)commissionInteger / 100.0;
 	newOffer.nPrice += (uint64)((double)newOffer.nPrice*fCommission);
 	newOffer.vchLinkOffer = vchLinkOffer;
-	newOffer.nLinkCommissionPct = commissionInteger;
 	newOffer.nHeight = linkOffer.nHeight;
 	newOffer.nFee = nNetFee;
 	string bdata = newOffer.SerializeToString();
@@ -2431,8 +2420,8 @@ Value offerupdate(const Array& params, bool fHelp) {
 	EnsureWalletIsUnlocked();
 
 	// look for a transaction with this key
-	CTransaction tx;
-	COffer theOffer;
+	CTransaction tx, linktx;
+	COffer theOffer, linkOffer;
 	if (!GetTxOfOffer(*pofferdb, vchOffer, theOffer, tx))
 		throw runtime_error("could not find an offer with this name");
 	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
@@ -2447,15 +2436,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 		throw runtime_error("could not read offer from DB");
 
 	theOffer = vtxPos.back();
-	vector<COffer> linkVtxPos;
-	// if offer linkage exists, copy over some offer details from linked offer
-	if (pofferdb->ExistsOffer(theOffer.vchLinkOffer) && !theOffer.vchLinkOffer.empty()) {
-		if (pofferdb->ReadOffer(theOffer.vchLinkOffer, linkVtxPos))
-		{
-			throw runtime_error("cannot update linked offer");
-		}
-			
-	}
+		
 	// calculate network fees
 	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_UPDATE);
 	
@@ -2928,7 +2909,6 @@ Value offerinfo(const Array& params, bool fHelp) {
 			if(!theOffer.vchLinkOffer.empty() && IsOfferMine(tx)) { 
 				oOffer.push_back(Pair("offerlink", "true"));
 				oOffer.push_back(Pair("offerlink_guid", stringFromVch(theOffer.vchLinkOffer)));
-				oOffer.push_back(Pair("offerlink_commission", strprintf("%u%%", theOffer.nLinkCommissionPct)));
 			}
 			oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 			oOffer.push_back(Pair("accepts", aoOfferAccepts));
