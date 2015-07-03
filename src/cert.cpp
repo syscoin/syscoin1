@@ -207,6 +207,8 @@ bool CCertDB::ReconstructCertIndex(CBlockIndex *pindexRescan) {
     CBlockIndex* pindex = pindexRescan;
 
     {
+	if(!HasReachedMainNetForkB2())
+		return true;
     TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
     while (pindex) {
 
@@ -961,6 +963,8 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         CValidationState &state, CCoinsViewCache &inputs, bool fBlock, bool fMiner,
         bool fJustCheck) {
 
+	if(!HasReachedMainNetForkB2())
+		return true;
     if (!tx.IsCoinBase()) {
         printf("*** %d %d %s %s %s %s\n", pindexBlock->nHeight,
                 pindexBest->nHeight, tx.GetHash().ToString().c_str(),
@@ -1270,7 +1274,8 @@ Value certnew(const Array& params, bool fHelp) {
                         "<title> title, 255 bytes max."
                         "<data> data, 64KB max."
                         + HelpRequiringPassphrase());
-
+	if(!HasReachedMainNetForkB2())
+		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
 	vector<unsigned char> vchTitle = vchFromValue(params[0]);
     vector<unsigned char> vchData = vchFromValue(params[1]);
 
@@ -1351,7 +1356,8 @@ Value certupdate(const Array& params, bool fHelp) {
                         "<title> certificate title, 255 bytes max.\n"
                         "<data> certificate data, 64 KB max.\n"
                         + HelpRequiringPassphrase());
-
+	if(!HasReachedMainNetForkB2())
+		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
     // gather & validate inputs
     vector<unsigned char> vchCert = vchFromValue(params[0]);
     vector<unsigned char> vchTitle = vchFromValue(params[1]);
@@ -1441,7 +1447,8 @@ Value certtransfer(const Array& params, bool fHelp) {
                 "<certkey> certificate guidkey.\n"
                 "<address> receiver syscoin address.\n"
                 + HelpRequiringPassphrase());
-
+	if(!HasReachedMainNetForkB2())
+		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
     // gather & validate inputs
     vector<unsigned char> vchCertKey = ParseHex(params[0].get_str());
 	vector<unsigned char> vchCert = vchFromValue(params[0]);

@@ -466,7 +466,8 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, unsigned i
  */
 bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
     CBlockIndex* pindex = pindexRescan;
-    
+	if(!HasReachedMainNetForkB2())
+		return true;    
     {
 	TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
     while (pindex) {  
@@ -477,7 +478,6 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
         uint256 txblkhash;
         
         BOOST_FOREACH(CTransaction& tx, block.vtx) {
-
             if (tx.nVersion != SYSCOIN_TX_VERSION)
                 continue;
 
@@ -486,8 +486,7 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 
             // decode the offer op, params, height
             bool o = DecodeOfferTx(tx, op, nOut, vvchArgs, -1);
-            if (!o || !IsOfferOp(op)) continue;
-            
+            if (!o || !IsOfferOp(op)) continue;         
             vector<unsigned char> vchOffer = vvchArgs[0];
         
             // get the transaction
@@ -546,28 +545,6 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 			}
             // read the offer accept from db if exists
             if(op == OP_OFFER_ACCEPT) {
-				bool foundPayment = false;
-				// find the payment from the tx outputs (make sure right amount of coins were paid for this offer accept), the payment amount found has to be exact
-				if(tx.vout.size() > 1)
-				{	
-					for(int i=0;i<tx.vout.size();i++)
-					{
-						if(tx.vout[i].nValue == txOffer.nPrice)
-						{
-							foundPayment = true;
-							break;
-						}
-					}
-					if(!foundPayment)
-					{
-						continue;
-					}
-				}
-				else
-				{
-					continue;
-				}
-
             	bool bReadOffer = false;
             	vector<unsigned char> vchOfferAccept = vvchArgs[1];
 	            if (ExistsOfferAccept(vchOfferAccept)) {
@@ -1289,7 +1266,8 @@ CScript RemoveOfferScriptPrefix(const CScript& scriptIn) {
 bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		CValidationState &state, CCoinsViewCache &inputs, bool fBlock, bool fMiner,
 		bool fJustCheck) {
-
+	if(!HasReachedMainNetForkB2())
+		return true;
 	if (!tx.IsCoinBase()) {
 		if (fDebug)
 			printf("*** %d %d %s %s %s %s\n", pindexBlock->nHeight,
@@ -1479,7 +1457,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					// we do this so we dont have to recalculate the entire linked offer tree of prices if the offer owner changes his price
 					// especially for those that use whitelists because they have applied discounts to their price, a recalculation would be expensive for bandwidht
 					// so we simply apply a ratio to each price down the tree instead of recalculating... works mathematically because price is multiplicative
-					// so we can multiply a ratio to maintain the discount/commission ratio's between the levels of the offer tree
+					// so we can multiply a ratio to maintain the discount ratio's between the levels of the offer tree
 					nPriceDiffRatio = (double)serializedOffer.nPrice / (double)theOffer.nPrice;
 					serializedOffer.accepts = theOffer.accepts;
 					theOffer = serializedOffer;
@@ -1799,6 +1777,8 @@ Value offernew(const Array& params, bool fHelp) {
 						"<exclusive resell> set to 1 if you only want those who control the whitelist certificates to be able to resell this offer via offerlink. Defaults to 0.\n"
 						"<address> offeraccept receive alias or address. Defaults to an address in your wallet.\n"
 						+ HelpRequiringPassphrase());
+	if(!HasReachedMainNetForkB2())
+		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
 	// gather inputs
 	string baSig;
 	unsigned int nParamIdx = 0;
@@ -1921,6 +1901,8 @@ Value offerlink(const Array& params, bool fHelp) {
 						"<address> new offeraccept receive address or alias. Defaults to an address in your wallet. Leave as '' to use default.\n"
 						"<description> description, 64 KB max. Defaults to original description. Leave as '' to use default.\n"
 						+ HelpRequiringPassphrase());
+	if(!HasReachedMainNetForkB2())
+		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
 	// gather inputs
 	string baSig;
 	uint64 nQty;
@@ -2100,6 +2082,8 @@ Value offeraddwhitelist(const Array& params, bool fHelp) {
 						"<discount percentage> percentage of discount given to reseller for this offer. Negative discount adds on top of offer price, acts as an extra commission. -99 to 99.\n"						
 						+ HelpRequiringPassphrase());
 
+	if(!HasReachedMainNetForkB2())
+		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");	
 	// gather & validate inputs
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	vector<unsigned char> vchCert =  vchFromValue(params[1]);
@@ -2364,6 +2348,8 @@ Value offerupdate(const Array& params, bool fHelp) {
 						"Perform an update on an offer you control.\n"
 						+ HelpRequiringPassphrase());
 
+	if(!HasReachedMainNetForkB2())
+		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");	
 	// gather & validate inputs
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	vector<unsigned char> vchCat = vchFromValue(params[1]);
@@ -2471,6 +2457,8 @@ Value offerrenew(const Array& params, bool fHelp) {
 						"Perform a renewal on an offer you control.\n"
 						+ HelpRequiringPassphrase());
 
+	if(!HasReachedMainNetForkB2())
+		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");	
 	// gather & validate inputs
 	vector<unsigned char> vchRand = ParseHex(params[0].get_str());
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
@@ -2543,7 +2531,8 @@ Value offerrefund(const Array& params, bool fHelp) {
 				"Refund an offer accept of an offer you control.\n"
 				"<guid> guidkey of offer accept to refund.\n"
 				+ HelpRequiringPassphrase());
-
+	if(!HasReachedMainNetForkB2())
+		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
 	vector<unsigned char> vchAcceptRand = ParseHex(params[0].get_str());
 
 	EnsureWalletIsUnlocked();
@@ -2588,6 +2577,8 @@ Value offeraccept(const Array& params, bool fHelp) {
 				"<refund address> In case offer not accepted refund to this address. Leave empty to use a new address from your wallet. \n"
 				"<linkedguid> guidkey from offer accept linking to this offer accept. For internal use only, leave blank\n"
 				+ HelpRequiringPassphrase());
+	if(!HasReachedMainNetForkB2())
+		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");	
 	vector<unsigned char> vchRefundAddress;	
 	CBitcoinAddress refundAddr;	
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
@@ -3260,6 +3251,8 @@ Value offerscan(const Array& params, bool fHelp) {
 
  Value offerclean(const Array& params, bool fHelp)
  {
+	if(!HasReachedMainNetForkB2())
+		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
 	if (fHelp || params.size())
 	throw runtime_error("offer_clean\nClean unsatisfiable transactions from the wallet - including offer_update on an already taken offer\n");
 
