@@ -1317,7 +1317,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		bool good = DecodeOfferTx(tx, op, nOut, vvchArgs, -1);
 		if (!good)
 			return error("CheckOfferInputs() : could not decode a syscoin tx");
-		int nPrevHeight;
 		int nDepth;
 		int64 nNetFee;
 
@@ -1393,7 +1392,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				return error("CheckOfferInputs() : offerrefund offer mismatch");
 			if (fBlock && !fJustCheck) {
 				// Check hash
-				const vector<unsigned char> &vchOffer = vvchArgs[0];
 				const vector<unsigned char> &vchAcceptRand = vvchArgs[1];
 				
 				// check for existence of offeraccept in txn offer obj
@@ -1416,7 +1414,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			if (fBlock && !fJustCheck) {
 				// Check hash
-				const vector<unsigned char> &vchOffer = vvchArgs[0];
 				const vector<unsigned char> &vchAcceptRand = vvchArgs[1];
 				
 				// check for existence of offeraccept in txn offer obj
@@ -1540,7 +1537,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							theOffer.linkWhitelist.GetLinkEntryByHash(vvchPrevArgs[0], entry);						
 						}
 						uint64 nPrice = theOffer.GetPrice(entry)*theOfferAccept.nQty;
-						for(int i=0;i<tx.vout.size();i++)
+						for(uint i=0;i<tx.vout.size();i++)
 						{
 							if(tx.vout[i].nValue == nPrice)
 							{
@@ -1781,7 +1778,6 @@ Value offernew(const Array& params, bool fHelp) {
 		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
 	// gather inputs
 	string baSig;
-	unsigned int nParamIdx = 0;
 	uint64 nQty, nPrice;
 	bool bExclusiveResell = false;
 	vector<unsigned char> vchPaymentAddress;
@@ -1906,7 +1902,6 @@ Value offerlink(const Array& params, bool fHelp) {
 	// gather inputs
 	string baSig;
 	uint64 nQty;
-	uint64 nPrice = UINT64_MAX;
 	CWalletTx wtxCertIn;
 	COfferLinkWhitelistEntry whiteListEntry;
 	vector<unsigned char> vchPaymentAddress;
@@ -2331,10 +2326,9 @@ Value offerwhitelist(const Array& params, bool fHelp) {
 			string strAddress = "";
 			GetCertAddress(txCert, strAddress);
 			oList.push_back(Pair("cert_address", strAddress));
-			oList.push_back(
-					Pair("cert_expiresin",
-							theCert.nHeight + GetCertDisplayExpirationDepth(theCert.nHeight)
-									- pindexBest->nHeight));
+			int expires_in = theCert.nHeight + GetCertDisplayExpirationDepth(theCert.nHeight)
+									- pindexBest->nHeight))
+			oList.push_back(Pair("cert_expiresin",expires_in);
 			oList.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
 			oRes.push_back(oList);
 		}  
@@ -2356,21 +2350,15 @@ Value offerupdate(const Array& params, bool fHelp) {
 	vector<unsigned char> vchTitle = vchFromValue(params[2]);
 	vector<unsigned char> vchDesc;
 	bool bExclusiveResell = false;
-	int64 qty=0;
 	uint64 price,nQty;
 	if (params.size() >= 6) vchDesc = vchFromValue(params[5]);
 	if(params.size() == 7) bExclusiveResell = atoi(params[6].get_str().c_str()) == 1? true: false;
 	try {
-		qty = atoi64(params[3].get_str().c_str());
-		price = atoi64(params[4].get_str().c_str());
+		nQty = (uint64)atoi64(params[3].get_str().c_str());
+		price = (uint64)atoi64(params[4].get_str().c_str());
 	} catch (std::exception &e) {
 		throw runtime_error("invalid price and/or quantity values.");
 	}
-	if(qty < 0)
-	{
-		throw runtime_error("invalid quantity value.");
-	}
-	nQty = (uint64)qty;
 	if(vchCat.size() < 1)
         throw runtime_error("offer category < 1 bytes!\n");
 	if(vchTitle.size() < 1)
