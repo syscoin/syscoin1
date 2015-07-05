@@ -312,7 +312,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 		// decode alias info from transaction
 		vector<vector<unsigned char> > vvchArgs;
-		int op, nOut, nPrevHeight;
+		int op, nOut;
 		int64 nDepth;
 		if (!DecodeAliasTx(tx, op, nOut, vvchArgs, -1))
 			return error(
