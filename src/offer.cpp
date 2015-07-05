@@ -2327,8 +2327,8 @@ Value offerwhitelist(const Array& params, bool fHelp) {
 			GetCertAddress(txCert, strAddress);
 			oList.push_back(Pair("cert_address", strAddress));
 			int expires_in = theCert.nHeight + GetCertDisplayExpirationDepth(theCert.nHeight)
-									- pindexBest->nHeight);
-			oList.push_back(Pair("cert_expiresin",expires_in);
+									- pindexBest->nHeight;
+			oList.push_back(Pair("cert_expiresin",expires_in));
 			oList.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
 			oRes.push_back(oList);
 		}  
