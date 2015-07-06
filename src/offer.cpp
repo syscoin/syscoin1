@@ -1537,7 +1537,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							theOffer.linkWhitelist.GetLinkEntryByHash(vvchPrevArgs[0], entry);						
 						}
 						uint64 nPrice = theOffer.GetPrice(entry)*theOfferAccept.nQty;
-						for(uint i=0;i<tx.vout.size();i++)
+						for(unsigned int i=0;i<tx.vout.size();i++)
 						{
 							if(tx.vout[i].nValue == nPrice)
 							{
