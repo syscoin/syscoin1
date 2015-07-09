@@ -16,7 +16,11 @@
 #include <QMessageBox>
 #include <QMenu>
 #include <QString>
+#if QT_VERSION >= 0x050000
+#include <QUrlQuery>
+#else
 #include <QUrl>
+#endif
 
 using namespace std;
 using namespace json_spirit;
