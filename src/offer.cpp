@@ -329,6 +329,7 @@ bool IsOfferOp(int op) {
 
 int nStartHeight = 161280;
 
+// SFS DYNAMIC EXPIRATION HEIGHT
 int64 GetOfferNetworkFee(opcodetype seed) {
 
 	int64 nFee = 0;
@@ -359,6 +360,7 @@ int64 GetOfferNetworkFee(opcodetype seed) {
 
 // Increase expiration to 36000 gradually starting at block 24000.
 // Use for validation purposes and pass the chain height.
+// SFS DYNAMIC EXPIRATION HEIGHT
 int GetOfferExpirationDepth(int nHeight) {
 	int nComputedHeight = ( nHeight - nStartHeight < 0 ) ? 1 : ( nHeight - nStartHeight ) + 1;
     if (nComputedHeight < 13440) return 6720;
@@ -880,6 +882,7 @@ bool GetTxOfOffer(COfferDB& dbOffer, const vector<unsigned char> &vchOffer,
 		return false;
 	txPos = vtxPos.back();
 	int nHeight = txPos.nHeight;
+	// SFS DYNAMIC EXPIRATION HEIGHT
 	if (nHeight + GetOfferExpirationDepth(pindexBest->nHeight)
 			< pindexBest->nHeight) {
 		string offer = stringFromVch(vchOffer);
@@ -903,6 +906,7 @@ bool GetTxOfOfferAccept(COfferDB& dbOffer, const vector<unsigned char> &vchOffer
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos)) return false;
 	txPos = vtxPos.back();
 	int nHeight = txPos.nHeight;
+	// SFS DYNAMIC EXPIRATION HEIGHT
 	if (nHeight + GetOfferExpirationDepth(pindexBest->nHeight)
 			< pindexBest->nHeight) {
 		string offer = stringFromVch(vchOfferAccept);
@@ -1341,6 +1345,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if (fBlock && !fJustCheck) {
 
 					// check for enough fees
+				// SFS DYNAMIC EXPIRATION HEIGHT
 				nNetFee = GetOfferNetFee(tx);
 				if (nNetFee < GetOfferNetworkFee(OP_OFFER_ACTIVATE))
 					return error(
@@ -1362,13 +1367,14 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if (vvchPrevArgs[0] != vvchArgs[0])
 				return error("CheckOfferInputs() : offerupdate offer mismatch");
 			if (fBlock && !fJustCheck) {
-				// TODO CPU intensive
+				// SFS DYNAMIC EXPIRATION HEIGHT
 				nDepth = CheckOfferTransactionAtRelativeDepth(pindexBlock,
 						prevCoins, GetOfferExpirationDepth(pindexBlock->nHeight));
 				if ((fBlock || fMiner) && nDepth < 0)
 					return error(
 							"CheckOfferInputs() : offerupdate on an expired offer, or there is a pending transaction on the offer");
 					// check for enough fees
+				// SFS DYNAMIC EXPIRATION HEIGHT
 				nNetFee = GetOfferNetFee(tx);
 				if (nNetFee < GetOfferNetworkFee(OP_OFFER_UPDATE))
 					return error(
@@ -1398,6 +1404,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				if(!theOffer.GetAcceptByHash(vchAcceptRand, theOfferAccept))
 					return error("OP_OFFER_REFUND could not read accept from offer txn");
 				// TODO CPU intensive
+				// SFS DYNAMIC EXPIRATION HEIGHT
 				nDepth = CheckOfferTransactionAtRelativeDepth(pindexBlock,
 						prevCoins, GetOfferExpirationDepth(pindexBlock->nHeight));
 				if ((fBlock || fMiner) && nDepth < 0)
@@ -1837,6 +1844,7 @@ Value offernew(const Array& params, bool fHelp) {
 
 	EnsureWalletIsUnlocked();
 	// calculate network fees
+	// SFS DYNAMIC EXPIRATION HEIGHT
 	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_ACTIVATE);	
 	// unserialize offer object from txn, serialize back
 	// build offer object
@@ -2010,6 +2018,7 @@ Value offerlink(const Array& params, bool fHelp) {
 
 	EnsureWalletIsUnlocked();
 	// calculate network fees
+	// SFS DYNAMIC EXPIRATION HEIGHT
 	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_ACTIVATE);	
 	// unserialize offer object from txn, serialize back
 	// build offer object
@@ -2138,6 +2147,7 @@ Value offeraddwhitelist(const Array& params, bool fHelp) {
 			<< OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	// calculate network fees
+	// SFS DYNAMIC EXPIRATION HEIGHT
 	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_UPDATE);
 	
 
@@ -2211,6 +2221,7 @@ Value offerremovewhitelist(const Array& params, bool fHelp) {
 			<< OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	// calculate network fees
+	// SFS DYNAMIC EXPIRATION HEIGHT
 	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_UPDATE);
 	theOffer.accepts.clear();
 
@@ -2283,6 +2294,7 @@ Value offerclearwhitelist(const Array& params, bool fHelp) {
 			<< OP_2DROP << OP_DROP;
 	scriptPubKey += scriptPubKeyOrig;
 	// calculate network fees
+	// SFS DYNAMIC EXPIRATION HEIGHT
 	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_UPDATE);
 	
 	theOffer.accepts.clear();
@@ -2412,6 +2424,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 	theOffer = vtxPos.back();
 		
 	// calculate network fees
+	// SFS DYNAMIC EXPIRATION HEIGHT
 	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_UPDATE);
 	
 	// update offer values
@@ -2492,6 +2505,7 @@ Value offerrenew(const Array& params, bool fHelp) {
 	theOffer.accepts.clear();
 
 	// calculate network fees
+	// SFS DYNAMIC EXPIRATION HEIGHT
 	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_UPDATE);
 
 	theOffer.nFee = nNetFee;

@@ -248,6 +248,7 @@ public:
 	std::vector<COfferAccept>accepts;
 	std::vector<unsigned char> vchLinkOffer;
 	COfferLinkWhitelist linkWhitelist;
+    uint64 nActivationSize;
 	COffer() { 
         SetNull();
     }
@@ -274,6 +275,7 @@ public:
     	READWRITE(accepts);
 		READWRITE(vchLinkOffer);
 		READWRITE(linkWhitelist);
+        READWRITE(nActivationSize);
 	)
 	uint64 GetPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry()){
 		double price = (double)nPrice;
