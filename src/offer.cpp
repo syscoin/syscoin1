@@ -41,26 +41,16 @@ extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
 extern bool GetTxOfCert(CCertDB& dbCert, const vector<unsigned char> &vchCert,
         CCert &txPos, CTransaction& tx);
 extern bool GetCertAddress(const CTransaction& tx, std::string& strAddress);
-extern string getSyscoinFeeFromAlias(int64 &nFee, const unsigned int &nHeightToFind);
-double convertSyscoinToUSDPrice(const int64 &nPrice, const unsigned int &nHeight)
-{
-	double usdPrice = 0;
-	int64 nFee;
-	if(getSyscoinFeeFromAlias(nFee, nHeight) != "")
-	{
-		// nFee is assumed to be equal to 1 USD in syscoin
-		usdPrice = nPrice / nFee;
-	}
-	return usdPrice;
-}
+extern string getUSDToSYSFromAlias(int64 &nFee, const unsigned int &nHeightToFind);
+
 int64 convertUSDPriceToSyscoin(const int64 &nPrice, const unsigned int &nHeight)
 {
-	int64 sysPrice = 0;
-	int64 nFee;
-	if(getSyscoinFeeFromAlias(nFee, nHeight) != "")
+	int64 sysPrice = nPrice;
+	int64 nRate;
+	if(getUSDToSYSFromAlias(nRate, nHeight) == "")
 	{
-		// nFee is assumed to be 1 USD in syscoin
-		sysPrice = nPrice * nFee;
+		// nRate is assumed to be rate of USD/SYS
+		sysPrice = nPrice * nRate;
 	}
 	return sysPrice;
 }
@@ -279,7 +269,7 @@ string makeOfferRefundTX(const CTransaction& prevTx, const COffer& theOffer, con
 	{
 		set<pair<const CWalletTx*,unsigned int> > setCoins;
 		int64 nValueIn = 0;
-		nTotalValue = ( theOfferAccept.nPrice * theOfferAccept.nQty );
+		nTotalValue = ( convertUSDPriceToSyscoin(theOfferAccept.nPrice, theOffer.nHeight) * theOfferAccept.nQty );
 		if (!pwalletMain->SelectCoins(nTotalValue, setCoins, nValueIn))
 		{
 			return string("insufficient funds to pay for offer refund");
@@ -354,7 +344,8 @@ int nStartHeight = 161280;
 int64 GetOfferNetworkFee(opcodetype seed, unsigned int nHeight) {
 
 	int64 nFee = 0;
-	if(getSyscoinFeeFromAlias(nFee, nHeight) != "")
+	int64 nRate = 0;
+	if(getUSDToSYSFromAlias(nRate, nHeight) != "")
 	{
 		if(seed==OP_OFFER_ACTIVATE) {
     		nFee = 50 * COIN;
@@ -366,7 +357,7 @@ int64 GetOfferNetworkFee(opcodetype seed, unsigned int nHeight) {
 	else
 	{
 		// 100th of a USD cent
-		nFee = nFee/10000;
+		nFee = nRate/10000;
 	}
 	// Round up to CENT
 	nFee += CENT - 1;
@@ -1566,7 +1557,8 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						{	
 							theOffer.linkWhitelist.GetLinkEntryByHash(vvchPrevArgs[0], entry);						
 						}
-						uint64 nPrice = theOffer.GetPrice(entry)*theOfferAccept.nQty;
+						int64 nPrice = theOffer.GetPrice(entry)*theOfferAccept.nQty;
+						nPrice = convertUSDPriceToSyscoin(nPrice, theOfferAccept.nHeight);
 						for(unsigned int i=0;i<tx.vout.size();i++)
 						{
 							if(tx.vout[i].nValue == nPrice)
@@ -1877,7 +1869,7 @@ Value offernew(const Array& params, bool fHelp) {
 	newOffer.sTitle = vchTitle;
 	newOffer.sDescription = vchDesc;
 	newOffer.nQty = nQty;
-	newOffer.nPrice = convertUSDPriceToSyscoin(nPrice, nBestHeight);
+	newOffer.nPrice = nPrice;
 	newOffer.nFee = nNetFee;
 	newOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
 	string bdata = newOffer.SerializeToString();
@@ -2453,7 +2445,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 		throw runtime_error("not enough remaining quantity to fulfill this offerupdate"); // SS i think needs better msg
 
 	theOffer.nQty = nQty;
-	theOffer.nPrice = convertUSDPriceToSyscoin(price, nBestHeight);
+	theOffer.nPrice = price;
 	theOffer.nFee = nNetFee;
 	theOffer.accepts.clear();
 	theOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
@@ -2742,7 +2734,7 @@ Value offeraccept(const Array& params, bool fHelp) {
     int64 nValueIn = 0;
 
 
-    uint64 nTotalValue = ( txAccept.nPrice * nQty );
+    uint64 nTotalValue = ( convertUSDPriceToSyscoin(txAccept.nPrice, nBestHeight) * nQty );
 
     if (!pwalletMain->SelectCoins(nTotalValue + (MIN_AMOUNT * 2), setCoins, nValueIn))
         throw runtime_error("insufficient funds to pay for offer");
@@ -2859,9 +2851,8 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("height", sHeight));
 			oOfferAccept.push_back(Pair("time", sTime));
 			oOfferAccept.push_back(Pair("quantity", strprintf("%llu", ca.nQty)));
-			double usdPrice = convertSyscoinToUSDPrice(ca.nPrice, ca.nHeight);
-			oOfferAccept.push_back(Pair("price", strprintf("$.2f", usdPrice))); // convert syscoin to USD price
-			oOfferAccept.push_back(Pair("total", strprintf("$.2f", usdPrice * ca.nQty)));
+			oOfferAccept.push_back(Pair("price", strprintf("$%llu", ca.nPrice))); // convert syscoin to USD price
+			oOfferAccept.push_back(Pair("total", strprintf("$%llu", ca.nPrice * ca.nQty)));
 			oOfferAccept.push_back(Pair("is_mine", IsOfferMine(txA) ? "true" : "false"));
 			if(ca.bPaid) {
 				oOfferAccept.push_back(Pair("paid","true"));
@@ -2914,7 +2905,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
 			oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
 			oOffer.push_back(Pair("quantity", strprintf("%llu", theOffer.nQty)));
-			oOffer.push_back(Pair("price", strprintf("$%.2f", convertSyscoinToUSDPrice(theOffer.nPrice, theOffer.nHeight) )) ); // convert syscoin to USD price
+			oOffer.push_back(Pair("price", strprintf("$%llu", theOffer.nPrice )) ); // convert syscoin to USD price
 			oOffer.push_back(Pair("is_mine", IsOfferMine(tx) ? "true" : "false"));
 			if(!theOffer.vchLinkOffer.empty() && IsOfferMine(tx)) { 
 				oOffer.push_back(Pair("offerlink", "true"));
@@ -3016,7 +3007,7 @@ Value offerlist(const Array& params, bool fHelp) {
             oName.push_back(Pair("title", stringFromVch(theOfferA.sTitle)));
             oName.push_back(Pair("category", stringFromVch(theOfferA.sCategory)));
             oName.push_back(Pair("description", stringFromVch(theOfferA.sDescription)));
-            oName.push_back(Pair("price", strprintf("$%.2f", convertSyscoinToUSDPrice(theOfferA.nPrice,theOfferA.nHeight)) ) );
+            oName.push_back(Pair("price", strprintf("$%llu", theOfferA.nPrice) ) );
             oName.push_back(Pair("quantity", strprintf("%llu", theOfferA.nQty)));
             oName.push_back(Pair("address", stringFromVch(theOfferA.vchPaymentAddress)));
 

@@ -64,7 +64,7 @@ int64 GetAliasNetFee(const CTransaction& tx);
 bool CheckAliasTxPos(const vector<CAliasIndex> &vtxPos, const int txPos);
 
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
-string getSyscoinFeeFromAlias(int64 &nFee, const unsigned int &nHeightToFind)
+string getUSDToSYSFromAlias(int64 &nFee, const unsigned int &nHeightToFind)
 {
 	vector<unsigned char> vchName = vchFromString("SYS_FEE");
 	// check for alias existence in DB
@@ -72,14 +72,14 @@ string getSyscoinFeeFromAlias(int64 &nFee, const unsigned int &nHeightToFind)
 	if (!paliasdb->ReadAlias(vchName, vtxPos))
 	{
 		if(fDebug)
-			printf("getSyscoinFeeFromAlias() Could not find SYS_FEE alias\n");
-		return "";
+			printf("getUSDToSYSFromAlias() Could not find SYS_FEE alias\n");
+		return "1";
 	}
 	if (vtxPos.size() < 1)
 	{
 		if(fDebug)
-			printf("getSyscoinFeeFromAlias() Could not find SYS_FEE alias\n");
-		return "";
+			printf("getUSDToSYSFromAlias() Could not find SYS_FEE alias (vtxPos.size() == 0)\n");
+		return "1";
 	}
 	CAliasIndex foundAlias;
 	for(unsigned int i=0;i<vtxPos.size();i++) {
@@ -90,6 +90,8 @@ string getSyscoinFeeFromAlias(int64 &nFee, const unsigned int &nHeightToFind)
             foundAlias = a;
         }
     }
+	if(foundAlias.IsNull())
+		foundAlias = vtxPos.back();
 	// get transaction pointed to by alias
 	uint256 blockHash;
 	uint256 txHash = foundAlias.txHash;
@@ -97,8 +99,8 @@ string getSyscoinFeeFromAlias(int64 &nFee, const unsigned int &nHeightToFind)
 	if (!GetTransaction(txHash, tx, blockHash, true))
 	{
 		if(fDebug)
-			printf("getSyscoinFeeFromAlias() Failed to read transaction from disk\n");
-		return "";
+			printf("getUSDToSYSFromAlias() Failed to read transaction from disk\n");
+		return "1";
 	}
 
 
@@ -107,15 +109,15 @@ string getSyscoinFeeFromAlias(int64 &nFee, const unsigned int &nHeightToFind)
 
 	uint256 hash;
 	if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
-		string value = stringFromVch(vchValue);
+		string value = stringFromVch(vchValue);	
 		int iFee = atoi(value);
 		nFee = iFee*COIN;
 	}
 	else
 	{
 		if(fDebug)
-			printf("getSyscoinFeeFromAlias() Failed to value from alias\n");
-		return "";
+			printf("getUSDToSYSFromAlias() Failed to value from alias\n");
+		return "1";
 	}
 		
 	return "";
@@ -695,7 +697,8 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 
 int64 GetAliasNetworkFee(opcodetype seed, unsigned int nHeight) {
 	int64 nFee = 0;
-	if(getSyscoinFeeFromAlias(nFee, nHeight) != "")
+	int64 nRate = 0;
+	if(getUSDToSYSFromAlias(nRate, nHeight) != "")
 	{
 		if(seed==OP_ALIAS_ACTIVATE)
 		{
@@ -709,7 +712,7 @@ int64 GetAliasNetworkFee(opcodetype seed, unsigned int nHeight) {
 	else
 	{
 		// 100th of a USD cent
-		nFee = nFee/10000;
+		nFee = nRate/10000;
 	}
 	// Round up to CENT
 	nFee += CENT - 1;
