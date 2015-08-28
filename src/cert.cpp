@@ -35,7 +35,7 @@ extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey,
 extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
         const CTransaction& txTo, unsigned int nIn, unsigned int flags,
         int nHashType);
-
+extern string getSyscoinFeeFromAlias(int64 &nFee, const unsigned int &nHeightToFind);
 void PutToCertList(std::vector<CCert> &certList, CCert& index) {
 	int i = certList.size() - 1;
 	BOOST_REVERSE_FOREACH(CCert &o, certList) {
@@ -62,21 +62,29 @@ bool IsCertOp(int op) {
 // expiration blocks is 262080 (final)
 // expiration starts at 87360, increases by 1 per block starting at
 // block 174721 until block 349440
-int64 GetCertNetworkFee(opcodetype seed) {
+int64 GetCertNetworkFee(opcodetype seed, unsigned int nHeight) {
 
 	int64 nFee = 0;
-    if(seed==OP_CERT_ACTIVATE) 
+	if(getSyscoinFeeFromAlias(nFee, nHeight) != "")
+		{
+		if(seed==OP_CERT_ACTIVATE) 
+		{
+			nFee = 150 * COIN;
+		}
+		else if(seed==OP_CERT_UPDATE) 
+		{
+			nFee = 100 * COIN;
+		} 
+		else if(seed==OP_CERT_TRANSFER) 
+		{
+			nFee = 25 * COIN;
+		}
+	}
+	else
 	{
-        nFee = 150 * COIN;
-    }
-    else if(seed==OP_CERT_UPDATE) 
-	{
-        nFee = 100 * COIN;
-    } 
-	else if(seed==OP_CERT_TRANSFER) 
-	{
-        nFee = 25 * COIN;
-    }
+		// 100th of a USD cent
+		nFee = nFee / 10000;
+	}
 	// Round up to CENT
 	nFee += CENT - 1;
 	nFee = (nFee / CENT) * CENT;
@@ -1062,7 +1070,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 					// check for enough fees
 				nNetFee = GetCertNetFee(tx);
-				if (nNetFee < GetCertNetworkFee(OP_CERT_ACTIVATE))
+				if (nNetFee < GetCertNetworkFee(OP_CERT_ACTIVATE, pindexBlock->nHeight))
 					return error(
 							"CheckCertInputs() : OP_CERT_ACTIVATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -1098,7 +1106,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							"CheckCertInputs() : certupdate on an expired cert, or there is a pending transaction on the cert");
 			   // check for enough fees
 				nNetFee = GetCertNetFee(tx);
-				if (nNetFee < GetCertNetworkFee(OP_CERT_UPDATE))
+				if (nNetFee < GetCertNetworkFee(OP_CERT_UPDATE, pindexBlock->nHeight))
 					return error(
 							"CheckCertInputs() : OP_CERT_UPDATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -1134,7 +1142,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 nPrevHeight = GetCertHeight(vchCert);
 
                 // check for enough fees
-                int64 expectedFee = GetCertNetworkFee(OP_CERT_TRANSFER);
+                int64 expectedFee = GetCertNetworkFee(OP_CERT_TRANSFER, pindexBlock->nHeight);
                 nNetFee = GetCertNetFee(tx);
                 if (nNetFee < expectedFee)
                     return error(
@@ -1259,9 +1267,9 @@ Value getcertfees(const Array& params, bool fHelp) {
     Object oRes;
     oRes.push_back(Pair("height", nBestHeight ));
     oRes.push_back(Pair("subsidy", ValueFromAmount(GetCertFeeSubsidy(nBestHeight) )));
-    oRes.push_back(Pair("activate_fee", ValueFromAmount(GetCertNetworkFee(OP_CERT_ACTIVATE) )));
-    oRes.push_back(Pair("update_fee", ValueFromAmount(GetCertNetworkFee(OP_CERT_UPDATE) )));
-    oRes.push_back(Pair("transfer_fee", ValueFromAmount(GetCertNetworkFee(OP_CERT_TRANSFER) )));
+    oRes.push_back(Pair("activate_fee", ValueFromAmount(GetCertNetworkFee(OP_CERT_ACTIVATE, nBestHeight) )));
+    oRes.push_back(Pair("update_fee", ValueFromAmount(GetCertNetworkFee(OP_CERT_UPDATE, nBestHeight) )));
+    oRes.push_back(Pair("transfer_fee", ValueFromAmount(GetCertNetworkFee(OP_CERT_TRANSFER, nBestHeight) )));
     return oRes;
 
 }
@@ -1303,7 +1311,7 @@ Value certnew(const Array& params, bool fHelp) {
 
     EnsureWalletIsUnlocked();
 	// calculate network fees
-	int64 nNetFee = GetCertNetworkFee(OP_CERT_ACTIVATE);
+	int64 nNetFee = GetCertNetworkFee(OP_CERT_ACTIVATE, nBestHeight);
 
     // build cert object
     CCert newCert;
@@ -1421,7 +1429,7 @@ Value certupdate(const Array& params, bool fHelp) {
 
 
     // calculate network fees
-    int64 nNetFee = GetCertNetworkFee(OP_CERT_UPDATE);
+    int64 nNetFee = GetCertNetworkFee(OP_CERT_UPDATE, nBestHeight);
 
     // update cert values
     theCert.vchTitle = vchTitle;
@@ -1490,7 +1498,7 @@ Value certtransfer(const Array& params, bool fHelp) {
     scriptPubKey += scriptPubKeyOrig;
 
     // calculate network fees
-    int64 nNetFee = GetCertNetworkFee(OP_CERT_TRANSFER);
+    int64 nNetFee = GetCertNetworkFee(OP_CERT_TRANSFER, nBestHeight);
 
     theCert.nFee = nNetFee;
 

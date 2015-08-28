@@ -1,5 +1,5 @@
-#ifndef NAMEDB_H
-#define NAMEDB_H
+#ifndef ALIAS_H
+#define ALIAS_H
 
 #include "bitcoinrpc.h"
 #include "leveldb.h"
@@ -168,7 +168,7 @@ bool GetAliasAddress(const CDiskTxPos& txPos, std::string& strAddress);
 extern void GetAliasValue(const std::string& strName, std::string& strAddress);
 std::string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, bool fAskFee, const std::string& txData = "");
 bool CreateTransactionWithInputTx(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxIn, int nTxOut, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, const std::string& txData = "");
-int64 GetAliasNetworkFee(opcodetype seed);
+int64 GetAliasNetworkFee(opcodetype seed, unsigned int nHeight);
 uint64 GetAliasFeeSubsidy(const unsigned int nTime);
 int64 GetAliasNetFee(const CTransaction& tx);
 bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 nValue);
@@ -178,4 +178,4 @@ int GetAliasDisplayExpirationDepth(int nHeight);
 void UnspendInputs(CWalletTx& wtx);
 bool RemoveAliasFee(CAliasFee &txnVal);
 
-#endif // NAMEDB_H
+#endif // ALIAS_H

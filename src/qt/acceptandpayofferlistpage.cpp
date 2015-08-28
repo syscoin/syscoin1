@@ -116,7 +116,7 @@ bool AcceptandPayOfferListPage::lookup(QString id)
 			offerOut.vchRand = vchFromString(find_value(offerObj, "id").get_str());
 			offerOut.sTitle = vchFromString(find_value(offerObj, "title").get_str());
 			offerOut.sCategory = vchFromString(find_value(offerObj, "category").get_str());
-			offerOut.nPrice = QString::number(find_value(offerObj, "price").get_real()).toLongLong();
+			offerOut.nPrice = convertUSDPriceToSyscoin(QString::number(find_value(offerObj, "price").get_real()).toLongLong(), nBestHeight);
 			offerOut.nQty = QString::fromStdString(find_value(offerObj, "quantity").get_str()).toLong();	
 			string descString = find_value(offerObj, "description").get_str();
 			offerOut.sDescription = vchFromString(descString);
@@ -244,7 +244,7 @@ void AcceptandPayOfferListPage::setValue(const COffer &offer)
     ui->offeridEdit->setText(QString::fromStdString(stringFromVch(offer.vchRand)));
 	ui->infoTitle->setText(QString::fromStdString(stringFromVch(offer.sTitle)));
 	ui->infoCategory->setText(QString::fromStdString(stringFromVch(offer.sCategory)));
-	ui->infoPrice->setText(QString::number(offer.nPrice));
+	ui->infoPrice->setText(QString::number(convertSyscoinToUSDPrice(offer.nPrice, offer.nHeight)));
 	ui->infoQty->setText(QString::number(offer.nQty));
 	ui->infoDescription->setText(QString::fromStdString(stringFromVch(offer.sDescription)));
 	ui->infoFee->setText(QString::number(offer.nFee));

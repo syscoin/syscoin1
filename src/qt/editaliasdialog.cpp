@@ -15,7 +15,7 @@ using namespace std;
 using namespace json_spirit;
 extern int nBestHeight;
 extern const CRPCTable tableRPC;
-int64 GetAliasNetworkFee(opcodetype seed);
+int64 GetAliasNetworkFee(opcodetype seed, unsigned int nHeight);
 EditAliasDialog::EditAliasDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::EditAliasDialog), mapper(0), mode(mode), model(0)
@@ -104,7 +104,7 @@ bool EditAliasDialog::saveCurrentRow()
                 QMessageBox::Ok, QMessageBox::Ok);
             return false;
         }
-		activateFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE)/COIN;
+		activateFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE, nBestHeight)/COIN;
 		activateFeeStr = strprintf("%"PRI64d, activateFee);
         retval = QMessageBox::question(this, tr("Confirm Alias Activation"),
             tr("Warning: New Alias will cost ") + QString::fromStdString(activateFeeStr) + " SYS<br><br>" + tr("Are you sure you want to create this Alias?"),
@@ -151,7 +151,7 @@ bool EditAliasDialog::saveCurrentRow()
     case EditAlias:
         if(mapper->submit())
         {
-			updateFee = GetAliasNetworkFee(OP_ALIAS_UPDATE)/COIN;
+			updateFee = GetAliasNetworkFee(OP_ALIAS_UPDATE, nBestHeight)/COIN;
 			updateFeeStr = strprintf("%"PRI64d, updateFee);
             retval = QMessageBox::question(this, tr("Confirm Alias Update"),
                 tr("Warning: Updating Alias will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish update this Alias?"),
@@ -198,7 +198,7 @@ bool EditAliasDialog::saveCurrentRow()
     case TransferAlias:
         if(mapper->submit())
         {
-			updateFee = GetAliasNetworkFee(OP_ALIAS_UPDATE)/COIN;
+			updateFee = GetAliasNetworkFee(OP_ALIAS_UPDATE, nBestHeight)/COIN;
 			updateFeeStr = strprintf("%"PRI64d, updateFee);
             retval = QMessageBox::question(this, tr("Confirm Alias Transfer"),
                 tr("Warning: Transferring Alias will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish transfer this Alias?"),

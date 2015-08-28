@@ -63,6 +63,64 @@ int GetAliasExpirationDepth(int nHeight);
 int64 GetAliasNetFee(const CTransaction& tx);
 bool CheckAliasTxPos(const vector<CAliasIndex> &vtxPos, const int txPos);
 
+// refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
+string getSyscoinFeeFromAlias(int64 &nFee, const unsigned int &nHeightToFind)
+{
+	vector<unsigned char> vchName = vchFromString("SYS_FEE");
+	// check for alias existence in DB
+	vector<CAliasIndex> vtxPos;
+	if (!paliasdb->ReadAlias(vchName, vtxPos))
+	{
+		if(fDebug)
+			printf("getSyscoinFeeFromAlias() Could not find SYS_FEE alias\n");
+		return "";
+	}
+	if (vtxPos.size() < 1)
+	{
+		if(fDebug)
+			printf("getSyscoinFeeFromAlias() Could not find SYS_FEE alias\n");
+		return "";
+	}
+	CAliasIndex foundAlias;
+	for(unsigned int i=0;i<vtxPos.size();i++) {
+		if(!foundAlias.IsNull())
+			break;
+        CAliasIndex a = vtxPos[i];
+        if(a.nHeight >= nHeightToFind) {
+            foundAlias = a;
+        }
+    }
+	// get transaction pointed to by alias
+	uint256 blockHash;
+	uint256 txHash = foundAlias.txHash;
+	CTransaction tx;
+	if (!GetTransaction(txHash, tx, blockHash, true))
+	{
+		if(fDebug)
+			printf("getSyscoinFeeFromAlias() Failed to read transaction from disk\n");
+		return "";
+	}
+
+
+	vector<unsigned char> vchValue;
+	int nHeight;
+
+	uint256 hash;
+	if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
+		string value = stringFromVch(vchValue);
+		int iFee = atoi(value);
+		nFee = iFee*COIN;
+	}
+	else
+	{
+		if(fDebug)
+			printf("getSyscoinFeeFromAlias() Failed to value from alias\n");
+		return "";
+	}
+		
+	return "";
+
+}
 void PutToAliasList(std::vector<CAliasIndex> &aliasList, CAliasIndex& index) {
 	int i = aliasList.size() - 1;
 	BOOST_REVERSE_FOREACH(CAliasIndex &o, aliasList) {
@@ -342,7 +400,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 					// check for enough fees
 				nNetFee = GetAliasNetFee(tx);
-				if (nNetFee < GetAliasNetworkFee(OP_ALIAS_ACTIVATE) && HasReachedMainNetForkB2())
+				if (nNetFee < GetAliasNetworkFee(OP_ALIAS_ACTIVATE, pindexBlock->nHeight) && HasReachedMainNetForkB2())
 					return error(
 							"CheckAliasInputs() : OP_ALIAS_ACTIVATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -372,7 +430,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							"CheckAliasInputs() : aliasupdate on an expired alias, or there is a pending transaction on the alias");
 				// verify enough fees with this txn
 				nNetFee = GetAliasNetFee(tx);
-				if (nNetFee < GetAliasNetworkFee(OP_ALIAS_UPDATE) && HasReachedMainNetForkB2())
+				if (nNetFee < GetAliasNetworkFee(OP_ALIAS_UPDATE, pindexBlock->nHeight) && HasReachedMainNetForkB2())
 					return error(
 							"CheckAliasInputs() : OP_ALIAS_UPDATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -635,15 +693,23 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 	return true;
 }
 
-int64 GetAliasNetworkFee(opcodetype seed) {
+int64 GetAliasNetworkFee(opcodetype seed, unsigned int nHeight) {
 	int64 nFee = 0;
-	if(seed==OP_ALIAS_ACTIVATE)
+	if(getSyscoinFeeFromAlias(nFee, nHeight) != "")
 	{
-		nFee = 100 * COIN;
+		if(seed==OP_ALIAS_ACTIVATE)
+		{
+			nFee = 100 * COIN;
+		}
+		else if(seed==OP_ALIAS_UPDATE)
+		{
+			nFee = 100 * COIN;
+		}
 	}
-	else if(seed==OP_ALIAS_UPDATE)
+	else
 	{
-		nFee = 100 * COIN;
+		// 100th of a USD cent
+		nFee = nFee/10000;
 	}
 	// Round up to CENT
 	nFee += CENT - 1;
@@ -1278,7 +1344,7 @@ Value aliasnew(const Array& params, bool fHelp) {
 
 
 	// calculate network fees
-	int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE);
+	int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE, nBestHeight);
 	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
     vector< pair<CScript, int64> > vecSend;
     vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
@@ -1354,7 +1420,7 @@ Value aliasupdate(const Array& params, bool fHelp) {
 	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
 		throw runtime_error("this alias is not in your wallet");
 
-	int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_UPDATE);
+	int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_UPDATE, nBestHeight);
 
 	string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
 			nNetFee, wtxIn, wtx, false);
@@ -1899,8 +1965,8 @@ Value getaliasfees(const Array& params, bool fHelp) {
 	Object oRes;
 	oRes.push_back(Pair("height", nBestHeight ));
 	oRes.push_back(Pair("subsidy", ValueFromAmount(GetAliasFeeSubsidy(nBestHeight) )));
-	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetAliasNetworkFee(OP_ALIAS_ACTIVATE) )));
-	oRes.push_back(Pair("update_fee", ValueFromAmount(GetAliasNetworkFee(OP_ALIAS_UPDATE) )));
+	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetAliasNetworkFee(OP_ALIAS_ACTIVATE, nBestHeight) )));
+	oRes.push_back(Pair("update_fee", ValueFromAmount(GetAliasNetworkFee(OP_ALIAS_UPDATE, nBestHeight) )));
 	return oRes;
 
 }
@@ -1933,7 +1999,7 @@ Value datanew(const Array& params, bool fHelp) {
 	// this is a syscoin transaction
 	CWalletTx wtx;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
-
+	wtx.data = vchFromString(txdata);
 	CTransaction tx;
 	if (GetTxOfAlias(*paliasdb, vchName, tx)) {
 		error("dataactivate() : this data is already active with tx %s",
@@ -1957,7 +2023,7 @@ Value datanew(const Array& params, bool fHelp) {
 
 
 	// calculate network fees
-	int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE);
+	int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE, nBestHeight);
 	// use the script pub key to create the vecsend which sendmoney takes and puts it into vout
     vector< pair<CScript, int64> > vecSend;
     vecSend.push_back(make_pair(scriptPubKey, MIN_AMOUNT));
@@ -2034,7 +2100,7 @@ Value dataupdate(const Array& params, bool fHelp) {
 	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn)) 
 		throw runtime_error("this alias is not in your wallet");
 
-	int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_UPDATE);
+	int64 nNetFee = GetAliasNetworkFee(OP_ALIAS_UPDATE, nBestHeight);
 
 	string strError = SendMoneyWithInputTx(scriptPubKey, MIN_AMOUNT,
 			nNetFee, wtxIn, wtx, false, txdata);

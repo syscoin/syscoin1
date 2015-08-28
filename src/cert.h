@@ -34,7 +34,7 @@ int64 GetCertTxHashHeight(const uint256 txHash);
 int GetCertTxPosHeight(const CDiskTxPos& txPos);
 int GetCertTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
 int GetCertDisplayExpirationDepth(int nHeight);
-int64 GetCertNetworkFee(opcodetype seed);
+int64 GetCertNetworkFee(opcodetype seed, unsigned int nHeight);
 int64 GetCertNetFee(const CTransaction& tx);
 bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue);
 bool ExtractCertAddress(const CScript& script, std::string& address);
