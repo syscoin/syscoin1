@@ -1877,7 +1877,7 @@ Value offernew(const Array& params, bool fHelp) {
 	newOffer.sTitle = vchTitle;
 	newOffer.sDescription = vchDesc;
 	newOffer.nQty = nQty;
-	newOffer.nPrice = AmountFromValue(convertUSDPriceToSyscoin(nPrice, nBestHeight));
+	newOffer.nPrice = convertUSDPriceToSyscoin(nPrice, nBestHeight);
 	newOffer.nFee = nNetFee;
 	newOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
 	string bdata = newOffer.SerializeToString();
@@ -2453,7 +2453,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 		throw runtime_error("not enough remaining quantity to fulfill this offerupdate"); // SS i think needs better msg
 
 	theOffer.nQty = nQty;
-	theOffer.nPrice = AmountFromValue(convertUSDPriceToSyscoin(price, nBestHeight));
+	theOffer.nPrice = convertUSDPriceToSyscoin(price, nBestHeight);
 	theOffer.nFee = nNetFee;
 	theOffer.accepts.clear();
 	theOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
