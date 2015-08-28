@@ -51,7 +51,7 @@ double convertSyscoinToUSDPrice(const int64 &nPrice, const unsigned int &nHeight
 		// nFee is assumed to be equal to 1 USD in syscoin
 		usdPrice = nPrice / nFee;
 	}
-	return usdPrice / COIN;
+	return usdPrice;
 }
 int64 convertUSDPriceToSyscoin(const int64 &nPrice, const unsigned int &nHeight)
 {
@@ -62,7 +62,7 @@ int64 convertUSDPriceToSyscoin(const int64 &nPrice, const unsigned int &nHeight)
 		// nFee is assumed to be 1 USD in syscoin
 		sysPrice = nPrice * nFee;
 	}
-	return AmountFromValue(sysPrice);
+	return sysPrice;
 }
 // check wallet transactions to see if there was a refund for an accept already
 // need this because during a reorg blocks are disconnected (deleted from db) and we can't rely on looking in db to see if refund was made for an accept
