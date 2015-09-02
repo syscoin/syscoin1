@@ -89,9 +89,8 @@ bool EditAliasDialog::saveCurrentRow()
     }
 	Array params;
 	string strMethod;
-	int64 newFee;
-	int64 updateFee,activateFee;
-	std::string newFeeStr, updateFeeStr,activateFeeStr;
+	double updateFee,activateFee;
+	std::string updateFeeStr,activateFeeStr;
 	QMessageBox::StandardButton retval;
     switch(mode)
     {
@@ -104,8 +103,8 @@ bool EditAliasDialog::saveCurrentRow()
                 QMessageBox::Ok, QMessageBox::Ok);
             return false;
         }
-		activateFee = GetAliasNetworkFee(OP_ALIAS_ACTIVATE, nBestHeight)/COIN;
-		activateFeeStr = strprintf("%"PRI64d, activateFee);
+		activateFee = (double)GetAliasNetworkFee(OP_ALIAS_ACTIVATE, nBestHeight)/(double)COIN;
+		activateFeeStr = strprintf("%.2f", activateFee);
         retval = QMessageBox::question(this, tr("Confirm Alias Activation"),
             tr("Warning: New Alias will cost ") + QString::fromStdString(activateFeeStr) + " SYS<br><br>" + tr("Are you sure you want to create this Alias?"),
 				 QMessageBox::Yes|QMessageBox::Cancel,
@@ -151,8 +150,8 @@ bool EditAliasDialog::saveCurrentRow()
     case EditAlias:
         if(mapper->submit())
         {
-			updateFee = GetAliasNetworkFee(OP_ALIAS_UPDATE, nBestHeight)/COIN;
-			updateFeeStr = strprintf("%"PRI64d, updateFee);
+			updateFee = (double)GetAliasNetworkFee(OP_ALIAS_UPDATE, nBestHeight)/(double)COIN;
+			updateFeeStr = strprintf("%.2f", updateFee);
             retval = QMessageBox::question(this, tr("Confirm Alias Update"),
                 tr("Warning: Updating Alias will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish update this Alias?"),
 					 QMessageBox::Yes|QMessageBox::Cancel,

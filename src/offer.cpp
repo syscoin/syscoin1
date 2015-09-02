@@ -41,13 +41,12 @@ extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
 extern bool GetTxOfCert(CCertDB& dbCert, const vector<unsigned char> &vchCert,
         CCert &txPos, CTransaction& tx);
 extern bool GetCertAddress(const CTransaction& tx, std::string& strAddress);
-extern string getUSDToSYSFromAlias(int64 &nFee, const unsigned int &nHeightToFind);
-
-int64 convertUSDPriceToSyscoin(const int64 &nPrice, const unsigned int &nHeight)
+extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind);
+int64 convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchCurrencyCode, const int64 &nPrice, const unsigned int &nHeight)
 {
 	int64 sysPrice = nPrice;
 	int64 nRate;
-	if(getUSDToSYSFromAlias(nRate, nHeight) == "")
+	if(getCurrencyToSYSFromAlias(vchCurrencyCode, nRate, nHeight) == "")
 	{
 		// nRate is assumed to be rate of USD/SYS
 		sysPrice = nPrice * nRate;
@@ -269,7 +268,7 @@ string makeOfferRefundTX(const CTransaction& prevTx, const COffer& theOffer, con
 	{
 		set<pair<const CWalletTx*,unsigned int> > setCoins;
 		int64 nValueIn = 0;
-		nTotalValue = ( convertUSDPriceToSyscoin(theOfferAccept.nPrice, theOffer.nHeight) * theOfferAccept.nQty );
+		nTotalValue = ( convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOfferAccept.nPrice, theOffer.nHeight) * theOfferAccept.nQty );
 		if (!pwalletMain->SelectCoins(nTotalValue, setCoins, nValueIn))
 		{
 			return string("insufficient funds to pay for offer refund");
@@ -345,7 +344,8 @@ int64 GetOfferNetworkFee(opcodetype seed, unsigned int nHeight) {
 
 	int64 nFee = 0;
 	int64 nRate = 0;
-	if(getUSDToSYSFromAlias(nRate, nHeight) != "")
+	const vector<unsigned char> &vchCurrency = vchFromString("USD");
+	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nHeight) != "")
 	{
 		if(seed==OP_OFFER_ACTIVATE) {
     		nFee = 50 * COIN;
@@ -1558,7 +1558,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							theOffer.linkWhitelist.GetLinkEntryByHash(vvchPrevArgs[0], entry);						
 						}
 						int64 nPrice = theOffer.GetPrice(entry)*theOfferAccept.nQty;
-						nPrice = convertUSDPriceToSyscoin(nPrice, theOfferAccept.nHeight);
+						nPrice = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, nPrice, nHeight);
 						for(unsigned int i=0;i<tx.vout.size();i++)
 						{
 							if(tx.vout[i].nValue == nPrice)
@@ -1785,15 +1785,16 @@ Value getofferfees(const Array& params, bool fHelp) {
 }
 
 Value offernew(const Array& params, bool fHelp) {
-	if (fHelp || params.size() < 5 || params.size() > 7)
+	if (fHelp || params.size() < 6 || params.size() > 8)
 		throw runtime_error(
-		"offernew <category> <title> <quantity> <price> <description> [exclusive resell=0] [address]\n"
+		"offernew <category> <title> <quantity> <price> <description> <currency> [exclusive resell=1] [address]\n"
 						"<category> category, 255 chars max.\n"
 						"<title> title, 255 chars max.\n"
 						"<quantity> quantity, > 0\n"
-						"<price> price in USD, > 0\n"
+						"<price> price in <currency>, > 0\n"
 						"<description> description, 64 KB max.\n"
-						"<exclusive resell> set to 1 if you only want those who control the whitelist certificates to be able to resell this offer via offerlink. Defaults to 0.\n"
+						"<currency> The currency code that you want your offer to be in ie: USD.\n"
+						"<exclusive resell> set to 1 if you only want those who control the whitelist certificates to be able to resell this offer via offerlink. Defaults to 1.\n"
 						"<address> offeraccept receive alias or address. Defaults to an address in your wallet.\n"
 						+ HelpRequiringPassphrase());
 	if(!HasReachedMainNetForkB2())
@@ -1801,10 +1802,11 @@ Value offernew(const Array& params, bool fHelp) {
 	// gather inputs
 	string baSig;
 	uint64 nQty, nPrice;
-	bool bExclusiveResell = false;
+	bool bExclusiveResell = true;
 	vector<unsigned char> vchPaymentAddress;
 	vector<unsigned char> vchCat = vchFromValue(params[0]);
 	vector<unsigned char> vchTitle = vchFromValue(params[1]);
+	vector<unsigned char> vchCurrency = vchFromValue(params[5]);
 	vector<unsigned char> vchDesc;
 	int64 qty = atoi64(params[2].get_str().c_str());
 	if(qty < 0)
@@ -1826,13 +1828,13 @@ Value offernew(const Array& params, bool fHelp) {
     // 64Kbyte offer desc. maxlen
 	if (vchDesc.size() > 1024 * 64)
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description > 65536 bytes!\n");
-	if(params.size() >= 6)
+	if(params.size() >= 7)
 	{
-		bExclusiveResell = atoi(params[5].get_str().c_str()) == 1? true: false;
+		bExclusiveResell = atoi(params[6].get_str().c_str()) == 1? true: false;
 	}
-	if(params.size() == 7)
+	if(params.size() == 8)
 	{
-		vchPaymentAddress = vchFromValue(params[6]);
+		vchPaymentAddress = vchFromValue(params[7]);
 		CBitcoinAddress payAddr = CBitcoinAddress(stringFromVch(vchPaymentAddress));
 		if (!payAddr.IsValid())
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
@@ -1845,8 +1847,12 @@ Value offernew(const Array& params, bool fHelp) {
 		CBitcoinAddress payAddr = CBitcoinAddress(newDefaultKey.GetID());
 		vchPaymentAddress = vchFromString(payAddr.ToString());
 	}
+	int64 nRate;
+	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nBestHeight) != "")
+	{
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not find this currency code in the SYS_RATES alias!\n");
+	}
 
-	
 	// this is a syscoin transaction
 	CWalletTx wtx;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
@@ -1872,6 +1878,7 @@ Value offernew(const Array& params, bool fHelp) {
 	newOffer.nPrice = nPrice;
 	newOffer.nFee = nNetFee;
 	newOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
+	newOffer.sCurrencyCode = vchCurrency;
 	string bdata = newOffer.SerializeToString();
 	
 	//create offeractivate txn keys
@@ -2049,6 +2056,7 @@ Value offerlink(const Array& params, bool fHelp) {
 	newOffer.vchLinkOffer = vchLinkOffer;
 	newOffer.nHeight = linkOffer.nHeight;
 	newOffer.nFee = nNetFee;
+	newOffer.sCurrencyCode = linkOffer.sCurrencyCode;
 	string bdata = newOffer.SerializeToString();
 	
 	//create offeractivate txn keys
@@ -2734,7 +2742,7 @@ Value offeraccept(const Array& params, bool fHelp) {
     int64 nValueIn = 0;
 
 
-    uint64 nTotalValue = ( convertUSDPriceToSyscoin(txAccept.nPrice, nBestHeight) * nQty );
+    uint64 nTotalValue = ( convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, txAccept.nPrice, nBestHeight) * nQty );
 
     if (!pwalletMain->SelectCoins(nTotalValue + (MIN_AMOUNT * 2), setCoins, nValueIn))
         throw runtime_error("insufficient funds to pay for offer");
@@ -2851,8 +2859,9 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("height", sHeight));
 			oOfferAccept.push_back(Pair("time", sTime));
 			oOfferAccept.push_back(Pair("quantity", strprintf("%llu", ca.nQty)));
-			oOfferAccept.push_back(Pair("price", strprintf("$%llu", ca.nPrice))); // convert syscoin to USD price
-			oOfferAccept.push_back(Pair("total", strprintf("$%llu", ca.nPrice * ca.nQty)));
+			oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));			
+			oOfferAccept.push_back(Pair("price", strprintf("%llu", ca.nPrice))); 
+			oOfferAccept.push_back(Pair("total", strprintf("%llu", ca.nPrice * ca.nQty))); 
 			oOfferAccept.push_back(Pair("is_mine", IsOfferMine(txA) ? "true" : "false"));
 			if(ca.bPaid) {
 				oOfferAccept.push_back(Pair("paid","true"));
@@ -2905,7 +2914,8 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
 			oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
 			oOffer.push_back(Pair("quantity", strprintf("%llu", theOffer.nQty)));
-			oOffer.push_back(Pair("price", strprintf("$%llu", theOffer.nPrice )) ); // convert syscoin to USD price
+			oOffer.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
+			oOffer.push_back(Pair("price", strprintf("%llu", theOffer.nPrice)));
 			oOffer.push_back(Pair("is_mine", IsOfferMine(tx) ? "true" : "false"));
 			if(!theOffer.vchLinkOffer.empty() && IsOfferMine(tx)) { 
 				oOffer.push_back(Pair("offerlink", "true"));
@@ -3008,6 +3018,7 @@ Value offerlist(const Array& params, bool fHelp) {
             oName.push_back(Pair("category", stringFromVch(theOfferA.sCategory)));
             oName.push_back(Pair("description", stringFromVch(theOfferA.sDescription)));
             oName.push_back(Pair("price", strprintf("$%llu", theOfferA.nPrice) ) );
+			oName.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode)));
             oName.push_back(Pair("quantity", strprintf("%llu", theOfferA.nQty)));
             oName.push_back(Pair("address", stringFromVch(theOfferA.vchPaymentAddress)));
 

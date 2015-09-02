@@ -35,7 +35,7 @@ extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey,
 extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
         const CTransaction& txTo, unsigned int nIn, unsigned int flags,
         int nHashType);
-extern string getUSDToSYSFromAlias(int64 &nFee, const unsigned int &nHeightToFind);
+extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind);
 void PutToCertList(std::vector<CCert> &certList, CCert& index) {
 	int i = certList.size() - 1;
 	BOOST_REVERSE_FOREACH(CCert &o, certList) {
@@ -66,7 +66,8 @@ int64 GetCertNetworkFee(opcodetype seed, unsigned int nHeight) {
 
 	int64 nFee = 0;
 	int64 nRate = 0;
-	if(getUSDToSYSFromAlias(nRate, nHeight) != "")
+	const vector<unsigned char> &vchCurrency = vchFromString("USD");
+	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nHeight) != "")
 		{
 		if(seed==OP_CERT_ACTIVATE) 
 		{

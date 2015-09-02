@@ -35,7 +35,7 @@ int64 GetOfferTxHashHeight(const uint256 txHash);
 int GetOfferTxPosHeight(const CDiskTxPos& txPos);
 int GetOfferTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
 int GetOfferDisplayExpirationDepth(int nHeight);
-int64 GetOfferNetworkFee(opcodetype seed, unsigned int nHeight);
+int64 GetOfferNetworkFee(const std::vector<unsigned char>& vchCurrency, opcodetype seed, unsigned int nHeight);
 int64 GetOfferNetFee(const CTransaction& tx);
 bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue);
 
@@ -247,6 +247,7 @@ public:
 	uint64 nFee;
 	std::vector<COfferAccept>accepts;
 	std::vector<unsigned char> vchLinkOffer;
+	std::vector<unsigned char> sCurrencyCode;
 	COfferLinkWhitelist linkWhitelist;
 	COffer() { 
         SetNull();
@@ -274,6 +275,8 @@ public:
     	READWRITE(accepts);
 		READWRITE(vchLinkOffer);
 		READWRITE(linkWhitelist);
+		READWRITE(sCurrencyCode);
+		
 	)
 	uint64 GetPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry()){
 		double price = (double)nPrice;
@@ -350,6 +353,8 @@ public:
         && a.vchPaymentAddress == b.vchPaymentAddress
 		&& a.vchLinkOffer == b.vchLinkOffer
 		&& a.linkWhitelist == b.linkWhitelist
+		&& a.sCurrencyCode == b.sCurrencyCode
+		
         );
     }
 
@@ -370,6 +375,7 @@ public:
         vchPaymentAddress = b.vchPaymentAddress;
 		vchLinkOffer = b.vchLinkOffer;
 		linkWhitelist = b.linkWhitelist;
+		sCurrencyCode = b.sCurrencyCode;
         return *this;
     }
 
@@ -377,7 +383,7 @@ public:
         return !(a == b);
     }
     
-    void SetNull() { nHeight = n = nPrice = nQty = 0; txHash = hash = 0; accepts.clear(); vchRand.clear(); sTitle.clear(); sDescription.clear();vchLinkOffer.clear();linkWhitelist.SetNull();}
+    void SetNull() { nHeight = n = nPrice = nQty = 0; txHash = hash = 0; accepts.clear(); vchRand.clear(); sTitle.clear(); sDescription.clear();vchLinkOffer.clear();linkWhitelist.SetNull();sCurrencyCode.clear();}
     bool IsNull() const { return (n == 0 && txHash == 0 && hash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 &&  linkWhitelist.IsNull()); }
 
     bool UnserializeFromTx(const CTransaction &tx);

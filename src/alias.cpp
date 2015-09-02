@@ -62,33 +62,33 @@ CScript RemoveAliasScriptPrefix(const CScript& scriptIn);
 int GetAliasExpirationDepth(int nHeight);
 int64 GetAliasNetFee(const CTransaction& tx);
 bool CheckAliasTxPos(const vector<CAliasIndex> &vtxPos, const int txPos);
-
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
-string getUSDToSYSFromAlias(int64 &nFee, const unsigned int &nHeightToFind)
+string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind)
 {
-	vector<unsigned char> vchName = vchFromString("SYS_FEE");
+	vector<unsigned char> vchName = vchFromString("SYS_RATES");
+	string currencyCodeToFind = stringFromVch(vchCurrency);
 	// check for alias existence in DB
 	vector<CAliasIndex> vtxPos;
 	if (!paliasdb->ReadAlias(vchName, vtxPos))
 	{
 		if(fDebug)
-			printf("getUSDToSYSFromAlias() Could not find SYS_FEE alias\n");
+			printf("getCurrencyToSYSFromAlias() Could not find SYS_RATES alias\n");
 		return "1";
 	}
 	if (vtxPos.size() < 1)
 	{
 		if(fDebug)
-			printf("getUSDToSYSFromAlias() Could not find SYS_FEE alias (vtxPos.size() == 0)\n");
+			printf("getCurrencyToSYSFromAlias() Could not find SYS_RATES alias (vtxPos.size() == 0)\n");
 		return "1";
 	}
 	CAliasIndex foundAlias;
 	for(unsigned int i=0;i<vtxPos.size();i++) {
-		if(!foundAlias.IsNull())
-			break;
         CAliasIndex a = vtxPos[i];
-        if(a.nHeight >= nHeightToFind) {
+        if(a.nHeight <= nHeightToFind) {
             foundAlias = a;
         }
+		else
+			break;
     }
 	if(foundAlias.IsNull())
 		foundAlias = vtxPos.back();
@@ -99,7 +99,7 @@ string getUSDToSYSFromAlias(int64 &nFee, const unsigned int &nHeightToFind)
 	if (!GetTransaction(txHash, tx, blockHash, true))
 	{
 		if(fDebug)
-			printf("getUSDToSYSFromAlias() Failed to read transaction from disk\n");
+			printf("getCurrencyToSYSFromAlias() Failed to read transaction from disk\n");
 		return "1";
 	}
 
@@ -110,13 +110,41 @@ string getUSDToSYSFromAlias(int64 &nFee, const unsigned int &nHeightToFind)
 	uint256 hash;
 	if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
 		string value = stringFromVch(vchValue);	
-		int iFee = atoi(value);
-		nFee = iFee*COIN;
+		Value outerValue;
+		if (read_string(value, outerValue))
+		{
+			Object outerObj = outerValue.get_obj();
+			Value ratesValue = find_value(outerObj, "rates");
+			if (ratesValue.type() == array_type)
+			{
+				Array codes = ratesValue.get_array();
+				BOOST_FOREACH(Value& code, codes)
+				{					
+					Object codeObj = code.get_obj();					
+					Value currencyNameValue = find_value(codeObj, "currency");
+					Value currencyAmountValue = find_value(codeObj, "rate");
+					if (currencyNameValue.type() == str_type)
+					{		
+						printf("getCurrencyToSYSFromAlias: str_type\n");
+						string currencyCode = currencyNameValue.get_str();
+						if(currencyCodeToFind == currencyCode)
+						{
+							if(currencyAmountValue.type() == real_type)
+								nFee = AmountFromValue(currencyAmountValue);
+							else if(currencyAmountValue.type() == int_type)
+								nFee = currencyAmountValue.get_int()*COIN;
+							
+							printf("getCurrencyToSYSFromAlias: found! %llu\n", nFee);
+						}
+					}
+				}
+			}
+		}
 	}
 	else
 	{
 		if(fDebug)
-			printf("getUSDToSYSFromAlias() Failed to value from alias\n");
+			printf("getCurrencyToSYSFromAlias() Failed to get value from alias\n");
 		return "1";
 	}
 		
@@ -532,14 +560,6 @@ bool ExtractAliasAddress(const CScript& script, string& address) {
 	return true;
 }
 
-int64 getAmount(Value value) {
-	ConvertTo<double>(value);
-	double dAmount = value.get_real();
-	int64 nAmount = roundint64(dAmount * COIN);
-	if (!MoneyRange(nAmount))
-		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-	return nAmount;
-}
 
 string stringFromValue(const Value& value) {
 	string strName = value.get_str();
@@ -698,7 +718,8 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 int64 GetAliasNetworkFee(opcodetype seed, unsigned int nHeight) {
 	int64 nFee = 0;
 	int64 nRate = 0;
-	if(getUSDToSYSFromAlias(nRate, nHeight) != "")
+	const vector<unsigned char> &vchCurrency = vchFromString("USD");
+	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nHeight) != "")
 	{
 		if(seed==OP_ALIAS_ACTIVATE)
 		{
