@@ -125,7 +125,6 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64
 					Value currencyAmountValue = find_value(codeObj, "rate");
 					if (currencyNameValue.type() == str_type)
 					{		
-						printf("getCurrencyToSYSFromAlias: str_type\n");
 						string currencyCode = currencyNameValue.get_str();
 						if(currencyCodeToFind == currencyCode)
 						{
@@ -133,8 +132,6 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64
 								nFee = AmountFromValue(currencyAmountValue);
 							else if(currencyAmountValue.type() == int_type)
 								nFee = currencyAmountValue.get_int()*COIN;
-							
-							printf("getCurrencyToSYSFromAlias: found! %llu\n", nFee);
 						}
 					}
 				}
