@@ -1351,10 +1351,7 @@ Value certnew(const Array& params, bool fHelp) {
 		throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}
 
-	vector<Value> res;
-	res.push_back(wtx.GetHash().GetHex());
-	res.push_back(HexStr(vchRand));
-	return res;
+	return wtx.GetHash().GetHex();
 }
 
 Value certupdate(const Array& params, bool fHelp) {
@@ -1512,10 +1509,9 @@ Value certtransfer(const Array& params, bool fHelp) {
     
  
     // return results
-    vector<Value> res;
-    res.push_back(wtx.GetHash().GetHex());
 
-    return res;
+
+	return wtx.GetHash().GetHex();
 }
 
 
@@ -1579,7 +1575,10 @@ Value certlist(const Array& params, bool fHelp) {
     if (fHelp || 1 < params.size())
         throw runtime_error("certlist [<cert>]\n"
                 "list my own Certificates");
+	vector<unsigned char> vchName;
 
+	if (params.size() == 1)
+		vchName = vchFromValue(params[0]);
     vector<unsigned char> vchNameUniq;
     if (params.size() == 1)
         vchNameUniq = vchFromValue(params[0]);
@@ -1590,7 +1589,7 @@ Value certlist(const Array& params, bool fHelp) {
 
     uint256 blockHash;
     uint256 hash;
-    CTransaction tx;
+    CTransaction tx, dbtx;
 
     vector<unsigned char> vchValue;
     int nHeight;
@@ -1602,41 +1601,77 @@ Value certlist(const Array& params, bool fHelp) {
 		int expired_block = 0;
         // get txn hash, read txn index
         hash = item.second.GetHash();
-
-        if (!GetTransaction(hash, tx, blockHash, true))
-            continue;
-
+		if (!GetTransaction(hash, tx, blockHash, true))
+			continue;
         // skip non-syscoin txns
         if (tx.nVersion != SYSCOIN_TX_VERSION)
             continue;
 
-        // decode txn, skip non-alias txns
-        vector<vector<unsigned char> > vvch;
-        int op, nOut;
-        if (!DecodeCertTx(tx, op, nOut, vvch, -1) || !IsCertOp(op)) 
-            continue;
-
-		CCert cert(tx);
-		
-         // skip this cert if it doesn't match the given filter value
-        if(vchNameUniq.size() > 0 && vchNameUniq != vvch[0])
-            continue;	
+		// get the txn height
 		nHeight = GetCertTxHashHeight(hash);
+
+		// get the txn cert name
+		if (!GetNameOfCertTx(tx, vchName))
+			continue;
+
+		// skip this cert if it doesn't match the given filter value
+		if (vchNameUniq.size() > 0 && vchNameUniq != vchName)
+			continue;
+		// get last active name only
+		if (vNamesI.find(vchName) != vNamesI.end() && (nHeight < vNamesI[vchName] || vNamesI[vchName] < 0))
+			continue;
+		// Read the database for the latest cert (vtxPos.back()) and ensure it is not transferred (iscertmine).. 
+		// if it IS transferred then skip over this cert whenever it is found(above vNamesI check) in your mapwallet
+		// check for cert existence in DB
+		// will only read the cert from the db once per name to ensure that it is not mine.
+		vector<CCert> vtxPos;
+		if (vNamesI.find(vchName) == vNamesI.end() && pcertdb->ReadCert(vchName, vtxPos))
+		{
+			if (vtxPos.size() > 0)
+			{
+				// get transaction pointed to by cert
+				uint256 txHash = vtxPos.back().txHash;
+				if(GetTransaction(txHash, dbtx, blockHash, true))
+				{
+				
+					nHeight = GetCertTxHashHeight(txHash);
+					// Is the latest cert in the db transferred?
+					if(!IsCertMine(dbtx))
+					{	
+						// by setting this to -1, subsequent aliases with the same name won't be read from disk (optimization) 
+						// because the latest cert tx doesn't belong to us anymore
+						vNamesI[vchName] = -1;
+						continue;
+					}
+					else
+					{
+						// get the value of the cert txn of the latest cert (from db)
+						GetValueOfCertTx(dbtx, vchValue);
+					}
+				}
+				
+			}
+		}
+		else
+		{
+			GetValueOfCertTx(tx, vchValue);
+		}
+		CCert cert(tx);
         // build the output object
         Object oName;
-        oName.push_back(Pair("cert", stringFromVch(vvch[0])));
+        oName.push_back(Pair("cert", stringFromVch(vchName)));
 		oName.push_back(Pair("is_mine", IsCertMine(tx)? "true": "false"));
-        vector<unsigned char> vchValue = cert.vchTitle;
+        vchValue = cert.vchTitle;
         string value = stringFromVch(vchValue);
         oName.push_back(Pair("title", value));
 
         string strAddress = "";
         GetCertAddress(tx, strAddress);
         oName.push_back(Pair("address", strAddress));
-        if(nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+		expired_block = nHeight + GetCertDisplayExpirationDepth(nHeight);
+		if(nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
 		{
 			expired = 1;
-			expired_block = nHeight + GetCertDisplayExpirationDepth(nHeight);
 		}  
 		if(expired == 0)
 		{
@@ -1645,12 +1680,9 @@ Value certlist(const Array& params, bool fHelp) {
 		oName.push_back(Pair("expires_in", expires_in));
 		oName.push_back(Pair("expires_on", expired_block));
 		oName.push_back(Pair("expired", expired));
-        // get last active name only
-        if(vNamesI.find(vvch[0]) != vNamesI.end() && vNamesI[vvch[0]] > nHeight)
-            continue;
-
-        vNamesI[vvch[0]] = nHeight;
-        vNamesO[vvch[0]] = oName;
+ 
+		vNamesI[vchName] = nHeight;
+		vNamesO[vchName] = oName;	
     
 	}
     BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, Object)& item, vNamesO)
@@ -1680,11 +1712,9 @@ Value certhistory(const Array& params, bool fHelp) {
         BOOST_FOREACH(txPos2, vtxPos) {
             txHash = txPos2.txHash;
             CTransaction tx;
-            if (!GetTransaction(txHash, tx, blockHash, true)) {
-                error("could not read txpos");
-                continue;
-            }
-
+			int expired = 0;
+			int expires_in = 0;
+			int expired_block = 0;
             Object oCert;
             vector<unsigned char> vchValue;
             int nHeight;
@@ -1697,14 +1727,18 @@ Value certhistory(const Array& params, bool fHelp) {
                 string strAddress = "";
                 GetCertAddress(tx, strAddress);
                 oCert.push_back(Pair("address", strAddress));
-                oCert.push_back(
-                        Pair("expires_in",
-                                nHeight + GetCertDisplayExpirationDepth(nHeight)
-                                        - pindexBest->nHeight));
-                if (nHeight + GetCertDisplayExpirationDepth(nHeight)
-                        - pindexBest->nHeight <= 0) {
-                    oCert.push_back(Pair("expired", 1));
-                }
+				expired_block = nHeight + GetCertDisplayExpirationDepth(nHeight);
+				if(nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+				{
+					expired = 1;
+				}  
+				if(expired == 0)
+				{
+					expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+				}
+				oCert.push_back(Pair("expires_in", expires_in));
+				oCert.push_back(Pair("expires_on", expired_block));
+				oCert.push_back(Pair("expired", expired));
                 oRes.push_back(oCert);
             }
         }
@@ -1759,16 +1793,17 @@ Value certfilter(const Array& params, bool fHelp) {
 
     pair<vector<unsigned char>, CCert> pairScan;
     BOOST_FOREACH(pairScan, certScan) {
-        string cert = stringFromVch(pairScan.first);
+		CCert txCert = pairScan.second;
+        string cert = stringFromVch(txCert.vchRand);
 
         // regexp
         using namespace boost::xpressive;
         smatch certparts;
         sregex cregex = sregex::compile(strRegexp);
-        if (strRegexp != "" && !regex_search(cert, certparts, cregex))
+        if (strRegexp != "" && !regex_search(stringFromVch(txCert.vchTitle), certparts, cregex) && strRegexp != cert)
             continue;
 
-        CCert txCert = pairScan.second;
+        
         int nHeight = txCert.nHeight;
 
         // max age
@@ -1778,20 +1813,23 @@ Value certfilter(const Array& params, bool fHelp) {
         nCountFrom++;
         if (nCountFrom < nFrom + 1)
             continue;
+        CTransaction tx;
+        uint256 blockHash;
+		if (!GetTransaction(txCert.txHash, tx, blockHash, true))
+			continue;
+
 		int expired = 0;
 		int expires_in = 0;
 		int expired_block = 0;
         Object oCert;
         oCert.push_back(Pair("cert", cert));
-        CTransaction tx;
-        uint256 blockHash;
 		vector<unsigned char> vchValue = txCert.vchTitle;
         string value = stringFromVch(vchValue);
         oCert.push_back(Pair("title", value));
-        if(nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0 || !GetTransaction(txCert.txHash, tx, blockHash, true))
+		expired_block = nHeight + GetCertDisplayExpirationDepth(nHeight);
+        if(nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
 		{
 			expired = 1;
-			expired_block = nHeight + GetCertDisplayExpirationDepth(nHeight);
 		}  
 		if(expired == 0)
 		{
@@ -1853,25 +1891,34 @@ Value certscan(const Array& params, bool fHelp) {
         CTransaction tx;
         CCert txCert = pairScan.second;
         uint256 blockHash;
-
+		int expired = 0;
+		int expires_in = 0;
+		int expired_block = 0;
         int nHeight = txCert.nHeight;
         vector<unsigned char> vchValue = txCert.vchTitle;
-        if ((nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight
-                <= 0) || !GetTransaction(txCert.txHash, tx, blockHash, true)) {
-            oCert.push_back(Pair("expired", 1));
-        } else {
-            string value = stringFromVch(vchValue);
-            //string strAddress = "";
-            //GetCertAddress(tx, strAddress);
-            oCert.push_back(Pair("value", value));
-            //oCert.push_back(Pair("txid", tx.GetHash().GetHex()));
-            //oCert.push_back(Pair("address", strAddress));
-            oCert.push_back(
-                    Pair("expires_in",
-                            nHeight + GetCertDisplayExpirationDepth(nHeight)
-                                    - pindexBest->nHeight));
-        }
-        oRes.push_back(oCert);
+        string value = stringFromVch(vchValue);
+		if (!GetTransaction(txCert.txHash, tx, blockHash, true))
+			continue;
+
+        //string strAddress = "";
+        //GetCertAddress(tx, strAddress);
+        oCert.push_back(Pair("value", value));
+        //oCert.push_back(Pair("txid", tx.GetHash().GetHex()));
+        //oCert.push_back(Pair("address", strAddress));
+		expired_block = nHeight + GetCertDisplayExpirationDepth(nHeight);
+		if(nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+		{
+			expired = 1;
+		}  
+		if(expired == 0)
+		{
+			expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+		}
+		oCert.push_back(Pair("expires_in", expires_in));
+		oCert.push_back(Pair("expires_on", expired_block));
+		oCert.push_back(Pair("expired", expired));
+			
+		oRes.push_back(oCert);
     }
 
     return oRes;

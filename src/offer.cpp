@@ -2896,11 +2896,10 @@ Value offerinfo(const Array& params, bool fHelp) {
 			string strAddress = "";
 			GetOfferAddress(tx, strAddress);
 			oOffer.push_back(Pair("address", strAddress));
-			
+			expired_block = nHeight + GetOfferDisplayExpirationDepth(nHeight);
             if(nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
 			{
 				expired = 1;
-				expired_block = nHeight + GetOfferDisplayExpirationDepth(nHeight);
 			}  
 			if(expired == 0)
 			{
@@ -3022,11 +3021,10 @@ Value offerlist(const Array& params, bool fHelp) {
             oName.push_back(Pair("quantity", strprintf("%llu", theOfferA.nQty)));
             oName.push_back(Pair("address", stringFromVch(theOfferA.vchPaymentAddress)));
 
-           
+			expired_block = nHeight + GetOfferDisplayExpirationDepth(nHeight);
             if(pending == 0 && (nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0))
 			{
 				expired = 1;
-				expired_block = nHeight + GetOfferDisplayExpirationDepth(nHeight);
 			}  
 			if(pending == 0 && expired == 0)
 			{
@@ -3155,16 +3153,17 @@ Value offerfilter(const Array& params, bool fHelp) {
 
 	pair<vector<unsigned char>, COffer> pairScan;
 	BOOST_FOREACH(pairScan, offerScan) {
-		string offer = stringFromVch(pairScan.first);
-
-		// regexp
-		using namespace boost::xpressive;
-		smatch offerparts;
-		sregex cregex = sregex::compile(strRegexp);
-		if (strRegexp != "" && !regex_search(offer, offerparts, cregex))
-			continue;
-
 		COffer txOffer = pairScan.second;
+        string offer = stringFromVch(txOffer.vchRand);
+
+        // regexp
+        using namespace boost::xpressive;
+        smatch offerparts;
+        sregex cregex = sregex::compile(strRegexp);
+        if (strRegexp != "" && !regex_search(stringFromVch(txOffer.sTitle), offerparts, cregex))
+            continue;
+
+		
 		int nHeight = txOffer.nHeight;
 
 		// max age

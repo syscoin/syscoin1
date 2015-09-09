@@ -100,7 +100,7 @@ bool EditCertDialog::saveCurrentRow()
 		activateFee = (double)GetCertNetworkFee(OP_CERT_ACTIVATE, nBestHeight)/(double)COIN;
 		activateFeeStr = strprintf("%.2f", activateFee);
         retval = QMessageBox::question(this, tr("Confirm Certificate Activation"),
-            tr("Warning: New Certificate will cost ") + QString::fromStdString(activateFeeStr) + " SYS<br><br>" + tr("Are you sure you want to create this Certificate?"),
+            tr("Warning: New certificate will cost ") + QString::fromStdString(activateFeeStr) + " SYS<br><br>" + tr("Are you sure you want to create this certificate?"),
 				 QMessageBox::Yes|QMessageBox::Cancel,
 				 QMessageBox::Cancel);
 		if(retval != QMessageBox::Yes)
@@ -109,6 +109,7 @@ bool EditCertDialog::saveCurrentRow()
 		}
 		strMethod = string("certnew");
 		params.push_back(ui->nameEdit->text().toStdString());
+		params.push_back("N/A");
 		try {
             Value result = tableRPC.execute(strMethod, params);
 			if (result.type() != null_type)
@@ -145,7 +146,7 @@ bool EditCertDialog::saveCurrentRow()
 			updateFee = (double)GetCertNetworkFee(OP_CERT_UPDATE, nBestHeight)/(double)COIN;
 			updateFeeStr = strprintf("%.2f", updateFee);
             retval = QMessageBox::question(this, tr("Confirm Certificate Update"),
-                tr("Warning: Updating Certificate will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish update this Certificate?"),
+                tr("Warning: Updating a certificate will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish update this certificate?"),
 					 QMessageBox::Yes|QMessageBox::Cancel,
 					 QMessageBox::Cancel);
 			if(retval != QMessageBox::Yes)
@@ -155,6 +156,7 @@ bool EditCertDialog::saveCurrentRow()
 			strMethod = string("certupdate");
 			params.push_back(ui->certEdit->text().toStdString());
 			params.push_back(ui->nameEdit->text().toStdString());
+			params.push_back("N/A");
 			
 			try {
 				Value result = tableRPC.execute(strMethod, params);
@@ -189,10 +191,10 @@ bool EditCertDialog::saveCurrentRow()
     case TransferCert:
         if(mapper->submit())
         {
-			updateFee = GetCertNetworkFee(OP_CERT_UPDATE, nBestHeight)/COIN;
-			updateFeeStr = strprintf("%"PRI64d, updateFee);
+			updateFee = (double)GetCertNetworkFee(OP_CERT_TRANSFER, nBestHeight)/(double)COIN;
+			updateFeeStr = strprintf("%.2f", updateFee);
             retval = QMessageBox::question(this, tr("Confirm Certificate Transfer"),
-                tr("Warning: Transferring Certificate will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish transfer this Certificate?"),
+                tr("Warning: Transferring a certificate will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish transfer this certificate?"),
 					 QMessageBox::Yes|QMessageBox::Cancel,
 					 QMessageBox::Cancel);
 			if(retval != QMessageBox::Yes)

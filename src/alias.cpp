@@ -1482,7 +1482,6 @@ Value aliaslist(const Array& params, bool fHelp) {
 			hash = item.second.GetHash();
 			if (!GetTransaction(hash, tx, blockHash, true))
 				continue;
-
 			// skip non-syscoin txns
 			if (tx.nVersion != SYSCOIN_TX_VERSION)
 				continue;
@@ -1490,9 +1489,7 @@ Value aliaslist(const Array& params, bool fHelp) {
 			// decode txn, skip non-alias txns
 			vector<vector<unsigned char> > vvch;
 			int op, nOut;
-			if (!DecodeAliasTx(tx, op, nOut, vvch, -1))
-				continue;
-			if(!IsAliasOp(op))
+			if (!DecodeAliasTx(tx, op, nOut, vvch, -1) || !IsAliasOp(op))
 				continue;
 			// get the txn height
 			nHeight = GetAliasTxHashHeight(hash);
@@ -1544,17 +1541,26 @@ Value aliaslist(const Array& params, bool fHelp) {
 			{
 				GetValueOfAliasTx(tx, vchValue);
 			}
+			int expired = 0;
+			int expires_in = 0;
+			int expired_block = 0;
 			// build the output object
 			Object oName;
 			oName.push_back(Pair("name", stringFromVch(vchName)));
 			oName.push_back(Pair("value", stringFromVch(vchValue)));
 			oName.push_back(Pair("lastupdate_height", nHeight));
-			oName.push_back(Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight)));
-			oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight ));
-
-			if (nHeight + GetAliasDisplayExpirationDepth(nHeight)
-					- pindexBest->nHeight <= 0)
-				oName.push_back(Pair("expired", 1));
+			expired_block = nHeight + GetAliasDisplayExpirationDepth(nHeight);
+			if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+			{
+				expired = 1;
+			}  
+			if(expired == 0)
+			{
+				expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+			}
+			oName.push_back(Pair("expires_in", expires_in));
+			oName.push_back(Pair("expires_on", expired_block));
+			oName.push_back(Pair("expired", expired));
 			vNamesI[vchName] = nHeight;
 			vNamesO[vchName] = oName;					
 
@@ -1601,7 +1607,9 @@ Value aliasinfo(const Array& params, bool fHelp) {
 		Object oName;
 		vector<unsigned char> vchValue;
 		int nHeight;
-
+		int expired = 0;
+		int expires_in = 0;
+		int expired_block = 0;
 		uint256 hash;
 		if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
 			oName.push_back(Pair("name", stringFromVch(vchName)));
@@ -1616,12 +1624,18 @@ Value aliasinfo(const Array& params, bool fHelp) {
 			bool fMine = pwalletMain->IsMine(tx)? true:  false;
 			oName.push_back(Pair("ismine", fMine));
             oName.push_back(Pair("lastupdate_height", nHeight));
-            oName.push_back(Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight)));
-            oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight ));
-			if (nHeight + GetAliasDisplayExpirationDepth(nHeight)
-					- pindexBest->nHeight <= 0) {
-				oName.push_back(Pair("expired", 1));
+			expired_block = nHeight + GetAliasDisplayExpirationDepth(nHeight);
+			if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+			{
+				expired = 1;
+			}  
+			if(expired == 0)
+			{
+				expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
 			}
+			oName.push_back(Pair("expires_in", expires_in));
+			oName.push_back(Pair("expires_on", expired_block));
+			oName.push_back(Pair("expired", expired));
 			if (tx.data.size())
 				oName.push_back(Pair("data", tx.GetBase64Data()));
 
@@ -1657,11 +1671,9 @@ Value aliashistory(const Array& params, bool fHelp) {
 		BOOST_FOREACH(txPos2, vtxPos) {
 			txHash = txPos2.txHash;
 			CTransaction tx;
-			if (!GetTransaction(txHash, tx, blockHash, true)) {
-				error("could not read txpos");
-				continue;
-			}
-
+			int expired = 0;
+			int expires_in = 0;
+			int expired_block = 0;
 			Object oName;
 			vector<unsigned char> vchValue;
 			int nHeight;
@@ -1675,12 +1687,18 @@ Value aliashistory(const Array& params, bool fHelp) {
 				GetAliasAddress(tx, strAddress);
 				oName.push_back(Pair("address", strAddress));
 	            oName.push_back(Pair("lastupdate_height", nHeight));
-	            oName.push_back(Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight)));
-	            oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight ));
-				if (nHeight + GetAliasDisplayExpirationDepth(nHeight)
-						- pindexBest->nHeight <= 0) {
-					oName.push_back(Pair("expired", 1));
+				expired_block = nHeight + GetAliasDisplayExpirationDepth(nHeight);
+				if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+				{
+					expired = 1;
+				}  
+				if(expired == 0)
+				{
+					expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
 				}
+				oName.push_back(Pair("expires_in", expires_in));
+				oName.push_back(Pair("expires_on", expired_block));
+				oName.push_back(Pair("expired", expired));
 				oRes.push_back(oName);
 			}
 		}
@@ -1762,25 +1780,35 @@ Value aliasfilter(const Array& params, bool fHelp) {
 			continue;
 
 
-
+		int expired = 0;
+		int expires_in = 0;
+		int expired_block = 0;
 		Object oName;
 		oName.push_back(Pair("name", name));
 		CTransaction tx;
 		uint256 blockHash;
 		uint256 txHash = txName.txHash;
+		if (!GetTransaction(txHash, tx, blockHash, true))
+			continue;
+
 		vector<unsigned char> vchValue;
 		GetValueOfAliasTx(tx, vchValue);
 		string value = stringFromVch(vchValue);
 		oName.push_back(Pair("value", value));
 		oName.push_back(Pair("txid", txHash.GetHex()));
         oName.push_back(Pair("lastupdate_height", nHeight));
-        oName.push_back(Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight)));
-        oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight ));
-		if ((nHeight + GetAliasDisplayExpirationDepth(nHeight)
-				- pindexBest->nHeight <= 0)
-				|| !GetTransaction(txHash, tx, blockHash, true)) {
-			oName.push_back(Pair("expired", 1));
+		expired_block = nHeight + GetAliasDisplayExpirationDepth(nHeight);
+        if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+		{
+			expired = 1;
+		}  
+		if(expired == 0)
+		{
+			expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
 		}
+		oName.push_back(Pair("expires_in", expires_in));
+		oName.push_back(Pair("expires_on", expired_block));
+		oName.push_back(Pair("expired", expired));
 
 		
 		oRes.push_back(oName);
@@ -1837,21 +1865,32 @@ Value aliasscan(const Array& params, bool fHelp) {
 		CTransaction tx;
 		CAliasIndex txName = pairScan.second;
 		uint256 blockHash;
-
+		int expired = 0;
+		int expires_in = 0;
+		int expired_block = 0;
 		int nHeight = txName.nHeight;
+		if (!GetTransaction(txName.txHash, tx, blockHash, true))
+			continue;
+
 		vector<unsigned char> vchValue = txName.vValue;
-		if ((nHeight + GetAliasDisplayExpirationDepth(nHeight)
-				- pindexBest->nHeight <= 0)
-				|| !GetTransaction(txName.txHash, tx, blockHash, true)) {
-			oName.push_back(Pair("expired", 1));
-		} else {
-			string value = stringFromVch(vchValue);
-			oName.push_back(Pair("txid", txName.txHash.GetHex()));
-			oName.push_back(Pair("value", value));
-            oName.push_back(Pair("lastupdate_height", nHeight));
-            oName.push_back(Pair("expires_on", nHeight + GetAliasDisplayExpirationDepth(nHeight)));
-            oName.push_back(Pair("expires_in", nHeight + GetAliasDisplayExpirationDepth(nHeight)- pindexBest->nHeight ));
+
+		string value = stringFromVch(vchValue);
+		oName.push_back(Pair("txid", txName.txHash.GetHex()));
+		oName.push_back(Pair("value", value));
+        oName.push_back(Pair("lastupdate_height", nHeight));
+		expired_block = nHeight + GetAliasDisplayExpirationDepth(nHeight);
+		if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+		{
+			expired = 1;
+		}  
+		if(expired == 0)
+		{
+			expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
 		}
+		oName.push_back(Pair("expires_in", expires_in));
+		oName.push_back(Pair("expires_on", expired_block));
+		oName.push_back(Pair("expired", expired));
+		
 		oRes.push_back(oName);
 	}
 

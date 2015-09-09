@@ -229,7 +229,7 @@ public:
 CertTableModel::CertTableModel(CWallet *wallet, WalletModel *parent,  CertModelType type) :
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0), modelType(type)
 {
-    columns << tr("Cert") << tr("Address") << tr("Expires On") << tr("Expires In") << tr("Certificate Status");;
+    columns << tr("Cert") << tr("Title") << tr("Expires On") << tr("Expires In") << tr("Certificate Status");
     priv = new CertTablePriv(wallet, this);
     refreshCertTable();
 }
