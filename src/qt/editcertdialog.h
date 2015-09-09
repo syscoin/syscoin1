@@ -7,7 +7,7 @@ namespace Ui {
     class EditCertDialog;
 }
 class CertTableModel;
-
+class WalletModel;
 QT_BEGIN_NAMESPACE
 class QDataWidgetMapper;
 QT_END_NAMESPACE
@@ -21,13 +21,14 @@ class EditCertDialog : public QDialog
 public:
     enum Mode {
         NewCert,
-        EditCert
+        EditCert,
+		TransferCert
     };
 
     explicit EditCertDialog(Mode mode, QWidget *parent = 0);
     ~EditCertDialog();
 
-    void setModel(CertTableModel *model);
+    void setModel(WalletModel*,CertTableModel *model);
     void loadRow(int row);
 
     QString getCert() const;
@@ -43,7 +44,7 @@ private:
     QDataWidgetMapper *mapper;
     Mode mode;
     CertTableModel *model;
-
+	WalletModel* walletModel;
     QString cert;
 };
 

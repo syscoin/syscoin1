@@ -66,7 +66,8 @@ public:
     AddressTableModel *getAddressTableModel();
     AliasTableModel *getAliasTableModelMine();
     AliasTableModel *getAliasTableModelAll();
-    CertTableModel *getCertTableModel();
+    CertTableModel *getCertTableModelMine();
+    CertTableModel *getCertTableModelAll();
     TransactionTableModel *getTransactionTableModel();
     
     qint64 getBalance(const CCoinControl *coinControl=NULL) const;
@@ -146,7 +147,8 @@ private:
     TransactionTableModel *transactionTableModel;
     AliasTableModel *aliasTableModelMine;
     AliasTableModel *aliasTableModelAll;
-    CertTableModel *certTableModel;
+    CertTableModel *certTableModelMine;
+    CertTableModel *certTableModelAll;
 
     // Cache some values to be able to detect changes
     qint64 cachedBalance;
@@ -187,13 +189,9 @@ public slots:
     void updateTransaction(const QString &hash, int status);
     /* New, updated or removed address book entry */
     void updateAddressBook(const QString &address, const QString &label, bool isMine, int status);
-    /* New, updated or removed alias */
-    void updateAlias(const QString &alias, const QString &value, const QString &expDepth, int status);
-   
-    /* New, updated or removed cert  / cert */
-    void updateCert(const QString &cert, const QString &title, const QString &expDepth,int status);
-    /* New, updated or removed cert  / cert */
-
+    void updateAlias();
+    void updateCert();
+	void updateOffer();
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
 };

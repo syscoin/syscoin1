@@ -10,13 +10,14 @@
 #include "addressbookpage.h"
 #include "aliasview.h"
 #include "offerview.h"
-#include "certlistpage.h"
+#include "certview.h"
 #include "sendcoinsdialog.h"
 #include "signverifymessagedialog.h"
 #include "clientmodel.h"
 #include "walletmodel.h"
 #include "optionsmodel.h"
 #include "aliastablemodel.h"
+#include "certtablemodel.h"
 #include "transactionview.h"
 #include "overviewpage.h"
 #include "askpassphrasedialog.h"
@@ -43,11 +44,13 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
     overviewPage = new OverviewPage();
     transactionsPage = new QWidget(this);
     aliasListPage = new QStackedWidget();
+	certListPage = new QStackedWidget();
     dataAliasListPage = new QStackedWidget();
     QVBoxLayout *vbox = new QVBoxLayout();
     QHBoxLayout *hbox_buttons = new QHBoxLayout();
     transactionView = new TransactionView(this);
     aliasView = new AliasView(aliasListPage, gui);
+	certView = new CertView(certListPage, gui);
     dataAliasView = new AliasView(dataAliasListPage, gui);
 	offerListPage = new QStackedWidget();
 	offerView = new OfferView(offerListPage, gui);
@@ -75,9 +78,6 @@ WalletView::WalletView(QWidget *parent, BitcoinGUI *_gui):
     transactionsPage->setLayout(vbox);
 
 	addressBookPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab);
-
-
-    certListPage = new CertListPage(CertListPage::ForEditing, CertListPage::CertTab);
 
     receiveCoinsPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::ReceivingTab);
 
@@ -136,7 +136,7 @@ void WalletView::setClientModel(ClientModel *clientModel)
         addressBookPage->setOptionsModel(clientModel->getOptionsModel());
         aliasView->setClientModel(clientModel);
 		dataAliasView->setClientModel(clientModel);
-        certListPage->setOptionsModel(clientModel->getOptionsModel());
+        certView->setClientModel(clientModel);
         receiveCoinsPage->setOptionsModel(clientModel->getOptionsModel());
     }
 }
@@ -154,7 +154,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
         overviewPage->setWalletModel(walletModel);
         aliasView->setWalletModel(walletModel);
 		dataAliasView->setWalletModel(walletModel);
-        certListPage->setModel(walletModel->getCertTableModel());
+        certView->setWalletModel(walletModel);
         addressBookPage->setModel(walletModel->getAddressTableModel());
         receiveCoinsPage->setModel(walletModel->getAddressTableModel());
         sendCoinsPage->setModel(walletModel);
@@ -271,6 +271,10 @@ bool WalletView::handleURI(const QString& strURI)
         return true;
     }
     if (dataAliasView->handleURI(strURI))
+    {
+        return true;
+    }
+	else if(certView->handleURI(strURI))
     {
         return true;
     }

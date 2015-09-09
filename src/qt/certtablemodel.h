@@ -7,20 +7,24 @@
 class CertTablePriv;
 class CWallet;
 class WalletModel;
+enum CertType {AllCert=0,MyCert};
 
+typedef enum CertType CertModelType;
 
 class CertTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 public:
-    explicit CertTableModel(CWallet *wallet, WalletModel *parent = 0);
+    explicit CertTableModel(CWallet *wallet, WalletModel *parent = 0, CertModelType = AllCert);
     ~CertTableModel();
 
     enum ColumnIndex {
         Name = 0,   /**< cert name */
         Title = 1,  /**< Cert value */
-        ExpirationDepth = 2
+		ExpiresOn = 2,
+		ExpiresIn = 3,
+		Expired = 4
     };
 
     enum RoleIndex {
@@ -46,14 +50,13 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role);
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     QModelIndex index(int row, int column, const QModelIndex &parent) const;
-    bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
     Qt::ItemFlags flags(const QModelIndex &index) const;
     /*@}*/
 
     /* Add an cert to the model.
        Returns the added cert on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &title, const QString &cert, const QString &expdepth);
+    QString addRow(const QString &type, const QString &cert, const QString &value, const QString &expires_on,const QString &expires_in, const QString &expired);
 
     /* Look up label for cert in cert book, if not found return empty string.
      */
@@ -63,23 +66,23 @@ public:
        Return -1 if not found.
      */
     int lookupCert(const QString &cert) const;
-
+	void clear();
+	void refreshCertTable();
     EditStatus getEditStatus() const { return editStatus; }
-
+	EditStatus editStatus;
 private:
     WalletModel *walletModel;
     CWallet *wallet;
     CertTablePriv *priv;
     QStringList columns;
-    EditStatus editStatus;
-
+	CertModelType modelType;
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);
 
 public slots:
     /* Update cert list from core.
      */
-    void updateEntry(const QString &cert, const QString &title, const QString &expdepth, bool isCert, int status);
+    void updateEntry(const QString &cert, const QString &value, const QString &expires_on,const QString &expires_in, const QString &expired, CertModelType type, int status);
 
     friend class CertTablePriv;
 };

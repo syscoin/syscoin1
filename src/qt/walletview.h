@@ -16,8 +16,8 @@ class TransactionView;
 class OverviewPage;
 class AddressBookPage;
 class AliasView;
+class CertView;
 class OfferView;
-class CertListPage;
 class SendCoinsDialog;
 class SignVerifyMessageDialog;
 class RPCConsole;
@@ -65,13 +65,14 @@ private:
     QWidget *transactionsPage;
     AliasView *aliasView;
 	AliasView *dataAliasView;
+	CertView *certView;
     QStackedWidget* aliasListPage;
     QStackedWidget* dataAliasListPage;
     AddressBookPage *addressBookPage;
     AddressBookPage *receiveCoinsPage;
     OfferView *offerView;
 	QStackedWidget* offerListPage;
-    CertListPage *certListPage;
+    QStackedWidget *certListPage;
     SendCoinsDialog *sendCoinsPage;
     SignVerifyMessageDialog *signVerifyMessageDialog;
 

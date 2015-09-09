@@ -225,26 +225,19 @@ void BitcoinGUI::createActions()
     tabGroup->addAction(offerListAction);
 
 	
-    certListAction = new QAction(QIcon(":/icons/cert"), tr("Certificate &s"), this);
+    certListAction = new QAction(QIcon(":/icons/cert"), tr("&Certificates"), this);
     certListAction->setStatusTip(tr("Manage Certificates"));
     certListAction->setToolTip(certListAction->statusTip());
     certListAction->setCheckable(true);
     certListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_0));
     tabGroup->addAction(certListAction);
 
-    certListAction = new QAction(QIcon(":/icons/cert"), tr("Cert&ificates"), this);
-    certListAction->setStatusTip(tr("Manage certificates"));
-    certListAction->setToolTip(certListAction->statusTip());
-    certListAction->setCheckable(true);
-    certListAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_A));
-    tabGroup->addAction(certListAction);
-
     // Hide buttons until we fixed the issues (win and mac)
 	aliasListAction->setVisible (true);
 	dataAliasListAction->setVisible (false);
 	offerListAction->setVisible (true);
-	certListAction->setVisible (false);
-	certListAction->setVisible (false);
+	certListAction->setVisible (true);
+
 
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
@@ -264,7 +257,7 @@ void BitcoinGUI::createActions()
     connect(offerListAction, SIGNAL(triggered()), this, SLOT(gotoOfferListPage()));
     connect(certListAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(certListAction, SIGNAL(triggered()), this, SLOT(gotoCertListPage()));
-    connect(certListAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
     quitAction->setStatusTip(tr("Quit application"));
@@ -353,7 +346,6 @@ void BitcoinGUI::createToolBars()
     toolbar->addAction(dataAliasListAction);
     toolbar->addAction(offerListAction);
     toolbar->addAction(certListAction);
-    toolbar->addAction(certListAction);
 }
 
 void BitcoinGUI::setClientModel(ClientModel *clientModel)
@@ -433,7 +425,6 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     aliasListAction->setEnabled(enabled);
     dataAliasListAction->setEnabled(enabled);
     offerListAction->setEnabled(enabled);
-    certListAction->setEnabled(enabled);
     certListAction->setEnabled(enabled);
 }
 

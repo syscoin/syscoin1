@@ -7,18 +7,13 @@
 #include "base58.h"
 
 #include <QFont>
-
 using namespace std;
+using namespace json_spirit;
 
 const QString CertTableModel::Cert = "O";
 
 
-class CCertDB;
-
-extern CCertDB *pcertdb;
-
-int GetCertExpirationDepth(int nHeight);
-
+extern const CRPCTable tableRPC;
 struct CertTableEntry
 {
     enum Type {
@@ -28,11 +23,13 @@ struct CertTableEntry
     Type type;
     QString title;
     QString cert;
-    QString expirationdepth;
+	QString expires_on;
+	QString expires_in;
+	QString expired;
 
     CertTableEntry() {}
-    CertTableEntry(Type type, const QString &title, const QString &cert, const QString &expirationdepth):
-        type(type), title(title), cert(cert), expirationdepth(expirationdepth) {}
+    CertTableEntry(Type type, const QString &title, const QString &cert, const QString &expires_on,const QString &expires_in, const QString &expired):
+        type(type), title(title), cert(cert), expires_on(expires_on), expires_in(expires_in), expired(expired) {}
 };
 
 struct CertTableEntryLessThan
@@ -64,61 +61,105 @@ public:
     CertTablePriv(CWallet *wallet, CertTableModel *parent):
         wallet(wallet), parent(parent) {}
 
-    void refreshCertTable()
+    void refreshCertTable(CertModelType type)
     {
         cachedCertTable.clear();
         {
-            CBlockIndex* pindex = pindexGenesisBlock;
-            LOCK(wallet->cs_wallet);
-            while (pindex) {
-                int nHeight = pindex->nHeight;
-                CBlock block;
-                block.ReadFromDisk(pindex);
-                uint256 txblkhash;
+			string strMethod = string("certlist");
+	        Array params; 
+			Value result ;
+			string name_str;
+			string value_str;
+			string expires_in_str;
+			string expires_on_str;
+			string expired_str;
+			int expired = 0;
+			int expires_in = 0;
+			int expires_on = 0;
+			
 
-                BOOST_FOREACH(CTransaction& tx, block.vtx) {
+			try {
+				result = tableRPC.execute(strMethod, params);
+			}
+			catch (Object& objError)
+			{
+				return;
+			}
+			catch(std::exception& e)
+			{
+				return;
+			}
+			if (result.type() == array_type)
+			{
+				name_str = "";
+				value_str = "";
+				expires_in_str = "";
 
-                    if (tx.nVersion != SYSCOIN_TX_VERSION)
-                        continue;
+				expires_on_str = "";
 
-                    int op, nOut;
-                    vector<vector<unsigned char> > vvchArgs;
-                    bool o = DecodeCertTx(tx, op, nOut, vvchArgs, -1);
-                    if (!o || !IsCertOp(op) || !IsCertMine(tx)) continue;
+				expired = 0;
+				expires_in = 0;
+				expires_on = 0;
 
-                    // get the transaction
-                    if(!GetTransaction(tx.GetHash(), tx, txblkhash, true))
-                        continue;
+		
+				Array arr = result.get_array();
+				BOOST_FOREACH(Value& input, arr)
+				{
+					if (input.type() != obj_type)
+						continue;
+					Object& o = input.get_obj();
+					name_str = "";
+					value_str = "";
+					expires_in_str = "";
+	
+					expires_on_str = "";
+					expired = 0;
+					expires_in = 0;
+					expires_on = 0;
 
-                    // attempt to read cert from txn
-                    CCert theCert;
-                    if(!theCert.UnserializeFromTx(tx))
-                        continue;
+			
+					const Value& name_value = find_value(o, "cert");
+					if (name_value.type() == str_type)
+						name_str = name_value.get_str();
+					const Value& value_value = find_value(o, "title");
+					if (value_value.type() == str_type)
+						value_str = value_value.get_str();
+					const Value& expires_on_value = find_value(o, "expires_on");
+					if (expires_on_value.type() == int_type)
+						expires_on = expires_on_value.get_int();
+					const Value& expires_in_value = find_value(o, "expires_in");
+					if (expires_in_value.type() == int_type)
+						expires_in = expires_in_value.get_int();
+					const Value& expired_value = find_value(o, "expired");
+					if (expired_value.type() == int_type)
+						expired = expired_value.get_int();
+					if(expired == 1)
+					{
+						expired_str = "Expired";
+					}
+					else
+					{
+						expired_str = "Valid";
+					}
+					expires_in_str = strprintf("%d Blocks", expires_in);
+					expires_on_str = strprintf("Block %d", expires_on);
 
-                    vector<CCert> vtxPos;
-                    if(!pcertdb->ReadCert(theCert.vchRand, vtxPos))
-                        continue;
-
-                    int nExpHeight = vtxPos.back().nHeight + GetCertExpirationDepth(vtxPos.back().nHeight);
-
-               
-                    if(op == OP_CERT_ACTIVATE)
-                        cachedCertTable.append(CertTableEntry(CertTableEntry::Cert,
-                                          QString::fromStdString(stringFromVch(theCert.vchTitle)),
-                                          QString::fromStdString(stringFromVch(theCert.vchRand)),
-                                          QString::fromStdString(strprintf("%d", nExpHeight ))));
-                    
-                }
-                pindex = pindex->pnext;
-            }
-        }
+					updateEntry(QString::fromStdString(name_str), QString::fromStdString(value_str), QString::fromStdString(expires_on_str), QString::fromStdString(expires_in_str), QString::fromStdString(expired_str),type, CT_NEW); 
+				}
+			}
+            
+         }
         
         // qLowerBound() and qUpperBound() require our cachedCertTable list to be sorted in asc order
         qSort(cachedCertTable.begin(), cachedCertTable.end(), CertTableEntryLessThan());
     }
 
-    void updateEntry(const QString &cert, const QString &title, const QString &expdepth, bool isCert, int status)
+    void updateEntry(const QString &cert, const QString &title, const QString &expires_on,const QString &expires_in, const QString &expired, CertModelType type, int status)
     {
+		if(!parent || parent->modelType != type)
+		{
+			return;
+		}
         // Find cert / value in model
         QList<CertTableEntry>::iterator lower = qLowerBound(
             cachedCertTable.begin(), cachedCertTable.end(), cert, CertTableEntryLessThan());
@@ -127,7 +168,7 @@ public:
         int lowerIndex = (lower - cachedCertTable.begin());
         int upperIndex = (upper - cachedCertTable.begin());
         bool inModel = (lower != upper);
-        CertTableEntry::Type newEntryType = isCert ? CertTableEntry::Cert : CertTableEntry::Cert;
+        CertTableEntry::Type newEntryType = CertTableEntry::Cert;
 
         switch(status)
         {
@@ -138,7 +179,7 @@ public:
                 break;
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedCertTable.insert(lowerIndex, CertTableEntry(newEntryType, title, cert, expdepth));
+            cachedCertTable.insert(lowerIndex, CertTableEntry(newEntryType, title, cert, expires_on, expires_in, expired));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
@@ -149,7 +190,9 @@ public:
             }
             lower->type = newEntryType;
             lower->title = title;
-            lower->expirationdepth = expdepth;
+			lower->expires_on = expires_on;
+			lower->expires_in = expires_in;
+			lower->expired = expired;
             parent->emitDataChanged(lowerIndex);
             break;
         case CT_DELETED:
@@ -183,19 +226,25 @@ public:
     }
 };
 
-CertTableModel::CertTableModel(CWallet *wallet, WalletModel *parent) :
-    QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0)
+CertTableModel::CertTableModel(CWallet *wallet, WalletModel *parent,  CertModelType type) :
+    QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0), modelType(type)
 {
-    columns << tr("Cert") << tr("Title") << tr("Expiration Height");
+    columns << tr("Cert") << tr("Address") << tr("Expires On") << tr("Expires In") << tr("Certificate Status");;
     priv = new CertTablePriv(wallet, this);
-    priv->refreshCertTable();
+    refreshCertTable();
 }
 
 CertTableModel::~CertTableModel()
 {
     delete priv;
 }
-
+void CertTableModel::refreshCertTable() 
+{
+	if(modelType != MyCert)
+		return;
+	clear();
+	priv->refreshCertTable(modelType);
+}
 int CertTableModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
@@ -223,17 +272,21 @@ QVariant CertTableModel::data(const QModelIndex &index, int role) const
             return rec->title;
         case Name:
             return rec->cert;
-        case ExpirationDepth:
-            return rec->expirationdepth;
+        case ExpiresOn:
+            return rec->expires_on;
+        case ExpiresIn:
+            return rec->expires_in;
+        case Expired:
+            return rec->expired;
         }
     }
     else if (role == Qt::FontRole)
     {
         QFont font;
-//        if(index.column() == Name)
-//        {
-//            font = GUIUtil::bitcoinAddressFont();
-//        }
+        if(index.column() == Name)
+        {
+            font = GUIUtil::bitcoinAddressFont();
+        }
         return font;
     }
     else if (role == TypeRole)
@@ -260,15 +313,34 @@ bool CertTableModel::setData(const QModelIndex &index, const QVariant &value, in
     {
         switch(index.column())
         {
-        case ExpirationDepth:
+        case ExpiresOn:
             // Do nothing, if old value == new value
-            if(rec->expirationdepth == value.toString())
+            if(rec->expires_on == value.toString())
             {
                 editStatus = NO_CHANGES;
                 return false;
             }
+           
             break;
-        case Title:
+        case ExpiresIn:
+            // Do nothing, if old value == new value
+            if(rec->expires_in == value.toString())
+            {
+                editStatus = NO_CHANGES;
+                return false;
+            }
+           
+            break;
+        case Expired:
+            // Do nothing, if old value == new value
+            if(rec->expired == value.toString())
+            {
+                editStatus = NO_CHANGES;
+                return false;
+            }
+           
+            break;
+       case Title:
             // Do nothing, if old value == new value
             if(rec->title == value.toString())
             {
@@ -283,15 +355,9 @@ bool CertTableModel::setData(const QModelIndex &index, const QVariant &value, in
                 editStatus = NO_CHANGES;
                 return false;
             }
-            // Refuse to set invalid cert, set error status and return false
-            else if(false /* validate cert */)
-            {
-                editStatus = INVALID_CERT;
-                return false;
-            }
-            // Check for duplicate certes to prevent accidental deletion of certes, if you try
+            // Check for duplicate certs to prevent accidental deletion of certs, if you try
             // to paste an existing cert over another cert (with a different label)
-            else if(false /* check duplicates */)
+            else if(lookupCert(rec->cert) != -1)
             {
                 editStatus = DUPLICATE_CERT;
                 return false;
@@ -299,9 +365,6 @@ bool CertTableModel::setData(const QModelIndex &index, const QVariant &value, in
             // Double-check that we're not overwriting a receiving cert
             else if(rec->type == CertTableEntry::Cert)
             {
-                {
-                    // update cert
-                }
             }
             break;
         }
@@ -326,15 +389,8 @@ Qt::ItemFlags CertTableModel::flags(const QModelIndex &index) const
 {
     if(!index.isValid())
         return 0;
-    //CertTableEntry *rec = static_cast<CertTableEntry*>(index.internalPointer());
-
     Qt::ItemFlags retval = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
-    // only value is editable.
-    if(index.column()==Title)
-    {
-        retval |= Qt::ItemIsEditable;
-    }
-     return retval;
+    return retval;
 }
 
 QModelIndex CertTableModel::index(int row, int column, const QModelIndex &parent) const
@@ -351,29 +407,20 @@ QModelIndex CertTableModel::index(int row, int column, const QModelIndex &parent
     }
 }
 
-void CertTableModel::updateEntry(const QString &cert, const QString &title, const QString &expdepth, bool isMine, int status)
+void CertTableModel::updateEntry(const QString &cert, const QString &value, const QString &expires_on,const QString &expires_in, const QString &expired, CertModelType type, int status)
 {
-    // Update cert book model from Bitcoin core
-    priv->updateEntry(cert, title, expdepth, isMine, status);
+    // Update alias book model from Syscoin core
+    priv->updateEntry(cert, value, expires_on, expires_in, expired, type, status);
 }
 
-QString CertTableModel::addRow(const QString &type, const QString &title, const QString &cert, const QString &expdepth)
+QString CertTableModel::addRow(const QString &type, const QString &cert, const QString &value, const QString &expires_on,const QString &expires_in, const QString &expired)
 {
-    std::string strTitle = title.toStdString();
     std::string strCert = cert.toStdString();
-    std::string strExpdepth = expdepth.toStdString();
-
     editStatus = OK;
-
-    if(false /*validate cert*/)
-    {
-        editStatus = INVALID_CERT;
-        return QString();
-    }
-    // Check for duplicate certes
+    // Check for duplicate cert
     {
         LOCK(wallet->cs_wallet);
-        if(false/* check duplicate certes */)
+        if(lookupCert(cert) != -1)
         {
             editStatus = DUPLICATE_CERT;
             return QString();
@@ -384,17 +431,20 @@ QString CertTableModel::addRow(const QString &type, const QString &title, const 
 
     return QString::fromStdString(strCert);
 }
-
-bool CertTableModel::removeRows(int row, int count, const QModelIndex &parent)
+void CertTableModel::clear()
 {
-    // refuse to remove certes.
-    return false;
+	beginResetModel();
+    priv->cachedCertTable.clear();
+	endResetModel();
 }
 
 /* Look up value for cert, if not found return empty string.
  */
 QString CertTableModel::valueForCert(const QString &cert) const
 {
+	CBitcoinAddress address_parsed(cert.toStdString());
+	if(address_parsed.IsValid() && address_parsed.isAlias)
+		return QString::fromStdString(address_parsed.ToString());
     return QString::fromStdString("{}");
 }
 

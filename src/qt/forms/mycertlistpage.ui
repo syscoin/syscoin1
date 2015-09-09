@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CertListPage</class>
- <widget class="QWidget" name="CertListPage">
+ <class>MyCertListPage</class>
+ <widget class="QWidget" name="MyCertListPage">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Certificates</string>
+   <string>My Certificates</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -23,30 +23,6 @@
       <bool>true</bool>
      </property>
     </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
-      <widget class="QLineEdit" name="lineEditCertSearch"/>
-     </item>
-     <item>
-      <widget class="QPushButton" name="searchCert">
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>48</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Search</string>
-       </property>
-       <property name="icon">
-        <iconset resource="../bitcoin.qrc">
-         <normaloff>:/icons/search</normaloff>:/icons/search</iconset>
-       </property>
-      </widget>
-     </item>
-    </layout>
    </item>
    <item>
     <widget class="QTableView" name="tableView">
@@ -78,6 +54,37 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="refreshButton">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>48</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>&amp;Refresh</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/refresh</normaloff>:/icons/refresh</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="newCert">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Create a new alias&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>&amp;New Certificate</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QPushButton" name="copyCert">
        <property name="toolTip">
@@ -116,6 +123,19 @@
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
          <normaloff>:/icons/export</normaloff>:/icons/export</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Ok</set>
        </property>
       </widget>
      </item>

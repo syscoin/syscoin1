@@ -1543,7 +1543,7 @@ Value certinfo(const Array& params, bool fHelp) {
 
     string sTime = strprintf("%llu", ca.nTime);
     string sHeight = strprintf("%llu", ca.nHeight);
-    oCert.push_back(Pair("id", HexStr(ca.vchRand)));
+    oCert.push_back(Pair("cert", HexStr(ca.vchRand)));
     oCert.push_back(Pair("txid", ca.txHash.GetHex()));
     oCert.push_back(Pair("height", sHeight));
     oCert.push_back(Pair("time", sTime));
@@ -1568,7 +1568,7 @@ Value certinfo(const Array& params, bool fHelp) {
 			expires_in = theCert.nHeight + GetCertDisplayExpirationDepth(theCert.nHeight) - pindexBest->nHeight;
 		}
 		oCert.push_back(Pair("expires_in", expires_in));
-		oCert.push_back(Pair("expired_block", expired_block));
+		oCert.push_back(Pair("expires_on", expired_block));
 		oCert.push_back(Pair("expired", expired));
     
     }
@@ -1624,8 +1624,12 @@ Value certlist(const Array& params, bool fHelp) {
 		nHeight = GetCertTxHashHeight(hash);
         // build the output object
         Object oName;
-        oName.push_back(Pair("id", stringFromVch(vvch[0])));
+        oName.push_back(Pair("cert", stringFromVch(vvch[0])));
 		oName.push_back(Pair("is_mine", IsCertMine(tx)? "true": "false"));
+        vector<unsigned char> vchValue = cert.vchTitle;
+        string value = stringFromVch(vchValue);
+        oName.push_back(Pair("title", value));
+
         string strAddress = "";
         GetCertAddress(tx, strAddress);
         oName.push_back(Pair("address", strAddress));
@@ -1639,7 +1643,7 @@ Value certlist(const Array& params, bool fHelp) {
 			expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
 		}
 		oName.push_back(Pair("expires_in", expires_in));
-		oName.push_back(Pair("expired_block", expired_block));
+		oName.push_back(Pair("expires_on", expired_block));
 		oName.push_back(Pair("expired", expired));
         // get last active name only
         if(vNamesI.find(vvch[0]) != vNamesI.end() && vNamesI[vvch[0]] > nHeight)
@@ -1770,29 +1774,33 @@ Value certfilter(const Array& params, bool fHelp) {
         // max age
         if (nMaxAge != 0 && pindexBest->nHeight - nHeight >= nMaxAge)
             continue;
-
         // from limits
         nCountFrom++;
         if (nCountFrom < nFrom + 1)
             continue;
-
+		int expired = 0;
+		int expires_in = 0;
+		int expired_block = 0;
         Object oCert;
         oCert.push_back(Pair("cert", cert));
         CTransaction tx;
         uint256 blockHash;
-        uint256 txHash = txCert.txHash;
-        if ((nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight
-                <= 0) || !GetTransaction(txHash, tx, blockHash, true)) {
-            oCert.push_back(Pair("expired", 1));
-        } else {
-            vector<unsigned char> vchValue = txCert.vchTitle;
-            string value = stringFromVch(vchValue);
-            oCert.push_back(Pair("value", value));
-            oCert.push_back(
-                    Pair("expires_in",
-                            nHeight + GetCertDisplayExpirationDepth(nHeight)
-                                    - pindexBest->nHeight));
-        }
+		vector<unsigned char> vchValue = txCert.vchTitle;
+        string value = stringFromVch(vchValue);
+        oCert.push_back(Pair("title", value));
+        if(nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0 || !GetTransaction(txCert.txHash, tx, blockHash, true))
+		{
+			expired = 1;
+			expired_block = nHeight + GetCertDisplayExpirationDepth(nHeight);
+		}  
+		if(expired == 0)
+		{
+			expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+		}
+		oCert.push_back(Pair("expires_in", expires_in));
+		oCert.push_back(Pair("expires_on", expired_block));
+		oCert.push_back(Pair("expired", expired));
+
         oRes.push_back(oCert);
 
         nCountNb++;

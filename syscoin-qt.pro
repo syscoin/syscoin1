@@ -18,13 +18,13 @@ CONFIG += thread
 #    BOOST_INCLUDE_PATH, BOOST_LIB_PATH, BDB_INCLUDE_PATH,
 #    BDB_LIB_PATH, OPENSSL_INCLUDE_PATH and OPENSSL_LIB_PATH respectively
 win32 {
-    BOOST_LIB_SUFFIX=-mgw48-mt-s-1_55
-    BOOST_INCLUDE_PATH=C:/deps/boost_1_55_0
-    BOOST_LIB_PATH=C:/deps/boost_1_55_0/stage/lib
+    BOOST_LIB_SUFFIX=-mgw48-mt-s-1_54
+    BOOST_INCLUDE_PATH=C:/deps/boost_1_54_0
+    BOOST_LIB_PATH=C:/deps/boost_1_54_0/stage/lib
     BDB_INCLUDE_PATH=C:/deps/db-4.8.30.NC/build_unix
     BDB_LIB_PATH=C:/deps/db-4.8.30.NC/build_unix
-    OPENSSL_INCLUDE_PATH=C:/deps/openssl-1.0.1i/include
-    OPENSSL_LIB_PATH=C:/deps/openssl-1.0.1i
+    OPENSSL_INCLUDE_PATH=C:/deps/openssl-1.0.1l/include
+    OPENSSL_LIB_PATH=C:/deps/openssl-1.0.1l
     MINIUPNPC_INCLUDE_PATH=C:/deps/
     MINIUPNPC_LIB_PATH=C:/deps/miniupnpc
 }
@@ -208,6 +208,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/transactionview.h \
     src/qt/aliasview.h \
     src/qt/offerview.h \
+    src/qt/certview.h \
     src/qt/walletmodel.h \
     src/qt/walletview.h \
     src/qt/walletstack.h \
@@ -241,6 +242,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/editaliasdialog.h \
     src/qt/aliaslistpage.h \
     src/qt/myaliaslistpage.h \
+    src/qt/mycertlistpage.h \
     src/qt/offerpaydialog.h \
     src/qt/offeracceptdialog.h \  
     src/qt/acceptandpayofferlistpage.h \
@@ -297,6 +299,7 @@ SOURCES += src/qt/bitcoin.cpp \
     src/qt/transactionview.cpp \
     src/qt/aliasview.cpp \
     src/qt/offerview.cpp \
+    src/qt/certview.cpp \
     src/qt/walletmodel.cpp \
     src/qt/walletview.cpp \
     src/qt/walletstack.cpp \
@@ -334,6 +337,7 @@ SOURCES += src/qt/bitcoin.cpp \
     src/qt/acceptandpayofferlistpage.cpp \    
     src/qt/certtablemodel.cpp \
     src/qt/editcertdialog.cpp \
+    src/qt/mycertlistpage.cpp \
     src/qt/certlistpage.cpp
 
 RESOURCES += src/qt/bitcoin.qrc
@@ -353,6 +357,7 @@ FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/aliaslistpage.ui \
     src/qt/forms/editaliasdialog.ui \
     src/qt/forms/myaliaslistpage.ui \
+    src/qt/forms/mycertlistpage.ui \
     src/qt/forms/acceptandpayofferlistpage.ui \
     src/qt/forms/offerpaydialog.ui \
     src/qt/forms/offeracceptdialog.ui \        

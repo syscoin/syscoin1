@@ -1,5 +1,5 @@
-#ifndef MyAliasListPage_H
-#define MyAliasListPage_H
+#ifndef MYALIASLISTPAGE_H
+#define MYALIASLISTPAGE_H
 
 #include <QDialog>
 
@@ -77,4 +77,4 @@ signals:
     void transferAlias(QString addr);
 };
 
-#endif // MyAliasListPage_H
+#endif // MYALIASLISTPAGE_H

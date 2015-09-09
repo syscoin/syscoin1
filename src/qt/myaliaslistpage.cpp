@@ -1,5 +1,4 @@
 /*
- * Co-created by Sidhujag & Saffroncoin Developer - Roshan
  * Syscoin Developers 2014
  */
 #include "myaliaslistpage.h"

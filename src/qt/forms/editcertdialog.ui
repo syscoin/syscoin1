@@ -20,17 +20,17 @@
       <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
      </property>
      <item row="0" column="0">
-      <widget class="QLabel" name="label">
+      <widget class="QLabel" name="certLabel">
        <property name="text">
-        <string>&amp;Label</string>
+        <string>Certificate</string>
        </property>
        <property name="buddy">
-        <cstring>labelEdit</cstring>
+        <cstring>certEdit</cstring>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QLineEdit" name="labelEdit">
+      <widget class="QLineEdit" name="certEdit">
        <property name="toolTip">
         <string>The value associated with this certificate.</string>
        </property>
@@ -39,19 +39,29 @@
      <item row="1" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>&amp;Cert</string>
+        <string>Title</string>
        </property>
        <property name="buddy">
-        <cstring>certEdit</cstring>
+        <cstring>nameEdit</cstring>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QLineEdit" name="certEdit">
+      <widget class="QLineEdit" name="nameEdit">
        <property name="toolTip">
         <string>The certificate name.</string>
        </property>
       </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="transferLabel">
+       <property name="text">
+        <string>Transfer Address</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="transferEdit"/>
      </item>
     </layout>
    </item>

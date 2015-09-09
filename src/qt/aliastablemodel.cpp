@@ -11,7 +11,6 @@
 
 using namespace std;
 using namespace json_spirit;
-bool GetValueOfAliasTxHash(const uint256 &txHash, vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
 
 const QString AliasTableModel::Alias = "A";
 const QString AliasTableModel::DataAlias = "D";
