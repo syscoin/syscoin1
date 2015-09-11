@@ -18,6 +18,7 @@
 #include "optionsmodel.h"
 #include "aliastablemodel.h"
 #include "certtablemodel.h"
+#include "offertablemodel.h"
 #include "transactionview.h"
 #include "overviewpage.h"
 #include "askpassphrasedialog.h"
@@ -137,6 +138,7 @@ void WalletView::setClientModel(ClientModel *clientModel)
         aliasView->setClientModel(clientModel);
 		dataAliasView->setClientModel(clientModel);
         certView->setClientModel(clientModel);
+		offerView->setClientModel(clientModel);
         receiveCoinsPage->setOptionsModel(clientModel->getOptionsModel());
     }
 }
@@ -155,6 +157,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
         aliasView->setWalletModel(walletModel);
 		dataAliasView->setWalletModel(walletModel);
         certView->setWalletModel(walletModel);
+		offerView->setWalletModel(walletModel);
         addressBookPage->setModel(walletModel->getAddressTableModel());
         receiveCoinsPage->setModel(walletModel->getAddressTableModel());
         sendCoinsPage->setModel(walletModel);
@@ -280,8 +283,6 @@ bool WalletView::handleURI(const QString& strURI)
     }
     else if (offerView->handleURI(strURI))
     {
-		gotoOfferListPage();
-		emit showNormalIfMinimized();
         return true;
     }
     // URI has to be valid

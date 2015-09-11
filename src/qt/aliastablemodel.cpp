@@ -471,15 +471,6 @@ void AliasTableModel::clear()
 	endResetModel();
 }
 
-/* Look up value for alias, if not found return empty string.
- */
-QString AliasTableModel::valueForAlias(const QString &alias) const
-{
-	CBitcoinAddress address_parsed(alias.toStdString());
-	if(address_parsed.IsValid() && address_parsed.isAlias)
-		return QString::fromStdString(address_parsed.ToString());
-    return QString::fromStdString("{}");
-}
 
 int AliasTableModel::lookupAlias(const QString &alias) const
 {

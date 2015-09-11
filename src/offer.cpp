@@ -2859,7 +2859,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("height", sHeight));
 			oOfferAccept.push_back(Pair("time", sTime));
 			oOfferAccept.push_back(Pair("quantity", strprintf("%llu", ca.nQty)));
-			oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));			
+			oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 			oOfferAccept.push_back(Pair("price", strprintf("%llu", ca.nPrice))); 
 			oOfferAccept.push_back(Pair("total", strprintf("%llu", ca.nPrice * ca.nQty))); 
 			oOfferAccept.push_back(Pair("is_mine", IsOfferMine(txA) ? "true" : "false"));
@@ -2890,7 +2890,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 		expires_in = 0;
 		expired_block = 0;
         if (GetValueOfOfferTxHash(txHash, vchValue, offerHash, nHeight)) {
-			oOffer.push_back(Pair("id", offer));
+			oOffer.push_back(Pair("offer", offer));
 			oOffer.push_back(Pair("txid", tx.GetHash().GetHex()));
 			oOffer.push_back(Pair("service_fee", ValueFromAmount(theOffer.nFee)));
 			string strAddress = "";
@@ -2989,10 +2989,13 @@ Value offerlist(const Array& params, bool fHelp) {
             if(!GetNameOfOfferTx(tx, vchName))
                 continue;
 
-            // skip this alias if it doesn't match the given filter value
-            if(vchNameUniq.size() > 0 && vchNameUniq != vchName)
-                continue;
-
+			// skip this offer if it doesn't match the given filter value
+			if (vchNameUniq.size() > 0 && vchNameUniq != vchName)
+				continue;
+			// get last active name only
+			if (vNamesI.find(vchName) != vNamesI.end() && (nHeight < vNamesI[vchName] || vNamesI[vchName] < 0))
+				continue;
+			
 			vector<COffer> vtxPos;
 			COffer theOfferA;
 			if (!pofferdb->ReadOffer(vchName, vtxPos))
@@ -3012,12 +3015,12 @@ Value offerlist(const Array& params, bool fHelp) {
 			
             // build the output object
             Object oName;
-            oName.push_back(Pair("guid", stringFromVch(vchName)));
+            oName.push_back(Pair("offer", stringFromVch(vchName)));
             oName.push_back(Pair("title", stringFromVch(theOfferA.sTitle)));
             oName.push_back(Pair("category", stringFromVch(theOfferA.sCategory)));
             oName.push_back(Pair("description", stringFromVch(theOfferA.sDescription)));
-            oName.push_back(Pair("price", strprintf("$%llu", theOfferA.nPrice) ) );
-			oName.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode)));
+            oName.push_back(Pair("price", strprintf("%llu", theOfferA.nPrice) ) );
+			oName.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode) ) );
             oName.push_back(Pair("quantity", strprintf("%llu", theOfferA.nQty)));
             oName.push_back(Pair("address", stringFromVch(theOfferA.vchPaymentAddress)));
 
@@ -3031,12 +3034,9 @@ Value offerlist(const Array& params, bool fHelp) {
 				expires_in = nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
 			}
 			oName.push_back(Pair("expires_in", expires_in));
-			oName.push_back(Pair("expired_block", expired_block));
+			oName.push_back(Pair("expires_on", expired_block));
 			oName.push_back(Pair("expired", expired));
 			oName.push_back(Pair("pending", pending));
-            // get last active name only
-            if(vNamesI.find(vchName) != vNamesI.end() && vNamesI[vchName] > nHeight)
-                continue;
 
             vNamesI[vchName] = nHeight;
             vNamesO[vchName] = oName;
@@ -3078,7 +3078,9 @@ Value offerhistory(const Array& params, bool fHelp) {
 				error("could not read txpos");
 				continue;
 			}
-
+			int expired = 0;
+			int expires_in = 0;
+			int expired_block = 0;
 			Object oOffer;
 			vector<unsigned char> vchValue;
 			int nHeight;
@@ -3091,14 +3093,18 @@ Value offerhistory(const Array& params, bool fHelp) {
 				string strAddress = "";
 				GetOfferAddress(tx, strAddress);
 				oOffer.push_back(Pair("address", strAddress));
-				oOffer.push_back(
-						Pair("expires_in",
-								nHeight + GetOfferDisplayExpirationDepth(nHeight)
-										- pindexBest->nHeight));
-				if (nHeight + GetOfferDisplayExpirationDepth(nHeight)
-						- pindexBest->nHeight <= 0) {
-					oOffer.push_back(Pair("expired", 1));
+				expired_block = nHeight + GetOfferDisplayExpirationDepth(nHeight);
+				if(nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+				{
+					expired = 1;
+				}  
+				if(expired == 0)
+				{
+					expires_in = nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
 				}
+				oOffer.push_back(Pair("expires_in", expires_in));
+				oOffer.push_back(Pair("expires_on", expired_block));
+				oOffer.push_back(Pair("expired", expired));
 				oRes.push_back(oOffer);
 			}
 		}
@@ -3160,10 +3166,12 @@ Value offerfilter(const Array& params, bool fHelp) {
         using namespace boost::xpressive;
         smatch offerparts;
         sregex cregex = sregex::compile(strRegexp);
-        if (strRegexp != "" && !regex_search(stringFromVch(txOffer.sTitle), offerparts, cregex))
+        if (strRegexp != "" && !regex_search(stringFromVch(txOffer.sTitle), offerparts, cregex) && strRegexp != offer)
             continue;
 
-		
+		int expired = 0;
+		int expires_in = 0;
+		int expired_block = 0;		
 		int nHeight = txOffer.nHeight;
 
 		// max age
@@ -3174,24 +3182,30 @@ Value offerfilter(const Array& params, bool fHelp) {
 		nCountFrom++;
 		if (nCountFrom < nFrom + 1)
 			continue;
+        CTransaction tx;
+        uint256 blockHash;
+		if (!GetTransaction(txOffer.txHash, tx, blockHash, true))
+			continue;
 
 		Object oOffer;
 		oOffer.push_back(Pair("offer", offer));
-		CTransaction tx;
-		uint256 blockHash;
-		uint256 txHash = txOffer.txHash;
-		if ((nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight
-				<= 0) || !GetTransaction(txHash, tx, blockHash, true)) {
-			oOffer.push_back(Pair("expired", 1));
-		} else {
-			vector<unsigned char> vchValue = txOffer.sTitle;
-			string value = stringFromVch(vchValue);
-			oOffer.push_back(Pair("title", value));
-			oOffer.push_back(
-					Pair("expires_in",
-							nHeight + GetOfferDisplayExpirationDepth(nHeight)
-									- pindexBest->nHeight));
+        oOffer.push_back(Pair("title", stringFromVch(txOffer.sTitle)));
+        oOffer.push_back(Pair("category", stringFromVch(txOffer.sCategory)));
+        oOffer.push_back(Pair("price", strprintf("%llu", txOffer.nPrice) ) );
+		oOffer.push_back(Pair("currency", stringFromVch(txOffer.sCurrencyCode)));
+        oOffer.push_back(Pair("quantity", strprintf("%llu", txOffer.nQty)));
+		expired_block = nHeight + GetOfferDisplayExpirationDepth(nHeight);
+		if(nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+		{
+			expired = 1;
+		}  
+		if(expired == 0)
+		{
+			expires_in = nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
 		}
+		oOffer.push_back(Pair("expires_in", expires_in));
+		oOffer.push_back(Pair("expires_on", expired_block));
+		oOffer.push_back(Pair("expired", expired));
 		oRes.push_back(oOffer);
 
 		nCountNb++;
@@ -3238,6 +3252,9 @@ Value offerscan(const Array& params, bool fHelp) {
 
 	pair<vector<unsigned char>, COffer> pairScan;
 	BOOST_FOREACH(pairScan, offerScan) {
+		int expired = 0;
+		int expires_in = 0;
+		int expired_block = 0;
 		Object oOffer;
 		string offer = stringFromVch(pairScan.first);
 		oOffer.push_back(Pair("offer", offer));
@@ -3246,22 +3263,18 @@ Value offerscan(const Array& params, bool fHelp) {
 		uint256 blockHash;
 
 		int nHeight = txOffer.nHeight;
-		vector<unsigned char> vchValue = txOffer.sTitle;
-		if ((nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight
-				<= 0) || !GetTransaction(txOffer.txHash, tx, blockHash, true)) {
-			oOffer.push_back(Pair("expired", 1));
-		} else {
-			string value = stringFromVch(vchValue);
-			//string strAddress = "";
-			//GetOfferAddress(tx, strAddress);
-			oOffer.push_back(Pair("title", value));
-			//oOffer.push_back(Pair("txid", tx.GetHash().GetHex()));
-			//oOffer.push_back(Pair("address", strAddress));
-			oOffer.push_back(
-					Pair("expires_in",
-							nHeight + GetOfferDisplayExpirationDepth(nHeight)
-									- pindexBest->nHeight));
+		expired_block = nHeight + GetOfferDisplayExpirationDepth(nHeight);
+		if(nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+		{
+			expired = 1;
+		}  
+		if(expired == 0)
+		{
+			expires_in = nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
 		}
+		oOffer.push_back(Pair("expires_in", expires_in));
+		oOffer.push_back(Pair("expires_on", expired_block));
+		oOffer.push_back(Pair("expired", expired));
 		oRes.push_back(oOffer);
 	}
 

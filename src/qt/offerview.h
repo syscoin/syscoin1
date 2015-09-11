@@ -1,19 +1,14 @@
-/*
- * Qt4/Qt5 Syscoin GUI.
- *
- * Sidhujag
- * Syscoin Developer 2014
- */
 #ifndef OFFERVIEW_H
 #define OFFERVIEW_H
 
 #include <QStackedWidget>
 
 class BitcoinGUI;
-
+class ClientModel;
+class WalletModel;
+class MyOfferListPage;
+class OfferListPage;
 class AcceptandPayOfferListPage;
-
-class COffer;
 
 QT_BEGIN_NAMESPACE
 class QObject;
@@ -41,16 +36,25 @@ public:
     /** Set the client model.
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
+    void setClientModel(ClientModel *clientModel);
+    /** Set the wallet model.
+        The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
+        functionality.
+    */
+    void setWalletModel(WalletModel *walletModel);
 	
     bool handleURI(const QString &uri);
 
 
 private:
     BitcoinGUI *gui;
+    ClientModel *clientModel;
+    WalletModel *walletModel;
 
 	QTabWidget *tabWidget;
 	AcceptandPayOfferListPage *acceptandPayOfferListPage;
-	
+    MyOfferListPage *myOfferListPage;
+    OfferListPage *offerListPage;	
 
 public:
     /** Switch to offer page */

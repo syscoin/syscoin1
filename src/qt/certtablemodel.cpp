@@ -10,7 +10,7 @@
 using namespace std;
 using namespace json_spirit;
 
-const QString CertTableModel::Cert = "O";
+const QString CertTableModel::Cert = "C";
 
 
 extern const CRPCTable tableRPC;
@@ -436,16 +436,6 @@ void CertTableModel::clear()
 	beginResetModel();
     priv->cachedCertTable.clear();
 	endResetModel();
-}
-
-/* Look up value for cert, if not found return empty string.
- */
-QString CertTableModel::valueForCert(const QString &cert) const
-{
-	CBitcoinAddress address_parsed(cert.toStdString());
-	if(address_parsed.IsValid() && address_parsed.isAlias)
-		return QString::fromStdString(address_parsed.ToString());
-    return QString::fromStdString("{}");
 }
 
 int CertTableModel::lookupCert(const QString &cert) const

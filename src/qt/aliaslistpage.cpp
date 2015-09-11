@@ -42,7 +42,7 @@ AliasListPage::AliasListPage(QWidget *parent) :
 	
     // Context menu actions
     QAction *copyAliasAction = new QAction(ui->copyAlias->text(), this);
-    QAction *copyAliasValueAction = new QAction(tr("Copy Va&lue"), this);
+    QAction *copyAliasValueAction = new QAction(tr("&Copy Value"), this);
 
 
     // Build context menu
@@ -136,18 +136,6 @@ void AliasListPage::onCopyAliasValueAction()
     GUIUtil::copyEntryData(ui->tableView, AliasTableModel::Value);
 }
 
-
-void AliasListPage::onTransferAliasAction()
-{
-    QTableView *table = ui->tableView;
-    QModelIndexList indexes = table->selectionModel()->selectedRows(AliasTableModel::Name);
-
-    foreach (QModelIndex index, indexes)
-    {
-        QString alias = index.data().toString();
-        emit transferAlias(alias);
-    }
-}
 
 void AliasListPage::selectionChanged()
 {

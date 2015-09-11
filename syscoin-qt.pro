@@ -207,8 +207,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/transactionfilterproxy.h \
     src/qt/transactionview.h \
     src/qt/aliasview.h \
-    src/qt/offerview.h \
     src/qt/certview.h \
+    src/qt/offerview.h \
     src/qt/walletmodel.h \
     src/qt/walletview.h \
     src/qt/walletstack.h \
@@ -242,6 +242,10 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/editaliasdialog.h \
     src/qt/aliaslistpage.h \
     src/qt/myaliaslistpage.h \
+    src/qt/offertablemodel.h \
+    src/qt/editofferdialog.h \
+    src/qt/offerlistpage.h \
+    src/qt/myofferlistpage.h \      
     src/qt/mycertlistpage.h \
     src/qt/offerpaydialog.h \
     src/qt/offeracceptdialog.h \  
@@ -298,8 +302,8 @@ SOURCES += src/qt/bitcoin.cpp \
     src/qt/transactionfilterproxy.cpp \
     src/qt/transactionview.cpp \
     src/qt/aliasview.cpp \
-    src/qt/offerview.cpp \
     src/qt/certview.cpp \
+    src/qt/offerview.cpp \
     src/qt/walletmodel.cpp \
     src/qt/walletview.cpp \
     src/qt/walletstack.cpp \
@@ -332,6 +336,10 @@ SOURCES += src/qt/bitcoin.cpp \
     src/qt/editaliasdialog.cpp \
     src/qt/aliaslistpage.cpp \
     src/qt/myaliaslistpage.cpp \
+    src/qt/offertablemodel.cpp \
+    src/qt/editofferdialog.cpp \
+    src/qt/offerlistpage.cpp \
+    src/qt/myofferlistpage.cpp \     
     src/qt/offerpaydialog.cpp \    
     src/qt/offeracceptdialog.cpp \  
     src/qt/acceptandpayofferlistpage.cpp \    
@@ -357,6 +365,9 @@ FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/aliaslistpage.ui \
     src/qt/forms/editaliasdialog.ui \
     src/qt/forms/myaliaslistpage.ui \
+    src/qt/forms/offerlistpage.ui \
+    src/qt/forms/editofferdialog.ui \
+    src/qt/forms/myofferlistpage.ui \     
     src/qt/forms/mycertlistpage.ui \
     src/qt/forms/acceptandpayofferlistpage.ui \
     src/qt/forms/offerpaydialog.ui \

@@ -4,6 +4,7 @@
 #include "addresstablemodel.h"
 #include "aliastablemodel.h"
 #include "certtablemodel.h"
+#include "offertablemodel.h"
 #include "transactiontablemodel.h"
 
 #include "ui_interface.h"
@@ -37,6 +38,8 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
 	aliasTableModelAll(0),
     certTableModelMine(0),
 	certTableModelAll(0),
+    offerTableModelMine(0),
+	offerTableModelAll(0),
     cachedBalance(0),
     cachedUnconfirmedBalance(0),
     cachedImmatureBalance(0),
@@ -51,6 +54,8 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
 	aliasTableModelAll = new AliasTableModel(wallet, this, AllAlias);
     certTableModelMine = new CertTableModel(wallet, this, MyCert);
 	certTableModelAll = new CertTableModel(wallet, this, AllCert);
+    offerTableModelMine = new OfferTableModel(wallet, this, MyOffer);
+	offerTableModelAll = new OfferTableModel(wallet, this, AllOffer);
     // This timer will be fired repeatedly to update the balance
     pollTimer = new QTimer(this);
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(pollBalanceChanged()));
@@ -183,8 +188,8 @@ void WalletModel::updateCert()
 
 void WalletModel::updateOffer()
 {
-    //if(offerTableModelMine)
-    //    offerTableModelMine->refreshOfferTable();
+    if(offerTableModelMine)
+        offerTableModelMine->refreshOfferTable();
 }
 WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipient> &recipients, const CCoinControl *coinControl)
 {
@@ -325,6 +330,14 @@ CertTableModel *WalletModel::getCertTableModelMine()
 CertTableModel *WalletModel::getCertTableModelAll()
 {
     return certTableModelAll;
+}
+OfferTableModel *WalletModel::getOfferTableModelMine()
+{
+    return offerTableModelMine;
+}
+OfferTableModel *WalletModel::getOfferTableModelAll()
+{
+    return offerTableModelAll;
 }
 TransactionTableModel *WalletModel::getTransactionTableModel()
 {

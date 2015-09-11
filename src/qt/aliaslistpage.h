@@ -58,8 +58,6 @@ private slots:
 
     /** Export button clicked */
     void on_exportButton_clicked();
-    /** transfer the alias to a syscoin address  */
-    void onTransferAliasAction();
 
     /** Set button states based on selected tab and selection */
     void selectionChanged();
@@ -68,8 +66,7 @@ private slots:
     /** New entry/entries were added to alias table */
     void selectNewAlias(const QModelIndex &parent, int begin, int /*end*/);
 
-signals:
-    void transferAlias(QString addr);
+
 };
 
 #endif // ALIASLISTPAGE_H

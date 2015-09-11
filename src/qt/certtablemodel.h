@@ -58,9 +58,6 @@ public:
      */
     QString addRow(const QString &type, const QString &cert, const QString &value, const QString &expires_on,const QString &expires_in, const QString &expired);
 
-    /* Look up label for cert in cert book, if not found return empty string.
-     */
-    QString valueForCert(const QString &cert) const;
 
     /* Look up row index of an cert in the model.
        Return -1 if not found.

@@ -63,10 +63,6 @@ public:
      */
     QString addRow(const QString &type, const QString &alias, const QString &value, const QString &lastupdate_height, const QString &expires_on,const QString &expires_in, const QString &expired);
 
-    /* Look up label for alias in alias book, if not found return empty string.
-     */
-    QString valueForAlias(const QString &alias) const;
-
     /* Look up row index of an alias in the model.
        Return -1 if not found.
      */

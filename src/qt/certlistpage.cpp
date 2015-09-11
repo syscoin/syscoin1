@@ -42,7 +42,7 @@ CertListPage::CertListPage(QWidget *parent) :
 	
     // Context menu actions
     QAction *copyCertAction = new QAction(ui->copyCert->text(), this);
-    QAction *copyCertValueAction = new QAction(tr("Copy Va&lue"), this);
+    QAction *copyCertValueAction = new QAction(tr("&Copy Value"), this);
 
 
     // Build context menu
@@ -135,17 +135,6 @@ void CertListPage::onCopyCertValueAction()
 }
 
 
-void CertListPage::onTransferCertAction()
-{
-    QTableView *table = ui->tableView;
-    QModelIndexList indexes = table->selectionModel()->selectedRows(CertTableModel::Name);
-
-    foreach (QModelIndex index, indexes)
-    {
-        QString cert = index.data().toString();
-        emit transferCert(cert);
-    }
-}
 
 void CertListPage::selectionChanged()
 {
