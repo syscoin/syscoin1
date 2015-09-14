@@ -1787,7 +1787,7 @@ Value getofferfees(const Array& params, bool fHelp) {
 Value offernew(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 6 || params.size() > 8)
 		throw runtime_error(
-		"offernew <category> <title> <quantity> <price> <description> <currency> [exclusive resell=1] [address]\n"
+		"offernew <category> <title> <quantity> <price> <description> <currency> [address] [exclusive resell=1]\n"
 						"<category> category, 255 chars max.\n"
 						"<title> title, 255 chars max.\n"
 						"<quantity> quantity, > 0\n"
@@ -1828,13 +1828,10 @@ Value offernew(const Array& params, bool fHelp) {
     // 64Kbyte offer desc. maxlen
 	if (vchDesc.size() > 1024 * 64)
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description > 65536 bytes!\n");
+
 	if(params.size() >= 7)
 	{
-		bExclusiveResell = atoi(params[6].get_str().c_str()) == 1? true: false;
-	}
-	if(params.size() == 8)
-	{
-		vchPaymentAddress = vchFromValue(params[7]);
+		vchPaymentAddress = vchFromValue(params[6]);
 		CBitcoinAddress payAddr = CBitcoinAddress(stringFromVch(vchPaymentAddress));
 		if (!payAddr.IsValid())
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
@@ -1846,6 +1843,10 @@ Value offernew(const Array& params, bool fHelp) {
 		pwalletMain->GetKeyFromPool(newDefaultKey, false);
 		CBitcoinAddress payAddr = CBitcoinAddress(newDefaultKey.GetID());
 		vchPaymentAddress = vchFromString(payAddr.ToString());
+	}
+	if(params.size() == 8)
+	{
+		bExclusiveResell = atoi(params[7].get_str().c_str()) == 1? true: false;
 	}
 	int64 nRate;
 	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nBestHeight) != "")
@@ -2731,7 +2732,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 	txAccept.nPrice = theOffer.GetPrice(foundCert);
 	txAccept.vchLinkOfferAccept = vchLinkOfferAccept;
 	txAccept.vchRefundAddress = vchRefundAddress;
-	txAccept.nFee = 0;
+	txAccept.nFee = theOffer.nFee;
 	txAccept.bPaid = true;
 	theOffer.accepts.clear();
 	theOffer.PutOfferAccept(txAccept);
@@ -2865,7 +2866,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("is_mine", IsOfferMine(txA) ? "true" : "false"));
 			if(ca.bPaid) {
 				oOfferAccept.push_back(Pair("paid","true"));
-				oOfferAccept.push_back(Pair("pay_service_fee", ValueFromAmount(ca.nFee)));
+				oOfferAccept.push_back(Pair("pay_service_fee", strprintf("%.2f SYS", ValueFromAmount(ca.nFee).get_real())));
 				oOfferAccept.push_back(Pair("pay_txid", ca.txPayId.GetHex() ));
 				oOfferAccept.push_back(Pair("pay_message", stringFromVch(ca.vchMessage)));
 			}
@@ -2892,7 +2893,7 @@ Value offerinfo(const Array& params, bool fHelp) {
         if (GetValueOfOfferTxHash(txHash, vchValue, offerHash, nHeight)) {
 			oOffer.push_back(Pair("offer", offer));
 			oOffer.push_back(Pair("txid", tx.GetHash().GetHex()));
-			oOffer.push_back(Pair("service_fee", ValueFromAmount(theOffer.nFee)));
+			oOffer.push_back(Pair("service_fee", strprintf("%llu", theOffer.nFee)));
 			string strAddress = "";
 			GetOfferAddress(tx, strAddress);
 			oOffer.push_back(Pair("address", strAddress));

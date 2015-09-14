@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>530</width>
-    <height>442</height>
+    <height>433</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -39,7 +39,7 @@
      <item row="2" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>Offer Id (guid):</string>
+        <string>Offer:</string>
        </property>
        <property name="buddy">
         <cstring>offeridEdit</cstring>
@@ -140,7 +140,7 @@
      <item row="13" column="0">
       <widget class="QLabel" name="label_5">
        <property name="text">
-        <string>Price (SYS):</string>
+        <string>Price:</string>
        </property>
       </widget>
      </item>
@@ -158,13 +158,20 @@
       </widget>
      </item>
      <item row="14" column="0">
+      <widget class="QLabel" name="label_12">
+       <property name="text">
+        <string>Currency:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="15" column="0">
       <widget class="QLabel" name="label_7">
        <property name="text">
         <string>Quantity Remaining:</string>
        </property>
       </widget>
      </item>
-     <item row="14" column="1">
+     <item row="15" column="1">
       <widget class="QLabel" name="infoQty">
        <property name="autoFillBackground">
         <bool>false</bool>
@@ -177,14 +184,14 @@
        </property>
       </widget>
      </item>
-     <item row="15" column="0">
+     <item row="16" column="0">
       <widget class="QLabel" name="label_9">
        <property name="text">
         <string>Description:</string>
        </property>
       </widget>
      </item>
-     <item row="15" column="1">
+     <item row="16" column="1">
       <widget class="QLabel" name="infoDescription">
        <property name="autoFillBackground">
         <bool>false</bool>
@@ -197,14 +204,14 @@
        </property>
       </widget>
      </item>
-     <item row="16" column="0">
+     <item row="17" column="0">
       <widget class="QLabel" name="label_8">
        <property name="text">
-        <string>Fee (SYS):</string>
+        <string>Fee:</string>
        </property>
       </widget>
      </item>
-     <item row="16" column="1">
+     <item row="17" column="1">
       <widget class="QLabel" name="infoFee">
        <property name="autoFillBackground">
         <bool>false</bool>
@@ -217,14 +224,14 @@
        </property>
       </widget>
      </item>
-     <item row="17" column="0">
+     <item row="18" column="0">
       <widget class="QLabel" name="label_10">
        <property name="text">
         <string>Payment Address:</string>
        </property>
       </widget>
      </item>
-     <item row="17" column="1">
+     <item row="18" column="1">
       <widget class="QLabel" name="infoPaymentAddress">
        <property name="autoFillBackground">
         <bool>false</bool>
@@ -234,6 +241,13 @@
        </property>
        <property name="wordWrap">
         <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="14" column="1">
+      <widget class="QLabel" name="infoCurrency">
+       <property name="text">
+        <string/>
        </property>
       </widget>
      </item>

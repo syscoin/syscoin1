@@ -253,14 +253,14 @@ void OfferListPage::on_searchOffer_clicked()
         {
             strError = find_value(objError, "message").get_str();
             QMessageBox::critical(this, windowTitle(),
-            tr("Error searching Offerificate: \"%1\"").arg(QString::fromStdString(strError)),
+            tr("Error searching Offer: \"%1\"").arg(QString::fromStdString(strError)),
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
         }
         catch(std::exception& e)
         {
             QMessageBox::critical(this, windowTitle(),
-                tr("General exception when searching offerficiates"),
+                tr("General exception when searching offer"),
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
         }

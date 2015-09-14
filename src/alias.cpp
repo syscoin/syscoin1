@@ -106,7 +106,7 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64
 
 	vector<unsigned char> vchValue;
 	int nHeight;
-
+	bool found = false;
 	uint256 hash;
 	if (GetValueOfAliasTxHash(txHash, vchValue, hash, nHeight)) {
 		string value = stringFromVch(vchValue);	
@@ -129,9 +129,15 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64
 						if(currencyCodeToFind == currencyCode)
 						{
 							if(currencyAmountValue.type() == real_type)
+							{
+								found = true;
 								nFee = AmountFromValue(currencyAmountValue);
+							}
 							else if(currencyAmountValue.type() == int_type)
+							{
+								found = true;
 								nFee = currencyAmountValue.get_int()*COIN;
+							}
 						}
 					}
 				}
@@ -144,7 +150,12 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64
 			printf("getCurrencyToSYSFromAlias() Failed to get value from alias\n");
 		return "1";
 	}
-		
+	if(!found)
+	{
+		if(fDebug)
+			printf("getCurrencyToSYSFromAlias() currency not found in SYS_RATES alias\n");
+		return "0";
+	}
 	return "";
 
 }

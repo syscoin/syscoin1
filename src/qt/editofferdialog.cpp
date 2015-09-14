@@ -114,16 +114,15 @@ bool EditOfferDialog::saveCurrentRow()
 		params.push_back(ui->currencyEdit->text().toStdString());
 		try {
             Value result = tableRPC.execute(strMethod, params);
-			if (result.type() != null_type)
-			{
-				string strResult = result.get_str();
-				offer = ui->nameEdit->text();
+			Array arr = result.get_array();
+			string strResult = arr[0].get_str();
+			offer = ui->nameEdit->text();
 
-				QMessageBox::information(this, windowTitle(),
-                tr("New Offer created successfully! TXID: \"%1\"").arg(QString::fromStdString(strResult)),
-					QMessageBox::Ok, QMessageBox::Ok);
-					
-			}
+			QMessageBox::information(this, windowTitle(),
+            tr("New Offer created successfully! TXID: \"%1\"").arg(QString::fromStdString(strResult)),
+				QMessageBox::Ok, QMessageBox::Ok);
+				
+			
 		}
 		catch (Object& objError)
 		{
@@ -136,7 +135,7 @@ bool EditOfferDialog::saveCurrentRow()
 		catch(std::exception& e)
 		{
 			QMessageBox::critical(this, windowTitle(),
-				tr("General exception creating new Offer"),
+				tr("General exception creating new Offer: \"%1\"").arg(QString::fromStdString(e.what())),
 				QMessageBox::Ok, QMessageBox::Ok);
 			break;
 		}							
@@ -186,7 +185,7 @@ bool EditOfferDialog::saveCurrentRow()
 			catch(std::exception& e)
 			{
 				QMessageBox::critical(this, windowTitle(),
-					tr("General exception updating Offer"),
+					tr("General exception updating Offer: \"%1\"").arg(QString::fromStdString(e.what())),
 					QMessageBox::Ok, QMessageBox::Ok);
 				break;
 			}	

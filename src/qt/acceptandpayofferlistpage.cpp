@@ -26,7 +26,8 @@ using namespace std;
 using namespace json_spirit;
 extern const CRPCTable tableRPC;
 extern string JSONRPCReply(const Value& result, const Value& error, const Value& id);
-
+extern int64 convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchCurrencyCode, const int64 &nPrice, const unsigned int &nHeight);
+extern int nBestHeight;
 AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AcceptandPayOfferListPage)
@@ -34,7 +35,7 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
     ui->setupUi(this);
 	this->offerPaid = false;
 	this->URIHandled = false;	
-    ui->labelExplanation->setText(tr("Accept and purchase this offer, Syscoins will be used to complete the transaction"));
+    ui->labelExplanation->setText(tr("Purchase an offer, Syscoin will be used from your balance to complete the transaction"));
     connect(ui->acceptButton, SIGNAL(clicked()), this, SLOT(acceptOffer()));
 	connect(ui->lookupButton, SIGNAL(clicked()), this, SLOT(lookup()));
 	connect(ui->offeridEdit, SIGNAL(textChanged(const QString &)), this, SLOT(resetState()));
@@ -60,13 +61,15 @@ void AcceptandPayOfferListPage::updateCaption()
 		}
 		else
 		{
-			ui->labelExplanation->setText(tr("Accept and purchase this offer, Syscoins will be used to complete the transaction"));
+			ui->labelExplanation->setText(tr("Purchase this offer, Syscoin will be used from your balance to complete the transaction"));
 		}
 		
 }
 void AcceptandPayOfferListPage::OpenPayDialog()
 {
-	QString price = QString::number(ui->infoPrice->text().toLongLong()*ui->qtyEdit->text().toLong());
+	string currencyCode = ui->infoCurrency->text().toStdString();
+	int64 iPrice = convertCurrencyCodeToSyscoin(vchFromString(currencyCode), ui->infoPrice->text().toLongLong(), nBestHeight);
+	QString price = QString::number(ValueFromAmount(iPrice).get_real()*ui->qtyEdit->text().toLong());
 	OfferAcceptDialog dlg(ui->infoTitle->text(), price, ui->qtyEdit->text(), ui->offeridEdit->text(), ui->notesEdit->toPlainText(), this);
 	if(dlg.exec())
 	{
@@ -113,10 +116,11 @@ bool AcceptandPayOfferListPage::lookup(QString id)
 			Object offerObj;
 			offerObj = result.get_obj();
 			COffer offerOut;
-			offerOut.vchRand = vchFromString(find_value(offerObj, "id").get_str());
+			offerOut.vchRand = vchFromString(find_value(offerObj, "offer").get_str());
 			offerOut.sTitle = vchFromString(find_value(offerObj, "title").get_str());
 			offerOut.sCategory = vchFromString(find_value(offerObj, "category").get_str());
-			offerOut.nPrice = QString::number(find_value(offerObj, "price").get_real()).toLongLong();
+			offerOut.sCurrencyCode = vchFromString(find_value(offerObj, "currency").get_str());
+			offerOut.nPrice = QString::fromStdString(find_value(offerObj, "price").get_str()).toLongLong();
 			offerOut.nQty = QString::fromStdString(find_value(offerObj, "quantity").get_str()).toLong();	
 			string descString = find_value(offerObj, "description").get_str();
 			offerOut.sDescription = vchFromString(descString);
@@ -134,7 +138,7 @@ bool AcceptandPayOfferListPage::lookup(QString id)
 				}
 
 			}
-			offerOut.nFee = QString::number(find_value(offerObj, "service_fee").get_real()).toLongLong();
+			offerOut.nFee = QString::fromStdString(find_value(offerObj, "service_fee").get_str()).toLongLong();	
 			offerOut.vchPaymentAddress = vchFromString(find_value(offerObj, "payment_address").get_str());
 			setValue(offerOut);
 			return true;
@@ -244,10 +248,11 @@ void AcceptandPayOfferListPage::setValue(const COffer &offer)
     ui->offeridEdit->setText(QString::fromStdString(stringFromVch(offer.vchRand)));
 	ui->infoTitle->setText(QString::fromStdString(stringFromVch(offer.sTitle)));
 	ui->infoCategory->setText(QString::fromStdString(stringFromVch(offer.sCategory)));
+	ui->infoCurrency->setText(QString::fromStdString(stringFromVch(offer.sCurrencyCode)));
 	ui->infoPrice->setText(QString::number(offer.nPrice));
 	ui->infoQty->setText(QString::number(offer.nQty));
 	ui->infoDescription->setText(QString::fromStdString(stringFromVch(offer.sDescription)));
-	ui->infoFee->setText(QString::number(offer.nFee));
+	ui->infoFee->setText(QString::number(ValueFromAmount(offer.nFee).get_real()) + " SYS");
 	ui->infoPaymentAddress->setText(QString::fromStdString(stringFromVch(offer.vchPaymentAddress)));
 
 }
