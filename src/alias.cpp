@@ -1770,12 +1770,14 @@ Value aliasfilter(const Array& params, bool fHelp) {
 	pair<vector<unsigned char>, CAliasIndex> pairScan;
 	BOOST_FOREACH(pairScan, nameScan) {
 		string name = stringFromVch(pairScan.first);
-
+		string nameToSearch = name;
+		std::transform(nameToSearch.begin(), nameToSearch.end(), nameToSearch.begin(), ::tolower);
+		std::transform(strRegexp.begin(), strRegexp.end(), strRegexp.begin(), ::tolower);
 		// regexp
 		using namespace boost::xpressive;
 		smatch nameparts;
 		sregex cregex = sregex::compile(strRegexp);
-		if (strRegexp != "" && !regex_search(name, nameparts, cregex))
+		if (strRegexp != "" && !regex_search(nameToSearch, nameparts, cregex))
 			continue;
 
 		CAliasIndex txName = pairScan.second;

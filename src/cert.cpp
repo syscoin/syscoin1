@@ -1606,7 +1606,11 @@ Value certlist(const Array& params, bool fHelp) {
         // skip non-syscoin txns
         if (tx.nVersion != SYSCOIN_TX_VERSION)
             continue;
-
+		// decode txn, skip non-alias txns
+		vector<vector<unsigned char> > vvch;
+		int op, nOut;
+		if (!DecodeCertTx(tx, op, nOut, vvch, -1) || !IsCertOp(op))
+			continue;
 		// get the txn height
 		nHeight = GetCertTxHashHeight(hash);
 
@@ -1795,12 +1799,16 @@ Value certfilter(const Array& params, bool fHelp) {
     BOOST_FOREACH(pairScan, certScan) {
 		CCert txCert = pairScan.second;
         string cert = stringFromVch(txCert.vchRand);
-
+		string certToSearch = cert;
+		string title = stringFromVch(txCert.vchTitle);
+		std::transform(title.begin(), title.end(), title.begin(), ::tolower);
+		std::transform(certToSearch.begin(), certToSearch.end(), certToSearch.begin(), ::tolower);
+		std::transform(strRegexp.begin(), strRegexp.end(), strRegexp.begin(), ::tolower);
         // regexp
         using namespace boost::xpressive;
         smatch certparts;
         sregex cregex = sregex::compile(strRegexp);
-        if (strRegexp != "" && !regex_search(stringFromVch(txCert.vchTitle), certparts, cregex) && strRegexp != cert)
+        if (strRegexp != "" && !regex_search(title, certparts, cregex) && strRegexp != certToSearch)
             continue;
 
         

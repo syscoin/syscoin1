@@ -80,6 +80,64 @@ public:
 
 			try {
 				result = tableRPC.execute(strMethod, params);
+				if (result.type() == array_type)
+				{
+					name_str = "";
+					value_str = "";
+					expires_in_str = "";
+
+					expires_on_str = "";
+
+					expired = 0;
+					expires_in = 0;
+					expires_on = 0;
+
+			
+					Array arr = result.get_array();
+					BOOST_FOREACH(Value& input, arr)
+					{
+						if (input.type() != obj_type)
+							continue;
+						Object& o = input.get_obj();
+						name_str = "";
+						value_str = "";
+						expires_in_str = "";
+		
+						expires_on_str = "";
+						expired = 0;
+						expires_in = 0;
+						expires_on = 0;
+
+				
+						const Value& name_value = find_value(o, "cert");
+						if (name_value.type() == str_type)
+							name_str = name_value.get_str();
+						const Value& value_value = find_value(o, "title");
+						if (value_value.type() == str_type)
+							value_str = value_value.get_str();
+						const Value& expires_on_value = find_value(o, "expires_on");
+						if (expires_on_value.type() == int_type)
+							expires_on = expires_on_value.get_int();
+						const Value& expires_in_value = find_value(o, "expires_in");
+						if (expires_in_value.type() == int_type)
+							expires_in = expires_in_value.get_int();
+						const Value& expired_value = find_value(o, "expired");
+						if (expired_value.type() == int_type)
+							expired = expired_value.get_int();
+						if(expired == 1)
+						{
+							expired_str = "Expired";
+						}
+						else
+						{
+							expired_str = "Valid";
+						}
+						expires_in_str = strprintf("%d Blocks", expires_in);
+						expires_on_str = strprintf("Block %d", expires_on);
+
+						updateEntry(QString::fromStdString(name_str), QString::fromStdString(value_str), QString::fromStdString(expires_on_str), QString::fromStdString(expires_in_str), QString::fromStdString(expired_str),type, CT_NEW); 
+					}
+				}
 			}
 			catch (Object& objError)
 			{
@@ -89,65 +147,6 @@ public:
 			{
 				return;
 			}
-			if (result.type() == array_type)
-			{
-				name_str = "";
-				value_str = "";
-				expires_in_str = "";
-
-				expires_on_str = "";
-
-				expired = 0;
-				expires_in = 0;
-				expires_on = 0;
-
-		
-				Array arr = result.get_array();
-				BOOST_FOREACH(Value& input, arr)
-				{
-					if (input.type() != obj_type)
-						continue;
-					Object& o = input.get_obj();
-					name_str = "";
-					value_str = "";
-					expires_in_str = "";
-	
-					expires_on_str = "";
-					expired = 0;
-					expires_in = 0;
-					expires_on = 0;
-
-			
-					const Value& name_value = find_value(o, "cert");
-					if (name_value.type() == str_type)
-						name_str = name_value.get_str();
-					const Value& value_value = find_value(o, "title");
-					if (value_value.type() == str_type)
-						value_str = value_value.get_str();
-					const Value& expires_on_value = find_value(o, "expires_on");
-					if (expires_on_value.type() == int_type)
-						expires_on = expires_on_value.get_int();
-					const Value& expires_in_value = find_value(o, "expires_in");
-					if (expires_in_value.type() == int_type)
-						expires_in = expires_in_value.get_int();
-					const Value& expired_value = find_value(o, "expired");
-					if (expired_value.type() == int_type)
-						expired = expired_value.get_int();
-					if(expired == 1)
-					{
-						expired_str = "Expired";
-					}
-					else
-					{
-						expired_str = "Valid";
-					}
-					expires_in_str = strprintf("%d Blocks", expires_in);
-					expires_on_str = strprintf("Block %d", expires_on);
-
-					updateEntry(QString::fromStdString(name_str), QString::fromStdString(value_str), QString::fromStdString(expires_on_str), QString::fromStdString(expires_in_str), QString::fromStdString(expired_str),type, CT_NEW); 
-				}
-			}
-            
          }
         
         // qLowerBound() and qUpperBound() require our cachedCertTable list to be sorted in asc order

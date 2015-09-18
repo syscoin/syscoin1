@@ -12,6 +12,7 @@ class AddressTableModel;
 class AliasTableModel;
 class CertTableModel;
 class OfferTableModel;
+class OfferAcceptTableModel;
 class TransactionTableModel;
 class CWallet;
 class CKeyID;
@@ -71,6 +72,8 @@ public:
     CertTableModel *getCertTableModelAll();
     OfferTableModel *getOfferTableModelMine();
     OfferTableModel *getOfferTableModelAll();
+    OfferAcceptTableModel *getOfferTableModelAccept();
+    OfferAcceptTableModel *getOfferTableModelMyAccept();
     TransactionTableModel *getTransactionTableModel();
     
     qint64 getBalance(const CCoinControl *coinControl=NULL) const;
@@ -154,6 +157,8 @@ private:
     CertTableModel *certTableModelAll;
     OfferTableModel *offerTableModelMine;
     OfferTableModel *offerTableModelAll;
+	OfferAcceptTableModel *offerTableModelAccept;
+    OfferAcceptTableModel *offerTableModelMyAccept;
     // Cache some values to be able to detect changes
     qint64 cachedBalance;
     qint64 cachedUnconfirmedBalance;

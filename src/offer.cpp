@@ -2929,7 +2929,91 @@ Value offerinfo(const Array& params, bool fHelp) {
 	return oLastOffer;
 
 }
+Value offeracceptlist(const Array& params, bool fHelp) {
+    if (fHelp || 1 < params.size())
+		throw runtime_error("offeracceptlist [offer]\n"
+				"list my offer accepts");
 
+    vector<unsigned char> vchName;
+
+    if (params.size() == 1)
+        vchName = vchFromValue(params[0]);
+
+    Array oRes;
+    {
+
+        uint256 blockHash;
+        uint256 hash;
+        CTransaction tx;
+        int nHeight;
+		
+        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
+        {
+			Object oOfferAccept;
+            // get txn hash, read txn index
+            hash = item.second.GetHash();
+
+            if (!GetTransaction(hash, tx, blockHash, true))
+                continue;
+
+            // skip non-syscoin txns
+            if (tx.nVersion != SYSCOIN_TX_VERSION)
+                continue;
+
+            // decode txn, skip non-alias txns
+            vector<vector<unsigned char> > vvch;
+            int op, nOut;
+            if (!DecodeOfferTx(tx, op, nOut, vvch, -1) 
+            	|| !IsOfferOp(op) 
+            	|| (op != OP_OFFER_ACCEPT))
+                continue;
+
+            // get the txn height
+            nHeight = GetOfferTxHashHeight(hash);
+
+            // get the txn alias name
+            if(!GetNameOfOfferTx(tx, vchName))
+                continue;
+			
+			vector<COffer> vtxPos;
+			COfferAccept theOfferAccept;
+
+			if (!pofferdb->ReadOffer(vchName, vtxPos))
+				continue;
+			COffer theOffer = vtxPos.back();
+			// Check hash
+			const vector<unsigned char> &vchAcceptRand = vvch[1];
+			
+			// check for existence of offeraccept in txn offer obj
+			if(!theOffer.GetAcceptByHash(vchAcceptRand, theOfferAccept))
+				continue;
+			string offer = stringFromVch(vchName);
+			string sHeight = strprintf("%llu", theOfferAccept.nHeight);
+			oOfferAccept.push_back(Pair("offer", offer));
+			oOfferAccept.push_back(Pair("txid", theOfferAccept.txHash.GetHex()));
+			oOfferAccept.push_back(Pair("height", sHeight));
+			oOfferAccept.push_back(Pair("quantity", strprintf("%llu", theOfferAccept.nQty)));
+			oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
+			oOfferAccept.push_back(Pair("price", strprintf("%llu", theOfferAccept.nPrice))); 
+			oOfferAccept.push_back(Pair("total", strprintf("%llu", theOfferAccept.nPrice * theOfferAccept.nQty))); 
+			oOfferAccept.push_back(Pair("is_mine", IsOfferMine(tx) ? "true" : "false"));
+			if(theOfferAccept.bPaid && !theOfferAccept.bRefunded) {
+				oOfferAccept.push_back(Pair("status","paid"));
+			}
+			else if(!theOfferAccept.bRefunded)
+			{
+				oOfferAccept.push_back(Pair("status","not paid"));
+			}
+			else if(theOfferAccept.bRefunded) { 
+				oOfferAccept.push_back(Pair("status", "refunded"));
+			}
+
+			oRes.push_back(oOfferAccept);	
+        }
+    }
+
+    return oRes;
+}
 Value offerlist(const Array& params, bool fHelp) {
     if (fHelp || 1 < params.size())
 		throw runtime_error("offerlist [offer]\n"
@@ -3162,12 +3246,16 @@ Value offerfilter(const Array& params, bool fHelp) {
 	BOOST_FOREACH(pairScan, offerScan) {
 		COffer txOffer = pairScan.second;
         string offer = stringFromVch(txOffer.vchRand);
-
+		string title = stringFromVch(txOffer.sTitle);
+		string offerToSearch = offer;
+		std::transform(offerToSearch.begin(), offerToSearch.end(), offerToSearch.begin(), ::tolower);
+		std::transform(title.begin(), title.end(), title.begin(), ::tolower);
+		std::transform(strRegexp.begin(), strRegexp.end(), strRegexp.begin(), ::tolower);
         // regexp
         using namespace boost::xpressive;
         smatch offerparts;
         sregex cregex = sregex::compile(strRegexp);
-        if (strRegexp != "" && !regex_search(stringFromVch(txOffer.sTitle), offerparts, cregex) && strRegexp != offer)
+        if (strRegexp != "" && !regex_search(title, offerparts, cregex) && strRegexp != offerToSearch)
             continue;
 
 		int expired = 0;

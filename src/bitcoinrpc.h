@@ -255,6 +255,7 @@ extern json_spirit::Value offerclearwhitelist(const json_spirit::Array& params, 
 extern json_spirit::Value offerwhitelist(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerinfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerlist(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value offeracceptlist(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerhistory(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerfilter(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerscan(const json_spirit::Array& params, bool fHelp);

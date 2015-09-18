@@ -7,6 +7,8 @@ class BitcoinGUI;
 class ClientModel;
 class WalletModel;
 class MyOfferListPage;
+class MyAcceptedOfferListPage;
+class AcceptedOfferListPage;
 class OfferListPage;
 class AcceptandPayOfferListPage;
 
@@ -54,6 +56,8 @@ private:
 	QTabWidget *tabWidget;
 	AcceptandPayOfferListPage *acceptandPayOfferListPage;
     MyOfferListPage *myOfferListPage;
+	MyAcceptedOfferListPage *myAcceptedOfferListPage;
+	AcceptedOfferListPage *acceptedOfferListPage;
     OfferListPage *offerListPage;	
 
 public:

@@ -19,6 +19,7 @@
 #include "aliastablemodel.h"
 #include "certtablemodel.h"
 #include "offertablemodel.h"
+#include "offeraccepttablemodel.h"
 #include "transactionview.h"
 #include "overviewpage.h"
 #include "askpassphrasedialog.h"

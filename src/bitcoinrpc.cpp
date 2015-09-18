@@ -308,6 +308,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "offerclearwhitelist",			&offerclearwhitelist,		false,      true,      true },
 	{ "offerwhitelist",			&offerwhitelist,		false,      true,      true },
     { "offerlist",        &offerlist,      false,      true,      true },
+	{ "offeracceptlist",        &offeracceptlist,      false,      true,      true },
     { "offerinfo",        &offerinfo,      false,      true,      true },
     { "offerhistory",     &offerhistory,   false,      true,      true },
     { "offerscan",        &offerscan,      false,      true,      true },
