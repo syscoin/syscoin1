@@ -244,6 +244,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/myaliaslistpage.h \
     src/qt/offertablemodel.h \
     src/qt/offeraccepttablemodel.h \
+    src/qt/offeracceptinfodialog.h \
     src/qt/editofferdialog.h \
     src/qt/offerlistpage.h \
     src/qt/myofferlistpage.h \  
@@ -341,6 +342,7 @@ SOURCES += src/qt/bitcoin.cpp \
     src/qt/myaliaslistpage.cpp \
     src/qt/offertablemodel.cpp \
     src/qt/offeraccepttablemodel.cpp \
+    src/qt/offeracceptinfodialog.cpp \
     src/qt/editofferdialog.cpp \
     src/qt/offerlistpage.cpp \
     src/qt/myofferlistpage.cpp \     
@@ -378,6 +380,7 @@ FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/acceptedofferlistpage.ui \ 
     src/qt/forms/mycertlistpage.ui \
     src/qt/forms/acceptandpayofferlistpage.ui \
+    src/qt/forms/offeracceptinfodialog.ui \
     src/qt/forms/offerpaydialog.ui \
     src/qt/forms/offeracceptdialog.ui \        
     src/qt/forms/editcertdialog.ui \

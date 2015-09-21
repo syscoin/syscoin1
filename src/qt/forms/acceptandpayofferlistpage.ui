@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>530</width>
-    <height>433</height>
+    <height>489</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -104,19 +104,6 @@
        </property>
       </widget>
      </item>
-     <item row="11" column="1">
-      <widget class="QLabel" name="infoTitle">
-       <property name="autoFillBackground">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
      <item row="12" column="0">
       <widget class="QLabel" name="label_6">
        <property name="text">
@@ -124,36 +111,10 @@
        </property>
       </widget>
      </item>
-     <item row="12" column="1">
-      <widget class="QLabel" name="infoCategory">
-       <property name="autoFillBackground">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
      <item row="13" column="0">
       <widget class="QLabel" name="label_5">
        <property name="text">
         <string>Price:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="13" column="1">
-      <widget class="QLabel" name="infoPrice">
-       <property name="autoFillBackground">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -171,36 +132,10 @@
        </property>
       </widget>
      </item>
-     <item row="15" column="1">
-      <widget class="QLabel" name="infoQty">
-       <property name="autoFillBackground">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
      <item row="16" column="0">
       <widget class="QLabel" name="label_9">
        <property name="text">
         <string>Description:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="16" column="1">
-      <widget class="QLabel" name="infoDescription">
-       <property name="autoFillBackground">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -211,19 +146,6 @@
        </property>
       </widget>
      </item>
-     <item row="17" column="1">
-      <widget class="QLabel" name="infoFee">
-       <property name="autoFillBackground">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
      <item row="18" column="0">
       <widget class="QLabel" name="label_10">
        <property name="text">
@@ -231,23 +153,59 @@
        </property>
       </widget>
      </item>
-     <item row="18" column="1">
-      <widget class="QLabel" name="infoPaymentAddress">
-       <property name="autoFillBackground">
+     <item row="11" column="1">
+      <widget class="QLineEdit" name="infoTitle">
+       <property name="enabled">
         <bool>false</bool>
        </property>
-       <property name="text">
-        <string/>
+      </widget>
+     </item>
+     <item row="12" column="1">
+      <widget class="QLineEdit" name="infoCategory">
+       <property name="enabled">
+        <bool>false</bool>
        </property>
-       <property name="wordWrap">
-        <bool>true</bool>
+      </widget>
+     </item>
+     <item row="13" column="1">
+      <widget class="QLineEdit" name="infoPrice">
+       <property name="enabled">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
      <item row="14" column="1">
-      <widget class="QLabel" name="infoCurrency">
-       <property name="text">
-        <string/>
+      <widget class="QLineEdit" name="infoCurrency">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="15" column="1">
+      <widget class="QLineEdit" name="infoQty">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="16" column="1">
+      <widget class="QLineEdit" name="infoDescription">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="17" column="1">
+      <widget class="QLineEdit" name="infoFee">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="18" column="1">
+      <widget class="QLineEdit" name="infoPaymentAddress">
+       <property name="enabled">
+        <bool>false</bool>
        </property>
       </widget>
      </item>

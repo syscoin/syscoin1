@@ -4,6 +4,7 @@
 #include "myacceptedofferlistpage.h"
 #include "ui_myacceptedofferlistpage.h"
 #include "offeraccepttablemodel.h"
+#include "offeracceptinfodialog.h"
 #include "clientmodel.h"
 #include "optionsmodel.h"
 #include "walletmodel.h"
@@ -32,21 +33,22 @@ MyAcceptedOfferListPage::MyAcceptedOfferListPage(QWidget *parent) :
 
     ui->labelExplanation->setText(tr("These are your registered Syscoin Accepted Offers. The accepts you have been paid for offers your own."));
 	
-	
+	connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(info()));	
     // Context menu actions
     QAction *copyOfferAction = new QAction(ui->copyOffer->text(), this);
     QAction *copyOfferValueAction = new QAction(tr("&Copy TxID"), this);
-
+	QAction *moreInfoAction = new QAction(tr("&More Info"), this);
 
     // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyOfferAction);
     contextMenu->addAction(copyOfferValueAction);
-
+	contextMenu->addSeparator();
+	contextMenu->addAction(moreInfoAction);
     // Connect signals for context menu actions
     connect(copyOfferAction, SIGNAL(triggered()), this, SLOT(on_copyOffer_clicked()));
     connect(copyOfferValueAction, SIGNAL(triggered()), this, SLOT(onCopyOfferValueAction()));
-
+	connect(moreInfoAction, SIGNAL(triggered()), this, SLOT(info()));
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
@@ -56,6 +58,17 @@ MyAcceptedOfferListPage::MyAcceptedOfferListPage(QWidget *parent) :
 MyAcceptedOfferListPage::~MyAcceptedOfferListPage()
 {
     delete ui;
+}
+void MyAcceptedOfferListPage::info()
+{
+    if(!ui->tableView->selectionModel())
+        return;
+    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
+    if(!selection.isEmpty())
+    {
+        OfferAcceptInfoDialog dlg(selection.at(0));
+        dlg.exec();
+    }
 }
 void MyAcceptedOfferListPage::showEvent ( QShowEvent * event )
 {

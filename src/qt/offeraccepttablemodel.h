@@ -31,7 +31,11 @@ public:
     };
 
     enum RoleIndex {
-        TypeRole = Qt::UserRole /**< Type of offer (#Send or #Receive) */
+        TypeRole = Qt::UserRole, /**< Type of offer (#Send or #Receive) */
+        /** Offer name */
+        NameRole,
+        /** Offer accept txid */
+        TxIDRole
     };
 
     /** Return status of edit/insert operation */

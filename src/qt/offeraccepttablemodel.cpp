@@ -291,6 +291,14 @@ QVariant OfferAcceptTableModel::data(const QModelIndex &index, int role) const
         default: break;
         }
     }
+    else if (role == NameRole)
+    {
+        return rec->offer;
+    }
+    else if (role == TxIDRole)
+    {
+        return rec->txid;
+    }
     return QVariant();
 }
 

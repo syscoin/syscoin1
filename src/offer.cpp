@@ -2873,11 +2873,19 @@ Value offerinfo(const Array& params, bool fHelp) {
 			else
 			{
 				oOfferAccept.push_back(Pair("paid","false"));
+				oOfferAccept.push_back(Pair("pay_service_fee", ""));
+				oOfferAccept.push_back(Pair("pay_txid", ""));
+				oOfferAccept.push_back(Pair("pay_message",""));
 			}
 			if(ca.bRefunded) { 
 
 				oOfferAccept.push_back(Pair("refunded", "true"));
 				oOfferAccept.push_back(Pair("refund_txid", ca.txRefundId.GetHex()));
+			}
+			else
+			{
+				oOfferAccept.push_back(Pair("refunded", "false"));
+				oOfferAccept.push_back(Pair("refund_txid", ""));
 			}
 			aoOfferAccepts.push_back(oOfferAccept);
 		}
