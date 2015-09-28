@@ -24,7 +24,7 @@ using namespace json_spirit;
 
 extern const CRPCTable tableRPC;
 extern string JSONRPCReply(const Value& result, const Value& error, const Value& id);
-int GetCertDisplayExpirationDepth(int nHeight);
+int GetCertDisplayExpirationDepth();
 CertListPage::CertListPage(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::CertListPage),
@@ -239,7 +239,7 @@ void CertListPage::on_searchCert_clicked()
 		int expires_in = 0;
 		int expires_on = 0; 
         params.push_back(ui->lineEditCertSearch->text().toStdString());
-        params.push_back(GetCertDisplayExpirationDepth(pindexBest->nHeight));
+        params.push_back(GetCertDisplayExpirationDepth());
 
         try {
             result = tableRPC.execute(strMethod, params);

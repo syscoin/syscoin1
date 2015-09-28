@@ -24,7 +24,7 @@ using namespace json_spirit;
 
 extern const CRPCTable tableRPC;
 extern string JSONRPCReply(const Value& result, const Value& error, const Value& id);
-int GetAliasDisplayExpirationDepth(int nHeight);
+int GetAliasDisplayExpirationDepth();
 AliasListPage::AliasListPage(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AliasListPage),
@@ -243,7 +243,7 @@ void AliasListPage::on_searchAlias_clicked()
 		int expires_on = 0;
 		int lastupdate_height = 0;    
         params.push_back(ui->lineEditAliasSearch->text().toStdString());
-        params.push_back(GetAliasDisplayExpirationDepth(pindexBest->nHeight));
+        params.push_back(GetAliasDisplayExpirationDepth());
 
         try {
             result = tableRPC.execute(strMethod, params);

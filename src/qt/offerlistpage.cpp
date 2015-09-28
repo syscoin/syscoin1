@@ -24,7 +24,7 @@ using namespace json_spirit;
 
 extern const CRPCTable tableRPC;
 extern string JSONRPCReply(const Value& result, const Value& error, const Value& id);
-int GetOfferDisplayExpirationDepth(int nHeight);
+int GetOfferDisplayExpirationDepth();
 OfferListPage::OfferListPage(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::OfferListPage),
@@ -244,7 +244,7 @@ void OfferListPage::on_searchOffer_clicked()
 		string expired_str;
 		int expired = 0;
         params.push_back(ui->lineEditOfferSearch->text().toStdString());
-        params.push_back(GetOfferDisplayExpirationDepth(pindexBest->nHeight));
+        params.push_back(GetOfferDisplayExpirationDepth());
 
         try {
             result = tableRPC.execute(strMethod, params);

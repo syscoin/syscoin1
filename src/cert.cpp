@@ -84,8 +84,8 @@ int64 GetCertNetworkFee(opcodetype seed, unsigned int nHeight) {
 	}
 	else
 	{
-		// 100th of a USD cent
-		nFee = nRate / 10000;
+		// 10 pips USD, 10k pips = $1USD
+		nFee = nRate/1000;
 	}
 	// Round up to CENT
 	nFee += CENT - 1;
@@ -110,15 +110,13 @@ int64 GetCertNetworkFee(opcodetype seed, unsigned int nHeight) {
 
 // Increase expiration to 36000 gradually starting at block 24000.
 // Use for validation purposes and pass the chain height.
-int GetCertExpirationDepth(int nHeight) {
-    if (nHeight < 174720) return 87360;
-    if (nHeight < 349440) return nHeight - 87360;
-    return 262080;
+int GetCertExpirationDepth() {
+    return 525600;
 }
 
 // For display purposes, pass the name height.
-int GetCertDisplayExpirationDepth(int nHeight) {
-    return GetCertExpirationDepth(nHeight);
+int GetCertDisplayExpirationDepth() {
+    return GetCertExpirationDepth();
 }
 
 bool IsMyCert(const CTransaction& tx, const CTxOut& txout) {
@@ -215,10 +213,9 @@ bool CCertDB::ScanCerts(const std::vector<unsigned char>& vchCert, unsigned int 
  */
 bool CCertDB::ReconstructCertIndex(CBlockIndex *pindexRescan) {
     CBlockIndex* pindex = pindexRescan;
-
-    {
 	if(!HasReachedMainNetForkB2())
 		return true;
+    {
     TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
     while (pindex) {
 
@@ -460,7 +457,7 @@ bool IsConflictedCertTx(CBlockTreeDB& txdb, const CTransaction& tx,
         cert = vvchArgs[0];
         if (nPrevHeight >= 0
                 && pindexBest->nHeight - nPrevHeight
-                        < GetCertExpirationDepth(pindexBest->nHeight))
+                        < GetCertExpirationDepth())
             return true;
     }
     return false;
@@ -564,7 +561,7 @@ bool GetTxOfCert(CCertDB& dbCert, const vector<unsigned char> &vchCert,
         return false;
     txPos = vtxPos.back();
     int nHeight = txPos.nHeight;
-    if (nHeight + GetCertExpirationDepth(pindexBest->nHeight)
+    if (nHeight + GetCertExpirationDepth()
             < pindexBest->nHeight) {
         string cert = stringFromVch(vchCert);
         printf("GetTxOfCert(%s) : expired", cert.c_str());
@@ -973,8 +970,6 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         CValidationState &state, CCoinsViewCache &inputs, bool fBlock, bool fMiner,
         bool fJustCheck) {
 
-	if(!HasReachedMainNetForkB2())
-		return true;
     if (!tx.IsCoinBase()) {
         printf("*** %d %d %s %s %s %s\n", pindexBlock->nHeight,
                 pindexBest->nHeight, tx.GetHash().ToString().c_str(),
@@ -1102,7 +1097,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if (fBlock && !fJustCheck) {
 				// TODO CPU intensive
 				nDepth = CheckCertTransactionAtRelativeDepth(pindexBlock,
-						prevCoins, GetCertExpirationDepth(pindexBlock->nHeight));
+						prevCoins, GetCertExpirationDepth());
 				if ((fBlock || fMiner) && nDepth < 0)
 					return error(
 							"CheckCertInputs() : certupdate on an expired cert, or there is a pending transaction on the cert");
@@ -1554,14 +1549,14 @@ Value certinfo(const Array& params, bool fHelp) {
         string strAddress = "";
         GetCertAddress(tx, strAddress);
         oCert.push_back(Pair("address", strAddress));
-        if(theCert.nHeight + GetCertDisplayExpirationDepth(theCert.nHeight) - pindexBest->nHeight <= 0)
+        if(theCert.nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 		{
 			expired = 1;
-			expired_block = theCert.nHeight + GetCertDisplayExpirationDepth(theCert.nHeight);
+			expired_block = theCert.nHeight + GetCertDisplayExpirationDepth();
 		}  
 		if(expired == 0)
 		{
-			expires_in = theCert.nHeight + GetCertDisplayExpirationDepth(theCert.nHeight) - pindexBest->nHeight;
+			expires_in = theCert.nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight;
 		}
 		oCert.push_back(Pair("expires_in", expires_in));
 		oCert.push_back(Pair("expires_on", expired_block));
@@ -1672,14 +1667,14 @@ Value certlist(const Array& params, bool fHelp) {
         string strAddress = "";
         GetCertAddress(tx, strAddress);
         oName.push_back(Pair("address", strAddress));
-		expired_block = nHeight + GetCertDisplayExpirationDepth(nHeight);
-		if(nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+		expired_block = nHeight + GetCertDisplayExpirationDepth();
+		if(nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 		{
 			expired = 1;
 		}  
 		if(expired == 0)
 		{
-			expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+			expires_in = nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight;
 		}
 		oName.push_back(Pair("expires_in", expires_in));
 		oName.push_back(Pair("expires_on", expired_block));
@@ -1731,14 +1726,14 @@ Value certhistory(const Array& params, bool fHelp) {
                 string strAddress = "";
                 GetCertAddress(tx, strAddress);
                 oCert.push_back(Pair("address", strAddress));
-				expired_block = nHeight + GetCertDisplayExpirationDepth(nHeight);
-				if(nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+				expired_block = nHeight + GetCertDisplayExpirationDepth();
+				if(nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 				{
 					expired = 1;
 				}  
 				if(expired == 0)
 				{
-					expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+					expires_in = nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight;
 				}
 				oCert.push_back(Pair("expires_in", expires_in));
 				oCert.push_back(Pair("expires_on", expired_block));
@@ -1834,14 +1829,14 @@ Value certfilter(const Array& params, bool fHelp) {
 		vector<unsigned char> vchValue = txCert.vchTitle;
         string value = stringFromVch(vchValue);
         oCert.push_back(Pair("title", value));
-		expired_block = nHeight + GetCertDisplayExpirationDepth(nHeight);
-        if(nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+		expired_block = nHeight + GetCertDisplayExpirationDepth();
+        if(nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 		{
 			expired = 1;
 		}  
 		if(expired == 0)
 		{
-			expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+			expires_in = nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight;
 		}
 		oCert.push_back(Pair("expires_in", expires_in));
 		oCert.push_back(Pair("expires_on", expired_block));
@@ -1913,14 +1908,14 @@ Value certscan(const Array& params, bool fHelp) {
         oCert.push_back(Pair("value", value));
         //oCert.push_back(Pair("txid", tx.GetHash().GetHex()));
         //oCert.push_back(Pair("address", strAddress));
-		expired_block = nHeight + GetCertDisplayExpirationDepth(nHeight);
-		if(nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+		expired_block = nHeight + GetCertDisplayExpirationDepth();
+		if(nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 		{
 			expired = 1;
 		}  
 		if(expired == 0)
 		{
-			expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+			expires_in = nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight;
 		}
 		oCert.push_back(Pair("expires_in", expires_in));
 		oCert.push_back(Pair("expires_on", expired_block));

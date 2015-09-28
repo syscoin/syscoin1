@@ -332,13 +332,7 @@ bool IsOfferOp(int op) {
 		|| op == OP_OFFER_REFUND;
 }
 
-// 10080 blocks = 1 week
-// offer expiration time is ~ 2 weeks
-// expiration blocks is 20160 (final)
-// expiration starts at 6720, increases by 1 per block starting at
-// block 13440 until block 349440
 
-int nStartHeight = 161280;
 
 int64 GetOfferNetworkFee(opcodetype seed, unsigned int nHeight) {
 
@@ -356,8 +350,8 @@ int64 GetOfferNetworkFee(opcodetype seed, unsigned int nHeight) {
 	}
 	else
 	{
-		// 100th of a USD cent
-		nFee = nRate/10000;
+		// 10 pips USD, 10k pips = $1USD
+		nFee = nRate/1000;
 	}
 	// Round up to CENT
 	nFee += CENT - 1;
@@ -365,31 +359,16 @@ int64 GetOfferNetworkFee(opcodetype seed, unsigned int nHeight) {
 	return nFee;
 }
 
-// int64 GetOfferNetworkFee(int seed, int nHeight) {
-// 	int nComputedHeight = nHeight - nStartHeight < 0 ? 1 : ( nHeight - nStartHeight ) + 1;
-//     if (nComputedHeight >= 13440) nComputedHeight += (nComputedHeight - 13440) * 3;
-//     int64 nStart = seed * COIN;
-//     if (fTestNet) nStart = 10 * CENT;
-//     else if (fCakeNet) return CENT;
-//     int64 nRes = nStart >> (nComputedHeight >> 13);
-//     nRes -= (nRes >> 14) * (nComputedHeight % 8192);
-//     nRes += CENT - 1;
-// 	nRes = (nRes / CENT) * CENT;
-//     return nRes;
-// }
 
-// Increase expiration to 36000 gradually starting at block 24000.
-// Use for validation purposes and pass the chain height.
-int GetOfferExpirationDepth(int nHeight) {
-	int nComputedHeight = ( nHeight - nStartHeight < 0 ) ? 1 : ( nHeight - nStartHeight ) + 1;
-    if (nComputedHeight < 13440) return 6720;
-    if (nComputedHeight < 26880) return nComputedHeight - 6720;
-    return 20160;
+
+
+int GetOfferExpirationDepth() {
+    return 525600;
 }
 
 // For display purposes, pass the name height.
-int GetOfferDisplayExpirationDepth(int nHeight) {
-    return GetOfferExpirationDepth(nHeight);
+int GetOfferDisplayExpirationDepth() {
+    return GetOfferExpirationDepth();
 }
 
 bool IsMyOffer(const CTransaction& tx, const CTxOut& txout) {
@@ -486,9 +465,9 @@ bool COfferDB::ScanOffers(const std::vector<unsigned char>& vchOffer, unsigned i
  * @return              [description]
  */
 bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
-    CBlockIndex* pindex = pindexRescan;
+    CBlockIndex* pindex = pindexRescan;  
 	if(!HasReachedMainNetForkB2())
-		return true;    
+		return true;
     {
 	TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
     while (pindex) {  
@@ -795,7 +774,7 @@ bool IsConflictedOfferTx(CBlockTreeDB& txdb, const CTransaction& tx,
 		offer = vvchArgs[0];
 		if (nPrevHeight >= 0
 				&& pindexBest->nHeight - nPrevHeight
-						< GetOfferExpirationDepth(pindexBest->nHeight))
+						< GetOfferExpirationDepth())
 			return true;
 	}
 	return false;
@@ -901,7 +880,7 @@ bool GetTxOfOffer(COfferDB& dbOffer, const vector<unsigned char> &vchOffer,
 		return false;
 	txPos = vtxPos.back();
 	int nHeight = txPos.nHeight;
-	if (nHeight + GetOfferExpirationDepth(pindexBest->nHeight)
+	if (nHeight + GetOfferExpirationDepth()
 			< pindexBest->nHeight) {
 		string offer = stringFromVch(vchOffer);
 		if(fDebug)
@@ -924,7 +903,7 @@ bool GetTxOfOfferAccept(COfferDB& dbOffer, const vector<unsigned char> &vchOffer
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos)) return false;
 	txPos = vtxPos.back();
 	int nHeight = txPos.nHeight;
-	if (nHeight + GetOfferExpirationDepth(pindexBest->nHeight)
+	if (nHeight + GetOfferExpirationDepth()
 			< pindexBest->nHeight) {
 		string offer = stringFromVch(vchOfferAccept);
 		if(fDebug)
@@ -1287,8 +1266,6 @@ CScript RemoveOfferScriptPrefix(const CScript& scriptIn) {
 bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		CValidationState &state, CCoinsViewCache &inputs, bool fBlock, bool fMiner,
 		bool fJustCheck) {
-	if(!HasReachedMainNetForkB2())
-		return true;
 	if (!tx.IsCoinBase()) {
 		if (fDebug)
 			printf("*** %d %d %s %s %s %s\n", pindexBlock->nHeight,
@@ -1385,7 +1362,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if (fBlock && !fJustCheck) {
 				// TODO CPU intensive
 				nDepth = CheckOfferTransactionAtRelativeDepth(pindexBlock,
-						prevCoins, GetOfferExpirationDepth(pindexBlock->nHeight));
+						prevCoins, GetOfferExpirationDepth());
 				if ((fBlock || fMiner) && nDepth < 0)
 					return error(
 							"CheckOfferInputs() : offerupdate on an expired offer, or there is a pending transaction on the offer");
@@ -1420,7 +1397,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					return error("OP_OFFER_REFUND could not read accept from offer txn");
 				// TODO CPU intensive
 				nDepth = CheckOfferTransactionAtRelativeDepth(pindexBlock,
-						prevCoins, GetOfferExpirationDepth(pindexBlock->nHeight));
+						prevCoins, GetOfferExpirationDepth());
 				if ((fBlock || fMiner) && nDepth < 0)
 					return error(
 							"CheckOfferInputs() : offerrefund on an expired offer, or there is a pending transaction on the offer");
@@ -2194,7 +2171,8 @@ Value offerremovewhitelist(const Array& params, bool fHelp) {
 		"offerremovewhitelist <offer guid> <cert guid>\n"
 		"Remove from the whitelist of your offer(controls who can resell).\n"
 						+ HelpRequiringPassphrase());
-
+	if(!HasReachedMainNetForkB2())
+		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");	
 	// gather & validate inputs
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	vector<unsigned char> vchCert = vchFromValue(params[1]);
@@ -2267,7 +2245,8 @@ Value offerclearwhitelist(const Array& params, bool fHelp) {
 		"offerclearwhitelist <offer guid> <cert guid>\n"
 		"Clear the whitelist of your offer(controls who can resell).\n"
 						+ HelpRequiringPassphrase());
-
+	if(!HasReachedMainNetForkB2())
+		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");	
 	// gather & validate inputs
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	vector<unsigned char> vchCert = vchFromValue(params[1]);
@@ -2334,7 +2313,8 @@ Value offerwhitelist(const Array& params, bool fHelp) {
     if (fHelp || 1 != params.size())
         throw runtime_error("offerwhitelist <offer guid>\n"
                 "List all whitelist entries for this offer.\n");
-
+	if(!HasReachedMainNetForkB2())
+		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");	
     Array oRes;
     vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	// look for a transaction with this key
@@ -2357,7 +2337,7 @@ Value offerwhitelist(const Array& params, bool fHelp) {
 			string strAddress = "";
 			GetCertAddress(txCert, strAddress);
 			oList.push_back(Pair("cert_address", strAddress));
-			int expires_in = theCert.nHeight + GetCertDisplayExpirationDepth(theCert.nHeight)
+			int expires_in = theCert.nHeight + GetCertDisplayExpirationDepth()
 									- pindexBest->nHeight;
 			oList.push_back(Pair("cert_expiresin",expires_in));
 			oList.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
@@ -2905,14 +2885,14 @@ Value offerinfo(const Array& params, bool fHelp) {
 			string strAddress = "";
 			GetOfferAddress(tx, strAddress);
 			oOffer.push_back(Pair("address", strAddress));
-			expired_block = nHeight + GetOfferDisplayExpirationDepth(nHeight);
-            if(nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+			expired_block = nHeight + GetOfferDisplayExpirationDepth();
+            if(nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 			{
 				expired = 1;
 			}  
 			if(expired == 0)
 			{
-				expires_in = nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+				expires_in = nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight;
 			}
 			oOffer.push_back(Pair("expires_in", expires_in));
 			oOffer.push_back(Pair("expired_block", expired_block));
@@ -3117,14 +3097,14 @@ Value offerlist(const Array& params, bool fHelp) {
             oName.push_back(Pair("quantity", strprintf("%llu", theOfferA.nQty)));
             oName.push_back(Pair("address", stringFromVch(theOfferA.vchPaymentAddress)));
 
-			expired_block = nHeight + GetOfferDisplayExpirationDepth(nHeight);
-            if(pending == 0 && (nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0))
+			expired_block = nHeight + GetOfferDisplayExpirationDepth();
+            if(pending == 0 && (nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight <= 0))
 			{
 				expired = 1;
 			}  
 			if(pending == 0 && expired == 0)
 			{
-				expires_in = nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+				expires_in = nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight;
 			}
 			oName.push_back(Pair("expires_in", expires_in));
 			oName.push_back(Pair("expires_on", expired_block));
@@ -3186,14 +3166,14 @@ Value offerhistory(const Array& params, bool fHelp) {
 				string strAddress = "";
 				GetOfferAddress(tx, strAddress);
 				oOffer.push_back(Pair("address", strAddress));
-				expired_block = nHeight + GetOfferDisplayExpirationDepth(nHeight);
-				if(nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+				expired_block = nHeight + GetOfferDisplayExpirationDepth();
+				if(nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 				{
 					expired = 1;
 				}  
 				if(expired == 0)
 				{
-					expires_in = nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+					expires_in = nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight;
 				}
 				oOffer.push_back(Pair("expires_in", expires_in));
 				oOffer.push_back(Pair("expires_on", expired_block));
@@ -3291,14 +3271,14 @@ Value offerfilter(const Array& params, bool fHelp) {
         oOffer.push_back(Pair("price", strprintf("%llu", txOffer.nPrice) ) );
 		oOffer.push_back(Pair("currency", stringFromVch(txOffer.sCurrencyCode)));
         oOffer.push_back(Pair("quantity", strprintf("%llu", txOffer.nQty)));
-		expired_block = nHeight + GetOfferDisplayExpirationDepth(nHeight);
-		if(nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+		expired_block = nHeight + GetOfferDisplayExpirationDepth();
+		if(nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 		{
 			expired = 1;
 		}  
 		if(expired == 0)
 		{
-			expires_in = nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+			expires_in = nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight;
 		}
 		oOffer.push_back(Pair("expires_in", expires_in));
 		oOffer.push_back(Pair("expires_on", expired_block));
@@ -3360,14 +3340,14 @@ Value offerscan(const Array& params, bool fHelp) {
 		uint256 blockHash;
 
 		int nHeight = txOffer.nHeight;
-		expired_block = nHeight + GetOfferDisplayExpirationDepth(nHeight);
-		if(nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+		expired_block = nHeight + GetOfferDisplayExpirationDepth();
+		if(nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 		{
 			expired = 1;
 		}  
 		if(expired == 0)
 		{
-			expires_in = nHeight + GetOfferDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+			expires_in = nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight;
 		}
 		oOffer.push_back(Pair("expires_in", expires_in));
 		oOffer.push_back(Pair("expires_on", expired_block));

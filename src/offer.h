@@ -34,7 +34,7 @@ bool GetValueOfOfferTxHash(const uint256 &txHash, std::vector<unsigned char>& vc
 int64 GetOfferTxHashHeight(const uint256 txHash);
 int GetOfferTxPosHeight(const CDiskTxPos& txPos);
 int GetOfferTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
-int GetOfferDisplayExpirationDepth(int nHeight);
+int GetOfferDisplayExpirationDepth();
 int64 GetOfferNetworkFee(const std::vector<unsigned char>& vchCurrency, opcodetype seed, unsigned int nHeight);
 int64 GetOfferNetFee(const CTransaction& tx);
 bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue);

@@ -59,7 +59,7 @@ extern void rescanforoffers(CBlockIndex *pindexRescan);
 //extern Value sendtoaddress(const Array& params, bool fHelp);
 
 CScript RemoveAliasScriptPrefix(const CScript& scriptIn);
-int GetAliasExpirationDepth(int nHeight);
+int GetAliasExpirationDepth();
 int64 GetAliasNetFee(const CTransaction& tx);
 bool CheckAliasTxPos(const vector<CAliasIndex> &vtxPos, const int txPos);
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
@@ -438,7 +438,7 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 					// check for enough fees
 				nNetFee = GetAliasNetFee(tx);
-				if (nNetFee < GetAliasNetworkFee(OP_ALIAS_ACTIVATE, pindexBlock->nHeight) && HasReachedMainNetForkB2())
+				if (nNetFee < GetAliasNetworkFee(OP_ALIAS_ACTIVATE, pindexBlock->nHeight))
 					return error(
 							"CheckAliasInputs() : OP_ALIAS_ACTIVATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -462,13 +462,13 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if (fBlock && !fJustCheck) {
 				// TODO CPU intensive
 				nDepth = CheckTransactionAtRelativeDepth(pindexBlock, prevCoins,
-						GetAliasExpirationDepth(pindexBlock->nHeight));
+						GetAliasExpirationDepth());
 				if ((fBlock || fMiner) && nDepth < 0)
 					return error(
 							"CheckAliasInputs() : aliasupdate on an expired alias, or there is a pending transaction on the alias");
 				// verify enough fees with this txn
 				nNetFee = GetAliasNetFee(tx);
-				if (nNetFee < GetAliasNetworkFee(OP_ALIAS_UPDATE, pindexBlock->nHeight) && HasReachedMainNetForkB2())
+				if (nNetFee < GetAliasNetworkFee(OP_ALIAS_UPDATE, pindexBlock->nHeight))
 					return error(
 							"CheckAliasInputs() : OP_ALIAS_UPDATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -648,7 +648,8 @@ void rescanforaliases(CBlockIndex *pindexRescan) {
 bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 	CDiskTxPos txindex;
 	CBlockIndex* pindex = pindexRescan;
-
+	if(!HasReachedMainNetForkB2())
+		return true;
 	{
 		TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
 		while (pindex) {
@@ -740,8 +741,8 @@ int64 GetAliasNetworkFee(opcodetype seed, unsigned int nHeight) {
 	}
 	else
 	{
-		// 100th of a USD cent
-		nFee = nRate/10000;
+		// 50 pips USD, 10k pips = $1USD
+		nFee = nRate/200;
 	}
 	// Round up to CENT
 	nFee += CENT - 1;
@@ -768,19 +769,14 @@ int64 GetAliasNetworkFee(opcodetype seed, unsigned int nHeight) {
 // block 174721 until block 349440
 
 //
-// Increase expiration to 262080 gradually starting at block 174720.
-// Use for validation purposes and pass the chain height.
-int GetAliasExpirationDepth(int nHeight) {
-	if (nHeight < 174720)
-		return 87360;
-	if (nHeight < 349440)
-		return nHeight - 87360;
-	return 262080;
+
+int GetAliasExpirationDepth() {
+	return 525600;
 }
 
 // For display purposes, pass the name height.
-int GetAliasDisplayExpirationDepth(int nHeight) {
-	return GetAliasExpirationDepth(nHeight);
+int GetAliasDisplayExpirationDepth() {
+	return GetAliasExpirationDepth();
 }
 
 int GetNameTxPosHeight(const CDiskTxPos& txPos) {
@@ -1083,7 +1079,7 @@ bool GetTxOfAlias(CAliasDB& dbName, const vector<unsigned char> &vchName,
 		return false;
 	CAliasIndex& txPos = vtxPos.back();
 	int nHeight = txPos.nHeight;
-	if (nHeight + GetAliasExpirationDepth(pindexBest->nHeight)
+	if (nHeight + GetAliasExpirationDepth()
 			< pindexBest->nHeight) {
 		string name = stringFromVch(vchName);
 		printf("GetTxOfAlias(%s) : expired", name.c_str());
@@ -1195,7 +1191,7 @@ bool IsConflictedAliasTx(CBlockTreeDB& txdb, const CTransaction& tx,
 		name = vvchArgs[0];
 		if (nPrevHeight >= 0
 				&& pindexBest->nHeight - nPrevHeight
-						< GetAliasExpirationDepth(pindexBest->nHeight))
+						< GetAliasExpirationDepth())
 			return true;
 	}
 	return false;
@@ -1560,14 +1556,14 @@ Value aliaslist(const Array& params, bool fHelp) {
 			oName.push_back(Pair("name", stringFromVch(vchName)));
 			oName.push_back(Pair("value", stringFromVch(vchValue)));
 			oName.push_back(Pair("lastupdate_height", nHeight));
-			expired_block = nHeight + GetAliasDisplayExpirationDepth(nHeight);
-			if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+			expired_block = nHeight + GetAliasDisplayExpirationDepth();
+			if(nHeight + GetAliasDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 			{
 				expired = 1;
 			}  
 			if(expired == 0)
 			{
-				expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+				expires_in = nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight;
 			}
 			oName.push_back(Pair("expires_in", expires_in));
 			oName.push_back(Pair("expires_on", expired_block));
@@ -1635,14 +1631,14 @@ Value aliasinfo(const Array& params, bool fHelp) {
 			bool fMine = pwalletMain->IsMine(tx)? true:  false;
 			oName.push_back(Pair("ismine", fMine));
             oName.push_back(Pair("lastupdate_height", nHeight));
-			expired_block = nHeight + GetAliasDisplayExpirationDepth(nHeight);
-			if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+			expired_block = nHeight + GetAliasDisplayExpirationDepth();
+			if(nHeight + GetAliasDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 			{
 				expired = 1;
 			}  
 			if(expired == 0)
 			{
-				expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+				expires_in = nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight;
 			}
 			oName.push_back(Pair("expires_in", expires_in));
 			oName.push_back(Pair("expires_on", expired_block));
@@ -1698,14 +1694,14 @@ Value aliashistory(const Array& params, bool fHelp) {
 				GetAliasAddress(tx, strAddress);
 				oName.push_back(Pair("address", strAddress));
 	            oName.push_back(Pair("lastupdate_height", nHeight));
-				expired_block = nHeight + GetAliasDisplayExpirationDepth(nHeight);
-				if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+				expired_block = nHeight + GetAliasDisplayExpirationDepth();
+				if(nHeight + GetAliasDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 				{
 					expired = 1;
 				}  
 				if(expired == 0)
 				{
-					expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+					expires_in = nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight;
 				}
 				oName.push_back(Pair("expires_in", expires_in));
 				oName.push_back(Pair("expires_on", expired_block));
@@ -1810,14 +1806,14 @@ Value aliasfilter(const Array& params, bool fHelp) {
 		oName.push_back(Pair("value", value));
 		oName.push_back(Pair("txid", txHash.GetHex()));
         oName.push_back(Pair("lastupdate_height", nHeight));
-		expired_block = nHeight + GetAliasDisplayExpirationDepth(nHeight);
-        if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+		expired_block = nHeight + GetAliasDisplayExpirationDepth();
+        if(nHeight + GetAliasDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 		{
 			expired = 1;
 		}  
 		if(expired == 0)
 		{
-			expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+			expires_in = nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight;
 		}
 		oName.push_back(Pair("expires_in", expires_in));
 		oName.push_back(Pair("expires_on", expired_block));
@@ -1891,14 +1887,14 @@ Value aliasscan(const Array& params, bool fHelp) {
 		oName.push_back(Pair("txid", txName.txHash.GetHex()));
 		oName.push_back(Pair("value", value));
         oName.push_back(Pair("lastupdate_height", nHeight));
-		expired_block = nHeight + GetAliasDisplayExpirationDepth(nHeight);
-		if(nHeight + GetAliasDisplayExpirationDepth(nHeight) - pindexBest->nHeight <= 0)
+		expired_block = nHeight + GetAliasDisplayExpirationDepth();
+		if(nHeight + GetAliasDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 		{
 			expired = 1;
 		}  
 		if(expired == 0)
 		{
-			expires_in = nHeight + GetCertDisplayExpirationDepth(nHeight) - pindexBest->nHeight;
+			expires_in = nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight;
 		}
 		oName.push_back(Pair("expires_in", expires_in));
 		oName.push_back(Pair("expires_on", expired_block));

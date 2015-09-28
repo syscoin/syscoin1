@@ -53,7 +53,7 @@ bool fTxIndex = true; // syscoin is using transaction index by default
 unsigned int nCoinCacheSize = 5000;
 
 int hardforkLaunch = 1660;
-int hardforkB2 = 450000;
+int hardforkB2 = 600000;
 
 extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey,
 		uint256 hash, int nHashType, CScript& scriptSigRet,
@@ -1891,22 +1891,24 @@ bool CTransaction::CheckInputs(CBlockIndex *pindex, CValidationState &state, CCo
 		int op;
 		int nOut;
 
-		
-		if(DecodeAliasTx(*this, op, nOut, vvchArgs, -1))
+		if(HasReachedMainNetForkB2())
 		{
-			if (!CheckAliasInputs(pindex, *this, state, inputs, fBlock, fMiner, bJustCheck))
-				return false;
-			
-		}
-		else if(DecodeOfferTx(*this, op, nOut, vvchArgs, -1))
-		{			
-			if (!CheckOfferInputs(pindex, *this, state, inputs, fBlock, fMiner, bJustCheck))
-				return false;		 
-		}
-		else if(DecodeCertTx(*this, op, nOut, vvchArgs, -1))
-		{
-			if (!CheckCertInputs(pindex, *this, state, inputs, fBlock, fMiner, bJustCheck))
-				return false;			
+			if(DecodeAliasTx(*this, op, nOut, vvchArgs, -1))
+			{
+				if (!CheckAliasInputs(pindex, *this, state, inputs, fBlock, fMiner, bJustCheck))
+					return false;
+				
+			}
+			else if(DecodeOfferTx(*this, op, nOut, vvchArgs, -1))
+			{			
+				if (!CheckOfferInputs(pindex, *this, state, inputs, fBlock, fMiner, bJustCheck))
+					return false;		 
+			}
+			else if(DecodeCertTx(*this, op, nOut, vvchArgs, -1))
+			{
+				if (!CheckCertInputs(pindex, *this, state, inputs, fBlock, fMiner, bJustCheck))
+					return false;			
+			}
 		}
 		
 
@@ -2163,7 +2165,7 @@ bool CBlock::DisconnectBlock(CValidationState &state, CBlockIndex *pindex, CCoin
 		// remove outputs
 		outs = CCoins();
 
-	    if (tx.nVersion == SYSCOIN_TX_VERSION) {
+	    if (tx.nVersion == SYSCOIN_TX_VERSION && HasReachedMainNetForkB2()) {
 		    vector<vector<unsigned char> > vvchArgs;
 		    int op, nOut;
 			if(DecodeAliasTx(tx, op, nOut, vvchArgs, -1))

@@ -174,7 +174,7 @@ int64 GetAliasNetFee(const CTransaction& tx);
 bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 nValue);
 std::string aliasFromOp(int op);
 bool IsAliasOp(int op);
-int GetAliasDisplayExpirationDepth(int nHeight);
+int GetAliasDisplayExpirationDepth();
 void UnspendInputs(CWalletTx& wtx);
 bool RemoveAliasFee(CAliasFee &txnVal);
 

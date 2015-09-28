@@ -17,7 +17,7 @@
 
 class COfferDB;
 extern COfferDB *pofferdb;
-int GetOfferExpirationDepth(int nHeight);
+int GetOfferExpirationDepth();
 
 class CCertDB;
 extern CCertDB *pcertdb;
