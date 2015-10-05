@@ -28,6 +28,10 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
 	ui->certLabel->setVisible(true);
 	ui->certEdit->setVisible(true);
 	ui->certEdit->setEnabled(false);
+	ui->certDataEdit->setVisible(true);
+	ui->certDataEdit->setEnabled(true);
+	ui->certDataLabel->setVisible(true);
+	ui->certDataEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
     switch(mode)
     {
     case NewCert:
@@ -43,6 +47,9 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
 		ui->nameEdit->setEnabled(false);
 		ui->transferEdit->setVisible(true);
 		ui->transferLabel->setVisible(true);
+		ui->certDataEdit->setVisible(false);
+		ui->certDataEdit->setEnabled(false);
+		ui->certDataLabel->setVisible(false);
         break;
     }
     mapper = new QDataWidgetMapper(this);
@@ -63,7 +70,7 @@ void EditCertDialog::setModel(WalletModel* walletModel, CertTableModel *model)
     mapper->setModel(model);
 	mapper->addMapping(ui->certEdit, CertTableModel::Name);
     mapper->addMapping(ui->nameEdit, CertTableModel::Title);
-	
+	mapper->addMapping(ui->certDataEdit, CertTableModel::Data);
     
 }
 
@@ -109,7 +116,7 @@ bool EditCertDialog::saveCurrentRow()
 		}
 		strMethod = string("certnew");
 		params.push_back(ui->nameEdit->text().toStdString());
-		params.push_back("N/A");
+		params.push_back(ui->certDataEdit->toPlainText().toStdString());
 		try {
             Value result = tableRPC.execute(strMethod, params);
 			if (result.type() != null_type)
@@ -156,7 +163,7 @@ bool EditCertDialog::saveCurrentRow()
 			strMethod = string("certupdate");
 			params.push_back(ui->certEdit->text().toStdString());
 			params.push_back(ui->nameEdit->text().toStdString());
-			params.push_back("N/A");
+			params.push_back(ui->certDataEdit->toPlainText().toStdString());
 			
 			try {
 				Value result = tableRPC.execute(strMethod, params);

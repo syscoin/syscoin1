@@ -101,12 +101,14 @@ void MyCertListPage::setModel(WalletModel *walletModel, CertTableModel *model)
 #if QT_VERSION < 0x050000
     ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::Title, QHeaderView::Stretch);
+	ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::Data, QHeaderView::Stretch);
     ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::ExpiresOn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::ExpiresIn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::Expired, QHeaderView::ResizeToContents);
 #else
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::Title, QHeaderView::Stretch);
+	ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::Data, QHeaderView::Stretch);
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::ExpiresOn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::ExpiresIn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::Expired, QHeaderView::ResizeToContents);
@@ -241,6 +243,7 @@ void MyCertListPage::on_exportButton_clicked()
     writer.setModel(proxyModel);
     writer.addColumn("Cert", CertTableModel::Name, Qt::EditRole);
     writer.addColumn("Title", CertTableModel::Title, Qt::EditRole);
+	writer.addColumn("Data", CertTableModel::Data, Qt::EditRole);
 	writer.addColumn("Expires On", CertTableModel::ExpiresOn, Qt::EditRole);
 	writer.addColumn("Expires In", CertTableModel::ExpiresIn, Qt::EditRole);
 	writer.addColumn("Expired", CertTableModel::Expired, Qt::EditRole);

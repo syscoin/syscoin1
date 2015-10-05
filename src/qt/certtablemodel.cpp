@@ -23,13 +23,14 @@ struct CertTableEntry
     Type type;
     QString title;
     QString cert;
+	QString data;
 	QString expires_on;
 	QString expires_in;
 	QString expired;
 
     CertTableEntry() {}
-    CertTableEntry(Type type, const QString &title, const QString &cert, const QString &expires_on,const QString &expires_in, const QString &expired):
-        type(type), title(title), cert(cert), expires_on(expires_on), expires_in(expires_in), expired(expired) {}
+    CertTableEntry(Type type, const QString &title, const QString &cert, const QString &data, const QString &expires_on,const QString &expires_in, const QString &expired):
+        type(type), title(title), cert(cert), data(data), expires_on(expires_on), expires_in(expires_in), expired(expired) {}
 };
 
 struct CertTableEntryLessThan
@@ -69,6 +70,7 @@ public:
 	        Array params; 
 			Value result ;
 			string name_str;
+			string data_str;
 			string value_str;
 			string expires_in_str;
 			string expires_on_str;
@@ -101,6 +103,7 @@ public:
 						Object& o = input.get_obj();
 						name_str = "";
 						value_str = "";
+						data_str = "";
 						expires_in_str = "";
 		
 						expires_on_str = "";
@@ -115,6 +118,9 @@ public:
 						const Value& value_value = find_value(o, "title");
 						if (value_value.type() == str_type)
 							value_str = value_value.get_str();
+						const Value& data_value = find_value(o, "data");
+						if (data_value.type() == str_type)
+							data_str = data_value.get_str();
 						const Value& expires_on_value = find_value(o, "expires_on");
 						if (expires_on_value.type() == int_type)
 							expires_on = expires_on_value.get_int();
@@ -135,7 +141,7 @@ public:
 						expires_in_str = strprintf("%d Blocks", expires_in);
 						expires_on_str = strprintf("Block %d", expires_on);
 
-						updateEntry(QString::fromStdString(name_str), QString::fromStdString(value_str), QString::fromStdString(expires_on_str), QString::fromStdString(expires_in_str), QString::fromStdString(expired_str),type, CT_NEW); 
+						updateEntry(QString::fromStdString(name_str), QString::fromStdString(value_str), QString::fromStdString(data_str), QString::fromStdString(expires_on_str), QString::fromStdString(expires_in_str), QString::fromStdString(expired_str),type, CT_NEW); 
 					}
 				}
 			}
@@ -153,7 +159,7 @@ public:
         qSort(cachedCertTable.begin(), cachedCertTable.end(), CertTableEntryLessThan());
     }
 
-    void updateEntry(const QString &cert, const QString &title, const QString &expires_on,const QString &expires_in, const QString &expired, CertModelType type, int status)
+    void updateEntry(const QString &cert, const QString &title, const QString &data, const QString &expires_on,const QString &expires_in, const QString &expired, CertModelType type, int status)
     {
 		if(!parent || parent->modelType != type)
 		{
@@ -178,7 +184,7 @@ public:
                 break;
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedCertTable.insert(lowerIndex, CertTableEntry(newEntryType, title, cert, expires_on, expires_in, expired));
+            cachedCertTable.insert(lowerIndex, CertTableEntry(newEntryType, title, cert, data, expires_on, expires_in, expired));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
@@ -189,6 +195,7 @@ public:
             }
             lower->type = newEntryType;
             lower->title = title;
+			lower->data = data;
 			lower->expires_on = expires_on;
 			lower->expires_in = expires_in;
 			lower->expired = expired;
@@ -228,7 +235,7 @@ public:
 CertTableModel::CertTableModel(CWallet *wallet, WalletModel *parent,  CertModelType type) :
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0), modelType(type)
 {
-    columns << tr("Cert") << tr("Title") << tr("Expires On") << tr("Expires In") << tr("Certificate Status");
+    columns << tr("Cert") << tr("Title") << tr("Data") << tr("Expires On") << tr("Expires In") << tr("Certificate Status");
     priv = new CertTablePriv(wallet, this);
     refreshCertTable();
 }
@@ -269,6 +276,8 @@ QVariant CertTableModel::data(const QModelIndex &index, int role) const
         {
         case Title:
             return rec->title;
+        case Data:
+            return rec->data;
         case Name:
             return rec->cert;
         case ExpiresOn:
@@ -347,6 +356,14 @@ bool CertTableModel::setData(const QModelIndex &index, const QVariant &value, in
                 return false;
             }
             break;
+       case Data:
+            // Do nothing, if old value == new value
+            if(rec->data == value.toString())
+            {
+                editStatus = NO_CHANGES;
+                return false;
+            }
+            break;
         case Name:
             // Do nothing, if old cert == new cert
             if(rec->cert == value.toString())
@@ -406,13 +423,13 @@ QModelIndex CertTableModel::index(int row, int column, const QModelIndex &parent
     }
 }
 
-void CertTableModel::updateEntry(const QString &cert, const QString &value, const QString &expires_on,const QString &expires_in, const QString &expired, CertModelType type, int status)
+void CertTableModel::updateEntry(const QString &cert, const QString &value, const QString &data, const QString &expires_on,const QString &expires_in, const QString &expired, CertModelType type, int status)
 {
-    // Update alias book model from Syscoin core
-    priv->updateEntry(cert, value, expires_on, expires_in, expired, type, status);
+    // Update cert book model from Syscoin core
+    priv->updateEntry(cert, value, data, expires_on, expires_in, expired, type, status);
 }
 
-QString CertTableModel::addRow(const QString &type, const QString &cert, const QString &value, const QString &expires_on,const QString &expires_in, const QString &expired)
+QString CertTableModel::addRow(const QString &type, const QString &cert, const QString &value, const QString &data, const QString &expires_on,const QString &expires_in, const QString &expired)
 {
     std::string strCert = cert.toStdString();
     editStatus = OK;

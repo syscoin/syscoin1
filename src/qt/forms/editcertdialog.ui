@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>457</width>
-    <height>123</height>
+    <height>268</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -62,6 +62,16 @@
      </item>
      <item row="2" column="1">
       <widget class="QLineEdit" name="transferEdit"/>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="certDataLabel">
+       <property name="text">
+        <string>Data</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QTextEdit" name="certDataEdit"/>
      </item>
     </layout>
    </item>

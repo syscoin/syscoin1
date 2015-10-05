@@ -1664,7 +1664,7 @@ Value certlist(const Array& params, bool fHelp) {
         vchValue = cert.vchTitle;
         string value = stringFromVch(vchValue);
         oName.push_back(Pair("title", value));
-
+		oName.push_back(Pair("data", stringFromVch(cert.vchData)));
         string strAddress = "";
         GetCertAddress(tx, strAddress);
         oName.push_back(Pair("address", strAddress));
@@ -1830,6 +1830,7 @@ Value certfilter(const Array& params, bool fHelp) {
 		vector<unsigned char> vchValue = txCert.vchTitle;
         string value = stringFromVch(vchValue);
         oCert.push_back(Pair("title", value));
+		oCert.push_back(Pair("data", stringFromVch(txCert.vchData)));
 		expired_block = nHeight + GetCertDisplayExpirationDepth();
         if(nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 		{

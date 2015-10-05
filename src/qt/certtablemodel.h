@@ -22,9 +22,10 @@ public:
     enum ColumnIndex {
         Name = 0,   /**< cert name */
         Title = 1,  /**< Cert value */
-		ExpiresOn = 2,
-		ExpiresIn = 3,
-		Expired = 4
+		Data = 2,
+		ExpiresOn = 3,
+		ExpiresIn = 4,
+		Expired = 5
     };
 
     enum RoleIndex {
@@ -56,7 +57,7 @@ public:
     /* Add an cert to the model.
        Returns the added cert on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &cert, const QString &value, const QString &expires_on,const QString &expires_in, const QString &expired);
+    QString addRow(const QString &type, const QString &cert, const QString &value, const QString &data, const QString &expires_on,const QString &expires_in, const QString &expired);
 
 
     /* Look up row index of an cert in the model.
@@ -79,7 +80,7 @@ private:
 public slots:
     /* Update cert list from core.
      */
-    void updateEntry(const QString &cert, const QString &value, const QString &expires_on,const QString &expires_in, const QString &expired, CertModelType type, int status);
+    void updateEntry(const QString &cert, const QString &value, const QString &data, const QString &expires_on,const QString &expires_in, const QString &expired, CertModelType type, int status);
 
     friend class CertTablePriv;
 };
