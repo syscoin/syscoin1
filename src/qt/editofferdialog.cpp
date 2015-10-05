@@ -41,6 +41,7 @@ EditOfferDialog::EditOfferDialog(Mode mode, QWidget *parent) :
     switch(mode)
     {
     case NewOffer:
+		ui->descriptionEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
 		ui->offerLabel->setVisible(false);
 		ui->offerEdit->setVisible(false);
         setWindowTitle(tr("New Offer"));

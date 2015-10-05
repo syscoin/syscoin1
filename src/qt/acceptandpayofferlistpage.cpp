@@ -39,6 +39,7 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
     connect(ui->acceptButton, SIGNAL(clicked()), this, SLOT(acceptOffer()));
 	connect(ui->lookupButton, SIGNAL(clicked()), this, SLOT(lookup()));
 	connect(ui->offeridEdit, SIGNAL(textChanged(const QString &)), this, SLOT(resetState()));
+	ui->notesEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
 }
 
 AcceptandPayOfferListPage::~AcceptandPayOfferListPage()
