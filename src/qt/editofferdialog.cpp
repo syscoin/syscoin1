@@ -38,18 +38,16 @@ EditOfferDialog::EditOfferDialog(Mode mode, QWidget *parent) :
 	ui->offerEdit->setEnabled(false);
 	ui->currencyDisclaimer->setVisible(true);
 	ui->currencyEdit->addItems(rateList);
+	ui->descriptionEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
     switch(mode)
     {
     case NewOffer:
-		ui->descriptionEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
 		ui->offerLabel->setVisible(false);
 		ui->offerEdit->setVisible(false);
         setWindowTitle(tr("New Offer"));
 		ui->currencyDisclaimer->setText(tr("<font color='red'>You will receive payment in Syscoin equivalent to the Market-value of the currency you have selected.</font>"));
         break;
     case EditOffer:
-		ui->descriptionEdit->setVisible(false);
-		ui->descriptionLabel->setVisible(false);
 		ui->currencyEdit->setEnabled(false);
 		ui->currencyDisclaimer->setVisible(false);
         setWindowTitle(tr("Edit Offer"));
@@ -77,6 +75,7 @@ void EditOfferDialog::setModel(WalletModel* walletModel, OfferTableModel *model)
     mapper->addMapping(ui->priceEdit, OfferTableModel::Price);
 	mapper->addMapping(ui->currencyEdit, OfferTableModel::Currency);
 	mapper->addMapping(ui->qtyEdit, OfferTableModel::Qty);	
+	mapper->addMapping(ui->descriptionEdit, OfferTableModel::Description);	
     
 }
 
@@ -175,6 +174,7 @@ bool EditOfferDialog::saveCurrentRow()
 			params.push_back(ui->nameEdit->text().toStdString());
 			params.push_back(ui->qtyEdit->text().toStdString());
 			params.push_back(ui->priceEdit->text().toStdString());
+			params.push_back(ui->descriptionEdit->toPlainText().toStdString());
 			
 			try {
 				Value result = tableRPC.execute(strMethod, params);

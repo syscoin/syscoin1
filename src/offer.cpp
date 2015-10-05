@@ -3270,6 +3270,7 @@ Value offerfilter(const Array& params, bool fHelp) {
 		Object oOffer;
 		oOffer.push_back(Pair("offer", offer));
         oOffer.push_back(Pair("title", stringFromVch(txOffer.sTitle)));
+		oOffer.push_back(Pair("description", stringFromVch(txOffer.sDescription)));
         oOffer.push_back(Pair("category", stringFromVch(txOffer.sCategory)));
         oOffer.push_back(Pair("price", strprintf("%llu", txOffer.nPrice) ) );
 		oOffer.push_back(Pair("currency", stringFromVch(txOffer.sCurrencyCode)));

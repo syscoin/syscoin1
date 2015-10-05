@@ -22,11 +22,12 @@ public:
     enum ColumnIndex {
         Name = 0,   /**< offer name */
         Title = 1,  /**< Offer value */
-		Category = 2,
-		Price = 3,
-		Currency = 4,
-		Qty = 5,
-		Expired = 6
+		Description = 2,
+		Category = 3,
+		Price = 4,
+		Currency = 5,
+		Qty = 6,
+		Expired = 7
     };
 
     enum RoleIndex {
@@ -58,7 +59,7 @@ public:
     /* Add an offer to the model.
        Returns the added offer on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &offer, const QString &value, const QString &category,const QString &price, const QString &currency, const QString &qty, const QString &expired);
+    QString addRow(const QString &type, const QString &offer, const QString &value, const QString &description, const QString &category,const QString &price, const QString &currency, const QString &qty, const QString &expired);
 
     /* Look up row index of an offer in the model.
        Return -1 if not found.
@@ -80,7 +81,7 @@ private:
 public slots:
     /* Update offer list from core.
      */
-    void updateEntry(const QString &offer, const QString &value, const QString &category,const QString &price, const QString &currency, const QString &qty, const QString &expired, OfferModelType type, int status);
+    void updateEntry(const QString &offer, const QString &value, const QString &description, const QString &category, const QString &price, const QString &currency, const QString &qty, const QString &expired, OfferModelType type, int status);
 
     friend class OfferTablePriv;
 };

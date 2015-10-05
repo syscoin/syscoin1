@@ -95,6 +95,7 @@ void OfferListPage::setModel(WalletModel* walletModel, OfferTableModel *model)
 #if QT_VERSION < 0x050000
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Title, QHeaderView::Stretch);
+	ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Description, QHeaderView::Stretch);
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Category, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Price, QHeaderView::ResizeToContents);
 	ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Currency, QHeaderView::ResizeToContents);
@@ -103,6 +104,7 @@ void OfferListPage::setModel(WalletModel* walletModel, OfferTableModel *model)
 #else
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Title, QHeaderView::Stretch);
+	ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Description, QHeaderView::Stretch);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Category, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Price, QHeaderView::ResizeToContents);
 	ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Currency, QHeaderView::ResizeToContents);
@@ -181,6 +183,7 @@ void OfferListPage::on_exportButton_clicked()
     writer.setModel(proxyModel);
     writer.addColumn("Offer", OfferTableModel::Name, Qt::EditRole);
     writer.addColumn("Title", OfferTableModel::Title, Qt::EditRole);
+	writer.addColumn("Description", OfferTableModel::Title, Qt::EditRole);
 	writer.addColumn("Category", OfferTableModel::Category, Qt::EditRole);
 	writer.addColumn("Price", OfferTableModel::Price, Qt::EditRole);
 	writer.addColumn("Currency", OfferTableModel::Currency, Qt::EditRole);
@@ -237,6 +240,7 @@ void OfferListPage::on_searchOffer_clicked()
         string strMethod = string("offerfilter");
 		string name_str;
 		string value_str;
+		string desc_str;
 		string category_str;
 		string price_str;
 		string currency_str;
@@ -276,6 +280,7 @@ void OfferListPage::on_searchOffer_clicked()
 				Object& o = input.get_obj();
 				name_str = "";
 				value_str = "";
+				desc_str = "";
 				expired = 0;
 
 
@@ -285,6 +290,9 @@ void OfferListPage::on_searchOffer_clicked()
 				const Value& value_value = find_value(o, "title");
 				if (value_value.type() == str_type)
 					value_str = value_value.get_str();
+				const Value& desc_value = find_value(o, "description");
+				if (desc_value.type() == str_type)
+					desc_str = desc_value.get_str();
 				const Value& category_value = find_value(o, "category");
 				if (category_value.type() == str_type)
 					category_str = category_value.get_str();
@@ -316,6 +324,7 @@ void OfferListPage::on_searchOffer_clicked()
 				model->addRow(OfferTableModel::Offer,
 						QString::fromStdString(name_str),
 						QString::fromStdString(value_str),
+						QString::fromStdString(desc_str),
 						QString::fromStdString(category_str),
 						QString::fromStdString(price_str),
 						QString::fromStdString(currency_str),
@@ -323,6 +332,7 @@ void OfferListPage::on_searchOffer_clicked()
 						QString::fromStdString(expired_str));
 					this->model->updateEntry(QString::fromStdString(name_str),
 						QString::fromStdString(value_str),
+						QString::fromStdString(desc_str),
 						QString::fromStdString(category_str),
 						QString::fromStdString(price_str),
 						QString::fromStdString(currency_str),

@@ -98,6 +98,7 @@ void MyOfferListPage::setModel(WalletModel *walletModel, OfferTableModel *model)
 #if QT_VERSION < 0x050000
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Title, QHeaderView::Stretch);
+	ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Description, QHeaderView::Stretch);
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Category, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Price, QHeaderView::ResizeToContents);
 	ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Currency, QHeaderView::ResizeToContents);
@@ -106,6 +107,7 @@ void MyOfferListPage::setModel(WalletModel *walletModel, OfferTableModel *model)
 #else
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Title, QHeaderView::Stretch);
+	ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Description, QHeaderView::Stretch);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Category, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Price, QHeaderView::ResizeToContents);
 	ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Currency, QHeaderView::ResizeToContents);
@@ -228,6 +230,7 @@ void MyOfferListPage::on_exportButton_clicked()
     writer.setModel(proxyModel);
     writer.addColumn("Offer", OfferTableModel::Name, Qt::EditRole);
     writer.addColumn("Title", OfferTableModel::Title, Qt::EditRole);
+	writer.addColumn("Description", OfferTableModel::Description, Qt::EditRole);
 	writer.addColumn("Category", OfferTableModel::Category, Qt::EditRole);
 	writer.addColumn("Price", OfferTableModel::Price, Qt::EditRole);
 	writer.addColumn("Currency", OfferTableModel::Currency, Qt::EditRole);
