@@ -10,7 +10,7 @@
 #include "json/json_spirit_writer_template.h"
 
 #include <boost/xpressive/xpressive_dynamic.hpp>
-
+#include <QStringList>
 using namespace std;
 using namespace json_spirit;
 
@@ -35,7 +35,7 @@ extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey,
 extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
         const CTransaction& txTo, unsigned int nIn, unsigned int flags,
         int nHashType);
-extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind);
+extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind, QStringList& rateList);
 void PutToCertList(std::vector<CCert> &certList, CCert& index) {
 	int i = certList.size() - 1;
 	BOOST_REVERSE_FOREACH(CCert &o, certList) {
@@ -67,7 +67,8 @@ int64 GetCertNetworkFee(opcodetype seed, unsigned int nHeight) {
 	int64 nFee = 0;
 	int64 nRate = 0;
 	const vector<unsigned char> &vchCurrency = vchFromString("USD");
-	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nHeight) != "")
+	QStringList rateList;
+	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nHeight, rateList) != "")
 		{
 		if(seed==OP_CERT_ACTIVATE) 
 		{

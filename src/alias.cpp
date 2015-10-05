@@ -15,7 +15,7 @@
 #include "json/json_spirit_writer_template.h"
 
 #include <boost/xpressive/xpressive_dynamic.hpp>
-
+#include <QStringList>
 using namespace std;
 using namespace json_spirit;
 
@@ -63,7 +63,7 @@ int GetAliasExpirationDepth();
 int64 GetAliasNetFee(const CTransaction& tx);
 bool CheckAliasTxPos(const vector<CAliasIndex> &vtxPos, const int txPos);
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
-string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind)
+string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind, QStringList& rateList)
 {
 	vector<unsigned char> vchName = vchFromString("SYS_RATES");
 	string currencyCodeToFind = stringFromVch(vchCurrency);
@@ -126,6 +126,7 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64
 					if (currencyNameValue.type() == str_type)
 					{		
 						string currencyCode = currencyNameValue.get_str();
+						rateList << QString::fromStdString(currencyCode);
 						if(currencyCodeToFind == currencyCode)
 						{
 							if(currencyAmountValue.type() == real_type)
@@ -728,7 +729,8 @@ int64 GetAliasNetworkFee(opcodetype seed, unsigned int nHeight) {
 	int64 nFee = 0;
 	int64 nRate = 0;
 	const vector<unsigned char> &vchCurrency = vchFromString("USD");
-	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nHeight) != "")
+	QStringList rateList;
+	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nHeight, rateList) != "")
 	{
 		if(seed==OP_ALIAS_ACTIVATE)
 		{

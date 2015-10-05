@@ -8,7 +8,7 @@
 #include "bitcoinrpc.h"
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_writer_template.h"
-
+#include <QStringList>
 #include <boost/xpressive/xpressive_dynamic.hpp>
 using namespace std;
 using namespace json_spirit;
@@ -41,12 +41,13 @@ extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
 extern bool GetTxOfCert(CCertDB& dbCert, const vector<unsigned char> &vchCert,
         CCert &txPos, CTransaction& tx);
 extern bool GetCertAddress(const CTransaction& tx, std::string& strAddress);
-extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind);
+extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind, QStringList& rateList);
 int64 convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchCurrencyCode, const int64 &nPrice, const unsigned int &nHeight)
 {
 	int64 sysPrice = nPrice;
 	int64 nRate;
-	if(getCurrencyToSYSFromAlias(vchCurrencyCode, nRate, nHeight) == "")
+	QStringList rateList;
+	if(getCurrencyToSYSFromAlias(vchCurrencyCode, nRate, nHeight, rateList) == "")
 	{
 		// nRate is assumed to be rate of USD/SYS
 		sysPrice = nPrice * nRate;
@@ -339,7 +340,8 @@ int64 GetOfferNetworkFee(opcodetype seed, unsigned int nHeight) {
 	int64 nFee = 0;
 	int64 nRate = 0;
 	const vector<unsigned char> &vchCurrency = vchFromString("USD");
-	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nHeight) != "")
+	QStringList rateList;
+	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nHeight, rateList) != "")
 	{
 		if(seed==OP_OFFER_ACTIVATE) {
     		nFee = 50 * COIN;
@@ -1826,7 +1828,8 @@ Value offernew(const Array& params, bool fHelp) {
 		bExclusiveResell = atoi(params[7].get_str().c_str()) == 1? true: false;
 	}
 	int64 nRate;
-	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nBestHeight) != "")
+	QStringList rateList;
+	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nBestHeight, rateList) != "")
 	{
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not find this currency code in the SYS_RATES alias!\n");
 	}

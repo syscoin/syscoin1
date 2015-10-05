@@ -10,33 +10,47 @@
 #include "script.h"
 #include <QDataWidgetMapper>
 #include <QMessageBox>
-
+#include <QStringList>
 using namespace std;
 using namespace json_spirit;
 extern int nBestHeight;
 extern const CRPCTable tableRPC;
+extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind, QStringList& rateList);
+extern vector<unsigned char> vchFromString(const std::string &str);
 int64 GetOfferNetworkFee(opcodetype seed, unsigned int nHeight);
 EditOfferDialog::EditOfferDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::EditOfferDialog), mapper(0), mode(mode), model(0)
 {
     ui->setupUi(this);
+	int64 nFee;
+	QStringList rateList;
 
+	if(getCurrencyToSYSFromAlias(vchFromString(""), nFee, nBestHeight, rateList) == "1")
+	{
+		QMessageBox::warning(this, windowTitle(),
+			tr("Warning: SYS_RATES alias not found. No currency information available!"),
+				QMessageBox::Ok, QMessageBox::Ok);
+	}
     GUIUtil::setupAddressWidget(ui->nameEdit, this);
 	ui->offerLabel->setVisible(true);
 	ui->offerEdit->setVisible(true);
 	ui->offerEdit->setEnabled(false);
+	ui->currencyDisclaimer->setVisible(true);
+	ui->currencyEdit->addItems(rateList);
     switch(mode)
     {
     case NewOffer:
 		ui->offerLabel->setVisible(false);
 		ui->offerEdit->setVisible(false);
         setWindowTitle(tr("New Offer"));
+		ui->currencyDisclaimer->setText(tr("<font color='red'>You will receive payment in Syscoin equivalent to the Market-value of the currency you have selected.</font>"));
         break;
     case EditOffer:
 		ui->descriptionEdit->setVisible(false);
 		ui->descriptionLabel->setVisible(false);
 		ui->currencyEdit->setEnabled(false);
+		ui->currencyDisclaimer->setVisible(false);
         setWindowTitle(tr("Edit Offer"));
         break;
 	}
@@ -111,7 +125,7 @@ bool EditOfferDialog::saveCurrentRow()
 		params.push_back(ui->qtyEdit->text().toStdString());
 		params.push_back(ui->priceEdit->text().toStdString());
 		params.push_back(ui->descriptionEdit->toPlainText().toStdString());
-		params.push_back(ui->currencyEdit->text().toStdString());
+		params.push_back(ui->currencyEdit->currentText().toStdString());
 		try {
             Value result = tableRPC.execute(strMethod, params);
 			Array arr = result.get_array();
