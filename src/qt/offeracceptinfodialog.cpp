@@ -24,7 +24,9 @@ OfferAcceptInfoDialog::OfferAcceptInfoDialog(const QModelIndex &idx, QWidget *pa
     mapper = new MonitoredDataMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 	offerGUID = idx.data(OfferAcceptTableModel::NameRole).toString();
-	offerAcceptGUID = idx.data(OfferAcceptTableModel::TxIDRole).toString();
+	offerAcceptGUID = idx.data(OfferAcceptTableModel::GUIDRole).toString();
+	ui->paytxidEdit->setVisible(false);
+	ui->refundTXIDLabel->setVisible(false);
 	lookup();
 }
 
@@ -60,27 +62,34 @@ bool OfferAcceptInfoDialog::lookup()
 			BOOST_FOREACH(Value& accept, offerAccepts)
 			{					
 				Object acceptObj = accept.get_obj();
-				QString offerAcceptHash = QString::fromStdString(find_value(acceptObj, "txid").get_str());
+				QString offerAcceptHash = QString::fromStdString(find_value(acceptObj, "id").get_str());
 				if(offerAcceptHash != offerAcceptGUID)
 					continue;
-				
-				ui->txidEdit->setText(offerAcceptHash);
+				ui->guidEdit->setText(offerAcceptHash);
+				ui->txidEdit->setText(QString::fromStdString(find_value(acceptObj, "txid").get_str()));
 				ui->heightEdit->setText(QString::fromStdString(find_value(acceptObj, "height").get_str()));
 				int unixTime = atoi(find_value(acceptObj, "time").get_str().c_str());
 				timestamp.setTime_t(unixTime);
 				ui->timeEdit->setText(timestamp.toString());
+
 				ui->quantityEdit->setText(QString::fromStdString(find_value(acceptObj, "quantity").get_str()));
 				ui->currencyEdit->setText(QString::fromStdString(find_value(acceptObj, "currency").get_str()));
 				ui->priceEdit->setText(QString::fromStdString(find_value(acceptObj, "price").get_str()));
 				ui->totalEdit->setText(QString::fromStdString(find_value(acceptObj, "total").get_str()));
 				ui->paidEdit->setText(QString::fromStdString(find_value(acceptObj, "paid").get_str()));
-				ui->refundedEdit->setText(QString::fromStdString(find_value(acceptObj, "refunded").get_str()));
+				QString refundedStr = QString::fromStdString(find_value(acceptObj, "refunded").get_str());			
+				ui->refundedEdit->setText(refundedStr);
 				ui->payservicefeeEdit->setText(QString::fromStdString(find_value(acceptObj, "pay_service_fee").get_str()));
-				ui->paytxidEdit->setText(QString::fromStdString(find_value(acceptObj, "pay_txid").get_str()));
+				if(refundedStr == QString("true"))
+				{
+					ui->paytxidEdit->setVisible(true);
+					ui->refundTXIDLabel->setVisible(true);
+					ui->paytxidEdit->setText(QString::fromStdString(find_value(acceptObj, "refund_txid").get_str()));
+				}
 				ui->paymessageEdit->setText(QString::fromStdString(find_value(acceptObj, "pay_message").get_str()));
 
 			}
-
+			ui->titleEdit->setText(QString::fromStdString(find_value(result.get_obj(), "title").get_str()));
 			return true;
 		}
 		 

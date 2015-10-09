@@ -36,7 +36,7 @@ MyAcceptedOfferListPage::MyAcceptedOfferListPage(QWidget *parent) :
 	connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(info()));	
     // Context menu actions
     QAction *copyOfferAction = new QAction(ui->copyOffer->text(), this);
-    QAction *copyOfferValueAction = new QAction(tr("&Copy TxID"), this);
+    QAction *copyOfferValueAction = new QAction(tr("&Copy OfferAccept ID"), this);
 	QAction *moreInfoAction = new QAction(tr("&More Info"), this);
 
     // Build context menu
@@ -105,7 +105,8 @@ void MyAcceptedOfferListPage::setModel(WalletModel *walletModel, OfferAcceptTabl
     // Set column widths
 #if QT_VERSION < 0x050000
     ui->tableView->horizontalHeader()->setResizeMode(OfferAcceptTableModel::Name, QHeaderView::ResizeToContents);
-    ui->tableView->horizontalHeader()->setResizeMode(OfferAcceptTableModel::TxID, QHeaderView::Stretch);
+    ui->tableView->horizontalHeader()->setResizeMode(OfferAcceptTableModel::GUID, QHeaderView::ResizeToContents);
+	ui->tableView->horizontalHeader()->setResizeMode(OfferAcceptTableModel::Title, QHeaderView::Stretch);
     ui->tableView->horizontalHeader()->setResizeMode(OfferAcceptTableModel::Height, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(OfferAcceptTableModel::Price, QHeaderView::ResizeToContents);
 	ui->tableView->horizontalHeader()->setResizeMode(OfferAcceptTableModel::Currency, QHeaderView::ResizeToContents);
@@ -114,7 +115,8 @@ void MyAcceptedOfferListPage::setModel(WalletModel *walletModel, OfferAcceptTabl
 	ui->tableView->horizontalHeader()->setResizeMode(OfferAcceptTableModel::Status, QHeaderView::ResizeToContents);
 #else
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferAcceptTableModel::Name, QHeaderView::ResizeToContents);
-    ui->tableView->horizontalHeader()->setSectionResizeMode(OfferAcceptTableModel::TxID, QHeaderView::Stretch);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(OfferAcceptTableModel::GUID, QHeaderView::ResizeToContents);
+	ui->tableView->horizontalHeader()->setSectionResizeMode(OfferAcceptTableModel::Title, QHeaderView::Stretch);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferAcceptTableModel::Height, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferAcceptTableModel::Price, QHeaderView::ResizeToContents);
 	ui->tableView->horizontalHeader()->setSectionResizeMode(OfferAcceptTableModel::Currency, QHeaderView::ResizeToContents);
@@ -145,7 +147,7 @@ void MyAcceptedOfferListPage::on_copyOffer_clicked()
 
 void MyAcceptedOfferListPage::onCopyOfferValueAction()
 {
-    GUIUtil::copyEntryData(ui->tableView, OfferAcceptTableModel::TxID);
+    GUIUtil::copyEntryData(ui->tableView, OfferAcceptTableModel::GUID);
 }
 
 
@@ -211,8 +213,9 @@ void MyAcceptedOfferListPage::on_exportButton_clicked()
 
     // name, column, role
     writer.setModel(proxyModel);
-    writer.addColumn("Offer", OfferAcceptTableModel::Name, Qt::EditRole);
-    writer.addColumn("TxID", OfferAcceptTableModel::TxID, Qt::EditRole);
+    writer.addColumn("Offer ID", OfferAcceptTableModel::Name, Qt::EditRole);
+    writer.addColumn("OfferAccept ID", OfferAcceptTableModel::GUID, Qt::EditRole);
+	writer.addColumn("Title", OfferAcceptTableModel::Title, Qt::EditRole);
 	writer.addColumn("Height", OfferAcceptTableModel::Height, Qt::EditRole);
 	writer.addColumn("Price", OfferAcceptTableModel::Price, Qt::EditRole);
 	writer.addColumn("Currency", OfferAcceptTableModel::Currency, Qt::EditRole);

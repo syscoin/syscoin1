@@ -61,7 +61,6 @@ public:
 	uint64 nFee;
 	bool bPaid;
 	bool bRefunded;
-    uint256 txPayId;
 	uint256 txRefundId;
 	std::vector<unsigned char> vchRefundAddress;
 	std::vector<unsigned char> vchLinkOfferAccept;
@@ -74,7 +73,6 @@ public:
         READWRITE(vchMessage);
         READWRITE(vchAddress);
 		READWRITE(txHash);
-        READWRITE(txPayId);
 		READWRITE(nHeight);
     	READWRITE(nTime);
         READWRITE(nQty);
@@ -99,7 +97,6 @@ public:
         && a.nPrice == b.nPrice
         && a.nFee == b.nFee
         && a.bPaid == b.bPaid
-        && a.txPayId == b.txPayId
 		&& a.bRefunded == b.bRefunded
 		&& a.txRefundId == b.txRefundId
 		&& a.vchRefundAddress == b.vchRefundAddress
@@ -118,7 +115,6 @@ public:
         nPrice = b.nPrice;
         nFee = b.nFee;
         bPaid = b.bPaid;
-        txPayId = b.txPayId;
 		bRefunded = b.bRefunded;
 		txRefundId = b.txRefundId;
 		vchRefundAddress = b.vchRefundAddress;
@@ -130,8 +126,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { nHeight = nTime = nPrice = nQty = 0; txHash = 0; bPaid = false; txPayId = 0; txRefundId=0; bRefunded=false;vchRefundAddress.clear();vchLinkOfferAccept.clear(); }
-    bool IsNull() const { return (nTime == 0 && txHash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 && bPaid == 0 && txPayId == 0 && bRefunded == false && txRefundId == 0); }
+    void SetNull() { nHeight = nTime = nPrice = nQty = 0; txHash = 0; bPaid = false; txRefundId=0; bRefunded=false;vchRefundAddress.clear();vchLinkOfferAccept.clear(); }
+    bool IsNull() const { return (nTime == 0 && txHash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 && bPaid == 0 && bRefunded == false && txRefundId == 0); }
 
 };
 class COfferLinkWhitelistEntry {

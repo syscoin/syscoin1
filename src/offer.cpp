@@ -1957,6 +1957,10 @@ Value offerlink(const Array& params, bool fHelp) {
 	if (!GetTxOfOffer(*pofferdb, vchLinkOffer, linkOffer, tx) || vchLinkOffer.empty())
 		throw runtime_error("could not find an offer with this name");
 
+	if(!linkOffer.vchLinkOffer.empty())
+	{
+		throw runtime_error("cannot link to an offer that is already linked to another offer");
+	}
 	if(params.size() == 4)
 	{
 		vchDesc = vchFromValue(params[3]);
@@ -2709,7 +2713,6 @@ Value offeraccept(const Array& params, bool fHelp) {
 	// create accept object
 	COfferAccept txAccept;
 	txAccept.vchRand = vchAcceptRand;
-    txAccept.txPayId = wtx.GetHash();
     txAccept.vchMessage = vchMessage;
 	txAccept.nQty = nQty;
 	txAccept.nPrice = theOffer.GetPrice(foundCert);
@@ -2850,18 +2853,15 @@ Value offerinfo(const Array& params, bool fHelp) {
 			if(ca.bPaid) {
 				oOfferAccept.push_back(Pair("paid","true"));
 				oOfferAccept.push_back(Pair("pay_service_fee", strprintf("%.2f SYS", ValueFromAmount(ca.nFee).get_real())));
-				oOfferAccept.push_back(Pair("pay_txid", ca.txPayId.GetHex() ));
 				oOfferAccept.push_back(Pair("pay_message", stringFromVch(ca.vchMessage)));
 			}
 			else
 			{
 				oOfferAccept.push_back(Pair("paid","false"));
 				oOfferAccept.push_back(Pair("pay_service_fee", ""));
-				oOfferAccept.push_back(Pair("pay_txid", ""));
 				oOfferAccept.push_back(Pair("pay_message",""));
 			}
 			if(ca.bRefunded) { 
-
 				oOfferAccept.push_back(Pair("refunded", "true"));
 				oOfferAccept.push_back(Pair("refund_txid", ca.txRefundId.GetHex()));
 			}
@@ -2870,6 +2870,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("refunded", "false"));
 				oOfferAccept.push_back(Pair("refund_txid", ""));
 			}
+
 			aoOfferAccepts.push_back(oOfferAccept);
 		}
 		int nHeight;
@@ -2981,7 +2982,8 @@ Value offeracceptlist(const Array& params, bool fHelp) {
 			string offer = stringFromVch(vchName);
 			string sHeight = strprintf("%llu", theOfferAccept.nHeight);
 			oOfferAccept.push_back(Pair("offer", offer));
-			oOfferAccept.push_back(Pair("txid", theOfferAccept.txHash.GetHex()));
+			oOfferAccept.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
+			oOfferAccept.push_back(Pair("id", HexStr(theOfferAccept.vchRand)));
 			oOfferAccept.push_back(Pair("height", sHeight));
 			oOfferAccept.push_back(Pair("quantity", strprintf("%llu", theOfferAccept.nQty)));
 			oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));

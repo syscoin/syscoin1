@@ -21,21 +21,22 @@ public:
 
     enum ColumnIndex {
         Name = 0,   /**< offer name */
-        TxID = 1,  /**< Offer value */
-		Height = 2,
-		Price = 3,
-		Currency = 4,
-		Qty = 5,
-		Total = 6,
-		Status = 7
+        GUID = 1,  /**< Offer value */
+		Title = 2,  /**< Offer value */
+		Height = 3,
+		Price = 4,
+		Currency = 5,
+		Qty = 6,
+		Total = 7,
+		Status = 8
     };
 
     enum RoleIndex {
         TypeRole = Qt::UserRole, /**< Type of offer (#Send or #Receive) */
         /** Offer name */
         NameRole,
-        /** Offer accept txid */
-        TxIDRole
+        /** Offer accept guid */
+        GUIDRole
     };
 
     /** Return status of edit/insert operation */
@@ -63,7 +64,7 @@ public:
     /* Add an offer to the model.
        Returns the added offer on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &offer, const QString &value, const QString &height,const QString &price, const QString &currency, const QString &qty, const QString &total, const QString &status);
+    QString addRow(const QString &type, const QString &offer, const QString &value, const QString &title, const QString &height,const QString &price, const QString &currency, const QString &qty, const QString &total, const QString &status);
 
     /* Look up row index of an offer in the model.
        Return -1 if not found.
@@ -85,7 +86,7 @@ private:
 public slots:
     /* Update offer list from core.
      */
-    void updateEntry(const QString &offer, const QString &value, const QString &height,const QString &price, const QString &currency, const QString &qty, const QString &total, const QString &status, OfferAcceptModelType type, int statusi);
+    void updateEntry(const QString &offer, const QString &value, const QString &title, const QString &height,const QString &price, const QString &currency, const QString &qty, const QString &total, const QString &status, OfferAcceptModelType type, int statusi);
 
     friend class OfferAcceptTablePriv;
 };
