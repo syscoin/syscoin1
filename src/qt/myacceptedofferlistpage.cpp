@@ -9,8 +9,13 @@
 #include "optionsmodel.h"
 #include "walletmodel.h"
 #include "bitcoingui.h"
+#include "bitcoinrpc.h"
 #include "csvmodelwriter.h"
 #include "guiutil.h"
+
+using namespace std;
+using namespace json_spirit;
+extern const CRPCTable tableRPC;
 
 #include <QSortFilterProxyModel>
 #include <QClipboard>
@@ -38,6 +43,7 @@ MyAcceptedOfferListPage::MyAcceptedOfferListPage(QWidget *parent) :
     QAction *copyOfferAction = new QAction(ui->copyOffer->text(), this);
     QAction *copyOfferValueAction = new QAction(tr("&Copy OfferAccept ID"), this);
 	QAction *moreInfoAction = new QAction(tr("&More Info"), this);
+	QAction *refundAction = new QAction(tr("&Refund"), this);
 
     // Build context menu
     contextMenu = new QMenu();
@@ -45,10 +51,12 @@ MyAcceptedOfferListPage::MyAcceptedOfferListPage(QWidget *parent) :
     contextMenu->addAction(copyOfferValueAction);
 	contextMenu->addSeparator();
 	contextMenu->addAction(moreInfoAction);
+	contextMenu->addAction(refundAction);
     // Connect signals for context menu actions
     connect(copyOfferAction, SIGNAL(triggered()), this, SLOT(on_copyOffer_clicked()));
     connect(copyOfferValueAction, SIGNAL(triggered()), this, SLOT(onCopyOfferValueAction()));
 	connect(moreInfoAction, SIGNAL(triggered()), this, SLOT(info()));
+	connect(refundAction, SIGNAL(triggered()), this, SLOT(refund()));
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
@@ -69,6 +77,58 @@ void MyAcceptedOfferListPage::info()
         OfferAcceptInfoDialog dlg(selection.at(0));
         dlg.exec();
     }
+}
+void MyAcceptedOfferListPage::refund()
+{
+    if(!ui->tableView->selectionModel())
+        return;
+    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
+    if(selection.isEmpty())
+    {
+        return;
+    }
+	QString offerAcceptGUID = selection.at(0).data(OfferAcceptTableModel::GUIDRole).toString();
+
+    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm refund"),
+             tr("Warning: If this offer accept was resold you should ensure the reseller's wallet is online to process the refund to the buyer!") + "<br><br>" + tr("Coins will be returned to the buyer. Are you sure you wish to refund this offer accept?"),
+             QMessageBox::Yes|QMessageBox::Cancel,
+             QMessageBox::Cancel);
+    if(retval == QMessageBox::Yes)
+    {
+		string strError;
+		string strMethod = string("offerrefund");
+		Array params;
+		Value result;
+		params.push_back(offerAcceptGUID.toStdString());
+
+		try {
+			result = tableRPC.execute(strMethod, params);
+
+			if (result.type() == str_type)
+			{
+				QMessageBox::information(this, windowTitle(),
+					tr("offer accept %1 refund was initiated successfully, please confirm with the buyer that he has recieved his funds after a few blocks!").arg(offerAcceptGUID),
+					QMessageBox::Ok, QMessageBox::Ok);				
+			}
+			 
+
+		}
+		catch (Object& objError)
+		{
+			string strError = find_value(objError, "message").get_str();
+			QMessageBox::critical(this, windowTitle(),
+				tr("Could not refund this offer accept: %1").arg(QString::fromStdString(strError)),
+					QMessageBox::Ok, QMessageBox::Ok);
+
+		}
+		catch(std::exception& e)
+		{
+			QMessageBox::critical(this, windowTitle(),
+				tr("There was an exception trying to refund this offer accept: ") + QString::fromStdString(e.what()),
+					QMessageBox::Ok, QMessageBox::Ok);
+		}
+
+	}
 }
 void MyAcceptedOfferListPage::showEvent ( QShowEvent * event )
 {

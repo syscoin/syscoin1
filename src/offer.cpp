@@ -2913,6 +2913,8 @@ Value offerinfo(const Array& params, bool fHelp) {
 				oOffer.push_back(Pair("offerlink", "true"));
 				oOffer.push_back(Pair("offerlink_guid", stringFromVch(theOffer.vchLinkOffer)));
 			}
+			else
+				oOffer.push_back(Pair("offerlink", "false"));
 			oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 			oOffer.push_back(Pair("accepts", aoOfferAccepts));
 			oLastOffer = oOffer;

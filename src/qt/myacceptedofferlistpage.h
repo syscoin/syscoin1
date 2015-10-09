@@ -67,6 +67,7 @@ private slots:
     /** New entry/entries were added to cert table */
     void selectNewOffer(const QModelIndex &parent, int begin, int /*end*/);
 	void info();
+	void refund();
 
 };
 

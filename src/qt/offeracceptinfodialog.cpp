@@ -27,6 +27,11 @@ OfferAcceptInfoDialog::OfferAcceptInfoDialog(const QModelIndex &idx, QWidget *pa
 	offerAcceptGUID = idx.data(OfferAcceptTableModel::GUIDRole).toString();
 	ui->paytxidEdit->setVisible(false);
 	ui->refundTXIDLabel->setVisible(false);
+
+	ui->linkGUIDEdit->setVisible(false);
+	ui->linkGUIDLabel->setVisible(false);
+
+
 	lookup();
 }
 
@@ -77,7 +82,8 @@ bool OfferAcceptInfoDialog::lookup()
 				ui->priceEdit->setText(QString::fromStdString(find_value(acceptObj, "price").get_str()));
 				ui->totalEdit->setText(QString::fromStdString(find_value(acceptObj, "total").get_str()));
 				ui->paidEdit->setText(QString::fromStdString(find_value(acceptObj, "paid").get_str()));
-				QString refundedStr = QString::fromStdString(find_value(acceptObj, "refunded").get_str());			
+				QString refundedStr = QString::fromStdString(find_value(acceptObj, "refunded").get_str());	
+				
 				ui->refundedEdit->setText(refundedStr);
 				ui->payservicefeeEdit->setText(QString::fromStdString(find_value(acceptObj, "pay_service_fee").get_str()));
 				if(refundedStr == QString("true"))
@@ -88,6 +94,13 @@ bool OfferAcceptInfoDialog::lookup()
 				}
 				ui->paymessageEdit->setText(QString::fromStdString(find_value(acceptObj, "pay_message").get_str()));
 
+			}
+			QString linkedStr = QString::fromStdString(find_value(result.get_obj(), "offerlink").get_str());
+			if(linkedStr == QString("true"))
+			{
+				ui->linkGUIDEdit->setVisible(true);
+				ui->linkGUIDLabel->setVisible(true);
+				ui->linkGUIDEdit->setText(QString::fromStdString(find_value(result.get_obj(), "offerlink_guid").get_str()));
 			}
 			ui->titleEdit->setText(QString::fromStdString(find_value(result.get_obj(), "title").get_str()));
 			return true;
