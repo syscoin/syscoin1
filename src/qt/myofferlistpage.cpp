@@ -4,6 +4,8 @@
 #include "myofferlistpage.h"
 #include "ui_myofferlistpage.h"
 #include "offertablemodel.h"
+#include "offerwhitelisttablemodel.h"
+#include "editwhitelistofferdialog.h"
 #include "clientmodel.h"
 #include "optionsmodel.h"
 #include "walletmodel.h"
@@ -28,6 +30,8 @@ MyOfferListPage::MyOfferListPage(QWidget *parent) :
     ui->newOffer->setIcon(QIcon());
     ui->copyOffer->setIcon(QIcon());
     ui->exportButton->setIcon(QIcon());
+	ui->refreshButton->setIcon(QIcon());
+	ui->whitelistButton->setIcon(QIcon());
 #endif
 
 	ui->buttonBox->setVisible(false);
@@ -39,23 +43,26 @@ MyOfferListPage::MyOfferListPage(QWidget *parent) :
     QAction *copyOfferAction = new QAction(ui->copyOffer->text(), this);
     QAction *copyOfferValueAction = new QAction(tr("&Copy Title"), this);
     QAction *editAction = new QAction(tr("&Edit"), this);
-
+	QAction *editWhitelistAction = new QAction(tr("&Manage Whitelist"), this);
     // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyOfferAction);
     contextMenu->addAction(copyOfferValueAction);
-    contextMenu->addAction(editAction);
     contextMenu->addSeparator();
+	contextMenu->addAction(editAction);
+	contextMenu->addAction(editWhitelistAction);
 
     // Connect signals for context menu actions
     connect(copyOfferAction, SIGNAL(triggered()), this, SLOT(on_copyOffer_clicked()));
     connect(copyOfferValueAction, SIGNAL(triggered()), this, SLOT(onCopyOfferValueAction()));
     connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
+	connect(editWhitelistAction, SIGNAL(triggered()), this, SLOT(onEditWhitelistAction()));
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
     // Pass through accept action from button box
     connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+	offerWhitelistTableModel = 0;
 }
 
 MyOfferListPage::~MyOfferListPage()
@@ -103,6 +110,7 @@ void MyOfferListPage::setModel(WalletModel *walletModel, OfferTableModel *model)
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Price, QHeaderView::ResizeToContents);
 	ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Currency, QHeaderView::ResizeToContents);
 	ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Qty, QHeaderView::ResizeToContents);
+	ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::ExclusiveResell, QHeaderView::ResizeToContents);
 	ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Expired, QHeaderView::ResizeToContents);
 #else
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Name, QHeaderView::ResizeToContents);
@@ -112,6 +120,7 @@ void MyOfferListPage::setModel(WalletModel *walletModel, OfferTableModel *model)
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Price, QHeaderView::ResizeToContents);
 	ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Currency, QHeaderView::ResizeToContents);
 	ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Qty, QHeaderView::ResizeToContents);
+	ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::ExclusiveResell, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Expired, QHeaderView::ResizeToContents);
 #endif
 
@@ -122,6 +131,9 @@ void MyOfferListPage::setModel(WalletModel *walletModel, OfferTableModel *model)
     connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(selectNewOffer(QModelIndex,int,int)));
 
     selectionChanged();
+	if(offerWhitelistTableModel)
+		delete offerWhitelistTableModel;
+	offerWhitelistTableModel = new OfferWhitelistTableModel(walletModel);
 }
 
 void MyOfferListPage::setOptionsModel(ClientModel* clientmodel, OptionsModel *optionsModel)
@@ -154,7 +166,30 @@ void MyOfferListPage::onEditAction()
     dlg.loadRow(origIndex.row());
     dlg.exec();
 }
-
+void MyOfferListPage::on_whitelistButton_clicked()
+{
+    if(!ui->tableView->selectionModel())
+        return;
+    QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows();
+    if(indexes.isEmpty())
+        return;
+	QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
+    EditWhitelistOfferDialog dlg(&origIndex);
+	dlg.setModel(walletModel, offerWhitelistTableModel);
+    dlg.exec();
+}
+void MyOfferListPage::onEditWhitelistAction()
+{
+    if(!ui->tableView->selectionModel())
+        return;
+    QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows();
+    if(indexes.isEmpty())
+        return;
+	QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
+    EditWhitelistOfferDialog dlg(&origIndex);
+	dlg.setModel(walletModel, offerWhitelistTableModel);
+    dlg.exec();
+}
 void MyOfferListPage::on_refreshButton_clicked()
 {
     if(!model)
@@ -183,10 +218,12 @@ void MyOfferListPage::selectionChanged()
     if(table->selectionModel()->hasSelection())
     {
         ui->copyOffer->setEnabled(true);
+		ui->whitelistButton->setEnabled(true);
     }
     else
     {
         ui->copyOffer->setEnabled(false);
+		ui->whitelistButton->setEnabled(false);
     }
 }
 
@@ -235,6 +272,7 @@ void MyOfferListPage::on_exportButton_clicked()
 	writer.addColumn("Price", OfferTableModel::Price, Qt::EditRole);
 	writer.addColumn("Currency", OfferTableModel::Currency, Qt::EditRole);
 	writer.addColumn("Qty", OfferTableModel::Qty, Qt::EditRole);
+	writer.addColumn("Exclusive Resell", OfferTableModel::ExclusiveResell, Qt::EditRole);
 	writer.addColumn("Expired", OfferTableModel::Expired, Qt::EditRole);
     if(!writer.write())
     {

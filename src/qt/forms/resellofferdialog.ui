@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>EditOfferDialog</class>
- <widget class="QDialog" name="EditOfferDialog">
+ <class>ResellOfferDialog</class>
+ <widget class="QDialog" name="ResellOfferDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Edit Offer</string>
+   <string>Resell Offer</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -24,71 +24,34 @@
        <property name="text">
         <string>Offer</string>
        </property>
-       <property name="buddy">
-        <cstring>offerEdit</cstring>
-       </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QLineEdit" name="offerEdit">
-       <property name="toolTip">
-        <string>The value associated with this certificate.</string>
+      <widget class="QLabel" name="offerGUIDLabel">
+       <property name="text">
+        <string/>
        </property>
       </widget>
      </item>
      <item row="1" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Title</string>
+        <string>Commission</string>
        </property>
        <property name="buddy">
-        <cstring>nameEdit</cstring>
+        <cstring>commissionEdit</cstring>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QLineEdit" name="nameEdit">
+      <widget class="QLineEdit" name="commissionEdit">
        <property name="toolTip">
         <string>The certificate name.</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="categoryLabel">
-       <property name="text">
-        <string>Category</string>
-       </property>
-      </widget>
-     </item>
      <item row="2" column="1">
-      <widget class="QLineEdit" name="categoryEdit"/>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="priceLabel">
-       <property name="text">
-        <string>Price</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QLineEdit" name="priceEdit"/>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="currencyLabel">
-       <property name="text">
-        <string>Currency</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="1">
-      <widget class="QComboBox" name="currencyEdit">
-       <property name="editable">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="1">
-      <widget class="QLabel" name="currencyDisclaimer">
+      <widget class="QLabel" name="commissionDisclaimer">
        <property name="text">
         <string/>
        </property>
@@ -97,25 +60,15 @@
        </property>
       </widget>
      </item>
-     <item row="7" column="0">
+     <item row="3" column="0">
       <widget class="QLabel" name="descriptionLabel">
        <property name="text">
         <string>Description</string>
        </property>
       </widget>
      </item>
-     <item row="7" column="1">
+     <item row="3" column="1">
       <widget class="QPlainTextEdit" name="descriptionEdit"/>
-     </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="qtyLabel">
-       <property name="text">
-        <string>Quantity</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="1">
-      <widget class="QLineEdit" name="qtyEdit"/>
      </item>
     </layout>
    </item>
@@ -136,7 +89,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>EditOfferDialog</receiver>
+   <receiver>ResellOfferDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -152,7 +105,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>EditOfferDialog</receiver>
+   <receiver>ResellOfferDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

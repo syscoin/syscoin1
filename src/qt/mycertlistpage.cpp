@@ -28,6 +28,7 @@ MyCertListPage::MyCertListPage(QWidget *parent) :
     ui->newCert->setIcon(QIcon());
     ui->copyCert->setIcon(QIcon());
     ui->exportButton->setIcon(QIcon());
+	ui->refreshButton->setIcon(QIcon());
 #endif
 
 	ui->buttonBox->setVisible(false);

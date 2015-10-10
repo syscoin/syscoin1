@@ -29,10 +29,10 @@ struct OfferTableEntry
 	QString currency;
 	QString qty;
 	QString expired;
-
+	QString exclusive_resell;
     OfferTableEntry() {}
-    OfferTableEntry(Type type, const QString &title, const QString &offer, const QString &description, const QString &category,const QString &price, const QString &currency,const QString &qty,const QString &expired):
-        type(type), title(title), offer(offer), description(description), category(category),price(price), currency(currency),qty(qty), expired(expired) {}
+    OfferTableEntry(Type type, const QString &title, const QString &offer, const QString &description, const QString &category,const QString &price, const QString &currency,const QString &qty,const QString &expired, const QString &exclusive_resell):
+        type(type), title(title), offer(offer), description(description), category(category),price(price), currency(currency),qty(qty), expired(expired), exclusive_resell(exclusive_resell) {}
 };
 
 struct OfferTableEntryLessThan
@@ -79,6 +79,7 @@ public:
 			string currency_str;
 			string qty_str;
 			string expired_str;
+			string exclusive_resell_str;
 			int expired = 0;
 
 			
@@ -103,7 +104,7 @@ public:
 						Object& o = input.get_obj();
 						name_str = "";
 						value_str = "";
-
+						exclusive_resell_str = "true";
 						expired = 0;
 
 
@@ -132,6 +133,10 @@ public:
 						const Value& expired_value = find_value(o, "expired");
 						if (expired_value.type() == int_type)
 							expired = expired_value.get_int();
+						const Value& exclusive_resell_value = find_value(o, "exclusive_resell");
+						if (exclusive_resell_value.type() == str_type)
+							exclusive_resell_str = exclusive_resell_value.get_str();
+
 						const Value& pending_value = find_value(o, "pending");
 						int pending = 0;
 						if (pending_value.type() == int_type)
@@ -150,7 +155,7 @@ public:
 							expired_str = "Valid";
 						}
 
-						updateEntry(QString::fromStdString(name_str), QString::fromStdString(value_str), QString::fromStdString(desc_str), QString::fromStdString(category_str), QString::fromStdString(price_str), QString::fromStdString(currency_str), QString::fromStdString(qty_str), QString::fromStdString(expired_str),type, CT_NEW); 
+						updateEntry(QString::fromStdString(name_str), QString::fromStdString(value_str), QString::fromStdString(desc_str), QString::fromStdString(category_str), QString::fromStdString(price_str), QString::fromStdString(currency_str), QString::fromStdString(qty_str), QString::fromStdString(expired_str),QString::fromStdString(exclusive_resell_str), type, CT_NEW); 
 					}
 				}
    			}
@@ -168,7 +173,7 @@ public:
         qSort(cachedOfferTable.begin(), cachedOfferTable.end(), OfferTableEntryLessThan());
     }
 
-    void updateEntry(const QString &offer, const QString &title,  const QString &description, const QString &category,const QString &price, const QString &currency,const QString &qty,const QString &expired, OfferModelType type, int status)
+    void updateEntry(const QString &offer, const QString &title,  const QString &description, const QString &category,const QString &price, const QString &currency,const QString &qty,const QString &expired, const QString &exclusive_resell, OfferModelType type, int status)
     {
 		if(!parent || parent->modelType != type)
 		{
@@ -193,7 +198,7 @@ public:
                 break;
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedOfferTable.insert(lowerIndex, OfferTableEntry(newEntryType, title, offer, description, category, price, currency, qty, expired));
+            cachedOfferTable.insert(lowerIndex, OfferTableEntry(newEntryType, title, offer, description, category, price, currency, qty, expired, exclusive_resell));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
@@ -210,6 +215,7 @@ public:
 			lower->currency = currency;
 			lower->qty = qty;
 			lower->expired = expired;
+			lower->exclusive_resell = exclusive_resell;
             parent->emitDataChanged(lowerIndex);
             break;
         case CT_DELETED:
@@ -246,7 +252,7 @@ public:
 OfferTableModel::OfferTableModel(CWallet *wallet, WalletModel *parent,  OfferModelType type) :
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0), modelType(type)
 {
-    columns << tr("Offer") << tr("Title") << tr("Description") << tr("Category") << tr("Price") << tr("Currency") << tr("Quantity") << tr("Status");
+    columns << tr("Offer") << tr("Title") << tr("Description") << tr("Category") << tr("Price") << tr("Currency") << tr("Quantity") << tr("Status") << tr("Exclusive Resell");
     priv = new OfferTablePriv(wallet, this);
     refreshOfferTable();
 }
@@ -301,6 +307,8 @@ QVariant OfferTableModel::data(const QModelIndex &index, int role) const
             return rec->qty;
         case Expired:
             return rec->expired;
+        case ExclusiveResell:
+            return rec->exclusive_resell;
         }
     }
     else if (role == Qt::FontRole)
@@ -312,6 +320,10 @@ QVariant OfferTableModel::data(const QModelIndex &index, int role) const
         }
         return font;
     }
+    else if (role == NameRole)
+    {
+        return rec->offer;
+    }
     else if (role == TypeRole)
     {
         switch(rec->type)
@@ -321,6 +333,31 @@ QVariant OfferTableModel::data(const QModelIndex &index, int role) const
         default: break;
         }
     }
+	else if(role == CategoryRole)
+	{
+		return rec->category;
+	}
+	else if(role == TitleRole)
+	{
+		return rec->title;
+	}
+	else if(role == QtyRole)
+	{
+		return rec->qty;
+	}
+	else if(role == PriceRole)
+	{
+		return rec->price;
+	}
+	else if(role == DescriptionRole)
+	{
+		return rec->description;
+	}
+	else if(role == ExclusiveWhitelistRole)
+	{
+		return rec->exclusive_resell;
+	}
+
     return QVariant();
 }
 
@@ -329,7 +366,6 @@ bool OfferTableModel::setData(const QModelIndex &index, const QVariant &value, i
     if(!index.isValid())
         return false;
     OfferTableEntry *rec = static_cast<OfferTableEntry*>(index.internalPointer());
-
     editStatus = OK;
 
     if(role == Qt::EditRole)
@@ -345,6 +381,16 @@ bool OfferTableModel::setData(const QModelIndex &index, const QVariant &value, i
             }
            
             break;
+        case ExclusiveResell:
+	         // Do nothing, if old value == new value
+            if(rec->exclusive_resell == value.toString())
+            {
+                editStatus = NO_CHANGES;
+                return false;
+            }
+           
+            break;
+			
         case Price:
             // Do nothing, if old value == new value
             if(rec->price == value.toString())
@@ -456,13 +502,13 @@ QModelIndex OfferTableModel::index(int row, int column, const QModelIndex &paren
     }
 }
 
-void OfferTableModel::updateEntry(const QString &offer, const QString &value, const QString &description, const QString &category,const QString &price, const QString &currency, const QString &qty, const QString &expired, OfferModelType type, int status)
+void OfferTableModel::updateEntry(const QString &offer, const QString &value, const QString &description, const QString &category,const QString &price, const QString &currency, const QString &qty, const QString &expired, const QString &exclusive_resell, OfferModelType type, int status)
 {
     // Update alias book model from Syscoin core
-    priv->updateEntry(offer, value, description, category, price, currency, qty, expired, type, status);
+    priv->updateEntry(offer, value, description, category, price, currency, qty, expired, exclusive_resell, type, status);
 }
 
-QString OfferTableModel::addRow(const QString &type, const QString &offer, const QString &value, const QString &description, const QString &category,const QString &price, const QString &currency, const QString &qty, const QString &expired)
+QString OfferTableModel::addRow(const QString &type, const QString &offer, const QString &value, const QString &description, const QString &category,const QString &price, const QString &currency, const QString &qty, const QString &expired, const QString &exclusive_resell)
 {
     std::string strOffer = offer.toStdString();
     editStatus = OK;

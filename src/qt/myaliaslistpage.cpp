@@ -28,6 +28,7 @@ MyAliasListPage::MyAliasListPage(QWidget *parent) :
     ui->newAlias->setIcon(QIcon());
     ui->copyAlias->setIcon(QIcon());
     ui->exportButton->setIcon(QIcon());
+	ui->refreshButton->setIcon(QIcon());
 #endif
 
 	ui->buttonBox->setVisible(false);

@@ -49,6 +49,7 @@ private:
     QString newOfferToSelect;
 
 private slots:
+	void on_resellButton_clicked();
     void on_searchOffer_clicked();
     /** Create a new Offer for receiving coins and / or add a new Offer book entry */
     /** Copy Offer of currently selected Offer entry to clipboard */

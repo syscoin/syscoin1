@@ -6,6 +6,7 @@
 namespace Ui {
     class MyOfferListPage;
 }
+class OfferWhitelistTableModel;
 class OfferTableModel;
 class OptionsModel;
 class ClientModel;
@@ -43,6 +44,7 @@ private:
 	WalletModel *walletModel;
     Ui::MyOfferListPage *ui;
     OfferTableModel *model;
+	OfferWhitelistTableModel* offerWhitelistTableModel;
     OptionsModel *optionsModel;
     QString returnValue;
     QSortFilterProxyModel *proxyModel;
@@ -51,6 +53,8 @@ private:
     QString newOfferToSelect;
 
 private slots:
+	void on_whitelistButton_clicked();
+	void onEditWhitelistAction();
     /** Create a new cert */
     void on_newOffer_clicked();
     /** Copy cert of currently selected cert entry to clipboard */

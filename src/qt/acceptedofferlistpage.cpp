@@ -27,6 +27,7 @@ AcceptedOfferListPage::AcceptedOfferListPage(QWidget *parent) :
 #ifdef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
     ui->copyOffer->setIcon(QIcon());
     ui->exportButton->setIcon(QIcon());
+	ui->refreshButton->setIcon(QIcon());
 #endif
 
 	ui->buttonBox->setVisible(false);

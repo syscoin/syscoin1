@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>EditOfferDialog</class>
- <widget class="QDialog" name="EditOfferDialog">
+ <class>NewWhitelistDialog</class>
+ <widget class="QDialog" name="NewWhitelistDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>457</width>
-    <height>337</height>
+    <height>157</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Edit Offer</string>
+   <string>Add Whitelist Entry</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -24,30 +24,27 @@
        <property name="text">
         <string>Offer</string>
        </property>
-       <property name="buddy">
-        <cstring>offerEdit</cstring>
-       </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QLineEdit" name="offerEdit">
-       <property name="toolTip">
-        <string>The value associated with this certificate.</string>
+      <widget class="QLabel" name="offerGUIDLabel">
+       <property name="text">
+        <string/>
        </property>
       </widget>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="label_2">
+      <widget class="QLabel" name="certLabel">
        <property name="text">
-        <string>Title</string>
+        <string>Cert</string>
        </property>
        <property name="buddy">
-        <cstring>nameEdit</cstring>
+        <cstring>certEdit</cstring>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QLineEdit" name="nameEdit">
+      <widget class="QLineEdit" name="certEdit">
        <property name="toolTip">
         <string>The certificate name.</string>
        </property>
@@ -56,39 +53,22 @@
      <item row="2" column="0">
       <widget class="QLabel" name="categoryLabel">
        <property name="text">
-        <string>Category</string>
+        <string>Discount</string>
        </property>
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QLineEdit" name="categoryEdit"/>
+      <widget class="QLineEdit" name="discountEdit"/>
      </item>
      <item row="3" column="0">
-      <widget class="QLabel" name="priceLabel">
+      <widget class="QLabel" name="discountText">
        <property name="text">
-        <string>Price</string>
+        <string/>
        </property>
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="QLineEdit" name="priceEdit"/>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="currencyLabel">
-       <property name="text">
-        <string>Currency</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="1">
-      <widget class="QComboBox" name="currencyEdit">
-       <property name="editable">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="1">
-      <widget class="QLabel" name="currencyDisclaimer">
+      <widget class="QLabel" name="discountDisclaimer">
        <property name="text">
         <string/>
        </property>
@@ -96,26 +76,6 @@
         <bool>true</bool>
        </property>
       </widget>
-     </item>
-     <item row="7" column="0">
-      <widget class="QLabel" name="descriptionLabel">
-       <property name="text">
-        <string>Description</string>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="1">
-      <widget class="QPlainTextEdit" name="descriptionEdit"/>
-     </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="qtyLabel">
-       <property name="text">
-        <string>Quantity</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="1">
-      <widget class="QLineEdit" name="qtyEdit"/>
      </item>
     </layout>
    </item>
@@ -136,7 +96,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>EditOfferDialog</receiver>
+   <receiver>NewWhitelistDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -152,7 +112,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>EditOfferDialog</receiver>
+   <receiver>NewWhitelistDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

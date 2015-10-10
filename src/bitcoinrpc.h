@@ -245,7 +245,6 @@ extern json_spirit::Value keyscan(const json_spirit::Array& params, bool fHelp);
 
 extern json_spirit::Value offernew(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerupdate(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value offerrenew(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offeraccept(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerrefund(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value offerlink(const json_spirit::Array& params, bool fHelp);

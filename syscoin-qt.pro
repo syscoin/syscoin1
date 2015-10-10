@@ -18,9 +18,9 @@ CONFIG += thread
 #    BOOST_INCLUDE_PATH, BOOST_LIB_PATH, BDB_INCLUDE_PATH,
 #    BDB_LIB_PATH, OPENSSL_INCLUDE_PATH and OPENSSL_LIB_PATH respectively
 win32 {
-    BOOST_LIB_SUFFIX=-mgw48-mt-s-1_55
-    BOOST_INCLUDE_PATH=C:/deps/boost_1_55_0
-    BOOST_LIB_PATH=C:/deps/boost_1_55_0/stage/lib
+    BOOST_LIB_SUFFIX=-mgw48-mt-s-1_54
+    BOOST_INCLUDE_PATH=C:/deps/boost_1_54_0
+    BOOST_LIB_PATH=C:/deps/boost_1_54_0/stage/lib
     BDB_INCLUDE_PATH=C:/deps/db-4.8.30.NC/build_unix
     BDB_LIB_PATH=C:/deps/db-4.8.30.NC/build_unix
     OPENSSL_INCLUDE_PATH=C:/deps/openssl-1.0.1l/include
@@ -246,6 +246,10 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/offeraccepttablemodel.h \
     src/qt/offeracceptinfodialog.h \
     src/qt/editofferdialog.h \
+    src/qt/newwhitelistdialog.h \
+    src/qt/resellofferdialog.h \
+    src/qt/offerwhitelisttablemodel.h \
+    src/qt/editwhitelistofferdialog.h \
     src/qt/offerlistpage.h \
     src/qt/myofferlistpage.h \  
     src/qt/myacceptedofferlistpage.h \     
@@ -344,6 +348,10 @@ SOURCES += src/qt/bitcoin.cpp \
     src/qt/offeraccepttablemodel.cpp \
     src/qt/offeracceptinfodialog.cpp \
     src/qt/editofferdialog.cpp \
+    src/qt/newwhitelistdialog.cpp \
+    src/qt/resellofferdialog.cpp \
+    src/qt/offerwhitelisttablemodel.cpp \
+    src/qt/editwhitelistofferdialog.cpp \ 
     src/qt/offerlistpage.cpp \
     src/qt/myofferlistpage.cpp \     
     src/qt/myacceptedofferlistpage.cpp \
@@ -376,6 +384,9 @@ FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/offerlistpage.ui \
     src/qt/forms/editofferdialog.ui \
     src/qt/forms/myofferlistpage.ui \   
+    src/qt/forms/editwhitelistofferdialog.ui \ 
+    src/qt/forms/newwhitelistdialog.ui \ 
+    src/qt/forms/resellofferdialog.ui \ 
     src/qt/forms/myacceptedofferlistpage.ui \   
     src/qt/forms/acceptedofferlistpage.ui \ 
     src/qt/forms/mycertlistpage.ui \
