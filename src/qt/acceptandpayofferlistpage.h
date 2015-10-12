@@ -34,7 +34,7 @@ public:
     const QString &getReturnValue() const { return returnValue; }
 	bool handleURI(const QUrl &uri);
 	bool handleURI(const QString& strURI);
-	void setValue(const COffer &offer);
+	void setValue(COffer &offer);
 	void updateCaption();
 	void OpenPayDialog();
 public slots:

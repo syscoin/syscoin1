@@ -30,7 +30,10 @@ OfferAcceptInfoDialog::OfferAcceptInfoDialog(const QModelIndex &idx, QWidget *pa
 
 	ui->linkGUIDEdit->setVisible(false);
 	ui->linkGUIDLabel->setVisible(false);
-
+	ui->discountEdit->setVisible(false);
+	ui->discountLabel->setVisible(false);
+	ui->commissionEdit->setVisible(false);
+	ui->commissionLabel->setVisible(false);
 
 	lookup();
 }
@@ -60,7 +63,17 @@ bool OfferAcceptInfoDialog::lookup()
 			Value offerAcceptsValue = find_value(result.get_obj(), "accepts");
 			if(offerAcceptsValue.type() != array_type)
 				return false;
+			QString linkedStr = QString::fromStdString(find_value(result.get_obj(), "offerlink").get_str());
+			if(linkedStr == QString("true"))
+			{
 
+				ui->linkGUIDEdit->setVisible(true);
+				ui->linkGUIDLabel->setVisible(true);
+				ui->commissionEdit->setVisible(true);
+				ui->commissionLabel->setVisible(true);
+				ui->linkGUIDEdit->setText(QString::fromStdString(find_value(result.get_obj(), "offerlink_guid").get_str()));
+				ui->commissionEdit->setText(QString::fromStdString(find_value(result.get_obj(), "commission").get_str()));
+			}
 			Array offerAccepts = offerAcceptsValue.get_array();
 			COfferAccept myAccept;
 			QDateTime timestamp;
@@ -82,6 +95,7 @@ bool OfferAcceptInfoDialog::lookup()
 				ui->priceEdit->setText(QString::fromStdString(find_value(acceptObj, "price").get_str()));
 				ui->totalEdit->setText(QString::fromStdString(find_value(acceptObj, "total").get_str()));
 				ui->paidEdit->setText(QString::fromStdString(find_value(acceptObj, "paid").get_str()));
+				
 				QString refundedStr = QString::fromStdString(find_value(acceptObj, "refunded").get_str());	
 				
 				ui->refundedEdit->setText(refundedStr);
@@ -92,17 +106,18 @@ bool OfferAcceptInfoDialog::lookup()
 					ui->refundTXIDLabel->setVisible(true);
 					ui->paytxidEdit->setText(QString::fromStdString(find_value(acceptObj, "refund_txid").get_str()));
 				}
+				if(linkedStr == QString("true"))
+				{
+					ui->discountEdit->setVisible(true);
+					ui->discountLabel->setVisible(true);
+					ui->discountEdit->setText(QString::fromStdString(find_value(acceptObj, "discount").get_str()));
+				}
 				ui->paymessageEdit->setText(QString::fromStdString(find_value(acceptObj, "pay_message").get_str()));
 
 			}
-			QString linkedStr = QString::fromStdString(find_value(result.get_obj(), "offerlink").get_str());
-			if(linkedStr == QString("true"))
-			{
-				ui->linkGUIDEdit->setVisible(true);
-				ui->linkGUIDLabel->setVisible(true);
-				ui->linkGUIDEdit->setText(QString::fromStdString(find_value(result.get_obj(), "offerlink_guid").get_str()));
-			}
+
 			ui->titleEdit->setText(QString::fromStdString(find_value(result.get_obj(), "title").get_str()));
+			
 			return true;
 		}
 		 

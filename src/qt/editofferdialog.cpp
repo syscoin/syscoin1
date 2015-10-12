@@ -15,7 +15,7 @@ using namespace std;
 using namespace json_spirit;
 extern int nBestHeight;
 extern const CRPCTable tableRPC;
-extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind, QStringList& rateList);
+extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision);
 extern vector<unsigned char> vchFromString(const std::string &str);
 int64 GetOfferNetworkFee(opcodetype seed, unsigned int nHeight);
 EditOfferDialog::EditOfferDialog(Mode mode, QWidget *parent) :
@@ -24,9 +24,9 @@ EditOfferDialog::EditOfferDialog(Mode mode, QWidget *parent) :
 {
     ui->setupUi(this);
 	int64 nFee;
-	QStringList rateList;
-
-	if(getCurrencyToSYSFromAlias(vchFromString(""), nFee, nBestHeight, rateList) == "1")
+	vector<string> rateList;
+	int precision;
+	if(getCurrencyToSYSFromAlias(vchFromString(""), nFee, nBestHeight, rateList, precision) == "1")
 	{
 		QMessageBox::warning(this, windowTitle(),
 			tr("Warning: SYS_RATES alias not found. No currency information available!"),
@@ -37,7 +37,11 @@ EditOfferDialog::EditOfferDialog(Mode mode, QWidget *parent) :
 	ui->offerEdit->setVisible(true);
 	ui->offerEdit->setEnabled(false);
 	ui->currencyDisclaimer->setVisible(true);
-	ui->currencyEdit->addItems(rateList);
+	for(int i =0;i<rateList.size();i++)
+	{
+		ui->currencyEdit->addItem(QString::fromStdString(rateList[i]));
+	}
+	
 	ui->descriptionEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
     switch(mode)
     {

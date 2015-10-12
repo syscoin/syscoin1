@@ -26,7 +26,8 @@ using namespace std;
 using namespace json_spirit;
 extern const CRPCTable tableRPC;
 extern string JSONRPCReply(const Value& result, const Value& error, const Value& id);
-extern int64 convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchCurrencyCode, const int64 &nPrice, const unsigned int &nHeight);
+extern uint64 convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchCurrencyCode, const double &nPrice, const unsigned int &nHeight);
+extern double convertSyscoinToCurrencyCode(const vector<unsigned char> &vchCurrencyCode, const uint64 &nPrice, const unsigned int &nHeight, int &precision);
 extern int nBestHeight;
 AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
     QDialog(parent),
@@ -69,7 +70,7 @@ void AcceptandPayOfferListPage::updateCaption()
 void AcceptandPayOfferListPage::OpenPayDialog()
 {
 	string currencyCode = ui->infoCurrency->text().toStdString();
-	int64 iPrice = convertCurrencyCodeToSyscoin(vchFromString(currencyCode), ui->infoPrice->text().toLongLong(), nBestHeight);
+	uint64 iPrice = convertCurrencyCodeToSyscoin(vchFromString(currencyCode), ui->infoPrice->text().toDouble(), nBestHeight);
 	QString price = QString::number(ValueFromAmount(iPrice).get_real()*ui->qtyEdit->text().toLong());
 	OfferAcceptDialog dlg(ui->infoTitle->text(), price, ui->qtyEdit->text(), ui->offeridEdit->text(), ui->notesEdit->toPlainText(), this);
 	if(dlg.exec())
@@ -121,7 +122,7 @@ bool AcceptandPayOfferListPage::lookup(QString id)
 			offerOut.sTitle = vchFromString(find_value(offerObj, "title").get_str());
 			offerOut.sCategory = vchFromString(find_value(offerObj, "category").get_str());
 			offerOut.sCurrencyCode = vchFromString(find_value(offerObj, "currency").get_str());
-			offerOut.nPrice = QString::fromStdString(find_value(offerObj, "price").get_str()).toLongLong();
+			offerOut.SetPrice(convertCurrencyCodeToSyscoin(offerOut.sCurrencyCode, QString::fromStdString(find_value(offerObj, "price").get_str()).toDouble(), nBestHeight));
 			offerOut.nQty = QString::fromStdString(find_value(offerObj, "quantity").get_str()).toLong();	
 			string descString = find_value(offerObj, "description").get_str();
 			offerOut.sDescription = vchFromString(descString);
@@ -243,14 +244,16 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 
     return true;
 }
-void AcceptandPayOfferListPage::setValue(const COffer &offer)
+void AcceptandPayOfferListPage::setValue(COffer &offer)
 {
 
     ui->offeridEdit->setText(QString::fromStdString(stringFromVch(offer.vchRand)));
 	ui->infoTitle->setText(QString::fromStdString(stringFromVch(offer.sTitle)));
 	ui->infoCategory->setText(QString::fromStdString(stringFromVch(offer.sCategory)));
 	ui->infoCurrency->setText(QString::fromStdString(stringFromVch(offer.sCurrencyCode)));
-	ui->infoPrice->setText(QString::number(offer.nPrice));
+	int precision = 2;
+	double price = convertSyscoinToCurrencyCode(offer.sCurrencyCode, offer.GetPrice(), nBestHeight, precision);
+	ui->infoPrice->setText(QString::number(price));
 	ui->infoQty->setText(QString::number(offer.nQty));
 	ui->infoDescription->setText(QString::fromStdString(stringFromVch(offer.sDescription)));
 	ui->infoFee->setText(QString::number(ValueFromAmount(offer.nFee).get_real()) + " SYS");

@@ -8,7 +8,6 @@
 #include "bitcoinrpc.h"
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_writer_template.h"
-#include <QStringList>
 #include <boost/xpressive/xpressive_dynamic.hpp>
 using namespace std;
 using namespace json_spirit;
@@ -41,16 +40,29 @@ extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
 extern bool GetTxOfCert(CCertDB& dbCert, const vector<unsigned char> &vchCert,
         CCert &txPos, CTransaction& tx);
 extern bool GetCertAddress(const CTransaction& tx, std::string& strAddress);
-extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind, QStringList& rateList);
-int64 convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchCurrencyCode, const int64 &nPrice, const unsigned int &nHeight)
+extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision);
+uint64 convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchCurrencyCode, const double &nPrice, const unsigned int &nHeight)
 {
-	int64 sysPrice = nPrice;
+	double sysPrice = nPrice;
 	int64 nRate;
-	QStringList rateList;
-	if(getCurrencyToSYSFromAlias(vchCurrencyCode, nRate, nHeight, rateList) == "")
+	vector<string> rateList;
+	int precision;
+	if(getCurrencyToSYSFromAlias(vchCurrencyCode, nRate, nHeight, rateList, precision) == "")
 	{
 		// nRate is assumed to be rate of USD/SYS
-		sysPrice = nPrice * nRate;
+		sysPrice = sysPrice * nRate;
+	}
+	return (uint64)sysPrice;
+}
+double convertSyscoinToCurrencyCode(const vector<unsigned char> &vchCurrencyCode, const uint64 &nPrice, const unsigned int &nHeight, int &precision)
+{
+	double sysPrice = nPrice;
+	int64 nRate;
+	vector<string> rateList;
+	if(getCurrencyToSYSFromAlias(vchCurrencyCode, nRate, nHeight, rateList, precision) == "")
+	{
+		// nRate is assumed to be rate of USD/SYS
+		sysPrice = sysPrice / nRate;
 	}
 	return sysPrice;
 }
@@ -146,61 +158,6 @@ uint64 QtyOfPendingAcceptsInMempool(const vector<unsigned char>& vchToFind)
 
 }
 
-void ExistsOfferLinkage(vector<unsigned char>& vchOffer, const vector<COffer> &vtxPos,
-	vector<pair<vector<unsigned char>, vector<COffer> > > & offerLinks) {
-	CBlockIndex* pindex = FindBlockByHeight(vtxPos.front().nHeight);
-    while (pindex) {  
-
-        CBlock block;
-        block.ReadFromDisk(pindex);
-        uint256 txblkhash;
-        
-        BOOST_FOREACH(CTransaction& tx, block.vtx) {
-
-            if (tx.nVersion != SYSCOIN_TX_VERSION)
-                continue;
-
-            vector<vector<unsigned char> > vvchArgs;
-            int op, nOut;
-           // decode the offer op, params, height
-            bool o = DecodeOfferTx(tx, op, nOut, vvchArgs, -1);
-            if (!o || !IsOfferOp(op) || (op != OP_OFFER_ACTIVATE && op != OP_OFFER_UPDATE && op != OP_OFFER_REFUND)) continue;
-
-			// weird case where the linked offer matches the current offer guid, causing infinite recursion
-			bool found = false;
-			pair<vector<unsigned char>, vector<COffer> > pairLink;
-			BOOST_FOREACH(pairLink, offerLinks) {
-				if(pairLink.first == vvchArgs[0])
-					found = true;
-			}
-			// skip if we already added it (prevents stack overflow)
-			if(found)
-			{
-				continue;
-			}
-
-			CTransaction linktx;
-			COffer myOffer;
-			// get the transaction, make sure its not expired
-            if(!GetTxOfOffer(*pofferdb, vvchArgs[0], myOffer, linktx))
-				continue;
-			if(myOffer.vchLinkOffer.empty() || myOffer.vchLinkOffer != vchOffer)
-				continue;
-			// add the guid of this offer to offerLinks
-			vector<COffer> myVtxPos;
-			if (pofferdb->ExistsOffer(vvchArgs[0])) {
-				if (pofferdb->ReadOffer(vvchArgs[0], myVtxPos))
-				{
-					offerLinks.push_back(make_pair(vvchArgs[0], myVtxPos));
-					ExistsOfferLinkage(vvchArgs[0], myVtxPos, offerLinks);
-				}
-			}
-
-        }
-        pindex = pindex->pnext;
-        
-    }
-}
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
 string makeOfferLinkAcceptTX(COfferAccept& theOfferAccept, const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchOfferAcceptLink)
 {
@@ -269,7 +226,7 @@ string makeOfferRefundTX(const CTransaction& prevTx, const COffer& theOffer, con
 	{
 		set<pair<const CWalletTx*,unsigned int> > setCoins;
 		int64 nValueIn = 0;
-		nTotalValue = ( convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOfferAccept.nPrice, theOffer.nHeight) * theOfferAccept.nQty );
+		nTotalValue = ( theOfferAccept.nPrice * theOfferAccept.nQty );
 		if (!pwalletMain->SelectCoins(nTotalValue, setCoins, nValueIn))
 		{
 			return string("insufficient funds to pay for offer refund");
@@ -340,8 +297,9 @@ int64 GetOfferNetworkFee(opcodetype seed, unsigned int nHeight) {
 	int64 nFee = 0;
 	int64 nRate = 0;
 	const vector<unsigned char> &vchCurrency = vchFromString("USD");
-	QStringList rateList;
-	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nHeight, rateList) != "")
+	vector<string> rateList;
+	int precision;
+	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nHeight, rateList,precision) != "")
 	{
 		if(seed==OP_OFFER_ACTIVATE) {
     		nFee = 50 * COIN;
@@ -1441,8 +1399,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 			if (!fMiner && !fJustCheck && pindexBlock->nHeight != pindexBest->nHeight) {
 				int nHeight = pindexBlock->nHeight;
-				// used to update linked offer prices with discounts from whitelist by an offset of owner offer updated price
-				double nPriceDiffRatio = 1.0;
 				// get the latest offer from the db
             	theOffer.nHeight = nHeight;
             	theOffer.GetOfferFromList(vtxPos);
@@ -1451,13 +1407,31 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				// but first we assign the accepts from the DB since
 				// they are not shipped in an update txn to keep size down
 				if(op == OP_OFFER_UPDATE) {
-					// we do this so we dont have to recalculate the entire linked offer tree of prices if the offer owner changes his price
-					// especially for those that use whitelists because they have applied discounts to their price, a recalculation would be expensive for bandwidht
-					// so we simply apply a ratio to each price down the tree instead of recalculating... works mathematically because price is multiplicative
-					// so we can multiply a ratio to maintain the discount ratio's between the levels of the offer tree
-					nPriceDiffRatio = (double)serializedOffer.nPrice / (double)theOffer.nPrice;
 					serializedOffer.accepts = theOffer.accepts;
 					theOffer = serializedOffer;
+				}
+				else if(op == OP_OFFER_ACTIVATE)
+				{
+					// if this is a linked offer activate, then add it to the parent offerLinks list
+					if(!theOffer.vchLinkOffer.empty())
+					{
+						vector<COffer> myVtxPos;
+						if (pofferdb->ExistsOffer(theOffer.vchLinkOffer)) {
+							if (pofferdb->ReadOffer(theOffer.vchLinkOffer, myVtxPos))
+							{
+								COffer myParentOffer = myVtxPos.back();
+								myParentOffer.offerLinks.push_back(vvchArgs[0]);							
+								myParentOffer.PutToOfferList(myVtxPos);
+								{
+								TRY_LOCK(cs_main, cs_trymain);
+								// write parent offer
+								if (!pofferdb->WriteOffer(theOffer.vchLinkOffer, myVtxPos))
+									return error( "CheckOfferInputs() : failed to write to offer link to DB");
+								}
+							}
+						}
+						
+					}
 				}
 				else if(op == OP_OFFER_REFUND)
 				{
@@ -1537,7 +1511,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							theOffer.linkWhitelist.GetLinkEntryByHash(vvchPrevArgs[0], entry);						
 						}
 						int64 nPrice = theOffer.GetPrice(entry)*theOfferAccept.nQty;
-						nPrice = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, nPrice, nHeight);
 						for(unsigned int i=0;i<tx.vout.size();i++)
 						{
 							if(tx.vout[i].nValue == nPrice)
@@ -1596,8 +1569,27 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						return true;
 					}
 					if(theOffer.vchLinkOffer.empty())
+					{
 						theOffer.nQty -= theOfferAccept.nQty;
-
+						// go through the linked offers, if any, and update the linked offer qty based on the this qty
+						for(unsigned int i=0;i<theOffer.offerLinks.size();i++) {
+							vector<COffer> myVtxPos;
+							if (pofferdb->ExistsOffer(theOffer.offerLinks[i])) {
+								if (pofferdb->ReadOffer(theOffer.offerLinks[i], myVtxPos))
+								{
+									COffer myLinkOffer = myVtxPos.back();
+									myLinkOffer.nQty = theOffer.nQty;	
+									myLinkOffer.PutToOfferList(myVtxPos);
+									{
+									TRY_LOCK(cs_main, cs_trymain);
+									// write offer
+									if (!pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
+										return error( "CheckOfferInputs() : failed to write to offer link to DB");
+									}
+								}
+							}
+						}
+					}
 					if (!fInit && pwalletMain && !linkOffer.IsNull() && IsOfferMine(offerTx))
 					{	
 						// myOffer.vchLinkOffer is the linked offer guid
@@ -1636,10 +1628,53 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					}
 				}
 				
-				// only modify the offer's height on an activate or update
+				// only modify the offer's height on an activate or update or refund
 				if(op == OP_OFFER_ACTIVATE || op == OP_OFFER_UPDATE ||  op == OP_OFFER_REFUND) {
 					theOffer.nHeight = pindexBlock->nHeight;					
 					theOffer.txHash = tx.GetHash();
+					if(op == OP_OFFER_UPDATE)
+					{
+						// if this offer is linked to a parent update it with parent information
+						if(!theOffer.vchLinkOffer.empty())
+						{
+							vector<COffer> myVtxPos;
+							if (pofferdb->ExistsOffer(theOffer.vchLinkOffer)) {
+								if (pofferdb->ReadOffer(theOffer.vchLinkOffer, myVtxPos))
+								{
+									COffer myLinkOffer = myVtxPos.back();
+									theOffer.nQty = myLinkOffer.nQty;	
+									theOffer.nHeight = myLinkOffer.nHeight;
+									theOffer.SetPrice(myLinkOffer.nPrice);
+									
+								}
+							}
+								
+						}
+						else
+						{
+							// go through the linked offers, if any, and update the linked offer info based on the this info
+							for(unsigned int i=0;i<theOffer.offerLinks.size();i++) {
+								vector<COffer> myVtxPos;
+								if (pofferdb->ExistsOffer(theOffer.offerLinks[i])) {
+									if (pofferdb->ReadOffer(theOffer.offerLinks[i], myVtxPos))
+									{
+										COffer myLinkOffer = myVtxPos.back();
+										myLinkOffer.nQty = theOffer.nQty;	
+										myLinkOffer.nHeight = theOffer.nHeight;
+										myLinkOffer.SetPrice(theOffer.nPrice);
+										myLinkOffer.PutToOfferList(myVtxPos);
+										{
+										TRY_LOCK(cs_main, cs_trymain);
+										// write offer
+										if (!pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
+											return error( "CheckOfferInputs() : failed to write to offer link to DB");
+										}
+									}
+								}
+							}
+							
+						}
+					}
 				}
 				// set the offer's txn-dependent values
                 theOffer.vchRand = vvchArgs[0];
@@ -1672,35 +1707,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						theOffer.nQty,
 						tx.GetHash().ToString().c_str(), 
 						nHeight, (double)nTheFee / COIN);
-				}
-				
-				if(op == OP_OFFER_UPDATE || (op == OP_OFFER_ACCEPT && theOffer.vchLinkOffer.empty()))
-				{
-					// if this offer has linked offers to it and it is an update or accept, then copy over necessary updates to offer linking to it
-					vector<pair<vector<unsigned char>, vector<COffer> > > offerLinkages;
-					ExistsOfferLinkage(vvchArgs[0], vtxPos, offerLinkages);				
-					pair<vector<unsigned char>, vector<COffer> > pairLink;
-					BOOST_FOREACH(pairLink, offerLinkages) {
-						vector<unsigned char> &linkVchOffer = pairLink.first;
-						vector<COffer> &myVtxPos = pairLink.second;
-						// copy over data to linked offer
-						COffer myLinkOffer = myVtxPos.back();
-						myLinkOffer.nQty = theOffer.nQty;	
-						if(op == OP_OFFER_UPDATE)
-						{
-							myLinkOffer.nHeight = theOffer.nHeight;
-							myLinkOffer.nPrice = (uint64)(nPriceDiffRatio*(double)myLinkOffer.nPrice);
-						}
-						
-						myLinkOffer.PutToOfferList(myVtxPos);
-						{
-						TRY_LOCK(cs_main, cs_trymain);
-						// write offer
-						if (!pofferdb->WriteOffer(linkVchOffer, myVtxPos))
-							return error( "CheckOfferInputs() : failed to write to offer link to DB");
-						}
-					}
-					
 				}
 			}
 		}
@@ -1780,7 +1786,8 @@ Value offernew(const Array& params, bool fHelp) {
 		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
 	// gather inputs
 	string baSig;
-	uint64 nQty, nPrice;
+	uint64 nQty;
+	double nPrice;
 	bool bExclusiveResell = true;
 	vector<unsigned char> vchPaymentAddress;
 	vector<unsigned char> vchCat = vchFromValue(params[0]);
@@ -1793,8 +1800,7 @@ Value offernew(const Array& params, bool fHelp) {
 		throw runtime_error("invalid quantity value.");
 	}
 	nQty = (uint64)qty;
-	nPrice = atoi64(params[3].get_str().c_str());
-
+	nPrice = atof(params[3].get_str().c_str());
 	vchDesc = vchFromValue(params[4]);
 	if(vchCat.size() < 1)
         throw runtime_error("offer category < 1 bytes!\n");
@@ -1828,8 +1834,9 @@ Value offernew(const Array& params, bool fHelp) {
 		vchPaymentAddress = vchFromString(payAddr.ToString());
 	}
 	int64 nRate;
-	QStringList rateList;
-	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nBestHeight, rateList) != "")
+	vector<string> rateList;
+	int precision;
+	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, nBestHeight, rateList,precision) != "")
 	{
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not find this currency code in the SYS_RATES alias!\n");
 	}
@@ -1856,7 +1863,8 @@ Value offernew(const Array& params, bool fHelp) {
 	newOffer.sTitle = vchTitle;
 	newOffer.sDescription = vchDesc;
 	newOffer.nQty = nQty;
-	newOffer.nPrice = nPrice;
+	
+	newOffer.SetPrice(convertCurrencyCodeToSyscoin(vchCurrency, nPrice, nBestHeight));
 	newOffer.nFee = nNetFee;
 	newOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
 	newOffer.sCurrencyCode = vchCurrency;
@@ -2007,10 +2015,10 @@ Value offerlink(const Array& params, bool fHelp) {
 	}
 
 
-	// if the whitelist is non-empty and you dont have a cert in the whitelist, you cannot link to this offer
-	if(foundEntry.IsNull() && linkOffer.linkWhitelist.entries.size() > 0)
+	// if the whitelist exclusive mode is on and you dont have a cert in the whitelist, you cannot link to this offer
+	if(foundEntry.IsNull() && linkOffer.linkWhitelist.bExclusiveResell)
 	{
-		throw runtime_error("cannot link to this offer because you don't own a cert from its whitelist");
+		throw runtime_error("cannot link to this offer because you don't own a cert from its whitelist (the offer is in exclusive mode)");
 	}
 
 	vchCat = linkOffer.sCategory;
@@ -2040,10 +2048,10 @@ Value offerlink(const Array& params, bool fHelp) {
 	newOffer.sDescription = vchDesc;
 	newOffer.nQty = nQty;
 	newOffer.linkWhitelist.bExclusiveResell = true;
-	newOffer.nPrice = linkOffer.GetPrice(foundEntry);
-	// add commission
-	double fCommission = (double)commissionInteger / 100.0;
-	newOffer.nPrice += (uint64)((double)newOffer.nPrice*fCommission);
+	newOffer.SetPrice(linkOffer.nPrice);
+	
+	newOffer.nCommission = commissionInteger;
+	
 	newOffer.vchLinkOffer = vchLinkOffer;
 	newOffer.nHeight = linkOffer.nHeight;
 	newOffer.nFee = nNetFee;
@@ -2367,7 +2375,7 @@ Value offerwhitelist(const Array& params, bool fHelp) {
 				expires_in = nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight;
 			}  
 			oList.push_back(Pair("cert_expiresin",expires_in));
-			oList.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
+			oList.push_back(Pair("offer_discount_percentage", strprintf("%d%%%", entry.nDiscountPct)));
 			oRes.push_back(oList);
 		}  
     }
@@ -2388,12 +2396,13 @@ Value offerupdate(const Array& params, bool fHelp) {
 	vector<unsigned char> vchTitle = vchFromValue(params[2]);
 	vector<unsigned char> vchDesc;
 	bool bExclusiveResell = true;
-	uint64 price,nQty;
+	uint64 nQty;
+	double price;
 	if (params.size() >= 6) vchDesc = vchFromValue(params[5]);
 	if(params.size() == 7) bExclusiveResell = atoi(params[6].get_str().c_str()) == 1? true: false;
 	try {
 		nQty = (uint64)atoi64(params[3].get_str().c_str());
-		price = (uint64)atoi64(params[4].get_str().c_str());
+		price = atof(params[4].get_str().c_str());
 	} catch (std::exception &e) {
 		throw runtime_error("invalid price and/or quantity values.");
 	}
@@ -2461,10 +2470,11 @@ Value offerupdate(const Array& params, bool fHelp) {
 		throw runtime_error("not enough remaining quantity to fulfill this offerupdate"); // SS i think needs better msg
 
 	theOffer.nQty = nQty;
-	theOffer.nPrice = price;
+	theOffer.SetPrice(convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, price, nBestHeight));
 	theOffer.nFee = nNetFee;
 	theOffer.accepts.clear();
-	theOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
+	if(params.size() == 7)
+		theOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
 	// serialize offer object
 	string bdata = theOffer.SerializeToString();
 
@@ -2609,20 +2619,14 @@ Value offeraccept(const Array& params, bool fHelp) {
 
 	COffer linkedOffer = theOffer;
 	CTransaction tmpTx;
-	// walk up the offer link tree to ensure the offers all still stand
-	while(1)
+	// check if parent to linked offer is still valid
+	if (!linkedOffer.IsNull() && !linkedOffer.vchLinkOffer.empty())
 	{
-
-		if (!linkedOffer.IsNull() && linkedOffer.vchLinkOffer != vchOffer && !linkedOffer.vchLinkOffer.empty())
+		if(pofferdb->ExistsOffer(linkedOffer.vchLinkOffer))
 		{
-			if(pofferdb->ExistsOffer(linkedOffer.vchLinkOffer))
-			{
-				if (!GetTxOfOffer(*pofferdb, linkedOffer.vchLinkOffer,linkedOffer, tmpTx))
-					throw runtime_error("Trying to accept a linked offer but could not find parent offer, perhaps it is expired");
-			}
+			if (!GetTxOfOffer(*pofferdb, linkedOffer.vchLinkOffer,linkedOffer, tmpTx))
+				throw runtime_error("Trying to accept a linked offer but could not find parent offer, perhaps it is expired");
 		}
-		else
-			break;
 	}
 	COfferLinkWhitelistEntry foundCert;
 	CWalletTx wtxCertIn;
@@ -2655,12 +2659,14 @@ Value offeraccept(const Array& params, bool fHelp) {
 	if(theOffer.nQty < (nQty+memPoolQty))
 		throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
 
+
 	// create accept object
 	COfferAccept txAccept;
 	txAccept.vchRand = vchAcceptRand;
     txAccept.vchMessage = vchMessage;
 	txAccept.nQty = nQty;
 	txAccept.nPrice = theOffer.GetPrice(foundCert);
+	txAccept.nDiscountPct = foundCert.nDiscountPct;
 	txAccept.vchLinkOfferAccept = vchLinkOfferAccept;
 	txAccept.vchRefundAddress = vchRefundAddress;
 	txAccept.nFee = theOffer.nFee;
@@ -2674,7 +2680,7 @@ Value offeraccept(const Array& params, bool fHelp) {
     int64 nValueIn = 0;
 
 
-    uint64 nTotalValue = ( convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, txAccept.nPrice, nBestHeight) * nQty );
+    uint64 nTotalValue = ( txAccept.nPrice * nQty );
 
     if (!pwalletMain->SelectCoins(nTotalValue + (MIN_AMOUNT * 2), setCoins, nValueIn))
         throw runtime_error("insufficient funds to pay for offer");
@@ -2792,8 +2798,17 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("time", sTime));
 			oOfferAccept.push_back(Pair("quantity", strprintf("%llu", ca.nQty)));
 			oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
-			oOfferAccept.push_back(Pair("price", strprintf("%llu", ca.nPrice))); 
-			oOfferAccept.push_back(Pair("total", strprintf("%llu", ca.nPrice * ca.nQty))); 
+			int precision = 2;
+			double price = convertSyscoinToCurrencyCode(theOffer.sCurrencyCode, ca.nPrice, nBestHeight, precision);
+			double total = convertSyscoinToCurrencyCode(theOffer.sCurrencyCode, ca.nPrice * ca.nQty, nBestHeight, precision);
+			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, price ))); 
+			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, total ))); 
+			if(!theOffer.vchLinkOffer.empty() && IsOfferMine(tx)) {
+				oOfferAccept.push_back(Pair("discount", strprintf("%d%%", ca.nDiscountPct ))); 
+			}
+			else
+				oOfferAccept.push_back(Pair("discount", "0")); 
+			
 			oOfferAccept.push_back(Pair("is_mine", IsOfferMine(txA) ? "true" : "false"));
 			if(ca.bPaid) {
 				oOfferAccept.push_back(Pair("paid","true"));
@@ -2854,14 +2869,23 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
 			oOffer.push_back(Pair("quantity", strprintf("%llu", theOffer.nQty)));
 			oOffer.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
-			oOffer.push_back(Pair("price", strprintf("%llu", theOffer.nPrice)));
+			
+			
+			int precision = 2;
+			double price = convertSyscoinToCurrencyCode(theOffer.sCurrencyCode, theOffer.GetPrice(), nBestHeight, precision);
+			oOffer.push_back(Pair("price", strprintf("%.*f", precision, price ))); 
+			
 			oOffer.push_back(Pair("is_mine", IsOfferMine(tx) ? "true" : "false"));
-			if(!theOffer.vchLinkOffer.empty() && IsOfferMine(tx)) { 
+			if(!theOffer.vchLinkOffer.empty() && IsOfferMine(tx)) {
+				oOffer.push_back(Pair("commission", strprintf("%d%%", theOffer.nCommission)));
 				oOffer.push_back(Pair("offerlink", "true"));
 				oOffer.push_back(Pair("offerlink_guid", stringFromVch(theOffer.vchLinkOffer)));
 			}
 			else
+			{
+				oOffer.push_back(Pair("commission", "0"));
 				oOffer.push_back(Pair("offerlink", "false"));
+			}
 			oOffer.push_back(Pair("exclusive_resell", theOffer.linkWhitelist.bExclusiveResell ? "true" : "false"));
 			oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 			oOffer.push_back(Pair("accepts", aoOfferAccepts));
@@ -2937,8 +2961,22 @@ Value offeracceptlist(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("height", sHeight));
 			oOfferAccept.push_back(Pair("quantity", strprintf("%llu", theOfferAccept.nQty)));
 			oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
-			oOfferAccept.push_back(Pair("price", strprintf("%llu", theOfferAccept.nPrice))); 
-			oOfferAccept.push_back(Pair("total", strprintf("%llu", theOfferAccept.nPrice * theOfferAccept.nQty))); 
+			int precision = 2;
+			double price = convertSyscoinToCurrencyCode(theOffer.sCurrencyCode, theOfferAccept.nPrice, nBestHeight, precision);
+			double total = convertSyscoinToCurrencyCode(theOffer.sCurrencyCode, theOfferAccept.nPrice * theOfferAccept.nQty, nBestHeight, precision);
+			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, price ))); 
+			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, total ))); 
+			
+			if(!theOffer.vchLinkOffer.empty() && IsOfferMine(tx)) {
+				oOfferAccept.push_back(Pair("commission", strprintf("%d%%", theOffer.nCommission ))); 
+				oOfferAccept.push_back(Pair("discount", strprintf("%d%%", theOfferAccept.nDiscountPct ))); 
+			}
+			else
+			{
+				oOfferAccept.push_back(Pair("commission", "0")); 
+				oOfferAccept.push_back(Pair("discount", "0")); 
+			}
+
 			oOfferAccept.push_back(Pair("is_mine", IsOfferMine(tx) ? "true" : "false"));
 			if(theOfferAccept.bPaid && !theOfferAccept.bRefunded) {
 				oOfferAccept.push_back(Pair("status","paid"));
@@ -3047,8 +3085,12 @@ Value offerlist(const Array& params, bool fHelp) {
             oName.push_back(Pair("title", stringFromVch(theOfferA.sTitle)));
             oName.push_back(Pair("category", stringFromVch(theOfferA.sCategory)));
             oName.push_back(Pair("description", stringFromVch(theOfferA.sDescription)));
-            oName.push_back(Pair("price", strprintf("%llu", theOfferA.nPrice) ) );
+			int precision = 2;
+			double price = convertSyscoinToCurrencyCode(theOfferA.sCurrencyCode, theOfferA.GetPrice(), nBestHeight, precision);
+			oName.push_back(Pair("price", strprintf("%.*f", precision, price ))); 	
+
 			oName.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode) ) );
+			oName.push_back(Pair("commission", strprintf("%d%%", theOfferA.nCommission)));
             oName.push_back(Pair("quantity", strprintf("%llu", theOfferA.nQty)));
             oName.push_back(Pair("address", stringFromVch(theOfferA.vchPaymentAddress)));
 			oName.push_back(Pair("exclusive_resell", theOfferA.linkWhitelist.bExclusiveResell ? "true" : "false"));
@@ -3224,8 +3266,11 @@ Value offerfilter(const Array& params, bool fHelp) {
         oOffer.push_back(Pair("title", stringFromVch(txOffer.sTitle)));
 		oOffer.push_back(Pair("description", stringFromVch(txOffer.sDescription)));
         oOffer.push_back(Pair("category", stringFromVch(txOffer.sCategory)));
-        oOffer.push_back(Pair("price", strprintf("%llu", txOffer.nPrice) ) );
+		int precision = 2;
+		double price = convertSyscoinToCurrencyCode(txOffer.sCurrencyCode, txOffer.GetPrice(), nBestHeight, precision);
+		oOffer.push_back(Pair("price", strprintf("%.*f", precision, price ))); 	
 		oOffer.push_back(Pair("currency", stringFromVch(txOffer.sCurrencyCode)));
+		oOffer.push_back(Pair("commission", strprintf("%d%%", txOffer.nCommission)));
         oOffer.push_back(Pair("quantity", strprintf("%llu", txOffer.nQty)));
 		oOffer.push_back(Pair("exclusive_resell", txOffer.linkWhitelist.bExclusiveResell ? "true" : "false"));
 		expired_block = nHeight + GetOfferDisplayExpirationDepth();
