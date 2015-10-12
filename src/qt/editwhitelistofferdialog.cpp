@@ -51,7 +51,7 @@ EditWhitelistOfferDialog::EditWhitelistOfferDialog(QModelIndex *idx, QWidget *pa
 	exclusiveWhitelist = idx->data(OfferTableModel::ExclusiveWhitelistRole).toString();
 	ui->buttonBox->setVisible(false);
 
-    ui->labelExplanation->setText(tr("These are the whitelist entries for your offer. You may specify discount levels for each whitelist entry or control who may resell your offer if you are in Exclusive Resell Mode. If Exclusive Resell Mode is off anyone can resell your offers, although discounts will still be applied if they own a certificate that you've added to your whitelist."));
+    ui->labelExplanation->setText(tr("These are the whitelist entries for your offer. You may specify discount levels for each whitelist entry or control who may resell your offer if you are in Exclusive Resell Mode. If Exclusive Resell Mode is off anyone can resell your offers, although discounts will still be applied if they own a certificate that you've added to your whitelist. Click the button at the bottom of this dialog to toggle the exclusive mode."));
 	
     // Context menu actions
     QAction *removeAction = new QAction(tr("&Remove"), this);
@@ -91,16 +91,10 @@ void EditWhitelistOfferDialog::setModel(WalletModel *walletModel, OfferWhitelist
     proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
     proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
-  
-		// Receive filter
-		//proxyModel->setFilterRole(OfferWhitelistTableModel::CertRole);
-		//proxyModel->setFilterFixedString(OfferWhitelistTableModel::Entry);
-       
-    
-		ui->tableView->setModel(proxyModel);
-		ui->tableView->sortByColumn(0, Qt::AscendingOrder);
-        ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-        ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
+	ui->tableView->setModel(proxyModel);
+	ui->tableView->sortByColumn(0, Qt::AscendingOrder);
+    ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
     // Set column widths
 #if QT_VERSION < 0x050000
     ui->tableView->horizontalHeader()->setResizeMode(OfferWhitelistTableModel::Cert, QHeaderView::ResizeToContents);
@@ -158,7 +152,7 @@ void EditWhitelistOfferDialog::on_exclusiveButton_clicked()
 		params.push_back(myIdx->data(OfferTableModel::QtyRole).toString().toStdString());
 		params.push_back(myIdx->data(OfferTableModel::PriceRole).toString().toStdString());
 		params.push_back(myIdx->data(OfferTableModel::DescriptionRole).toString().toStdString());
-		if(tmpExclusiveWhitelist == QString("true"))
+		if(tmpExclusiveWhitelist == QString("ON"))
 			params.push_back("0");
 		else 
 			params.push_back("1");
@@ -168,10 +162,10 @@ void EditWhitelistOfferDialog::on_exclusiveButton_clicked()
 			tr("Whitelist exclusive mode changed successfully!"),
 				QMessageBox::Ok, QMessageBox::Ok);
 
-			if(tmpExclusiveWhitelist == QString("true"))
-				exclusiveWhitelist = QString("false");
+			if(tmpExclusiveWhitelist == QString("ON"))
+				exclusiveWhitelist = QString("OFF");
 			else
-				exclusiveWhitelist = QString("true");
+				exclusiveWhitelist = QString("OFF");
 
 		}
 		catch (Object& objError)
@@ -190,13 +184,13 @@ void EditWhitelistOfferDialog::on_exclusiveButton_clicked()
 		}
 
 	}
-	if(exclusiveWhitelist == QString("true"))
+	if(exclusiveWhitelist == QString("ON"))
 	{
-		ui->exclusiveButton->setText(tr("Exclusive Mode On"));
+		ui->exclusiveButton->setText(tr("Exclusive Mode is ON"));
 	}
 	else
 	{
-		ui->exclusiveButton->setText(tr("Exclusive Mode Off"));
+		ui->exclusiveButton->setText(tr("Exclusive Mode is OFF"));
 	}	
 }
 
@@ -358,13 +352,13 @@ void EditWhitelistOfferDialog::on_refreshButton_clicked()
 				QMessageBox::Ok, QMessageBox::Ok);
 	}
 
-	if(exclusiveWhitelist == QString("true"))
+	if(exclusiveWhitelist == QString("ON"))
 	{
-		ui->exclusiveButton->setText(tr("Exclusive Mode On"));
+		ui->exclusiveButton->setText(tr("Exclusive Mode is ON"));
 	}
 	else
 	{
-		ui->exclusiveButton->setText(tr("Exclusive Mode Off"));
+		ui->exclusiveButton->setText(tr("Exclusive Mode is OFF"));
 	}
 	if(model->rowCount(*myIdx) > 0)
 	{

@@ -24,7 +24,7 @@ public:
 
     void setModel(WalletModel*,OfferWhitelistTableModel *model);
     QString getEntry() const;
-
+	void loadCerts();
 
 public slots:
     void accept();

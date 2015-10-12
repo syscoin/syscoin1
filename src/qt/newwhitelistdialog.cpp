@@ -25,7 +25,8 @@ NewWhitelistDialog::NewWhitelistDialog(QModelIndex *idx, QWidget *parent) :
 	QString offerGUID = idx->data(OfferTableModel::NameRole).toString();
 	ui->offerGUIDLabel->setText(offerGUID);
 	ui->discountDisclaimer->setText(tr("<font color='red'>This is a percentage of price for your offer you want to allow your reseller to purchase your offer for. Typically given to wholesalers or for special arrangements with a reseller.</font>"));
-
+	ui->certEdit->setEditText(tr("Choose or enter GUID of a Certificate you own"));
+	loadCerts();
 }
 
 NewWhitelistDialog::~NewWhitelistDialog()
@@ -38,6 +39,67 @@ void NewWhitelistDialog::setModel(WalletModel *walletModel, OfferWhitelistTableM
 {
     this->model = model;
 	this->walletModel = walletModel;
+}
+void NewWhitelistDialog::loadCerts()
+{
+	string strMethod = string("certlist");
+    Array params; 
+	Value result ;
+	string name_str;
+	int expired = 0;
+	
+	try {
+		result = tableRPC.execute(strMethod, params);
+
+		if (result.type() == array_type)
+		{
+			name_str = "";
+			expired = 0;
+
+
+	
+			Array arr = result.get_array();
+			BOOST_FOREACH(Value& input, arr)
+			{
+				if (input.type() != obj_type)
+					continue;
+				Object& o = input.get_obj();
+				name_str = "";
+
+				expired = 0;
+
+
+		
+				const Value& name_value = find_value(o, "cert");
+				if (name_value.type() == str_type)
+					name_str = name_value.get_str();
+				
+				const Value& expired_value = find_value(o, "expired");
+				if (expired_value.type() == int_type)
+					expired = expired_value.get_int();
+				
+				if(expired == 0)
+				{
+					ui->certEdit->addItem(QString::fromStdString(name_str));
+				}
+				
+			}
+		}
+	}
+	catch (Object& objError)
+	{
+		string strError = find_value(objError, "message").get_str();
+		QMessageBox::critical(this, windowTitle(),
+			tr("Could not refresh cert list: %1").arg(QString::fromStdString(strError)),
+				QMessageBox::Ok, QMessageBox::Ok);
+	}
+	catch(std::exception& e)
+	{
+		QMessageBox::critical(this, windowTitle(),
+			tr("There was an exception trying to refresh the cert list: ") + QString::fromStdString(e.what()),
+				QMessageBox::Ok, QMessageBox::Ok);
+	}         
+ 
 }
 bool NewWhitelistDialog::saveCurrentRow()
 {
@@ -68,12 +130,12 @@ bool NewWhitelistDialog::saveCurrentRow()
 	}
 	strMethod = string("offeraddwhitelist");
 	params.push_back(ui->offerGUIDLabel->text().toStdString());
-	params.push_back(ui->certEdit->text().toStdString());
+	params.push_back(ui->certEdit->currentText().toStdString());
 	params.push_back(ui->discountEdit->text().toStdString());
 
 	try {
         Value result = tableRPC.execute(strMethod, params);
-		entry = ui->certEdit->text();
+		entry = ui->certEdit->currentText();
 
 		QMessageBox::information(this, windowTitle(),
         tr("New whitelist entry added successfully!"),
@@ -114,12 +176,12 @@ void NewWhitelistDialog::accept()
             break;
         case OfferWhitelistTableModel::INVALID_ENTRY:
             QMessageBox::warning(this, windowTitle(),
-                tr("The entered entry \"%1\" is not a valid whitelist entry.").arg(ui->certEdit->text()),
+                tr("The entered entry \"%1\" is not a valid whitelist entry.").arg(ui->certEdit->currentText()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
         case OfferWhitelistTableModel::DUPLICATE_ENTRY:
             QMessageBox::warning(this, windowTitle(),
-                tr("The entered entry \"%1\" is already taken.").arg(ui->certEdit->text()),
+                tr("The entered entry \"%1\" is already taken.").arg(ui->certEdit->currentText()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
         case OfferWhitelistTableModel::WALLET_UNLOCK_FAILURE:

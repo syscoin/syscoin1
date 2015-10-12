@@ -30,8 +30,6 @@ OfferAcceptInfoDialog::OfferAcceptInfoDialog(const QModelIndex &idx, QWidget *pa
 
 	ui->linkGUIDEdit->setVisible(false);
 	ui->linkGUIDLabel->setVisible(false);
-	ui->discountEdit->setVisible(false);
-	ui->discountLabel->setVisible(false);
 	ui->commissionEdit->setVisible(false);
 	ui->commissionLabel->setVisible(false);
 
@@ -105,12 +103,6 @@ bool OfferAcceptInfoDialog::lookup()
 					ui->paytxidEdit->setVisible(true);
 					ui->refundTXIDLabel->setVisible(true);
 					ui->paytxidEdit->setText(QString::fromStdString(find_value(acceptObj, "refund_txid").get_str()));
-				}
-				if(linkedStr == QString("true"))
-				{
-					ui->discountEdit->setVisible(true);
-					ui->discountLabel->setVisible(true);
-					ui->discountEdit->setText(QString::fromStdString(find_value(acceptObj, "discount").get_str()));
 				}
 				ui->paymessageEdit->setText(QString::fromStdString(find_value(acceptObj, "pay_message").get_str()));
 

@@ -2803,12 +2803,6 @@ Value offerinfo(const Array& params, bool fHelp) {
 			double total = convertSyscoinToCurrencyCode(theOffer.sCurrencyCode, ca.nPrice * ca.nQty, nBestHeight, precision);
 			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, price ))); 
 			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, total ))); 
-			if(!theOffer.vchLinkOffer.empty() && IsOfferMine(tx)) {
-				oOfferAccept.push_back(Pair("discount", strprintf("%d%%", ca.nDiscountPct ))); 
-			}
-			else
-				oOfferAccept.push_back(Pair("discount", "0")); 
-			
 			oOfferAccept.push_back(Pair("is_mine", IsOfferMine(txA) ? "true" : "false"));
 			if(ca.bPaid) {
 				oOfferAccept.push_back(Pair("paid","true"));
@@ -2886,7 +2880,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 				oOffer.push_back(Pair("commission", "0"));
 				oOffer.push_back(Pair("offerlink", "false"));
 			}
-			oOffer.push_back(Pair("exclusive_resell", theOffer.linkWhitelist.bExclusiveResell ? "true" : "false"));
+			oOffer.push_back(Pair("exclusive_resell", theOffer.linkWhitelist.bExclusiveResell ? "ON" : "OFF"));
 			oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 			oOffer.push_back(Pair("accepts", aoOfferAccepts));
 			oLastOffer = oOffer;
@@ -2967,16 +2961,6 @@ Value offeracceptlist(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, price ))); 
 			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, total ))); 
 			
-			if(!theOffer.vchLinkOffer.empty() && IsOfferMine(tx)) {
-				oOfferAccept.push_back(Pair("commission", strprintf("%d%%", theOffer.nCommission ))); 
-				oOfferAccept.push_back(Pair("discount", strprintf("%d%%", theOfferAccept.nDiscountPct ))); 
-			}
-			else
-			{
-				oOfferAccept.push_back(Pair("commission", "0")); 
-				oOfferAccept.push_back(Pair("discount", "0")); 
-			}
-
 			oOfferAccept.push_back(Pair("is_mine", IsOfferMine(tx) ? "true" : "false"));
 			if(theOfferAccept.bPaid && !theOfferAccept.bRefunded) {
 				oOfferAccept.push_back(Pair("status","paid"));
@@ -3093,7 +3077,7 @@ Value offerlist(const Array& params, bool fHelp) {
 			oName.push_back(Pair("commission", strprintf("%d%%", theOfferA.nCommission)));
             oName.push_back(Pair("quantity", strprintf("%llu", theOfferA.nQty)));
             oName.push_back(Pair("address", stringFromVch(theOfferA.vchPaymentAddress)));
-			oName.push_back(Pair("exclusive_resell", theOfferA.linkWhitelist.bExclusiveResell ? "true" : "false"));
+			oName.push_back(Pair("exclusive_resell", theOfferA.linkWhitelist.bExclusiveResell ? "ON" : "OFF"));
 			expired_block = nHeight + GetOfferDisplayExpirationDepth();
             if(pending == 0 && (nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight <= 0))
 			{
@@ -3272,7 +3256,7 @@ Value offerfilter(const Array& params, bool fHelp) {
 		oOffer.push_back(Pair("currency", stringFromVch(txOffer.sCurrencyCode)));
 		oOffer.push_back(Pair("commission", strprintf("%d%%", txOffer.nCommission)));
         oOffer.push_back(Pair("quantity", strprintf("%llu", txOffer.nQty)));
-		oOffer.push_back(Pair("exclusive_resell", txOffer.linkWhitelist.bExclusiveResell ? "true" : "false"));
+		oOffer.push_back(Pair("exclusive_resell", txOffer.linkWhitelist.bExclusiveResell ? "ON" : "OFF"));
 		expired_block = nHeight + GetOfferDisplayExpirationDepth();
 		if(nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 		{

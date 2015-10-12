@@ -1660,7 +1660,6 @@ Value certlist(const Array& params, bool fHelp) {
         // build the output object
         Object oName;
         oName.push_back(Pair("cert", stringFromVch(vchName)));
-		oName.push_back(Pair("is_mine", IsCertMine(tx)? "true": "false"));
         vchValue = cert.vchTitle;
         string value = stringFromVch(vchValue);
         oName.push_back(Pair("title", value));
