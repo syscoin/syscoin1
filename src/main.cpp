@@ -1334,7 +1334,7 @@ uint256 static GetOrphanRoot(const CBlockHeader* pblock) {
  * @return
  */
 int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
-    int64 a,b,c,d,e,s;
+    int64 a,e,s;
     int64 nSubsidy = 128 * COIN;
     if(nHeight == 0)
         nSubsidy = 1024 * COIN; // genesis amount
@@ -1362,23 +1362,8 @@ int64 static GetBlockValue(int nHeight, int64 nFees, uint256 prevHash) {
 	e = nFees;
     s = a+e;
 
-	if(!HasReachedMainNetForkB2())
-	{
-
-		if (nHeight < hardforkLaunch 
-			|| nHeight >= MM_FEEREGEN_HARDFORK
-			|| (fCakeNet || fTestNet)) 
-		{
-			b = GetAliasFeeSubsidy(nHeight);
-			c = GetOfferFeeSubsidy(nHeight);
-			d = GetCertFeeSubsidy(nHeight);
-			s += b+c+d;
-		}
-	}
-
-
     if (fDebug)
-		printf ("GetBlockvalue of Block %d: subsidy=%"PRI64d", fees=%"PRI64d", aliasSubsidy=%"PRI64d", offerSubsidy=%"PRI64d", certSubidy=%"PRI64d", sum=%"PRI64d". \n", nHeight, a,e,b,c,d,s);
+		printf ("GetBlockvalue of Block %d: subsidy=%"PRI64d", fees=%"PRI64d", sum=%"PRI64d". \n", nHeight, a,e,s);
     return s;
 }
 
@@ -1660,43 +1645,6 @@ void static InvalidBlockFound(CBlockIndex *pindex) {
 	}
 }
 
-bool LoadSyscoinFees() {
-	TRY_LOCK(cs_main, cs_trymain);
-    // read alias and offer indexes
-
-    // read alias network fees
-    lstAliasFees.clear();
-    vector<CAliasFee> va;
-    paliasdb->ReadAliasTxFees(va);
-    list<CAliasFee> lAF(va.begin(), va.end());
-    lstAliasFees = lAF;
-	BOOST_FOREACH(CAliasFee& fee, lstAliasFees) {
-		printf("Alias Fee - height: %llu \t value: %llu\n", fee.nHeight, fee.nValue);
-	}
-
-    // read offer network fees
-    lstOfferFees.clear();
-    vector<COfferFee> vo;
-    pofferdb->ReadOfferTxFees(vo);
-    list<COfferFee> lOF(vo.begin(), vo.end());
-    lstOfferFees = lOF;
-	BOOST_FOREACH(COfferFee& fee, lstOfferFees) {
-		printf("Offer Fee - height: %llu \t value: %llu\n", fee.nHeight, fee.nFee);
-	}
-
-    // read cert  network fees
-    lstCertFees.clear();
-    vector<CCertFee> vc;
-    pcertdb->ReadCertFees(vc);
-    list<CCertFee> lCF(vc.begin(), vc.end());
-    lstCertFees = lCF;
-	BOOST_FOREACH(CCertFee& fee, lstCertFees) {
-		printf("Cert Fee - height: %llu \t value: %llu\n", fee.nHeight, fee.nFee);
-	}
-
-    return true;
-}
-
 bool ConnectBestBlock(CValidationState &state) {
 	do {
 		CBlockIndex *pindexNewBest;
@@ -1900,7 +1848,7 @@ bool CTransaction::CheckInputs(CBlockIndex *pindex, CValidationState &state, CCo
 				
 			}
 			else if(DecodeOfferTx(*this, op, nOut, vvchArgs, -1))
-			{			
+			{	
 				if (!CheckOfferInputs(pindex, *this, state, inputs, fBlock, fMiner, bJustCheck))
 					return false;		 
 			}
@@ -1910,7 +1858,6 @@ bool CTransaction::CheckInputs(CBlockIndex *pindex, CValidationState &state, CCo
 					return false;			
 			}
 		}
-		
 
 		if (nValueIn < GetValueOut())
 			return state.DoS(100,
@@ -1994,14 +1941,8 @@ bool DisconnectAlias( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
 		// TODO validate that the first pos is the current tx pos
 	}
 	
-	if(!paliasdb->WriteName(vvchArgs[0], vtxPos))
+	if(!paliasdb->WriteAlias(vvchArgs[0], vtxPos))
 		return error("DisconnectBlock() : failed to write to alias DB");
-
-	CAliasFee theFeeObject;
-	theFeeObject.hash =  tx.GetHash();
-	theFeeObject.nHeight = pindex->nHeight;
-	theFeeObject.nValue = 0;
-	RemoveAliasFee(theFeeObject);
 
 	printf("DISCONNECTED ALIAS TXN: alias=%s op=%s hash=%s  height=%d\n",
 		stringFromVch(vvchArgs[0]).c_str(),
@@ -2058,11 +1999,6 @@ bool DisconnectOffer( CBlockIndex *pindex, const CTransaction &tx, int op, vecto
 	if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 		return error("DisconnectBlock() : failed to write to offer DB");
 
-	COfferFee theFeeObject;
-	theFeeObject.hash =  tx.GetHash();
-	theFeeObject.nHeight = pindex->nHeight;
-	theFeeObject.nFee = 0;
-	RemoveOfferFee(theFeeObject);
 
 	printf("DISCONNECTED offer TXN: offer=%s op=%s hash=%s  height=%d\n",
 		stringFromVch(vvchArgs[0]).c_str(),
@@ -2103,13 +2039,6 @@ bool DisconnectCertificate( CBlockIndex *pindex, const CTransaction &tx, int op,
 	// write new offer state to db
 	if(!pcertdb->WriteCert(vvchArgs[0], vtxPos))
 		return error("DisconnectBlock() : failed to write to offer DB");
-
-	CCertFee theFeeObject;
-	theFeeObject.hash =  tx.GetHash();
-	theFeeObject.nHeight = pindex->nHeight;
-	theFeeObject.nFee = 0;
-	RemoveCertFee(theFeeObject);
-
 
 	printf("DISCONNECTED CERT TXN: title=%s hash=%s height=%d\n",
 		   stringFromVch(vvchArgs[0]).c_str(),
@@ -2390,24 +2319,18 @@ bool CBlock::ConnectBlock(CValidationState &state, CBlockIndex* pindex,
 
 		int64 bValue = GetBlockValue(pindex->nHeight, nFees, 0);
 
-		if (!HasReachedMainNetForkB2()) // block before hardfork were allowed to
-		    bValue += (bValue * 8); // 800% float till fixed
+		if (!HasReachedMainNetForkB2())
+		    bValue += (bValue * 8); // 800% float till fork
 
 		if (nFees >= 0 && vtx[0].GetValueOut()
 				> bValue
                 && pindex->nHeight > 1) // blocks 0 (genesis) and 1 (premine) have no max restrictions
 		{
-			// recalculate the syscoin fee structures which the subsidy calculation is based off of ( vtx[0].GetValueOut() )
-			printf("LoadSyscoinFees(): Coinbase calculation mismatch with Syscoin subsidy fees, resetting fees and trying again...");
-			LoadSyscoinFees();
-			bValue = GetBlockValue(pindex->nHeight, nFees, 0);
-			if(vtx[0].GetValueOut() > bValue)
-			{
-				return state.DoS(100,
-							error( "ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",
-									pindex->nHeight, vtx[0].GetValueOut(),
-									bValue));
-			}
+			return state.DoS(100,
+						error( "ConnectBlock() : coinbase pays too much for %d (actual=%"PRI64d" vs limit=%"PRI64d")",
+								pindex->nHeight, vtx[0].GetValueOut(),
+								bValue));
+			
 		}
     if(nFees < 0) {
         std::string strHash = pindex->GetBlockHash().ToString();
@@ -3436,8 +3359,6 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth) {
 	if (pindexBest == NULL || pindexBest->pprev == NULL)
 		return true;
 
-	printf("Loading Syscoin service fees from DB.\n");
-	LoadSyscoinFees();
 
 	// Verify blocks in the best chain
 	if (nCheckDepth <= 0)

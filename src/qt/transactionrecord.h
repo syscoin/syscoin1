@@ -76,10 +76,6 @@ public:
         AliasUpdate,
         AliasTransfer,
         
-        DataActivate,
-        DataUpdate,
-        DataTransfer,
-       
         OfferActivate,
         OfferUpdate,
         OfferAccept,

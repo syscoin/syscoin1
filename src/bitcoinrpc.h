@@ -234,12 +234,6 @@ extern json_spirit::Value aliasclean(const json_spirit::Array& params, bool fHel
 extern json_spirit::Value getaliasfees(const json_spirit::Array& params, bool fHelp);
 
 // store key-value pairs using the blockchain
-extern json_spirit::Value datanew(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value dataupdate(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value datalist(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value datainfo(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value datahistory(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value datafilter(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value keyscan(const json_spirit::Array& params, bool fHelp);
 
 

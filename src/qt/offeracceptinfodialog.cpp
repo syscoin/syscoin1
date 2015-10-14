@@ -97,7 +97,7 @@ bool OfferAcceptInfoDialog::lookup()
 				QString refundedStr = QString::fromStdString(find_value(acceptObj, "refunded").get_str());	
 				
 				ui->refundedEdit->setText(refundedStr);
-				ui->payservicefeeEdit->setText(QString::fromStdString(find_value(acceptObj, "pay_service_fee").get_str()));
+				
 				if(refundedStr == QString("true"))
 				{
 					ui->paytxidEdit->setVisible(true);

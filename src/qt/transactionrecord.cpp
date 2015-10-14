@@ -141,17 +141,13 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 						switch(op)
 						{
 						case OP_ALIAS_ACTIVATE:
-							sub.type = (!wtx.data.size()) ? TransactionRecord::AliasActivate : TransactionRecord::DataActivate;
+							sub.type = TransactionRecord::AliasActivate;
 							vchName = vvchArgs[0];
 							break;
 						case OP_ALIAS_UPDATE:
 							vchName = vvchArgs[0];
-							if (!wtx.data.size()) {
-								sub.type = (IsAliasMine(wtx)) ? TransactionRecord::AliasUpdate : TransactionRecord::AliasTransfer;
-							}
-							else {
-								sub.type = (IsAliasMine(wtx)) ? TransactionRecord::DataUpdate : TransactionRecord::DataTransfer;
-							}
+							sub.type = (IsAliasMine(wtx)) ? TransactionRecord::AliasUpdate : TransactionRecord::AliasTransfer;
+							
 							break;
 						case OP_OFFER_ACTIVATE:
 							vchName = vvchArgs[0];
@@ -227,17 +223,13 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 switch(op)
                 {
                 case OP_ALIAS_ACTIVATE:
-                    sub.type = (!wtx.data.size()) ? TransactionRecord::AliasActivate : TransactionRecord::DataActivate;
+                    sub.type = TransactionRecord::AliasActivate;
                     vchName = vvchArgs[0];
                     break;
                 case OP_ALIAS_UPDATE:
                     vchName = vvchArgs[0];
-                    if (!wtx.data.size()) {
-                        sub.type = (IsAliasMine(wtx)) ? TransactionRecord::AliasUpdate : TransactionRecord::AliasTransfer;
-                    }
-                    else {
-                        sub.type = (IsAliasMine(wtx)) ? TransactionRecord::DataUpdate : TransactionRecord::DataTransfer;
-                    }
+                    sub.type = (IsAliasMine(wtx)) ? TransactionRecord::AliasUpdate : TransactionRecord::AliasTransfer;
+                    
                     break;
                 case OP_OFFER_ACTIVATE:
                     vchName = vvchArgs[0];

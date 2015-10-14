@@ -15,7 +15,7 @@ extern const CRPCTable tableRPC;
 template<typename T> void ConvertTo(Value& value, bool fAllowNull = false);
 
 
-std::list<COfferFee> lstOfferFees;
+
 extern bool ExistsInMempool(std::vector<unsigned char> vchNameOrRand, opcodetype type);
 extern bool HasReachedMainNetForkB2();
 
@@ -41,31 +41,19 @@ extern bool GetTxOfCert(CCertDB& dbCert, const vector<unsigned char> &vchCert,
         CCert &txPos, CTransaction& tx);
 extern bool GetCertAddress(const CTransaction& tx, std::string& strAddress);
 extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision);
-uint64 convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchCurrencyCode, const double &nPrice, const unsigned int &nHeight)
+int64 convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchCurrencyCode, const double &nPrice, const unsigned int &nHeight, int &precision)
 {
 	double sysPrice = nPrice;
 	int64 nRate;
 	vector<string> rateList;
-	int precision;
 	if(getCurrencyToSYSFromAlias(vchCurrencyCode, nRate, nHeight, rateList, precision) == "")
 	{
 		// nRate is assumed to be rate of USD/SYS
 		sysPrice = sysPrice * nRate;
 	}
-	return (uint64)sysPrice;
+	return (int64)sysPrice;
 }
-double convertSyscoinToCurrencyCode(const vector<unsigned char> &vchCurrencyCode, const uint64 &nPrice, const unsigned int &nHeight, int &precision)
-{
-	double sysPrice = nPrice;
-	int64 nRate;
-	vector<string> rateList;
-	if(getCurrencyToSYSFromAlias(vchCurrencyCode, nRate, nHeight, rateList, precision) == "")
-	{
-		// nRate is assumed to be rate of USD/SYS
-		sysPrice = sysPrice / nRate;
-	}
-	return sysPrice;
-}
+
 // check wallet transactions to see if there was a refund for an accept already
 // need this because during a reorg blocks are disconnected (deleted from db) and we can't rely on looking in db to see if refund was made for an accept
 bool foundRefundInWallet(const vector<unsigned char> &vchAcceptRand, const vector<unsigned char>& acceptCode)
@@ -218,7 +206,7 @@ string makeOfferRefundTX(const CTransaction& prevTx, const COffer& theOffer, con
 
 	// this is a syscoin txn
 	CWalletTx wtx, wtx2;
-	uint64 nTotalValue = MIN_AMOUNT;
+	int64 nTotalValue = MIN_AMOUNT;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 	CScript scriptPubKeyOrig, scriptPayment;
 
@@ -364,12 +352,6 @@ bool COffer::UnserializeFromTx(const CTransaction &tx) {
 	}
 	return true;
 }
-
-void COffer::SerializeToTx(CTransaction &tx) {
-	vector<unsigned char> vchData = vchFromString(SerializeToString());
-	tx.data = vchData;
-}
-
 string COffer::SerializeToString() {
 	// serialize offer object
 	CDataStream dsOffer(SER_NETWORK, PROTOCOL_VERSION);
@@ -542,25 +524,14 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 	            if (!WriteOfferAccept(vvchArgs[1], vvchArgs[0]))
 	                return error("ReconstructOfferIndex() : failed to write to offer DB");
 			
-			// insert offers fees to regenerate list, write offer to
-			// master index
-			int64 nTheFee = GetOfferNetFee(tx);
-			if(nTheFee > 0) 
-			{
-				vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
-				InsertOfferFee(pindex, tx.GetHash(), nTheFee);
-				if (!pofferdb->WriteOfferTxFees(vOfferFees))
-					return error( "ReconstructOfferIndex() : failed to write fees to offer DB");
-			}
 			if(fDebug)
-				printf( "RECONSTRUCT OFFER: op=%s offer=%s title=%s qty=%llu hash=%s height=%d fees=%llu\n",
+				printf( "RECONSTRUCT OFFER: op=%s offer=%s title=%s qty=%llu hash=%s height=%d\n",
 					offerFromOp(op).c_str(),
 					stringFromVch(vvchArgs[0]).c_str(),
 					stringFromVch(txOffer.sTitle).c_str(),
 					txOffer.nQty,
 					tx.GetHash().ToString().c_str(), 
-					nHeight,
-					nTheFee);
+					nHeight);
 			
         }
         pindex = pindex->pnext;
@@ -587,85 +558,6 @@ int64 GetOfferTxHashHeight(const uint256 txHash) {
 	CDiskTxPos postx;
 	pblocktree->ReadTxIndex(txHash, postx);
 	return GetOfferTxPosHeight(postx);
-}
-
-uint64 GetOfferFeeSubsidy(unsigned int nHeight) {
-	uint64 hr1 = 1, hr12 = 1;
-	{
-		TRY_LOCK(cs_main, cs_trymain);
-		unsigned int h12 = 360 * 12;
-		unsigned int nTargetTime = 0;
-		unsigned int nTarget1hrTime = 0;
-		unsigned int blk1hrht = nHeight - 1;
-		unsigned int blk12hrht = nHeight - 1;
-		bool bFound = false;
-
-		BOOST_FOREACH(COfferFee &nmFee, lstOfferFees) {
-			if(nmFee.nHeight <= nHeight)
-				bFound = true;
-			if(bFound) {
-				if(nTargetTime==0) {
-					hr1 = hr12 = 0;
-					nTargetTime = nmFee.nTime - h12;
-					nTarget1hrTime = nmFee.nTime - (h12/12);
-				}
-				if(nmFee.nTime > nTargetTime) {
-					hr12 += nmFee.nFee;
-					blk12hrht = nmFee.nHeight;
-					if(nmFee.nTime > nTarget1hrTime) {
-						hr1 += nmFee.nFee;
-						blk1hrht = nmFee.nHeight;
-					}
-				}
-			}
-		}
-		hr12 /= (nHeight - blk12hrht) + 1;
-		hr1 /= (nHeight - blk1hrht) + 1;
-	}
-	return (hr12 + hr1) / 2;
-}
-
-bool RemoveOfferFee(COfferFee &txnVal) {
-	{
-		TRY_LOCK(cs_main, cs_trymain);
-
-		COfferFee *theval = NULL;
-		if(lstOfferFees.size()==0) return false;
-		BOOST_FOREACH(COfferFee &nmTxnValue, lstOfferFees) {
-			if (txnVal.hash == nmTxnValue.hash
-			 && txnVal.nHeight == nmTxnValue.nHeight) {
-				theval = &nmTxnValue;
-				break;
-			}
-		}
-		if(theval)
-			lstOfferFees.remove(*theval);
-
-		return theval != NULL;
-	}
-}
-
-bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
-	TRY_LOCK(cs_main, cs_trymain);
-	COfferFee txnVal;
-	txnVal.hash = hash;
-	txnVal.nTime = pindex->nTime;
-	txnVal.nHeight = pindex->nHeight;
-	txnVal.nFee = nValue;
-	bool bFound = false;
-
-	BOOST_FOREACH(COfferFee &nmTxnValue, lstOfferFees) {
-		if (txnVal.hash == nmTxnValue.hash
-				&& txnVal.nHeight == nmTxnValue.nHeight) {
-			nmTxnValue = txnVal;
-			bFound = true;
-			break;
-		}
-	}
-	if (!bFound)
-		lstOfferFees.push_front(txnVal);
-
-	return bFound;
 }
 
 int64 GetOfferNetFee(const CTransaction& tx) {
@@ -887,15 +779,32 @@ bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut,
 	for (unsigned int i = 0; i < tx.vout.size(); i++) {
 		const CTxOut& out = tx.vout[i];
 		vector<vector<unsigned char> > vvchRead;
-		if (DecodeOfferScript(out.scriptPubKey, op, vvchRead)) {
-			nOut = i; found = true; vvch = vvchRead;
+		if (DecodeOfferScript(out.scriptPubKey, op, vvch)) {
+			nOut = i; found = true;
 			break;
 		}
 	}
 	if (!found) vvch.clear();
 	return found && IsOfferOp(op);
 }
+bool DecodeOfferTxInputs(const CTransaction& tx, int& op, int& nOut,
+		vector<vector<unsigned char> >& vvch, CCoinsViewCache &inputs) {
+	bool found = false;
 
+	const COutPoint *prevOutput = NULL;
+	const CCoins *prevCoins = NULL;
+    // Strict check - bug disallowed
+    for (int i = 0; i < (int)tx.vin.size(); i++) {
+		prevOutput = &tx.vin[i].prevout;
+		prevCoins = &inputs.GetCoins(prevOutput->hash);
+        if (DecodeOfferScript(prevCoins->vout[prevOutput->n].scriptPubKey, op, vvch)) {
+            nOut = i; found = true; 
+            break;
+        }
+    }
+	if (!found) vvch.clear();
+	return found && IsOfferOp(op);
+}
 
 
 bool DecodeOfferTx(const CCoins& tx, int& op, int& nOut,
@@ -1238,28 +1147,22 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		const CCoins *prevCoins = NULL;
 		int prevOp;
 		vector<vector<unsigned char> > vvchPrevArgs;
-
+		int nIn = -1;
 		// Strict check - bug disallowed
 		for (int i = 0; i < (int) tx.vin.size(); i++) {
 			prevOutput = &tx.vin[i].prevout;
 			prevCoins = &inputs.GetCoins(prevOutput->hash);
-			vector<vector<unsigned char> > vvch;
-			if (DecodeOfferScript(prevCoins->vout[prevOutput->n].scriptPubKey,
-					prevOp, vvch)) {
-				found = true; vvchPrevArgs = vvch;
+			if (DecodeOfferScript(prevCoins->vout[prevOutput->n].scriptPubKey, prevOp, vvchPrevArgs)) {
+				found = true; 
 				break;
 			}
-			else 
+			else if (DecodeCertScript(prevCoins->vout[prevOutput->n].scriptPubKey, prevOp, vvchPrevArgs))
 			{
-				vector<vector<unsigned char> > vvch2;
-				if (DecodeCertScript(prevCoins->vout[prevOutput->n].scriptPubKey,
-						prevOp, vvch2)) {
-					found = true; vvchPrevArgs = vvch2;
-					break;
-				}
+				found = true; 
+				break;
 			}
-			if(!found)vvchPrevArgs.clear();
 		}
+		if(!found)vvchPrevArgs.clear();
 
 		// Make sure offer outputs are not spent by a regular transaction, or the offer would be lost
 		if (tx.nVersion != SYSCOIN_TX_VERSION) {
@@ -1300,7 +1203,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 					// check for enough fees
 				nNetFee = GetOfferNetFee(tx);
-				if (nNetFee < GetOfferNetworkFee(OP_OFFER_ACTIVATE, pindexBlock->nHeight))
+				if (nNetFee < GetOfferNetworkFee(OP_OFFER_ACTIVATE, theOffer.nHeight))
 					return error(
 							"CheckOfferInputs() : OP_OFFER_ACTIVATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -1328,7 +1231,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							"CheckOfferInputs() : offerupdate on an expired offer, or there is a pending transaction on the offer");
 					// check for enough fees
 				nNetFee = GetOfferNetFee(tx);
-				if (nNetFee < GetOfferNetworkFee(OP_OFFER_UPDATE, pindexBlock->nHeight))
+				if (nNetFee < GetOfferNetworkFee(OP_OFFER_UPDATE, theOffer.nHeight))
 					return error(
 							"CheckOfferInputs() : OP_OFFER_UPDATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -1510,7 +1413,9 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						{	
 							theOffer.linkWhitelist.GetLinkEntryByHash(vvchPrevArgs[0], entry);						
 						}
-						int64 nPrice = theOffer.GetPrice(entry)*theOfferAccept.nQty;
+						int precision = 2;
+						// lookup the price of the offer in syscoin based on pegged alias at the block # when accept was made (sets nHeight in offeraccept serialized object in tx)
+						int64 nPrice = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(entry), theOfferAccept.nHeight, precision)*theOfferAccept.nQty;
 						for(unsigned int i=0;i<tx.vout.size();i++)
 						{
 							if(tx.vout[i].nValue == nPrice)
@@ -1686,27 +1591,16 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				if (!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 					return error( "CheckOfferInputs() : failed to write to offer DB");
 
-                // compute verify and write fee data to DB
-                int64 nTheFee = GetOfferNetFee(tx);
-				if(nTheFee > 0) 
-				{
-					vector<COfferFee> vOfferFees(lstOfferFees.begin(), lstOfferFees.end());
-					if (fDebug)
-						printf("OFFER FEES: Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
-					InsertOfferFee(pindexBlock, tx.GetHash(), nTheFee);
-					if (!pofferdb->WriteOfferTxFees(vOfferFees))
-						return error( "CheckOfferInputs() : failed to write fees to offer DB");
-				}
-				
+               				
 				// debug
 				if (fDebug)
-					printf( "CONNECTED OFFER: op=%s offer=%s title=%s qty=%llu hash=%s height=%d fees=%1f\n",
+					printf( "CONNECTED OFFER: op=%s offer=%s title=%s qty=%llu hash=%s height=%d\n",
 						offerFromOp(op).c_str(),
 						stringFromVch(vvchArgs[0]).c_str(),
 						stringFromVch(theOffer.sTitle).c_str(),
 						theOffer.nQty,
 						tx.GetHash().ToString().c_str(), 
-						nHeight, (double)nTheFee / COIN);
+						nHeight);
 				}
 			}
 		}
@@ -1762,7 +1656,6 @@ Value getofferfees(const Array& params, bool fHelp) {
 						"get current service fees for alias transactions\n");
 	Object oRes;
 	oRes.push_back(Pair("height", nBestHeight ));
-	oRes.push_back(Pair("subsidy", ValueFromAmount(GetOfferFeeSubsidy(nBestHeight) )));
 	oRes.push_back(Pair("activate_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_ACTIVATE, nBestHeight) )));
 	oRes.push_back(Pair("update_fee", ValueFromAmount(GetOfferNetworkFee(OP_OFFER_UPDATE, nBestHeight) )));
 	return oRes;
@@ -1787,7 +1680,7 @@ Value offernew(const Array& params, bool fHelp) {
 	// gather inputs
 	string baSig;
 	uint64 nQty;
-	double nPrice;
+	float nPrice;
 	bool bExclusiveResell = true;
 	vector<unsigned char> vchPaymentAddress;
 	vector<unsigned char> vchCat = vchFromValue(params[0]);
@@ -1840,7 +1733,8 @@ Value offernew(const Array& params, bool fHelp) {
 	{
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not find this currency code in the SYS_RATES alias!\n");
 	}
-
+	string priceStr = strprintf("%.*f", precision, nPrice);
+	nPrice = (float)atof(priceStr.c_str());
 	// this is a syscoin transaction
 	CWalletTx wtx;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
@@ -1863,9 +1757,8 @@ Value offernew(const Array& params, bool fHelp) {
 	newOffer.sTitle = vchTitle;
 	newOffer.sDescription = vchDesc;
 	newOffer.nQty = nQty;
-	
-	newOffer.SetPrice(convertCurrencyCodeToSyscoin(vchCurrency, nPrice, nBestHeight));
-	newOffer.nFee = nNetFee;
+	newOffer.nHeight = nBestHeight;
+	newOffer.SetPrice(nPrice);
 	newOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
 	newOffer.sCurrencyCode = vchCurrency;
 	string bdata = newOffer.SerializeToString();
@@ -2034,6 +1927,11 @@ Value offerlink(const Array& params, bool fHelp) {
 	uint64 rand = GetRand((uint64) -1);
 	vector<unsigned char> vchRand = CBigNum(rand).getvch();
 	vector<unsigned char> vchOffer = vchFromString(HexStr(vchRand));
+	int precision = 2;
+	// get precision
+	convertCurrencyCodeToSyscoin(linkOffer.sCurrencyCode, linkOffer.GetPrice(), nBestHeight, precision);
+	string priceStr = strprintf("%.*f", precision, linkOffer.GetPrice());
+	float price = (float)atof(priceStr.c_str());
 
 	EnsureWalletIsUnlocked();
 	// calculate network fees
@@ -2048,13 +1946,12 @@ Value offerlink(const Array& params, bool fHelp) {
 	newOffer.sDescription = vchDesc;
 	newOffer.nQty = nQty;
 	newOffer.linkWhitelist.bExclusiveResell = true;
-	newOffer.SetPrice(linkOffer.nPrice);
+	newOffer.SetPrice(price);
 	
 	newOffer.nCommission = commissionInteger;
 	
 	newOffer.vchLinkOffer = vchLinkOffer;
-	newOffer.nHeight = linkOffer.nHeight;
-	newOffer.nFee = nNetFee;
+	newOffer.nHeight = nBestHeight;
 	newOffer.sCurrencyCode = linkOffer.sCurrencyCode;
 	string bdata = newOffer.SerializeToString();
 	
@@ -2161,7 +2058,7 @@ Value offeraddwhitelist(const Array& params, bool fHelp) {
 		throw runtime_error("could not read offer from DB");
 
 	theOffer = vtxPos.back();
-
+	theOffer.nHeight = nBestHeight;
 	for(unsigned int i=0;i<theOffer.linkWhitelist.entries.size();i++) {
 		COfferLinkWhitelistEntry& entry = theOffer.linkWhitelist.entries[i];
 		// make sure this cert doesn't already exist
@@ -2245,6 +2142,7 @@ Value offerremovewhitelist(const Array& params, bool fHelp) {
 		throw runtime_error("could not read offer from DB");
 
 	theOffer = vtxPos.back();
+	theOffer.nHeight = nBestHeight;
 	// create OFFERUPDATE txn keys
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << theOffer.sTitle
@@ -2318,6 +2216,7 @@ Value offerclearwhitelist(const Array& params, bool fHelp) {
 		throw runtime_error("could not read offer from DB");
 
 	theOffer = vtxPos.back();
+	theOffer.nHeight = nBestHeight;
 	// create OFFERUPDATE txn keys
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_UPDATE) << vchOffer << theOffer.sTitle
@@ -2397,7 +2296,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 	vector<unsigned char> vchDesc;
 	bool bExclusiveResell = true;
 	uint64 nQty;
-	double price;
+	float price;
 	if (params.size() >= 6) vchDesc = vchFromValue(params[5]);
 	if(params.size() == 7) bExclusiveResell = atoi(params[6].get_str().c_str()) == 1? true: false;
 	try {
@@ -2460,7 +2359,11 @@ Value offerupdate(const Array& params, bool fHelp) {
 		
 	// calculate network fees
 	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_UPDATE, nBestHeight);
-	
+	int precision = 2;
+	// get precision
+	convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(), nBestHeight, precision);
+	string priceStr = strprintf("%.*f", precision, price);
+	price = (float)atof(priceStr.c_str());
 	// update offer values
 	theOffer.sCategory = vchCat;
 	theOffer.sTitle = vchTitle;
@@ -2468,10 +2371,10 @@ Value offerupdate(const Array& params, bool fHelp) {
 	uint64 memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if((nQty-memPoolQty) < 0)
 		throw runtime_error("not enough remaining quantity to fulfill this offerupdate"); // SS i think needs better msg
-
+	
 	theOffer.nQty = nQty;
-	theOffer.SetPrice(convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, price, nBestHeight));
-	theOffer.nFee = nNetFee;
+	theOffer.nHeight = nBestHeight;
+	theOffer.SetPrice(price);
 	theOffer.accepts.clear();
 	if(params.size() == 7)
 		theOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
@@ -2545,15 +2448,14 @@ Value offeraccept(const Array& params, bool fHelp) {
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	vector<unsigned char> vchLinkOfferAccept = vchFromValue(params.size()>= 5? params[4]:"");
 	vector<unsigned char> vchMessage = vchFromValue(params.size()>=3?params[2]:params[0]);
-	uint64 nQty;
-	int64 qty = 1;
+	int64 nQty = 1;
 	if (params.size() >= 2) {
 		try {
-			qty=atoi64(params[1].get_str().c_str());
+			nQty=atoi64(params[1].get_str().c_str());
 		} catch (std::exception &e) {
 			throw runtime_error("invalid price and/or quantity values.");
 		}
-		if(qty < 0)
+		if(nQty < 0)
 		{
 			throw runtime_error("invalid quantity value.");
 		}
@@ -2575,7 +2477,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
 				"Invalid syscoin address");
 
-	nQty = (uint64)qty;
+
     if (vchMessage.size() < 1)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "offeraccept message data < 1 bytes!\n");
     if (vchMessage.size() > 16 * 1024)
@@ -2658,8 +2560,8 @@ Value offeraccept(const Array& params, bool fHelp) {
 	uint64 memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if(theOffer.nQty < (nQty+memPoolQty))
 		throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
-
-
+	int precision = 2;
+	int64 nPrice = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(foundCert), nBestHeight, precision);
 	// create accept object
 	COfferAccept txAccept;
 	txAccept.vchRand = vchAcceptRand;
@@ -2669,7 +2571,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 	txAccept.nDiscountPct = foundCert.nDiscountPct;
 	txAccept.vchLinkOfferAccept = vchLinkOfferAccept;
 	txAccept.vchRefundAddress = vchRefundAddress;
-	txAccept.nFee = theOffer.nFee;
+	txAccept.nHeight = nBestHeight;
 	txAccept.bPaid = true;
 	theOffer.accepts.clear();
 	theOffer.PutOfferAccept(txAccept);
@@ -2680,7 +2582,7 @@ Value offeraccept(const Array& params, bool fHelp) {
     int64 nValueIn = 0;
 
 
-    uint64 nTotalValue = ( txAccept.nPrice * nQty );
+    int64 nTotalValue = ( nPrice * nQty );
 
     if (!pwalletMain->SelectCoins(nTotalValue + (MIN_AMOUNT * 2), setCoins, nValueIn))
         throw runtime_error("insufficient funds to pay for offer");
@@ -2727,7 +2629,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 		scriptPubKey += scriptPubKeyOrig;
 
 		int64 nNetFee = GetCertNetworkFee(OP_CERT_UPDATE, nBestHeight);
-		cert.nFee = nNetFee;
+		cert.nHeight = nBestHeight;
 		strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
 				wtx, wtxCert, false, cert.SerializeToString());
 		if (strError != "")
@@ -2799,20 +2701,18 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("quantity", strprintf("%llu", ca.nQty)));
 			oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 			int precision = 2;
-			double price = convertSyscoinToCurrencyCode(theOffer.sCurrencyCode, ca.nPrice, nBestHeight, precision);
-			double total = convertSyscoinToCurrencyCode(theOffer.sCurrencyCode, ca.nPrice * ca.nQty, nBestHeight, precision);
-			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, price ))); 
-			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, total ))); 
+			convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, 0, nBestHeight, precision);
+			convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, 0, nBestHeight, precision);
+			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ca.nPrice ))); 
+			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ca.nPrice * ca.nQty ))); 
 			oOfferAccept.push_back(Pair("is_mine", IsOfferMine(txA) ? "true" : "false"));
 			if(ca.bPaid) {
 				oOfferAccept.push_back(Pair("paid","true"));
-				oOfferAccept.push_back(Pair("pay_service_fee", strprintf("%.2f SYS", ValueFromAmount(ca.nFee).get_real())));
 				oOfferAccept.push_back(Pair("pay_message", stringFromVch(ca.vchMessage)));
 			}
 			else
 			{
 				oOfferAccept.push_back(Pair("paid","false"));
-				oOfferAccept.push_back(Pair("pay_service_fee", ""));
 				oOfferAccept.push_back(Pair("pay_message",""));
 			}
 			if(ca.bRefunded) { 
@@ -2841,7 +2741,6 @@ Value offerinfo(const Array& params, bool fHelp) {
         if (GetValueOfOfferTxHash(txHash, vchValue, offerHash, nHeight)) {
 			oOffer.push_back(Pair("offer", offer));
 			oOffer.push_back(Pair("txid", tx.GetHash().GetHex()));
-			oOffer.push_back(Pair("service_fee", strprintf("%llu", theOffer.nFee)));
 			string strAddress = "";
 			GetOfferAddress(tx, strAddress);
 			oOffer.push_back(Pair("address", strAddress));
@@ -2866,8 +2765,8 @@ Value offerinfo(const Array& params, bool fHelp) {
 			
 			
 			int precision = 2;
-			double price = convertSyscoinToCurrencyCode(theOffer.sCurrencyCode, theOffer.GetPrice(), nBestHeight, precision);
-			oOffer.push_back(Pair("price", strprintf("%.*f", precision, price ))); 
+			convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, 0, nBestHeight, precision);
+			oOffer.push_back(Pair("price", strprintf("%.*f", precision, theOffer.GetPrice() ))); 
 			
 			oOffer.push_back(Pair("is_mine", IsOfferMine(tx) ? "true" : "false"));
 			if(!theOffer.vchLinkOffer.empty() && IsOfferMine(tx)) {
@@ -2956,10 +2855,10 @@ Value offeracceptlist(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("quantity", strprintf("%llu", theOfferAccept.nQty)));
 			oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 			int precision = 2;
-			double price = convertSyscoinToCurrencyCode(theOffer.sCurrencyCode, theOfferAccept.nPrice, nBestHeight, precision);
-			double total = convertSyscoinToCurrencyCode(theOffer.sCurrencyCode, theOfferAccept.nPrice * theOfferAccept.nQty, nBestHeight, precision);
-			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, price ))); 
-			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, total ))); 
+			convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, 0, nBestHeight, precision);
+			convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, 0, nBestHeight, precision);
+			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, theOfferAccept.nPrice ))); 
+			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, theOfferAccept.nPrice * theOfferAccept.nQty ))); 
 			
 			oOfferAccept.push_back(Pair("is_mine", IsOfferMine(tx) ? "true" : "false"));
 			if(theOfferAccept.bPaid && !theOfferAccept.bRefunded) {
@@ -3070,8 +2969,8 @@ Value offerlist(const Array& params, bool fHelp) {
             oName.push_back(Pair("category", stringFromVch(theOfferA.sCategory)));
             oName.push_back(Pair("description", stringFromVch(theOfferA.sDescription)));
 			int precision = 2;
-			double price = convertSyscoinToCurrencyCode(theOfferA.sCurrencyCode, theOfferA.GetPrice(), nBestHeight, precision);
-			oName.push_back(Pair("price", strprintf("%.*f", precision, price ))); 	
+			convertCurrencyCodeToSyscoin(theOfferA.sCurrencyCode, 0, nBestHeight, precision);
+			oName.push_back(Pair("price", strprintf("%.*f", precision, theOfferA.GetPrice() ))); 	
 
 			oName.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode) ) );
 			oName.push_back(Pair("commission", strprintf("%d%%", theOfferA.nCommission)));
@@ -3251,8 +3150,8 @@ Value offerfilter(const Array& params, bool fHelp) {
 		oOffer.push_back(Pair("description", stringFromVch(txOffer.sDescription)));
         oOffer.push_back(Pair("category", stringFromVch(txOffer.sCategory)));
 		int precision = 2;
-		double price = convertSyscoinToCurrencyCode(txOffer.sCurrencyCode, txOffer.GetPrice(), nBestHeight, precision);
-		oOffer.push_back(Pair("price", strprintf("%.*f", precision, price ))); 	
+		convertCurrencyCodeToSyscoin(txOffer.sCurrencyCode, 0, nBestHeight, precision);
+		oOffer.push_back(Pair("price", strprintf("%.*f", precision, txOffer.GetPrice() ))); 	
 		oOffer.push_back(Pair("currency", stringFromVch(txOffer.sCurrencyCode)));
 		oOffer.push_back(Pair("commission", strprintf("%d%%", txOffer.nCommission)));
         oOffer.push_back(Pair("quantity", strprintf("%llu", txOffer.nQty)));

@@ -8,16 +8,17 @@ class CAliasIndex {
 public:
     uint256 txHash;
     int64 nHeight;
-    COutPoint txPrevOut;
     std::vector<unsigned char> vValue;
 
     CAliasIndex() { 
         SetNull();
     }
-
-    CAliasIndex(uint256 txHashIn, COutPoint txPrevOutIn, uint64 nHeightIn, std::vector<unsigned char> vValueIn) {
+    CAliasIndex(const CTransaction &tx) {
+        SetNull();
+        UnserializeFromTx(tx);
+    }
+    CAliasIndex(uint256 txHashIn, uint64 nHeightIn, std::vector<unsigned char> vValueIn) {
         txHash = txHashIn;
-        txPrevOut = txPrevOutIn;
         nHeight = nHeightIn;
         vValue = vValueIn;
     }
@@ -25,7 +26,6 @@ public:
     IMPLEMENT_SERIALIZE (
         READWRITE(txHash);
         READWRITE(VARINT(nHeight));
-        READWRITE(txPrevOut);
     	READWRITE(vValue);
     )
 
@@ -39,58 +39,16 @@ public:
     
     void SetNull() { txHash.SetHex("0x0"); nHeight = -1; vValue.clear(); }
     bool IsNull() const { return (nHeight == -1 && txHash == 0); }
+	bool UnserializeFromTx(const CTransaction &tx);
+    std::string SerializeToString();
 };
-
-class CAliasFee {
-public:
-	uint64 nBlockTime;
-	uint64 nHeight;
-	uint256 hash;
-	uint64 nValue;
-
-	CAliasFee() {
-        SetNull();
-    }
-
-    IMPLEMENT_SERIALIZE (
-        READWRITE(nBlockTime);
-        READWRITE(nHeight);
-        READWRITE(hash);
-    	READWRITE(nValue);
-    )
-
-    void SetNull() { hash = 0; nHeight = 0; nValue = 0; nBlockTime = 0; }
-    bool IsNull() const { return (nHeight == 0 && hash == 0 && nValue == 0 && nBlockTime == 0); }
-
-	CAliasFee(uint256 s, uint64 t, uint64 h, uint64 v) {
-		hash = s;
-		nBlockTime = t;
-		nHeight = h;
-		nValue = v;
-	}
-	bool operator()(uint256 s, uint64 t, uint64 h, uint64 v) {
-		hash = s;
-		nBlockTime = t;
-		nHeight = h;
-		nValue = v;
-		return true;
-	}
-    friend bool operator==(const CAliasFee &a, const CAliasFee &b) {
-        return (a.hash == b.hash && a.nBlockTime == b.nBlockTime && a.nHeight == b.nHeight && a.nValue == b.nValue);
-    }
-
-    friend bool operator!=(const CAliasFee &a, const CAliasFee &b) {
-        return !(a == b);
-    }
-};
-extern std::list<CAliasFee> lstAliasFees;
 
 class CAliasDB : public CLevelDB {
 public:
     CAliasDB(size_t nCacheSize, bool fMemory, bool fWipe) : CLevelDB(GetDataDir() / "aliases", nCacheSize, fMemory, fWipe) {
     }
 
-	bool WriteName(const std::vector<unsigned char>& name, std::vector<CAliasIndex>& vtxPos) {
+	bool WriteAlias(const std::vector<unsigned char>& name, std::vector<CAliasIndex>& vtxPos) {
 		return Write(make_pair(std::string("namei"), name), vtxPos);
 	}
 
@@ -103,20 +61,6 @@ public:
 	bool ExistsAlias(const std::vector<unsigned char>& name) {
 	    return Exists(make_pair(std::string("namei"), name));
 	}
-
-	bool WriteAliasTxFees(std::vector<CAliasFee>& vtxPos) {
-		return Write(std::string("nametxf"), vtxPos);
-	}
-	bool ReadAliasTxFees(std::vector<CAliasFee>& vtxPos) {
-		return Read(std::string("nametxf"), vtxPos);
-	}
-
-    bool WriteAliasIndex(std::vector<std::vector<unsigned char> >& vtxIndex) {
-        return Write(std::string("namendx"), vtxIndex);
-    }
-    bool ReadAliasIndex(std::vector<std::vector<unsigned char> >& vtxIndex) {
-        return Read(std::string("namendx"), vtxIndex);
-    }
 
     bool ScanNames(
             const std::vector<unsigned char>& vchName,
@@ -160,6 +104,7 @@ bool GetValueOfNameTxHash(const uint256& txHash, std::vector<unsigned char>& vch
 bool GetAliasOfTx(const CTransaction& tx, std::vector<unsigned char>& name);
 bool GetValueOfAliasTx(const CTransaction& tx, std::vector<unsigned char>& value);
 bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, int nHeight);
+bool DecodeAliasTxInputs(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, CCoinsViewCache &inputs);
 bool GetValueOfAliasTx(const CCoins& tx, std::vector<unsigned char>& value);
 bool DecodeAliasTx(const CCoins& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, int nHeight);
 bool DecodeAliasScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
@@ -169,13 +114,12 @@ extern void GetAliasValue(const std::string& strName, std::string& strAddress);
 std::string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee, CWalletTx& wtxIn, CWalletTx& wtxNew, bool fAskFee, const std::string& txData = "");
 bool CreateTransactionWithInputTx(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxIn, int nTxOut, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, const std::string& txData = "");
 int64 GetAliasNetworkFee(opcodetype seed, unsigned int nHeight);
-uint64 GetAliasFeeSubsidy(const unsigned int nTime);
 int64 GetAliasNetFee(const CTransaction& tx);
-bool InsertAliasFee(CBlockIndex *pindex, uint256 hash, uint64 nValue);
+
 std::string aliasFromOp(int op);
 bool IsAliasOp(int op);
 int GetAliasDisplayExpirationDepth();
 void UnspendInputs(CWalletTx& wtx);
-bool RemoveAliasFee(CAliasFee &txnVal);
+
 
 #endif // ALIAS_H

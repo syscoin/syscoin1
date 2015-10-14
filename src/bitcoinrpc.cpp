@@ -288,14 +288,6 @@ static const CRPCCommand vRPCCommands[] =
     { "getaliasfees",      &getaliasfees,         false,      true,      true },
 
 
-	// use the blockchain to store provably-ownable data
-    { "datanew",          &datanew,         false,      true,      true },
-    { "dataupdate",       &dataupdate,      false,      true,      true },
-    { "datalist",         &datalist,        false,      true,      true },
-    { "datainfo",         &datainfo,        false,      true,      true },
-    { "datahistory",      &datahistory,     false,      true,      true },
-    { "datafiler",        &datafilter,      false,      true,      true },
-
     // use the blockchain as a distributed marketplace
     { "offernew",         &offernew,       false,      true,      true },
     { "offerupdate",      &offerupdate,    false,      true,      true },

@@ -368,12 +368,7 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
     case TransactionRecord::AliasTransfer:
         return tr("Alias Updated (Transfer)");
     
-    case TransactionRecord::DataActivate:
-        return tr("Data Alias Activated");
-    case TransactionRecord::DataUpdate:
-        return tr("Data Alias Updated");
-    case TransactionRecord::DataTransfer:
-        return tr("Data Alias Updated (Tranfer)");
+    
    
     case TransactionRecord::OfferActivate:
         return tr("Offer Activated");
@@ -408,7 +403,6 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
     case TransactionRecord::SendToAddress:
     case TransactionRecord::SendToOther:
     case TransactionRecord::AliasActivate:
-    case TransactionRecord::DataActivate:
     case TransactionRecord::OfferActivate:
     case TransactionRecord::OfferAccept:
 	case TransactionRecord::OfferAcceptRefundInProgress:
@@ -436,10 +430,7 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     case TransactionRecord::AliasActivate:
     case TransactionRecord::AliasUpdate:
     case TransactionRecord::AliasTransfer:
-   
-    case TransactionRecord::DataActivate:
-    case TransactionRecord::DataUpdate:
-    case TransactionRecord::DataTransfer:
+ 
    
     case TransactionRecord::OfferActivate:
     case TransactionRecord::OfferUpdate:

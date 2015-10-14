@@ -80,10 +80,6 @@ TransactionView::TransactionView(QWidget *parent) :
     typeWidget->addItem(tr("Alias Updated"), TransactionFilterProxy::TYPE(TransactionRecord::AliasUpdate));
     typeWidget->addItem(tr("Alias Updated (Transfer)"), TransactionFilterProxy::TYPE(TransactionRecord::AliasTransfer));
    
-    typeWidget->addItem(tr("Data Alias Activated"), TransactionFilterProxy::TYPE(TransactionRecord::DataActivate));
-    typeWidget->addItem(tr("Data Alias Updated"), TransactionFilterProxy::TYPE(TransactionRecord::DataUpdate));
-    typeWidget->addItem(tr("Data Alias Updated (Transfer)"), TransactionFilterProxy::TYPE(TransactionRecord::DataTransfer));
-   
     typeWidget->addItem(tr("Offer Activated"), TransactionFilterProxy::TYPE(TransactionRecord::OfferActivate));
     typeWidget->addItem(tr("Offer Updated"), TransactionFilterProxy::TYPE(TransactionRecord::OfferUpdate));
     typeWidget->addItem(tr("Offer Accepted"), TransactionFilterProxy::TYPE(TransactionRecord::OfferAccept));

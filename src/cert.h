@@ -25,10 +25,10 @@ bool CreateCertTransactionWithInputTx(const std::vector<std::pair<CScript, int64
                                       int nTxOut, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, const std::string& txData);
 bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, int nHeight);
 bool DecodeCertTx(const CCoins& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, int nHeight);
+bool DecodeCertTxInputs(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, CCoinsViewCache &inputs);
 bool DecodeCertScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 bool IsCertOp(int op);
 int IndexOfCertOutput(const CTransaction& tx);
-uint64 GetCertFeeSubsidy(unsigned int nHeight);
 bool GetValueOfCertTxHash(const uint256 &txHash, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
 int64 GetCertTxHashHeight(const uint256 txHash);
 int GetCertTxPosHeight(const CDiskTxPos& txPos);
@@ -51,8 +51,6 @@ public:
     std::vector<unsigned char> vchData;
     uint256 txHash;
     uint64 nHeight;
-    uint64 nTime;
-    uint64 nFee;
 
     CCert() {
         SetNull();
@@ -67,8 +65,6 @@ public:
         READWRITE(vchData);
         READWRITE(txHash);
         READWRITE(nHeight);
-        READWRITE(nTime);
-        READWRITE(nFee);
     )
 
     friend bool operator==(const CCert &a, const CCert &b) {
@@ -78,8 +74,6 @@ public:
         && a.vchData == b.vchData
         && a.txHash == b.txHash
         && a.nHeight == b.nHeight
-        && a.nTime == b.nTime
-        && a.nFee == b.nFee
         );
     }
 
@@ -89,8 +83,6 @@ public:
         vchData = b.vchData;
         txHash = b.txHash;
         nHeight = b.nHeight;
-        nTime = b.nTime;
-        nFee = b.nFee;
         return *this;
     }
 
@@ -98,54 +90,12 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { nHeight = nTime = 0; txHash = 0; nFee = 0; vchRand.clear(); }
-    bool IsNull() const { return (nTime == 0 && txHash == 0 && nFee == 0 && nHeight == 0 && vchRand.size() == 0); }
+    void SetNull() { nHeight = 0; txHash = 0;  vchRand.clear(); }
+    bool IsNull() const { return (txHash == 0 &&  nHeight == 0 && vchRand.size() == 0); }
     bool UnserializeFromTx(const CTransaction &tx);
-    void SerializeToTx(CTransaction &tx);
     std::string SerializeToString();
 };
 
-
-class CCertFee {
-public:
-    uint256 hash;
-    uint64 nHeight;
-    uint64 nTime;
-    uint64 nFee;
-
-    CCertFee() {
-        nTime = 0; nHeight = 0; hash = 0; nFee = 0;
-    }
-
-    IMPLEMENT_SERIALIZE (
-        READWRITE(hash);
-        READWRITE(nHeight);
-        READWRITE(nTime);
-        READWRITE(nFee);
-    )
-
-    friend bool operator==(const CCertFee &a, const CCertFee &b) {
-        return (
-        a.nTime==b.nTime
-        && a.hash==b.hash
-        && a.nHeight==b.nHeight
-        && a.nFee == b.nFee
-        );
-    }
-
-    CCertFee operator=(const CCertFee &b) {
-        nTime = b.nTime;
-        nFee = b.nFee;
-        hash = b.hash;
-        nHeight = b.nHeight;
-        return *this;
-    }
-
-    friend bool operator!=(const CCertFee &a, const CCertFee &b) { return !(a == b); }
-    void SetNull() { hash = nTime = nHeight = nFee = 0;}
-    bool IsNull() const { return (nTime == 0 && nFee == 0 && hash == 0 && nHeight == 0); }
-};
-bool RemoveCertFee(CCertFee &txnVal);
 
 class CCertDB : public CLevelDB {
 public:
@@ -167,14 +117,6 @@ public:
         return Exists(make_pair(std::string("certi"), name));
     }
 
-    bool WriteCertFees(std::vector<CCertFee>& vtxPos) {
-        return Write(make_pair(std::string("certa"), std::string("certtxf")), vtxPos);
-    }
-
-    bool ReadCertFees(std::vector<CCertFee>& vtxPos) {
-        return Read(make_pair(std::string("certa"), std::string("certtxf")), vtxPos);
-    }
-
     bool ScanCerts(
             const std::vector<unsigned char>& vchName,
             unsigned int nMax,
@@ -182,8 +124,6 @@ public:
 
     bool ReconstructCertIndex(CBlockIndex *pindexRescan);
 };
-extern std::list<CCertFee> lstCertFees;
-
 
 bool GetTxOfCert(CCertDB& dbCert, const std::vector<unsigned char> &vchCert, CTransaction& tx);
 

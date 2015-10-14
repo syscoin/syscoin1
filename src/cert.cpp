@@ -15,7 +15,7 @@ using namespace json_spirit;
 
 template<typename T> void ConvertTo(Value& value, bool fAllowNull = false);
 
-std::list<CCertFee> lstCertFees;
+
 extern bool ExistsInMempool(std::vector<unsigned char> vchNameOrRand, opcodetype type);
 extern bool HasReachedMainNetForkB2();
 extern CCertDB *pcertdb;
@@ -152,11 +152,6 @@ bool CCert::UnserializeFromTx(const CTransaction &tx) {
     return true;
 }
 
-void CCert::SerializeToTx(CTransaction &tx) {
-    vector<unsigned char> vchData = vchFromString(SerializeToString());
-    tx.data = vchData;
-}
-
 string CCert::SerializeToString() {
     // serialize cert object
     CDataStream dsCert(SER_NETWORK, PROTOCOL_VERSION);
@@ -263,31 +258,18 @@ bool CCertDB::ReconstructCertIndex(CBlockIndex *pindexRescan) {
             txCert.nHeight = nHeight;
             // txn-specific values to cert object
             txCert.vchRand = vvchArgs[0];
-            txCert.nTime = pindex->nTime;
             PutToCertList(vtxPos, txCert);
 
             if (!WriteCert(vchCert, vtxPos))
                 return error("ReconstructCertIndex() : failed to write to cert DB");
 
-            // insert certs fees to regenerate list, write cert to
-            // master index
-            int64 nTheFee = GetCertNetFee(tx);
-			if(nTheFee > 0)
-			{
-				InsertCertFee(pindex, tx.GetHash(), nTheFee);
-				vector<CCertFee> vCertFees(lstCertFees.begin(),
-					lstCertFees.end());
-				if (!pcertdb->WriteCertFees(vCertFees))
-					return error("ReconstructCertIndex() : failed to write fees to alias DB");
-			}
-
-            printf( "RECONSTRUCT CERT: op=%s cert=%s title=%s hash=%s height=%d fees=%llu\n",
+          
+            printf( "RECONSTRUCT CERT: op=%s cert=%s title=%s hash=%s height=%d\n",
                     certFromOp(op).c_str(),
                     stringFromVch(vvchArgs[0]).c_str(),
                     stringFromVch(txCert.vchTitle).c_str(),
                     tx.GetHash().ToString().c_str(),
-                    nHeight,
-                    nTheFee);
+                    nHeight);
         }
         pindex = pindex->pnext;
         
@@ -315,83 +297,6 @@ int64 GetCertTxHashHeight(const uint256 txHash) {
 	return GetCertTxPosHeight(postx);
 }
 
-uint64 GetCertFeeSubsidy(unsigned int nHeight) {
-	uint64 hr1 = 1, hr12 = 1;
-	{
-		TRY_LOCK(cs_main, cs_trymain);
-		unsigned int h12 = 360 * 12;
-		unsigned int nTargetTime = 0;
-		unsigned int nTarget1hrTime = 0;
-		unsigned int blk1hrht = nHeight - 1;
-		unsigned int blk12hrht = nHeight - 1;
-		bool bFound = false;
-
-		BOOST_FOREACH(CCertFee &nmFee, lstCertFees) {
-			if(nmFee.nHeight <= nHeight)
-				bFound = true;
-			if(bFound) {
-				if(nTargetTime==0) {
-					hr1 = hr12 = 0;
-					nTargetTime = nmFee.nTime - h12;
-					nTarget1hrTime = nmFee.nTime - (h12/12);
-				}
-				if(nmFee.nTime > nTargetTime) {
-					hr12 += nmFee.nFee;
-					blk12hrht = nmFee.nHeight;
-					if(nmFee.nTime > nTarget1hrTime) {
-						hr1 += nmFee.nFee;
-						blk1hrht = nmFee.nHeight;
-					}
-				}
-			}
-		}
-		hr12 /= (nHeight - blk12hrht) + 1;
-		hr1 /= (nHeight - blk1hrht) + 1;
-	}
-    return (hr12 + hr1) / 2;
-}
-
-bool RemoveCertFee(CCertFee &txnVal) {
-	TRY_LOCK(cs_main, cs_trymain);
-
-	CCertFee *theval = NULL;
-	if(lstCertFees.size()==0) return false;
-	BOOST_FOREACH(CCertFee &nmTxnValue, lstCertFees) {
-		if (txnVal.hash == nmTxnValue.hash
-		 && txnVal.nHeight == nmTxnValue.nHeight) {
-			theval = &nmTxnValue;
-			break;
-		}
-	}
-
-	if(theval)
-		lstCertFees.remove(*theval);
-
-	return theval != NULL;
-}
-
-bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue) {
-	TRY_LOCK(cs_main, cs_trymain);
-    CCertFee txnVal;
-	txnVal.hash = hash;
-    txnVal.nTime = pindex->nTime;
-    txnVal.nHeight = pindex->nHeight;
-    txnVal.nFee = nValue;
-	bool bFound = false;
-
-	BOOST_FOREACH(CCertFee &nmTxnValue, lstCertFees) {
-		if (txnVal.hash == nmTxnValue.hash
-				&& txnVal.nHeight == nmTxnValue.nHeight) {
-			nmTxnValue = txnVal;
-			bFound = true;
-			break;
-		}
-	}
-    if (!bFound)
-        lstCertFees.push_front(txnVal);
-
-    return bFound;
-}
 
 int64 GetCertNetFee(const CTransaction& tx) {
     int64 nFee = 0;
@@ -576,7 +481,26 @@ bool GetTxOfCert(CCertDB& dbCert, const vector<unsigned char> &vchCert,
     return true;
 }
 
+bool DecodeCertTxInputs(const CTransaction& tx, int& op, int& nOut,
+        vector<vector<unsigned char> >& vvch, CCoinsViewCache &inputs) {
+    bool found = false;
 
+	const COutPoint *prevOutput = NULL;
+	const CCoins *prevCoins = NULL;
+    // Strict check - bug disallowed
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        const CTxIn& in = tx.vin[i];
+		prevOutput = &in.prevout;
+		prevCoins = &inputs.GetCoins(prevOutput->hash);
+        vector<vector<unsigned char> > vvchRead;
+        if (DecodeCertScript(prevCoins->vout[prevOutput->n].scriptPubKey, op, vvchRead)) {
+            nOut = i; found = true; vvch = vvchRead;
+            break;
+        }
+    }
+    if (!found) vvch.clear();
+    return found && IsCertOp(op);
+}
 bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut,
         vector<vector<unsigned char> >& vvch, int nHeight) {
     bool found = false;
@@ -980,53 +904,32 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         bool found = false;
         const COutPoint *prevOutput = NULL;
         const CCoins *prevCoins = NULL;
-        const COutPoint *prevOutput1 = NULL;
-        const CCoins *prevCoins1 = NULL;
-        int prevOp, prevOp1;
-        vector<vector<unsigned char> > vvchPrevArgs, vvchPrevArgs1;
 
+        int prevOp;
+        vector<vector<unsigned char> > vvchPrevArgs;
         // Strict check - bug disallowed
-        for (int i = 0; i < (int) tx.vin.size(); i++) {
-            prevOutput = &tx.vin[i].prevout;
-            prevCoins = &inputs.GetCoins(prevOutput->hash);
-            vector<vector<unsigned char> > vvch;			
-			if (DecodeCertScript(prevCoins->vout[prevOutput->n].scriptPubKey,
-					prevOp, vvch)) {
-				found = true; vvchPrevArgs = vvch;
+		for (int i = 0; i < (int) tx.vin.size(); i++) {
+			if(found)
+				break;
+			vector<vector<unsigned char> > vvch, vvch2;
+			prevOutput = &tx.vin[i].prevout;
+			prevCoins = &inputs.GetCoins(prevOutput->hash);
+			if(DecodeCertScript(prevCoins->vout[prevOutput->n].scriptPubKey, prevOp, vvch))
+			{
+				vvchPrevArgs = vvch;
+				found = true;
 				break;
 			}
-			else 
+			else if(DecodeOfferScript(prevCoins->vout[prevOutput->n].scriptPubKey, prevOp, vvch2))
 			{
-				// try to get the previous tx as an offer (offeraccept)
-				vector<vector<unsigned char> > vvch2;
-				uint256 blockHash;
-				if (DecodeOfferScript(prevCoins->vout[prevOutput->n].scriptPubKey,
-						prevOp, vvch2)) {
-					found = true; vvchPrevArgs = vvch2;
-					CTransaction prevTx, prevPrevTx;
-					// try to get the previous of the previous tx as a cert (certupdate in offeraccept)
-					if (GetTransaction(prevOutput->hash, prevTx, blockHash, true))
-					{
-						for (int j = 0; j < (int) prevTx.vin.size(); j++) {
-							prevOutput1 = &prevTx.vin[j].prevout;
-							if(prevOutput1->IsNull())
-								continue;
-							if (GetTransaction(prevOutput1->hash, prevPrevTx, blockHash, true))
-							{
-								int nOut;
-								if(DecodeCertTx(prevPrevTx, prevOp1, nOut, vvchPrevArgs1, -1))
-								{
-									break;
-								}
-							}
-						
-						}
-					}
-				}
+				found = true; 
+				vvchPrevArgs = vvch2;
+				break;
 			}
-            if(!found)vvchPrevArgs.clear();
-
-        }
+			
+			
+		}
+		if(!found)vvchPrevArgs.clear();
         // Make sure cert outputs are not spent by a regular transaction, or the cert would be lost
         if (tx.nVersion != SYSCOIN_TX_VERSION) {
             if (found)
@@ -1034,17 +937,14 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                         "CheckCertInputs() : a non-syscoin transaction with a syscoin input");
             return true;
         }
-
         vector<vector<unsigned char> > vvchArgs;
-        int op;
-        int nOut;
+        int op, nOut;
         bool good = DecodeCertTx(tx, op, nOut, vvchArgs, -1);
         if (!good)
             return error("CheckCertInputs() : could not decode a syscoin tx");
         int nPrevHeight;
         int nDepth;
         int64 nNetFee;
-
         // unserialize cert object from txn, check for valid
         CCert theCert;
         theCert.UnserializeFromTx(tx);
@@ -1053,10 +953,8 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
         if (vvchArgs[0].size() > MAX_NAME_LENGTH)
             return error("cert hex guid too long");
-
         switch (op) {
         case OP_CERT_ACTIVATE:
-
             if (found)
                 return error(
                         "CheckCertInputs() : certactivate tx pointing to previous syscoin tx");
@@ -1068,7 +966,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 					// check for enough fees
 				nNetFee = GetCertNetFee(tx);
-				if (nNetFee < GetCertNetworkFee(OP_CERT_ACTIVATE, pindexBlock->nHeight))
+				if (nNetFee < GetCertNetworkFee(OP_CERT_ACTIVATE, theCert.nHeight))
 					return error(
 							"CheckCertInputs() : OP_CERT_ACTIVATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -1078,33 +976,23 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
         case OP_CERT_UPDATE:
 			// if previous op was a cert or an offeraccept its ok
-            if ( !found || (!IsCertOp(prevOp) && prevOp != OP_OFFER_ACCEPT))
-                return error("certupdate previous op %s is invalid", offerFromOp(prevOp).c_str());
-			// previous op was an accept, check to make sure the previous op to the accept was a cert again and its guid matched this guid 
-			// (incase you are trying to update a cert that isn't yours by using an accept as an input)
-			// the accept as an input comes from offeraccept because we need to use the cert as an input to the offer accept for resellers with whitelist certs
-			// and thus we did a manual certupdate in offeraccept to ensure we have inputs for future cert transactions like this one
-			if(prevOp == OP_OFFER_ACCEPT && vvchPrevArgs1[0] != vvchArgs[0])
-			{
-				// stops the hacker in his tracks
-				return error("CheckCertInputs() : certupdate prev cert mismatch");
-			}
+            if ( !found || (!IsCertOp(prevOp) && !IsOfferOp(prevOp)))
+                return error("certupdate previous op is invalid");
+            if (vvchPrevArgs[0] != vvchArgs[0] && !IsOfferOp(prevOp))
+                return error("CheckCertInputs() : certupdate prev cert mismatch vvchPrevArgs[0]: %s, vvchArgs[0] %s", stringFromVch(vvchPrevArgs[0]).c_str(), stringFromVch(vvchArgs[0]).c_str());
             if (vvchArgs[1].size() > MAX_VALUE_LENGTH)
                 return error("certupdate tx with value too long");
 
-			// aslong as previous op is not an accept then make sure previous guid and this guid match for the cert
-            if (vvchPrevArgs[0] != vvchArgs[0] && prevOp != OP_OFFER_ACCEPT)
-                return error("CheckCertInputs() : certupdate cert mismatch");
 			if (fBlock && !fJustCheck) {
 				// TODO CPU intensive
 				nDepth = CheckCertTransactionAtRelativeDepth(pindexBlock,
 						prevCoins, GetCertExpirationDepth());
 				if ((fBlock || fMiner) && nDepth < 0)
 					return error(
-							"CheckCertInputs() : certupdate on an expired cert, or there is a pending transaction on the cert");
-			   // check for enough fees
+							"CheckCertInputs() : certupdate on an expired cert, or there is a pending transaction on the cert");		  
+				// check for enough fees
 				nNetFee = GetCertNetFee(tx);
-				if (nNetFee < GetCertNetworkFee(OP_CERT_UPDATE, pindexBlock->nHeight))
+				if (nNetFee < GetCertNetworkFee(OP_CERT_UPDATE, theCert.nHeight))
 					return error(
 							"CheckCertInputs() : OP_CERT_UPDATE got tx %s with fee too low %lu",
 							tx.GetHash().GetHex().c_str(),
@@ -1115,10 +1003,9 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         
 
         case OP_CERT_TRANSFER:
-
             // validate conditions
             if ( !found || !IsCertOp(prevOp))
-                return error("certtransfer previous op %s is invalid", certFromOp(prevOp).c_str());
+                return error("certtransfer previous op is invalid");
         	if (vvchArgs[0].size() > 20)
 				return error("certtransfer tx with cert rand too big");
             if (vvchArgs[1].size() > 20)
@@ -1140,7 +1027,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 nPrevHeight = GetCertHeight(vchCert);
 
                 // check for enough fees
-                int64 expectedFee = GetCertNetworkFee(OP_CERT_TRANSFER, pindexBlock->nHeight);
+                int64 expectedFee = GetCertNetworkFee(OP_CERT_TRANSFER, theCert.nHeight);
                 nNetFee = GetCertNetFee(tx);
                 if (nNetFee < expectedFee)
                     return error(
@@ -1164,7 +1051,6 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
         // these ifs are problably total bullshit except for the certnew
         if (fBlock || (!fBlock && !fMiner && !fJustCheck)) {
-            
 			// save serialized cert for later use
 			CCert serializedCert = theCert;
 
@@ -1182,7 +1068,6 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				theCert.nHeight = pindexBlock->nHeight;
 				theCert.txHash = tx.GetHash();
                 theCert.vchRand = vvchArgs[0];
-                theCert.nTime = pindexBlock->nTime;
 				PutToCertList(vtxPos, theCert);
 				{
 				TRY_LOCK(cs_main, cs_trymain);
@@ -1190,24 +1075,14 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 if (!pcertdb->WriteCert(vvchArgs[0], vtxPos))
                     return error( "CheckCertInputs() : failed to write to cert DB");
 
-                // compute verify and write fee data to DB
-                int64 nTheFee = GetCertNetFee(tx);
-				if(nTheFee > 0)
-				{
-					InsertCertFee(pindexBlock, tx.GetHash(), nTheFee);
-					printf("CERT FEES: Added %lf in fees to track for regeneration.\n", (double) nTheFee / COIN);
-					vector<CCertFee> vCertFees(lstCertFees.begin(), lstCertFees.end());
-					if (!pcertdb->WriteCertFees(vCertFees))
-						return error( "CheckCertInputs() : failed to write fees to cert DB");
-				}
-				
+              			
                 // debug
-                printf( "CONNECTED CERT: op=%s cert=%s title=%s hash=%s height=%d fees=%llu\n",
+                printf( "CONNECTED CERT: op=%s cert=%s title=%s hash=%s height=%d\n",
                         certFromOp(op).c_str(),
                         stringFromVch(vvchArgs[0]).c_str(),
                         stringFromVch(theCert.vchTitle).c_str(),
                         tx.GetHash().ToString().c_str(),
-                        nHeight, nTheFee / COIN);
+                        nHeight);
 				}
             }
             
@@ -1264,7 +1139,6 @@ Value getcertfees(const Array& params, bool fHelp) {
                         "get current service fees for alias transactions\n");
     Object oRes;
     oRes.push_back(Pair("height", nBestHeight ));
-    oRes.push_back(Pair("subsidy", ValueFromAmount(GetCertFeeSubsidy(nBestHeight) )));
     oRes.push_back(Pair("activate_fee", ValueFromAmount(GetCertNetworkFee(OP_CERT_ACTIVATE, nBestHeight) )));
     oRes.push_back(Pair("update_fee", ValueFromAmount(GetCertNetworkFee(OP_CERT_UPDATE, nBestHeight) )));
     oRes.push_back(Pair("transfer_fee", ValueFromAmount(GetCertNetworkFee(OP_CERT_TRANSFER, nBestHeight) )));
@@ -1316,7 +1190,8 @@ Value certnew(const Array& params, bool fHelp) {
     newCert.vchRand = vchCert;
     newCert.vchTitle = vchTitle;
     newCert.vchData = vchData;
-    newCert.nFee = nNetFee;
+	newCert.nHeight = nBestHeight;
+
 
     string bdata = newCert.SerializeToString();
 
@@ -1429,8 +1304,7 @@ Value certupdate(const Array& params, bool fHelp) {
     // update cert values
     theCert.vchTitle = vchTitle;
     theCert.vchData = vchData;
-    theCert.nFee = nNetFee;
-
+	theCert.nHeight = nBestHeight;
     // serialize cert object
     string bdata = theCert.SerializeToString();
 
@@ -1495,8 +1369,7 @@ Value certtransfer(const Array& params, bool fHelp) {
     // calculate network fees
     int64 nNetFee = GetCertNetworkFee(OP_CERT_TRANSFER, nBestHeight);
 
-    theCert.nFee = nNetFee;
-
+	theCert.nHeight = nBestHeight;
     // send the cert pay txn
     string strError = SendCertMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
             wtxIn, wtx, false, theCert.SerializeToString());
@@ -1533,13 +1406,11 @@ Value certinfo(const Array& params, bool fHelp) {
     vector<unsigned char> vchValue;
     CCert ca = theCert;
 
-    string sTime = strprintf("%llu", ca.nTime);
+
     string sHeight = strprintf("%llu", ca.nHeight);
     oCert.push_back(Pair("cert", HexStr(ca.vchRand)));
     oCert.push_back(Pair("txid", ca.txHash.GetHex()));
     oCert.push_back(Pair("height", sHeight));
-    oCert.push_back(Pair("time", sTime));
-    oCert.push_back(Pair("service_fee", ValueFromAmount(ca.nFee)));
     oCert.push_back(Pair("title", stringFromVch(ca.vchTitle)));
     oCert.push_back(Pair("data", stringFromVch(ca.vchData)));
     oCert.push_back(Pair("is_mine", IsCertMine(tx) ? "true" : "false"));
