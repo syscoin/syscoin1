@@ -1694,6 +1694,10 @@ Value offernew(const Array& params, bool fHelp) {
 	}
 	nQty = (uint64)qty;
 	nPrice = atof(params[3].get_str().c_str());
+	if(nPrice <= 0)
+	{
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer price must be greater than 0!\n");
+	}
 	vchDesc = vchFromValue(params[4]);
 	if(vchCat.size() < 1)
         throw runtime_error("offer category < 1 bytes!\n");
@@ -1733,7 +1737,11 @@ Value offernew(const Array& params, bool fHelp) {
 	{
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not find this currency code in the SYS_RATES alias!\n");
 	}
-	string priceStr = strprintf("%.*f", precision, nPrice);
+	float minPrice = 1/pow(10,precision);
+	float price = nPrice;
+	if(price < minPrice)
+		price = minPrice;
+	string priceStr = strprintf("%.*f", precision, price);
 	nPrice = (float)atof(priceStr.c_str());
 	// this is a syscoin transaction
 	CWalletTx wtx;
@@ -1930,8 +1938,12 @@ Value offerlink(const Array& params, bool fHelp) {
 	int precision = 2;
 	// get precision
 	convertCurrencyCodeToSyscoin(linkOffer.sCurrencyCode, linkOffer.GetPrice(), nBestHeight, precision);
-	string priceStr = strprintf("%.*f", precision, linkOffer.GetPrice());
-	float price = (float)atof(priceStr.c_str());
+	float minPrice = 1/pow(10,precision);
+	float price = linkOffer.GetPrice();
+	if(price < minPrice)
+		price = minPrice;
+	string priceStr = strprintf("%.*f", precision, price);
+	price = (float)atof(priceStr.c_str());
 
 	EnsureWalletIsUnlocked();
 	// calculate network fees
@@ -2302,8 +2314,13 @@ Value offerupdate(const Array& params, bool fHelp) {
 	try {
 		nQty = (uint64)atoi64(params[3].get_str().c_str());
 		price = atof(params[4].get_str().c_str());
+
 	} catch (std::exception &e) {
 		throw runtime_error("invalid price and/or quantity values.");
+	}
+	if(price <= 0)
+	{
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer price must be greater than 0!\n");
 	}
 	if(vchCat.size() < 1)
         throw runtime_error("offer category < 1 bytes!\n");
@@ -2362,6 +2379,9 @@ Value offerupdate(const Array& params, bool fHelp) {
 	int precision = 2;
 	// get precision
 	convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(), nBestHeight, precision);
+	float minPrice = 1/pow(10,precision);
+	if(price < minPrice)
+		price = minPrice;
 	string priceStr = strprintf("%.*f", precision, price);
 	price = (float)atof(priceStr.c_str());
 	// update offer values
