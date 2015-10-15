@@ -150,7 +150,7 @@ bool AcceptandPayOfferListPage::lookup(QString id)
 	catch (Object& objError)
 	{
 		QMessageBox::critical(this, windowTitle(),
-				tr("Could not find this offer, please check the offer ID and that it has been confirmed by the blockchain"),
+			tr("Could not find this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + id,
 				QMessageBox::Ok, QMessageBox::Ok);
 
 	}
@@ -182,12 +182,7 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
     if(!uri.isValid() || uri.scheme() != QString("syscoin") || this->URIHandled)
         return false;
 
-	string strError;
-	string strMethod = string("offerinfo");
-	Array params;
-	Value result;
-	params.push_back(uri.path().toStdString());
-	
+	string strError;	
     try {
 		ui->notesEdit->setPlainText(QString(""));
 		ui->qtyEdit->setText(QString("0"));
@@ -201,7 +196,7 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 		for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
 		{
 			
-			if (i->first == "quantity")
+			if (i->first == "quantity" || i->first == "qty")
 			{
 				qty = i->second.toLong();
 				ui->qtyEdit->setText(QString::number(qty));
@@ -217,7 +212,10 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 		{
 		
 			this->URIHandled = true;
-			OpenPayDialog();
+			if(ui->qtyEdit->text().toInt() > 0)
+			{
+				acceptOffer();
+			}
 			this->URIHandled = false;
 		}
 

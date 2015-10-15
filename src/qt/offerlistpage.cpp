@@ -5,6 +5,7 @@
 #include "ui_offerlistpage.h"
 #include "offertablemodel.h"
 #include "optionsmodel.h"
+#include "offerview.h"
 #include "walletmodel.h"
 #include "bitcoingui.h"
 #include "bitcoinrpc.h"
@@ -24,11 +25,12 @@ using namespace json_spirit;
 extern const CRPCTable tableRPC;
 extern string JSONRPCReply(const Value& result, const Value& error, const Value& id);
 int GetOfferDisplayExpirationDepth();
-OfferListPage::OfferListPage(QWidget *parent) :
-    QDialog(parent),
+OfferListPage::OfferListPage(OfferView *parent) :
+    QDialog(0),
     ui(new Ui::OfferListPage),
     model(0),
-    optionsModel(0)
+    optionsModel(0),
+	offerView(parent)
 {
     ui->setupUi(this);
 
@@ -36,6 +38,7 @@ OfferListPage::OfferListPage(QWidget *parent) :
     ui->copyOffer->setIcon(QIcon());
     ui->exportButton->setIcon(QIcon());
 	ui->resellButton->setIcon(QIcon());
+	ui->purchaseButton->setIcon(QIcon());
 #endif
 
     ui->labelExplanation->setText(tr("Search for Syscoin Offers"));
@@ -44,16 +47,20 @@ OfferListPage::OfferListPage(QWidget *parent) :
     QAction *copyOfferAction = new QAction(ui->copyOffer->text(), this);
     QAction *copyOfferValueAction = new QAction(tr("&Copy Value"), this);
 	QAction *resellAction = new QAction(tr("&Resell Offer"), this);
+	QAction *purchaseAction = new QAction(tr("&Purchase Offer"), this);
 
     // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyOfferAction);
     contextMenu->addAction(copyOfferValueAction);
+	contextMenu->addSeparator();
 	contextMenu->addAction(resellAction);
+	contextMenu->addAction(purchaseAction);
     // Connect signals for context menu actions
     connect(copyOfferAction, SIGNAL(triggered()), this, SLOT(on_copyOffer_clicked()));
     connect(copyOfferValueAction, SIGNAL(triggered()), this, SLOT(onCopyOfferValueAction()));
 	connect(resellAction, SIGNAL(triggered()), this, SLOT(on_resellButton_clicked()));
+	connect(purchaseAction, SIGNAL(triggered()), this, SLOT(on_purchaseButton_clicked()));
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
 
@@ -150,6 +157,22 @@ void OfferListPage::on_resellButton_clicked()
     ResellOfferDialog dlg((QModelIndex*)&selection.at(0));   
     dlg.exec();
 }
+void OfferListPage::on_purchaseButton_clicked()
+{
+ 	if(!model)	
+		return;
+	if(!ui->tableView->selectionModel())
+        return;
+    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
+    if(selection.isEmpty())
+    {
+        return;
+    }
+	QString offerGUID = selection.at(0).data(OfferTableModel::NameRole).toString();
+	QString URI = QString("syscoin:///") + offerGUID + QString("?qty=1");
+	offerView->handleURI(URI);
+}
+
 void OfferListPage::onCopyOfferValueAction()
 {
     GUIUtil::copyEntryData(ui->tableView, OfferTableModel::Title);
@@ -167,11 +190,14 @@ void OfferListPage::selectionChanged()
     {
         ui->copyOffer->setEnabled(true);
 		ui->resellButton->setEnabled(true);
+		ui->purchaseButton->setEnabled(true);
+		
     }
     else
     {
         ui->copyOffer->setEnabled(false);
 		ui->resellButton->setEnabled(false);
+		ui->purchaseButton->setEnabled(false);
     }
 }
 void OfferListPage::keyPressEvent(QKeyEvent * event)

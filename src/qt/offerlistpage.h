@@ -7,6 +7,7 @@ namespace Ui {
     class OfferListPage;
 }
 class OfferTableModel;
+class OfferView;
 class OptionsModel;
 class WalletModel;
 QT_BEGIN_NAMESPACE
@@ -27,7 +28,7 @@ class OfferListPage : public QDialog
 public:
    
 
-    explicit OfferListPage(QWidget *parent = 0);
+    explicit OfferListPage(OfferView *parent);
     ~OfferListPage();
 
 
@@ -47,10 +48,11 @@ private:
     QMenu *contextMenu;
     QAction *deleteAction; // to be able to explicitly disable it
     QString newOfferToSelect;
-
+	OfferView* offerView;
 private slots:
 	void on_resellButton_clicked();
     void on_searchOffer_clicked();
+	void on_purchaseButton_clicked();
     /** Create a new Offer for receiving coins and / or add a new Offer book entry */
     /** Copy Offer of currently selected Offer entry to clipboard */
     void on_copyOffer_clicked();

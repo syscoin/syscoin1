@@ -104,6 +104,17 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="purchaseButton">
+       <property name="text">
+        <string>Purchase Offer</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>

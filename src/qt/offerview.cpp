@@ -32,7 +32,7 @@ OfferView::OfferView(QStackedWidget *parent, BitcoinGUI *_gui):
 {
 
 	tabWidget = new QTabWidget();
-    offerListPage = new OfferListPage();
+    offerListPage = new OfferListPage(this);
     myOfferListPage = new MyOfferListPage();
 	acceptandPayOfferListPage = new AcceptandPayOfferListPage();
 	myAcceptedOfferListPage = new MyAcceptedOfferListPage();
