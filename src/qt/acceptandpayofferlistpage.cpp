@@ -18,6 +18,9 @@
 #include <QMenu>
 #include <QString>
 #include <QUrl>
+#if QT_VERSION >= QT_VERSION_CHECK(5,0,0)
+#   include <QUrlQuery>
+#endif
 using namespace std;
 using namespace json_spirit;
 extern const CRPCTable tableRPC;
