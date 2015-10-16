@@ -169,7 +169,7 @@ void OfferListPage::on_purchaseButton_clicked()
         return;
     }
 	QString offerGUID = selection.at(0).data(OfferTableModel::NameRole).toString();
-	QString URI = QString("syscoin:///") + offerGUID + QString("?qty=1");
+	QString URI = QString("syscoin:///") + offerGUID;
 	offerView->handleURI(URI);
 }
 
