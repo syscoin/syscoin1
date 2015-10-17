@@ -31,12 +31,12 @@
      </item>
      <item>
       <widget class="QPushButton" name="searchAlias">
-        <property name="maximumSize">
-          <size>
-            <width>16777215</width>
-            <height>48</height>
-          </size>
-        </property>        
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>48</height>
+        </size>
+       </property>
        <property name="text">
         <string>Search</string>
        </property>
@@ -84,7 +84,7 @@
         <string>Copy the currently selected alias to the system clipboard</string>
        </property>
        <property name="text">
-        <string>&amp;Copy Alias</string>
+        <string>&amp;Copy Alias ID</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">

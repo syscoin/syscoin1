@@ -78,7 +78,8 @@ void AcceptandPayOfferListPage::OpenPayDialog()
 		this->offerPaid = dlg.getPaymentStatus();
 		if(this->offerPaid)
 		{
-			lookup();
+			COffer offer;
+			setValue(offer);
 		}
 	}
 	updateCaption();
@@ -181,11 +182,11 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 	  // return if URI is not valid or is no Sys URI
     if(!uri.isValid() || uri.scheme() != QString("syscoin") || this->URIHandled)
         return false;
-
+	bool foundQtyParam = false;
 	string strError;	
     try {
 		ui->notesEdit->setPlainText(QString(""));
-		ui->qtyEdit->setText(QString("0"));
+		ui->qtyEdit->setText(QString("1"));
 	#if QT_VERSION < 0x050000
 		QList<QPair<QString, QString> > items = uri.queryItems();
 	#else
@@ -200,6 +201,7 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 			{
 				qty = i->second.toLong();
 				ui->qtyEdit->setText(QString::number(qty));
+				foundQtyParam = true;
 			}
 			else if (i->first == "notes")
 			{
@@ -212,7 +214,7 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 		{
 		
 			this->URIHandled = true;
-			if(ui->qtyEdit->text().toInt() > 0)
+			if(foundQtyParam)
 			{
 				acceptOffer();
 			}
@@ -252,6 +254,7 @@ void AcceptandPayOfferListPage::setValue(COffer &offer)
 	ui->infoQty->setText(QString::number(offer.nQty));
 	ui->infoDescription->setText(QString::fromStdString(stringFromVch(offer.sDescription)));
 	ui->infoPaymentAddress->setText(QString::fromStdString(stringFromVch(offer.vchPaymentAddress)));
+	ui->qtyEdit->setText(QString("1"));
 
 }
 

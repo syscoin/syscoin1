@@ -84,7 +84,7 @@
         <string>Copy the currently selected alias to the system clipboard</string>
        </property>
        <property name="text">
-        <string>&amp;Copy Certificate</string>
+        <string>&amp;Copy Certificate ID</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">

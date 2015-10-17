@@ -38,11 +38,11 @@ OfferView::OfferView(QStackedWidget *parent, BitcoinGUI *_gui):
 	myAcceptedOfferListPage = new MyAcceptedOfferListPage();
 	acceptedOfferListPage = new AcceptedOfferListPage();
 
-	tabWidget->addTab(myOfferListPage, tr("My &Offers"));
-	tabWidget->addTab(myAcceptedOfferListPage, tr("&My Accepted Offers"));
-	tabWidget->addTab(acceptedOfferListPage, tr("Offers &I've Accepted"));
-	tabWidget->addTab(offerListPage, tr("&Search"));
-	tabWidget->addTab(acceptandPayOfferListPage, tr("&Purchase Offer"));
+	tabWidget->addTab(myOfferListPage, tr("&Selling"));
+	tabWidget->addTab(myAcceptedOfferListPage, tr("S&old"));
+	tabWidget->addTab(acceptedOfferListPage, tr("&My Purchases"));
+	tabWidget->addTab(offerListPage, tr("Search"));
+	tabWidget->addTab(acceptandPayOfferListPage, tr("&Buy"));
 	tabWidget->setTabIcon(0, QIcon(":/icons/cart"));
 	tabWidget->setTabIcon(1, QIcon(":/icons/cart"));
 	tabWidget->setTabIcon(2, QIcon(":/icons/cart"));

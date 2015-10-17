@@ -32,7 +32,7 @@ AcceptedOfferListPage::AcceptedOfferListPage(QWidget *parent) :
 
 	ui->buttonBox->setVisible(false);
 
-    ui->labelExplanation->setText(tr("These are your registered Syscoin Accepted Offers. The accepts you made and paid for offers other than your own."));
+    ui->labelExplanation->setText(tr("These are offers you have purchased."));
 	
 	connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(info()));
     // Context menu actions

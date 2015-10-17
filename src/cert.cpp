@@ -643,7 +643,7 @@ bool CreateCertTransactionWithInputTx(
     wtxNew.BindWallet(pwalletMain);
 
     nFeeRet = nTransactionFee;
-    loop {
+    while(true) {
         wtxNew.vin.clear();
         wtxNew.vout.clear();
         wtxNew.fFromMe = true;

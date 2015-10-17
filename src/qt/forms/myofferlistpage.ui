@@ -91,7 +91,7 @@
         <string>Copy the currently selected alias to the system clipboard</string>
        </property>
        <property name="text">
-        <string>&amp;Copy Offer</string>
+        <string>&amp;Copy Offer ID</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">

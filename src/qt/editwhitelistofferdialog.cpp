@@ -55,7 +55,7 @@ EditWhitelistOfferDialog::EditWhitelistOfferDialog(QModelIndex *idx, QWidget *pa
 	
     // Context menu actions
     QAction *removeAction = new QAction(tr("&Remove"), this);
-	QAction *copyAction = new QAction(tr("&Copy Certificate GUID"), this);
+	QAction *copyAction = new QAction(tr("&Copy Certificate ID"), this);
     // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyAction);

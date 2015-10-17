@@ -264,12 +264,17 @@ void OfferListPage::selectNewOffer(const QModelIndex &parent, int begin, int /*e
 
 void OfferListPage::on_searchOffer_clicked()
 {
-    if(!walletModel) return;
+    if(!walletModel) 
+	{
+		selectionChanged();
+		return;
+	}
     if(ui->lineEditOfferSearch->text().trimmed().isEmpty())
     {
         QMessageBox::warning(this, tr("Error Searching Offers"),
             tr("Please enter search term"),
             QMessageBox::Ok, QMessageBox::Ok);
+		selectionChanged();
         return;
     }
         Array params;
@@ -304,6 +309,7 @@ void OfferListPage::on_searchOffer_clicked()
             QMessageBox::critical(this, windowTitle(),
             tr("Error searching Offer: \"%1\"").arg(QString::fromStdString(strError)),
                 QMessageBox::Ok, QMessageBox::Ok);
+			selectionChanged();
             return;
         }
         catch(std::exception& e)
@@ -311,6 +317,7 @@ void OfferListPage::on_searchOffer_clicked()
             QMessageBox::critical(this, windowTitle(),
                 tr("General exception when searching offer"),
                 QMessageBox::Ok, QMessageBox::Ok);
+			selectionChanged();
             return;
         }
 		if (result.type() == array_type)
@@ -395,8 +402,10 @@ void OfferListPage::on_searchOffer_clicked()
             QMessageBox::critical(this, windowTitle(),
                 tr("Error: Invalid response from offerfilter command"),
                 QMessageBox::Ok, QMessageBox::Ok);
+			selectionChanged();
             return;
         }
+		selectionChanged();
 
 }
 

@@ -774,7 +774,7 @@ bool CreateTransactionWithInputTx(const vector<pair<CScript, int64> >& vecSend,
 
 	{
 		nFeeRet = nTransactionFee;
-		loop {
+		while(true) {
 			wtxNew.vin.clear();
 			wtxNew.vout.clear();
 			wtxNew.fFromMe = true;
