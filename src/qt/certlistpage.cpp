@@ -288,7 +288,7 @@ void CertListPage::on_searchCert_clicked()
 					const Value& value_value = find_value(o, "title");
 					if (value_value.type() == str_type)
 						value_str = value_value.get_str();
-					const Value& data_value = find_value(o, "title");
+					const Value& data_value = find_value(o, "data");
 					if (data_value.type() == str_type)
 						data_str = data_value.get_str();
 					const Value& expires_on_value = find_value(o, "expires_on");
