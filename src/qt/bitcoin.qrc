@@ -51,6 +51,7 @@
         <file alias="about">res/images/bitcoin-about.png</file>
         <file alias="splash">res/images/bitcoin-splash.png</file>
         <file alias="splash_testnet">res/images/bitcoin-splash-testnet.png</file>
+        <file alias="image">res/images/imageplaceholder.png</file>
     </qresource>
     <qresource prefix="/movies">
         <file alias="update_spinner">res/movies/update_spinner.mng</file>

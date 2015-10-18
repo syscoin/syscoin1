@@ -23,7 +23,10 @@ OfferAcceptDialog::OfferAcceptDialog(QString title, QString price, QString quant
 	this->offerPaid = false;
 	connect(ui->acceptButton, SIGNAL(clicked()), this, SLOT(acceptOffer()));
 }
-
+void OfferAcceptDialog::on_cancelButton_clicked()
+{
+    reject();
+}
 OfferAcceptDialog::~OfferAcceptDialog()
 {
     delete ui;

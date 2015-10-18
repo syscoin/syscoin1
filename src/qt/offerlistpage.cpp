@@ -61,6 +61,7 @@ OfferListPage::OfferListPage(OfferView *parent) :
     connect(copyOfferValueAction, SIGNAL(triggered()), this, SLOT(onCopyOfferValueAction()));
 	connect(resellAction, SIGNAL(triggered()), this, SLOT(on_resellButton_clicked()));
 	connect(purchaseAction, SIGNAL(triggered()), this, SLOT(on_purchaseButton_clicked()));
+	connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_purchaseButton_clicked()));
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
 
@@ -154,6 +155,14 @@ void OfferListPage::on_resellButton_clicked()
     {
         return;
     }
+	int qtyRemain = selection.at(0).data(OfferTableModel::QtyRole).toInt();
+	if(qtyRemain <= 0)
+	{
+        QMessageBox::critical(this, windowTitle(),
+        tr("Sorry, you cannot not resell this offer, it is sold out!"),
+            QMessageBox::Ok, QMessageBox::Ok);
+		return;
+	}
     ResellOfferDialog dlg((QModelIndex*)&selection.at(0));   
     dlg.exec();
 }
@@ -168,6 +177,14 @@ void OfferListPage::on_purchaseButton_clicked()
     {
         return;
     }
+	int qtyRemain = selection.at(0).data(OfferTableModel::QtyRole).toInt();
+	if(qtyRemain <= 0)
+	{
+        QMessageBox::critical(this, windowTitle(),
+        tr("Sorry, you cannot not purchase this offer, it is sold out!"),
+            QMessageBox::Ok, QMessageBox::Ok);
+		return;
+	}
 	QString offerGUID = selection.at(0).data(OfferTableModel::NameRole).toString();
 	QString URI = QString("syscoin:///") + offerGUID;
 	offerView->handleURI(URI);

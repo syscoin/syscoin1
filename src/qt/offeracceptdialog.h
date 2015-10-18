@@ -30,6 +30,7 @@ private:
 	bool offerPaid; 
 
 private slots:
+	void on_cancelButton_clicked();
     void acceptOffer();
 };
 

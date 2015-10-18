@@ -16,6 +16,13 @@
 #include <QMessageBox>
 #include <QMenu>
 #include <QString>
+#include <QByteArray>
+#include <QPixmap>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QRegExp>
+#include <QStringList>
 #if QT_VERSION >= 0x050000
 #include <QUrlQuery>
 #else
@@ -40,8 +47,28 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
 	connect(ui->lookupButton, SIGNAL(clicked()), this, SLOT(lookup()));
 	connect(ui->offeridEdit, SIGNAL(textChanged(const QString &)), this, SLOT(resetState()));
 	ui->notesEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
-}
 
+	m_netwManager = new QNetworkAccessManager(this);
+
+}
+void AcceptandPayOfferListPage::netwManagerFinished()
+{
+	QNetworkReply* reply = (QNetworkReply*)sender();
+	if(!reply)
+		return;
+	if (reply->error() != QNetworkReply::NoError) {
+			QMessageBox::critical(this, windowTitle(),
+				reply->errorString(),
+				QMessageBox::Ok, QMessageBox::Ok);
+		return;
+	}
+
+	QByteArray jpegData = reply->readAll();
+	QPixmap pixmap;
+	pixmap.loadFromData(jpegData);
+	ui->labelImage->setPixmap(pixmap);
+	reply->deleteLater();
+}
 AcceptandPayOfferListPage::~AcceptandPayOfferListPage()
 {
     delete ui;
@@ -255,7 +282,23 @@ void AcceptandPayOfferListPage::setValue(COffer &offer)
 	ui->infoDescription->setText(QString::fromStdString(stringFromVch(offer.sDescription)));
 	ui->infoPaymentAddress->setText(QString::fromStdString(stringFromVch(offer.vchPaymentAddress)));
 	ui->qtyEdit->setText(QString("1"));
-
+	QRegExp rx("(?:https?|ftp)://\\S+");
+    rx.indexIn(ui->infoDescription->text());
+    QStringList list = rx.capturedTexts();
+	if(list.size() > 0 && list[0] != QString(""))
+	{
+		QString parsedURL = list[0].simplified();
+		QUrl url(parsedURL);
+		if(url.isValid())
+		{
+			QNetworkRequest request(url);
+			request.setRawHeader("Accept", "q=0.9,image/webp,*/*;q=0.8");
+			request.setRawHeader("Cache-Control", "no-cache");
+			request.setRawHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.71 Safari/537.36");
+			QNetworkReply *reply = m_netwManager->get(request);
+			connect(reply, SIGNAL(finished()), this, SLOT(netwManagerFinished()));
+		}
+	}
 }
 
 bool AcceptandPayOfferListPage::handleURI(const QString& strURI)

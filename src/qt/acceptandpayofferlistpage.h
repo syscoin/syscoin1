@@ -17,6 +17,7 @@ class QSortFilterProxyModel;
 class QMenu;
 class QModelIndex;
 class QUrl;
+class QNetworkAccessManager;
 QT_END_NAMESPACE
 
 /** Widget that shows a list of owned offeres.
@@ -41,6 +42,8 @@ public slots:
     void acceptOffer();
 	bool lookup(QString id = QString(""));
 	void resetState();
+	void netwManagerFinished();
+
 private:
     Ui::AcceptandPayOfferListPage *ui;
 	bool URIHandled;
@@ -48,8 +51,8 @@ private:
 	bool offerPaid;
     QMenu *contextMenu;
     QAction *deleteAction; // to be able to explicitly disable it
-
-
+	QNetworkAccessManager* m_netwManager;
+	
 };
 
 #endif // ACCEPTANDPAYOFFERLISTPAGE_H
