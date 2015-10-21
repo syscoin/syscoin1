@@ -23,7 +23,7 @@ ResellOfferDialog::ResellOfferDialog(QModelIndex *idx, QWidget *parent) :
 	QString offerGUID = idx->data(OfferTableModel::NameRole).toString();
 	ui->descriptionEdit->setPlainText(idx->data(OfferTableModel::DescriptionRole).toString());
 	ui->offerGUIDLabel->setText(offerGUID);
-	ui->commissionDisclaimer->setText(tr("<font color='red'>This is your commission percentage you want to markup the offer for you wish to resell.</font>"));
+	ui->commissionDisclaimer->setText(tr("<font color='red'>The payment of <b>commission</b> for an offer sale. Payments will be calculated on the basis of a percentage of the offer value. Enter your desired percentage.</font>"));
 
 }
 
@@ -61,7 +61,7 @@ bool ResellOfferDialog::saveCurrentRow()
         Value result = tableRPC.execute(strMethod, params);
 
 		QMessageBox::information(this, windowTitle(),
-        tr("Offer resold successfully! Check the <b>My Offers</b> tab to see it after it has confirmed."),
+        tr("Offer resold successfully! Check the <b>Selling</b> tab to see it after it has confirmed."),
 			QMessageBox::Ok, QMessageBox::Ok);
 		return true;	
 		

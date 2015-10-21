@@ -1223,19 +1223,21 @@ Value certnew(const Array& params, bool fHelp) {
     vector<unsigned char> vchData = vchFromValue(params[1]);
 	bool bPrivate = false;
     if(vchTitle.size() < 1)
-        throw runtime_error("certificate title < 1 bytes!\n");
+        throw runtime_error("certificate cannot be empty!");
 
     if(vchTitle.size() > MAX_NAME_LENGTH)
-        throw runtime_error("certificate title > 255 bytes!\n");
-
-    if (vchData.size() < 1)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data < 1 bytes!\n");
+        throw runtime_error("certificate title cannot exceed 255 bytes!");
 
     if (vchData.size() > MAX_VALUE_LENGTH)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data > 1023 bytes!\n");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data cannot exceed 1023 bytes!");
 	if(params.size() >= 3)
 	{
 		bPrivate = atoi(params[2].get_str().c_str()) == 1? true: false;
+	}
+    if (vchData.size() < 1)
+	{
+        vchData = vchFromString(" ");
+		bPrivate = false;
 	}
     // gather inputs
     uint64 rand = GetRand((uint64) -1);
@@ -1322,16 +1324,16 @@ Value certupdate(const Array& params, bool fHelp) {
     vector<unsigned char> vchData = vchFromValue(params[2]);
 	bool bPrivate = atoi(params[3].get_str().c_str()) == 1? true: false;
     if(vchTitle.size() < 1)
-        throw runtime_error("certificate title < 1 bytes!\n");
+        throw runtime_error("certificate title cannot be empty!");
 
     if(vchTitle.size() > MAX_NAME_LENGTH)
-        throw runtime_error("certificate title > 255 bytes!\n");
+        throw runtime_error("certificate title cannot exceed 255 bytes!");
 
     if (vchData.size() < 1)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data < 1 bytes!\n");
+        vchData = vchFromString(" ");
 
     if (vchData.size() > MAX_VALUE_LENGTH)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data > 1023 bytes!\n");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data cannot exceed 1023 bytes!");
 
     // this is a syscoind txn
     CWalletTx wtx, wtxIn;

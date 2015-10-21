@@ -130,7 +130,7 @@ public:
 OfferWhitelistTableModel::OfferWhitelistTableModel(WalletModel *parent) :
     QAbstractTableModel(parent)
 {
-    columns << tr("Cert. GUID") << tr("Cert. Title") << tr("Is Cert. Mine") << tr("Cert. Address") << tr("Cert. Expires In") << tr("Discount Percentage");
+    columns << tr("GUID") << tr("Title") << tr("Owner") << tr("Address") << tr("Expires In") << tr("Discount");
     priv = new OfferWhitelistTablePriv(this);
 
 }

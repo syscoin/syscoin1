@@ -1282,12 +1282,12 @@ Value aliasnew(const Array& params, bool fHelp) {
 	vchValue = vchFromValue(params[1]);
 
 	if (vchValue.size() > MAX_VALUE_LENGTH)
-		throw runtime_error("alias value > 1023 bytes!\n");
+		throw runtime_error("alias value cannot exceed 1023 bytes!");
 
 
 	CBitcoinAddress myAddress = CBitcoinAddress(stringFromVch(vchName));
 	if(myAddress.IsValid() && !myAddress.isAlias)
-		throw runtime_error("alias name cannot be a syscoin address!\n");
+		throw runtime_error("alias name cannot be a syscoin address!");
 
 	CWalletTx wtx;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
@@ -1349,7 +1349,7 @@ Value aliasupdate(const Array& params, bool fHelp) {
 	vector<unsigned char> vchName = vchFromValue(params[0]);
 	vector<unsigned char> vchValue = vchFromValue(params[1]);
 	if (vchValue.size() > 519)
-		throw runtime_error("alias value > 1023 bytes!\n");
+		throw runtime_error("alias value cannot exceed 1023 bytes!");
 	CWalletTx wtx, wtxIn;
 	wtx.nVersion = SYSCOIN_TX_VERSION;
 	CScript scriptPubKeyOrig;

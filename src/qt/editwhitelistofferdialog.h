@@ -40,7 +40,11 @@ private:
     QString newEntryToSelect;
 	QString offerGUID;
 	QString exclusiveWhitelist;
-	QModelIndex *myIdx;
+	QString offerCategory;
+	QString offerTitle;
+	QString offerQty;
+	QString offerPrice;
+	QString offerDescription;
 
 private slots:
     /** Create a new cert */

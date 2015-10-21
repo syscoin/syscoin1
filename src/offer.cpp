@@ -1728,20 +1728,20 @@ Value offernew(const Array& params, bool fHelp) {
 	nPrice = atof(params[3].get_str().c_str());
 	if(nPrice <= 0)
 	{
-		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer price must be greater than 0!\n");
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer price must be greater than 0!");
 	}
 	vchDesc = vchFromValue(params[4]);
 	if(vchCat.size() < 1)
-        throw runtime_error("offer category < 1 bytes!\n");
+        throw runtime_error("offer category cannot be empty!");
 	if(vchTitle.size() < 1)
-        throw runtime_error("offer title < 1 bytes!\n");
+        throw runtime_error("offer title cannot be empty!");
 	if(vchCat.size() > 255)
-        throw runtime_error("offer category > 255 bytes!\n");
+        throw runtime_error("offer category cannot exceed 255 bytes!");
 	if(vchTitle.size() > 255)
-        throw runtime_error("offer title > 255 bytes!\n");
+        throw runtime_error("offer title cannot exceed 255 bytes!");
     // 64Kbyte offer desc. maxlen
 	if (vchDesc.size() > 1024 * 64)
-		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description > 65536 bytes!\n");
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description cannot exceed 65536 bytes!");
 
 	if(params.size() >= 7)
 	{
@@ -1885,9 +1885,9 @@ Value offerlink(const Array& params, bool fHelp) {
 	}
 
 	int commissionInteger = atoi(params[1].get_str().c_str());
-	if(commissionInteger <= 0 || commissionInteger > 255)
+	if(commissionInteger < 0 || commissionInteger > 255)
 	{
-		throw JSONRPCError(RPC_INVALID_PARAMETER, "commission must be greater than 0 and less than 256!\n");
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "commission must positive and less than 256!");
 	}
 	
 	if(params.size() >= 3)
@@ -1898,7 +1898,7 @@ Value offerlink(const Array& params, bool fHelp) {
 		{
 			// 64Kbyte offer desc. maxlen
 			if (vchDesc.size() > 1024 * 64)
-				throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description > 65536 bytes!\n");
+				throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description cannot exceed 65536 bytes!");
 		}
 		else
 		{
@@ -2365,19 +2365,19 @@ Value offerupdate(const Array& params, bool fHelp) {
 	}
 	if(price <= 0)
 	{
-		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer price must be greater than 0!\n");
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer price must be greater than 0!");
 	}
 	if(vchCat.size() < 1)
-        throw runtime_error("offer category < 1 bytes!\n");
+        throw runtime_error("offer category cannot by empty!");
 	if(vchTitle.size() < 1)
-        throw runtime_error("offer title < 1 bytes!\n");
+        throw runtime_error("offer title cannot be empty!");
 	if(vchCat.size() > 255)
-        throw runtime_error("offer category > 255 bytes!\n");
+        throw runtime_error("offer category cannot exceed 255 bytes!");
 	if(vchTitle.size() > 255)
-        throw runtime_error("offer title > 255 bytes!\n");
+        throw runtime_error("offer title cannot exceed 255 bytes!");
     // 64Kbyte offer desc. maxlen
 	if (vchDesc.size() > 1024 * 64)
-		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description > 65536 bytes!\n");
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description cannot exceed 65536 bytes!");
 
 	// this is a syscoind txn
 	CWalletTx wtx, wtxIn;
@@ -2502,7 +2502,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 				"Accept&Pay for a confirmed offer.\n"
 				"<guid> guidkey from offer.\n"
 				"<quantity> quantity to buy. Defaults to 1.\n"
-				"<message> payment message to seller, 16 KB max.\n"
+				"<message> payment message to seller, 1KB max.\n"
 				"<refund address> In case offer not accepted refund to this address. Leave empty to use a new address from your wallet. \n"
 				"<linkedguid> guidkey from offer accept linking to this offer accept. For internal use only, leave blank\n"
 				+ HelpRequiringPassphrase());
@@ -2544,9 +2544,9 @@ Value offeraccept(const Array& params, bool fHelp) {
 
 
     if (vchMessage.size() < 1)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "offeraccept message data < 1 bytes!\n");
-    if (vchMessage.size() > 16 * 1024)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "offeraccept message data > 16384 bytes!\n");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "offeraccept message data cannot be empty!");
+    if (vchMessage.size() > MAX_VALUE_LENGTH)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "offeraccept message data cannot exceed 16384 bytes!");
 
 	// this is a syscoin txn
 	CWalletTx wtx;

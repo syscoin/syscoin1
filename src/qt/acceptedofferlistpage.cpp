@@ -32,7 +32,7 @@ AcceptedOfferListPage::AcceptedOfferListPage(QWidget *parent) :
 
 	ui->buttonBox->setVisible(false);
 
-    ui->labelExplanation->setText(tr("These are offers you have purchased."));
+    ui->labelExplanation->setText(tr("These are offers you have purchased. Offer operations take 1 confirmation to appear in this table."));
 	
 	connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(info()));
     // Context menu actions

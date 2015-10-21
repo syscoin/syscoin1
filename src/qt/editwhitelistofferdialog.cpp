@@ -34,8 +34,7 @@ int64 GetOfferNetworkFee(opcodetype seed, unsigned int nHeight);
 EditWhitelistOfferDialog::EditWhitelistOfferDialog(QModelIndex *idx, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::EditWhitelistOfferDialog),
-    model(0),
-	myIdx(idx)
+    model(0)
 {
     ui->setupUi(this);
 
@@ -49,9 +48,15 @@ EditWhitelistOfferDialog::EditWhitelistOfferDialog(QModelIndex *idx, QWidget *pa
 #endif
 	offerGUID = idx->data(OfferTableModel::NameRole).toString();
 	exclusiveWhitelist = idx->data(OfferTableModel::ExclusiveWhitelistRole).toString();
+	offerCategory = idx->data(OfferTableModel::CategoryRole).toString();
+	offerTitle = idx->data(OfferTableModel::TitleRole).toString();
+	offerQty = idx->data(OfferTableModel::QtyRole).toString();
+	offerPrice = idx->data(OfferTableModel::PriceRole).toString();
+	offerDescription = idx->data(OfferTableModel::DescriptionRole).toString();
+	
 	ui->buttonBox->setVisible(false);
-
-    ui->labelExplanation->setText(tr("These are the whitelist entries for your offer. You may specify discount levels for each whitelist entry or control who may resell your offer if you are in Exclusive Resell Mode. If Exclusive Resell Mode is off anyone can resell your offers, although discounts will still be applied if they own a certificate that you've added to your whitelist. Click the button at the bottom of this dialog to toggle the exclusive mode."));
+	ui->removeAllButton->setEnabled(false);
+    ui->labelExplanation->setText(tr("These are the whitelist entries for your offer. Whitelist operations take 1 confirmation to appear in this table. You may specify discount levels for each whitelist entry or control who may resell your offer if you are in Exclusive Resell Mode. If Exclusive Resell Mode is off anyone can resell your offers, although discounts will still be applied if they own a certificate that you've added to your whitelist. Click the button at the bottom of this dialog to toggle the exclusive mode."));
 	
     // Context menu actions
     QAction *removeAction = new QAction(tr("&Remove"), this);
@@ -117,7 +122,6 @@ void EditWhitelistOfferDialog::setModel(WalletModel *walletModel, OfferWhitelist
 
     // Select row for newly created offer
     connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(selectNewEntry(QModelIndex,int,int)));
-
     selectionChanged();
 	model->clear();
 	on_refreshButton_clicked();
@@ -140,33 +144,41 @@ void EditWhitelistOfferDialog::on_exclusiveButton_clicked()
              tr("Warning: Updating exclusive whitelist mode will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Do you want to continue?"),
              QMessageBox::Yes|QMessageBox::Cancel,
              QMessageBox::Cancel);
-    if(retval == QMessageBox::Yes)
+	if(retval == QMessageBox::Yes)
     {
 		string strError;
 		string strMethod = string("offerupdate");
 		Array params;
 		Value result;
-		params.push_back(myIdx->data(OfferTableModel::NameRole).toString().toStdString());
-		params.push_back(myIdx->data(OfferTableModel::CategoryRole).toString().toStdString());
-		params.push_back(myIdx->data(OfferTableModel::TitleRole).toString().toStdString());
-		params.push_back(myIdx->data(OfferTableModel::QtyRole).toString().toStdString());
-		params.push_back(myIdx->data(OfferTableModel::PriceRole).toString().toStdString());
-		params.push_back(myIdx->data(OfferTableModel::DescriptionRole).toString().toStdString());
-		if(tmpExclusiveWhitelist == QString("ON"))
-			params.push_back("0");
-		else 
-			params.push_back("1");
 		try {
+
+			params.push_back(offerGUID.toStdString());
+			params.push_back(offerCategory.toStdString());
+			params.push_back(offerTitle.toStdString());
+			params.push_back(offerQty.toStdString());
+			params.push_back(offerPrice.toStdString());
+			params.push_back(offerDescription.toStdString());
+			if(tmpExclusiveWhitelist == QString("ON"))
+				params.push_back("0");
+			else 
+				params.push_back("1");
 			result = tableRPC.execute(strMethod, params);
 			QMessageBox::information(this, windowTitle(),
 			tr("Whitelist exclusive mode changed successfully!"),
 				QMessageBox::Ok, QMessageBox::Ok);
-
 			if(tmpExclusiveWhitelist == QString("ON"))
 				exclusiveWhitelist = QString("OFF");
 			else
-				exclusiveWhitelist = QString("OFF");
+				exclusiveWhitelist = QString("ON");
 
+			if(exclusiveWhitelist == QString("ON"))
+			{
+				ui->exclusiveButton->setText(tr("Exclusive Mode is ON"));
+			}
+			else
+			{
+				ui->exclusiveButton->setText(tr("Exclusive Mode is OFF"));
+			}
 		}
 		catch (Object& objError)
 		{
@@ -182,16 +194,7 @@ void EditWhitelistOfferDialog::on_exclusiveButton_clicked()
 				tr("There was an exception trying to change the whitelist mode: ") + QString::fromStdString(e.what()),
 					QMessageBox::Ok, QMessageBox::Ok);
 		}
-
 	}
-	if(exclusiveWhitelist == QString("ON"))
-	{
-		ui->exclusiveButton->setText(tr("Exclusive Mode is ON"));
-	}
-	else
-	{
-		ui->exclusiveButton->setText(tr("Exclusive Mode is OFF"));
-	}	
 }
 
 void EditWhitelistOfferDialog::on_removeButton_clicked()
@@ -294,8 +297,9 @@ void EditWhitelistOfferDialog::on_refreshButton_clicked()
 	string strMethod = string("offerwhitelist");
 	Array params;
 	Value result;
-	params.push_back(offerGUID.toStdString());
+	
 	try {
+		params.push_back(offerGUID.toStdString());
 		result = tableRPC.execute(strMethod, params);
 		if (result.type() == array_type)
 		{
@@ -336,6 +340,14 @@ void EditWhitelistOfferDialog::on_refreshButton_clicked()
 				model->updateEntry(QString::fromStdString(cert_str), QString::fromStdString(title_str), QString::fromStdString(mine_str), QString::fromStdString(cert_address_str), QString::fromStdString(cert_expiresin_str), QString::fromStdString(offer_discount_percentage_str), CT_NEW); 
 			}
 		}
+		if(exclusiveWhitelist == QString("ON"))
+		{
+			ui->exclusiveButton->setText(tr("Exclusive Mode is ON"));
+		}
+		else
+		{
+			ui->exclusiveButton->setText(tr("Exclusive Mode is OFF"));
+		}
 	}
 	catch (Object& objError)
 	{
@@ -352,29 +364,13 @@ void EditWhitelistOfferDialog::on_refreshButton_clicked()
 				QMessageBox::Ok, QMessageBox::Ok);
 	}
 
-	if(exclusiveWhitelist == QString("ON"))
-	{
-		ui->exclusiveButton->setText(tr("Exclusive Mode is ON"));
-	}
-	else
-	{
-		ui->exclusiveButton->setText(tr("Exclusive Mode is OFF"));
-	}
-	if(model->rowCount(*myIdx) > 0)
-	{
-		ui->removeAllButton->setEnabled(true);
-	}
-	else
-	{
-		ui->removeAllButton->setEnabled(false);
-	}
 
 }
 void EditWhitelistOfferDialog::on_newEntry_clicked()
 {
     if(!model)
         return;
-    NewWhitelistDialog dlg(myIdx);   
+    NewWhitelistDialog dlg(offerGUID);   
 	dlg.setModel(walletModel, model);
     dlg.exec();
 }
@@ -388,6 +384,7 @@ void EditWhitelistOfferDialog::selectionChanged()
     if(table->selectionModel()->hasSelection())
     {
         ui->removeButton->setEnabled(true);
+		ui->removeAllButton->setEnabled(true);
     }
     else
     {

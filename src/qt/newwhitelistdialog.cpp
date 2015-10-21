@@ -16,13 +16,11 @@ using namespace json_spirit;
 extern int nBestHeight;
 extern const CRPCTable tableRPC;
 int64 GetOfferNetworkFee(opcodetype seed, unsigned int nHeight);
-NewWhitelistDialog::NewWhitelistDialog(QModelIndex *idx, QWidget *parent) :
+NewWhitelistDialog::NewWhitelistDialog(const QString &offerGUID, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NewWhitelistDialog), model(0)
 {
     ui->setupUi(this);
-
-	QString offerGUID = idx->data(OfferTableModel::NameRole).toString();
 	ui->offerGUIDLabel->setText(offerGUID);
 	ui->discountDisclaimer->setText(tr("<font color='red'>This is a percentage of price for your offer you want to allow your reseller to purchase your offer for. Typically given to wholesalers or for special arrangements with a reseller.</font>"));
 	ui->certEdit->setEditText(tr("Choose or enter GUID of a Certificate you own"));
