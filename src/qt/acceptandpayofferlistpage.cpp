@@ -49,7 +49,8 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
 	ui->notesEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
 
 	m_netwManager = new QNetworkAccessManager(this);
-
+	m_placeholderImage.load(":/images/image");
+	ui->labelImage->setPixmap(m_placeholderImage);
 }
 void AcceptandPayOfferListPage::netwManagerFinished()
 {
@@ -168,7 +169,6 @@ bool AcceptandPayOfferListPage::lookup(QString id)
 				}
 
 			}
-			offerOut.vchPaymentAddress = vchFromString(find_value(offerObj, "payment_address").get_str());
 			setValue(offerOut);
 			return true;
 		}
@@ -280,11 +280,11 @@ void AcceptandPayOfferListPage::setValue(COffer &offer)
 	ui->infoPrice->setText(QString::number(offer.GetPrice()));
 	ui->infoQty->setText(QString::number(offer.nQty));
 	ui->infoDescription->setText(QString::fromStdString(stringFromVch(offer.sDescription)));
-	ui->infoPaymentAddress->setText(QString::fromStdString(stringFromVch(offer.vchPaymentAddress)));
 	ui->qtyEdit->setText(QString("1"));
 	QRegExp rx("(?:https?|ftp)://\\S+");
     rx.indexIn(ui->infoDescription->text());
     QStringList list = rx.capturedTexts();
+	ui->labelImage->setPixmap(m_placeholderImage);
 	if(list.size() > 0 && list[0] != QString(""))
 	{
 		QString parsedURL = list[0].simplified();

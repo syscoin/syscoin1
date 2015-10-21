@@ -5,7 +5,7 @@
 #include "auxpow.h"
 #include "script.h"
 #include "main.h"
-
+#include "messagecrypter.h"
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_writer_template.h"
 
@@ -35,6 +35,32 @@ extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
         const CTransaction& txTo, unsigned int nIn, unsigned int flags,
         int nHashType);
 extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision);
+bool EncryptMessage(const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchMessage, string &strCipherText)
+{
+	CMessageCrypter crypter;
+	if(!crypter.Encrypt(HexStr(vchPubKey), stringFromVch(vchMessage), strCipherText))
+		return false;
+
+	return true;
+}
+bool DecryptMessage(const string &vchPublicAddress, const vector<unsigned char> &vchCipherText, string &strMessage)
+{
+	CKey PrivateKey;
+	CBitcoinAddress paymentAddress(vchPublicAddress);
+	CKeyID pubKeyID;
+	if(!paymentAddress.GetKeyID(pubKeyID))
+		return false;
+	if (!pwalletMain->GetKey(pubKeyID, PrivateKey))
+        return false;
+	CBitcoinSecret Secret(PrivateKey);
+	PrivateKey = Secret.GetKey();
+	std::vector<unsigned char> vchPrivateKey(PrivateKey.begin(), PrivateKey.end());
+	CMessageCrypter crypter;
+	if(!crypter.Decrypt(HexStr(vchPrivateKey), stringFromVch(vchCipherText), strMessage))
+		return false;
+	
+	return true;
+}
 void PutToCertList(std::vector<CCert> &certList, CCert& index) {
 	int i = certList.size() - 1;
 	BOOST_REVERSE_FOREACH(CCert &o, certList) {
@@ -942,7 +968,6 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         bool good = DecodeCertTx(tx, op, nOut, vvchArgs, -1);
         if (!good)
             return error("CheckCertInputs() : could not decode a syscoin tx");
-        int nPrevHeight;
         int nDepth;
         int64 nNetFee;
         // unserialize cert object from txn, check for valid
@@ -950,7 +975,26 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         theCert.UnserializeFromTx(tx);
         if (theCert.IsNull())
             error("CheckCertInputs() : null cert object");
-
+		if(theCert.vchData.size() > MAX_VALUE_LENGTH)
+		{
+			return error("cert data too big");
+		}
+		if(theCert.vchTitle.size() > MAX_NAME_LENGTH)
+		{
+			return error("cert title too big");
+		}
+		if(theCert.vchRand.size() > 20)
+		{
+			return error("cert rand too big");
+		}
+		if(theCert.vchAddress.size() > MAX_NAME_LENGTH)
+		{
+			return error("cert address too big");
+		}
+		if(theCert.vchPubKey.size() > MAX_VALUE_LENGTH)
+		{
+			return error("cert pub key too big");
+		}
         if (vvchArgs[0].size() > MAX_NAME_LENGTH)
             return error("cert hex guid too long");
         switch (op) {
@@ -960,8 +1004,8 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                         "CheckCertInputs() : certactivate tx pointing to previous syscoin tx");
 			if (vvchArgs[1].size() > 20)
 				return error("cert tx with rand too big");
-			if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
-                return error("certactivate tx with value too long");
+			if (vvchArgs[2].size() > MAX_NAME_LENGTH)
+                return error("certactivate tx title too long");
 			if (fBlock && !fJustCheck) {
 
 					// check for enough fees
@@ -980,8 +1024,8 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 return error("certupdate previous op is invalid");
             if (vvchPrevArgs[0] != vvchArgs[0] && !IsOfferOp(prevOp))
                 return error("CheckCertInputs() : certupdate prev cert mismatch vvchPrevArgs[0]: %s, vvchArgs[0] %s", stringFromVch(vvchPrevArgs[0]).c_str(), stringFromVch(vvchArgs[0]).c_str());
-            if (vvchArgs[1].size() > MAX_VALUE_LENGTH)
-                return error("certupdate tx with value too long");
+            if (vvchArgs[1].size() > MAX_NAME_LENGTH)
+                return error("certupdate tx title too long");
 
 			if (fBlock && !fJustCheck) {
 				// TODO CPU intensive
@@ -1023,9 +1067,6 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                     return error(
                             "CheckCertInputs() : certtransfer cannot be mined if Cert/certtransfer is not already in chain");
 
-
-                nPrevHeight = GetCertHeight(vchCert);
-
                 // check for enough fees
                 int64 expectedFee = GetCertNetworkFee(OP_CERT_TRANSFER, theCert.nHeight);
                 nNetFee = GetCertNetFee(tx);
@@ -1062,6 +1103,28 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							"CheckCertInputs() : failed to read from cert DB");
 			}
             if (!fMiner && !fJustCheck && pindexBlock->nHeight != pindexBest->nHeight) {
+				if(op == OP_CERT_TRANSFER)
+				{
+					CBitcoinAddress sendAddr(stringFromVch(theCert.vchAddress));
+					CKeyID pubKeyID;
+					// if my newly transferred cert is private, encrypt the data
+					if(theCert.bPrivate && sendAddr.IsValid() && IsCertMine(tx) && sendAddr.GetKeyID(pubKeyID))
+					{
+						CPubKey PubKey;
+						if(pwalletMain->GetPubKey(pubKeyID, PubKey))
+						{
+							string strCipherText;
+							std::vector<unsigned char> vchPubKey(PubKey.begin(), PubKey.end());
+							if(EncryptMessage(vchPubKey, theCert.vchData, strCipherText))
+							{
+								theCert.vchData = vchFromString(strCipherText);
+								theCert.vchPubKey = vchPubKey;
+							}
+						}
+					}
+
+				}
+
                 int nHeight = pindexBlock->nHeight;     
 				
                 // set the cert's txn-dependent values
@@ -1146,19 +1209,19 @@ Value getcertfees(const Array& params, bool fHelp) {
 
 }
 
-
 Value certnew(const Array& params, bool fHelp) {
-    if (fHelp || params.size() != 2)
+    if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
-                "certnew <title> <data>\n"
-                        "<title> title, 255 bytes max."
-                        "<data> data, 64KB max."
+		"certnew <title> <data> [private=0]\n"
+                        "<title> title, 255 bytes max.\n"
+                        "<data> data, 1KB max.\n"
+						"<private> set to 1 if you only want to make the cert data private, only the owner of the cert can view it. Off by default.\n"
                         + HelpRequiringPassphrase());
 	if(!HasReachedMainNetForkB2())
 		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
 	vector<unsigned char> vchTitle = vchFromValue(params[0]);
     vector<unsigned char> vchData = vchFromValue(params[1]);
-
+	bool bPrivate = false;
     if(vchTitle.size() < 1)
         throw runtime_error("certificate title < 1 bytes!\n");
 
@@ -1168,9 +1231,12 @@ Value certnew(const Array& params, bool fHelp) {
     if (vchData.size() < 1)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data < 1 bytes!\n");
 
-    if (vchData.size() > 64 * 1024)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data > 65536 bytes!\n");
-
+    if (vchData.size() > MAX_VALUE_LENGTH)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data > 1023 bytes!\n");
+	if(params.size() >= 3)
+	{
+		bPrivate = atoi(params[2].get_str().c_str()) == 1? true: false;
+	}
     // gather inputs
     uint64 rand = GetRand((uint64) -1);
     vector<unsigned char> vchRand = CBigNum(rand).getvch();
@@ -1180,27 +1246,40 @@ Value certnew(const Array& params, bool fHelp) {
     CWalletTx wtx;
     wtx.nVersion = SYSCOIN_TX_VERSION;
 
-
-    EnsureWalletIsUnlocked();
-	// calculate network fees
-	int64 nNetFee = GetCertNetworkFee(OP_CERT_ACTIVATE, nBestHeight);
-
-    // build cert object
-    CCert newCert;
-    newCert.vchRand = vchCert;
-    newCert.vchTitle = vchTitle;
-    newCert.vchData = vchData;
-	newCert.nHeight = nBestHeight;
-
-
-    string bdata = newCert.SerializeToString();
-
+	EnsureWalletIsUnlocked();
     //create certactivate txn keys
     CPubKey newDefaultKey;
     pwalletMain->GetKeyFromPool(newDefaultKey, false);
     CScript scriptPubKeyOrig;
     scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
     CScript scriptPubKey;
+
+    
+	// calculate network fees
+	int64 nNetFee = GetCertNetworkFee(OP_CERT_ACTIVATE, nBestHeight);
+	std::vector<unsigned char> vchPubKey(newDefaultKey.begin(), newDefaultKey.end());
+	if(bPrivate)
+	{
+		string strCipherText;
+		if(!EncryptMessage(vchPubKey, vchData, strCipherText))
+		{
+			throw JSONRPCError(RPC_WALLET_ERROR, "Could not encrypt certificate data!");
+		}
+		vchData = vchFromString(strCipherText);
+	}
+	// calculate net
+    // build cert object
+    CCert newCert;
+    newCert.vchRand = vchCert;
+    newCert.vchTitle = vchTitle;
+	newCert.vchData = vchData;
+	newCert.nHeight = nBestHeight;
+	newCert.vchPubKey = vchPubKey;
+	newCert.bPrivate = bPrivate;
+	CBitcoinAddress certAddr = CBitcoinAddress(newDefaultKey.GetID());
+	newCert.vchAddress = vchFromString(certAddr.ToString());
+    string bdata = newCert.SerializeToString();
+
     scriptPubKey << CScript::EncodeOP_N(OP_CERT_ACTIVATE) << vchCert
             << vchRand << newCert.vchTitle << OP_2DROP << OP_2DROP;
     scriptPubKey += scriptPubKeyOrig;
@@ -1226,13 +1305,14 @@ Value certnew(const Array& params, bool fHelp) {
 }
 
 Value certupdate(const Array& params, bool fHelp) {
-    if (fHelp || params.size() != 3)
+    if (fHelp || params.size() != 4)
         throw runtime_error(
-                "certupdate <guid> <title> <data>\n"
+		"certupdate <guid> <title> <data> <private>\n"
                         "Perform an update on an certificate you control.\n"
                         "<guid> certificate guidkey.\n"
                         "<title> certificate title, 255 bytes max.\n"
-                        "<data> certificate data, 64 KB max.\n"
+                        "<data> certificate data, 1KB max.\n"
+						"<private> set to 1 if you only want to make the cert data private, only the owner of the cert can view it.\n"
                         + HelpRequiringPassphrase());
 	if(!HasReachedMainNetForkB2())
 		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
@@ -1240,37 +1320,26 @@ Value certupdate(const Array& params, bool fHelp) {
     vector<unsigned char> vchCert = vchFromValue(params[0]);
     vector<unsigned char> vchTitle = vchFromValue(params[1]);
     vector<unsigned char> vchData = vchFromValue(params[2]);
-
+	bool bPrivate = atoi(params[3].get_str().c_str()) == 1? true: false;
     if(vchTitle.size() < 1)
         throw runtime_error("certificate title < 1 bytes!\n");
 
-    if(vchTitle.size() > 255)
+    if(vchTitle.size() > MAX_NAME_LENGTH)
         throw runtime_error("certificate title > 255 bytes!\n");
 
     if (vchData.size() < 1)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data < 1 bytes!\n");
 
-    if (vchData.size() > 64 * 1024)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data > 65536 bytes!\n");
+    if (vchData.size() > MAX_VALUE_LENGTH)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "certificate data > 1023 bytes!\n");
 
     // this is a syscoind txn
     CWalletTx wtx, wtxIn;
     wtx.nVersion = SYSCOIN_TX_VERSION;
     CScript scriptPubKeyOrig;
 
-    // get a key from our wallet set dest as ourselves
-    CPubKey newDefaultKey;
-    pwalletMain->GetKeyFromPool(newDefaultKey, false);
-    scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
 
-    // create CERTUPDATE txn keys
-    CScript scriptPubKey;
-    scriptPubKey << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << vchTitle
-            << OP_2DROP << OP_DROP;
-    scriptPubKey += scriptPubKeyOrig;
-
-
-  	// check for existing cert 's
+      	// check for existing cert 's
 	if (ExistsInMempool(vchCert, OP_CERT_ACTIVATE) || ExistsInMempool(vchCert, OP_CERT_UPDATE) || ExistsInMempool(vchCert, OP_CERT_TRANSFER)) {
 		throw runtime_error("there are pending operations on that cert");
 	}
@@ -1285,7 +1354,7 @@ Value certupdate(const Array& params, bool fHelp) {
     // make sure cert is in wallet
 	if (!pwalletMain->GetTransaction(tx.GetHash(), wtxIn) || !IsCertMine(tx)) 
 		throw runtime_error("this cert is not in your wallet");
-	printf("update cert.txHash %s vs tx.GetHash() %s\n", cert.txHash.ToString().c_str(), tx.GetHash().ToString().c_str());
+	
     // unserialize cert object from txn
     CCert theCert;
     if(!theCert.UnserializeFromTx(tx))
@@ -1297,14 +1366,39 @@ Value certupdate(const Array& params, bool fHelp) {
         throw runtime_error("could not read cert from DB");
     theCert = vtxPos.back();
 
+    // get a key from our wallet set dest as ourselves
+    CPubKey newDefaultKey;
+    pwalletMain->GetKeyFromPool(newDefaultKey, false);
+    scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
 
+    // create CERTUPDATE txn keys
+    CScript scriptPubKey;
+    scriptPubKey << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << vchTitle
+            << OP_2DROP << OP_DROP;
+    scriptPubKey += scriptPubKeyOrig;
     // calculate network fees
     int64 nNetFee = GetCertNetworkFee(OP_CERT_UPDATE, nBestHeight);
+	// if we want to make data private, encrypt it
+	if(bPrivate)
+	{
+		string strCipherText;
+		if(!EncryptMessage(theCert.vchPubKey, vchData, strCipherText))
+		{
+			throw JSONRPCError(RPC_WALLET_ERROR, "Could not encrypt certificate data!");
+		}
+		vchData = vchFromString(strCipherText);
+	}
 
-    // update cert values
+
+  
+    theCert.vchRand = vchCert;
     theCert.vchTitle = vchTitle;
-    theCert.vchData = vchData;
+	theCert.vchData = vchData;
 	theCert.nHeight = nBestHeight;
+	theCert.bPrivate = bPrivate;
+
+
+
     // serialize cert object
     string bdata = theCert.SerializeToString();
 
@@ -1357,10 +1451,16 @@ Value certtransfer(const Array& params, bool fHelp) {
 	if (ExistsInMempool(theCert.vchRand, OP_CERT_TRANSFER)) {
 		throw runtime_error("there are pending operations on that cert ");
 	}
+	// unserialize cert object from txn
+	if(!theCert.UnserializeFromTx(tx))
+		throw runtime_error("cannot unserialize offer from txn");
 
-    // get a key from our wallet set dest as ourselves
-    CPubKey newDefaultKey;
-    pwalletMain->GetKeyFromPool(newDefaultKey, false);
+	// get the cert from DB
+	vector<CCert> vtxPos;
+	if (!pcertdb->ReadCert(vchCert, vtxPos))
+		throw runtime_error("could not read cert from DB");
+	theCert = vtxPos.back();
+
     scriptPubKeyOrig.SetDestination(sendAddr.Get());
     CScript scriptPubKey;
     scriptPubKey << CScript::EncodeOP_N(OP_CERT_TRANSFER) << theCert.vchRand << vchCertKey << OP_2DROP << OP_DROP;
@@ -1368,8 +1468,20 @@ Value certtransfer(const Array& params, bool fHelp) {
 
     // calculate network fees
     int64 nNetFee = GetCertNetworkFee(OP_CERT_TRANSFER, nBestHeight);
+	// if cert is private, decrypt the data
+	if(theCert.bPrivate)
+	{
+		string strData;
+		// decrypt using old key
+		if(!DecryptMessage(stringFromVch(theCert.vchAddress), theCert.vchData, strData))
+		{
+			throw JSONRPCError(RPC_WALLET_ERROR, "Could not decrypt certificate data!");
+		}
+		theCert.vchData = vchFromString(strData);
+	}	
 
 	theCert.nHeight = nBestHeight;
+	theCert.vchAddress = vchFromString(sendAddr.ToString());
     // send the cert pay txn
     string strError = SendCertMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
             wtxIn, wtx, false, theCert.SerializeToString());
@@ -1394,41 +1506,51 @@ Value certinfo(const Array& params, bool fHelp) {
     // look for a transaction with this key, also returns
     // an cert object if it is found
     CTransaction tx;
-    CCert theCert;
-    if (!GetTxOfCert(*pcertdb, vchCert, theCert, tx))
-        throw runtime_error("could not find a certificate with this key");
-    uint256 txHash = tx.GetHash();
+
+	vector<CCert> vtxPos;
 
 	int expired = 0;
 	int expires_in = 0;
 	int expired_block = 0;
     Object oCert;
     vector<unsigned char> vchValue;
-    CCert ca = theCert;
 
+	if (!pcertdb->ReadCert(vchCert, vtxPos))
+		  throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from cert DB");
+	CCert ca = vtxPos.back();
 
     string sHeight = strprintf("%llu", ca.nHeight);
-    oCert.push_back(Pair("cert", HexStr(ca.vchRand)));
+    oCert.push_back(Pair("cert", stringFromVch(vchCert)));
     oCert.push_back(Pair("txid", ca.txHash.GetHex()));
     oCert.push_back(Pair("height", sHeight));
     oCert.push_back(Pair("title", stringFromVch(ca.vchTitle)));
-    oCert.push_back(Pair("data", stringFromVch(ca.vchData)));
+
+
+	string strData = stringFromVch(ca.vchData);
+	string strDecrypted = "";
+	if(ca.bPrivate)
+	{
+		strData = string("Encrypted for owner of certificate");
+		if(DecryptMessage(stringFromVch(ca.vchAddress), ca.vchData, strDecrypted))
+			strData = strDecrypted;
+		
+	}
+
+    oCert.push_back(Pair("data", strData));
     oCert.push_back(Pair("is_mine", IsCertMine(tx) ? "true" : "false"));
 
     int nHeight;
     uint256 certHash;
-    if (GetValueOfCertTxHash(txHash, vchValue, certHash, nHeight)) {
-        string strAddress = "";
-        GetCertAddress(tx, strAddress);
-        oCert.push_back(Pair("address", strAddress));
-        if(theCert.nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight <= 0)
+    if (GetValueOfCertTxHash(ca.txHash, vchValue, certHash, nHeight)) {
+        oCert.push_back(Pair("address", stringFromVch(ca.vchAddress)));
+		expired_block = nHeight + GetCertDisplayExpirationDepth();
+		if(nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 		{
 			expired = 1;
-			expired_block = theCert.nHeight + GetCertDisplayExpirationDepth();
 		}  
 		if(expired == 0)
 		{
-			expires_in = theCert.nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight;
+			expires_in = nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight;
 		}
 		oCert.push_back(Pair("expires_in", expires_in));
 		oCert.push_back(Pair("expires_on", expired_block));
@@ -1491,53 +1613,31 @@ Value certlist(const Array& params, bool fHelp) {
 		// get last active name only
 		if (vNamesI.find(vchName) != vNamesI.end() && (nHeight < vNamesI[vchName] || vNamesI[vchName] < 0))
 			continue;
-		// Read the database for the latest cert (vtxPos.back()) and ensure it is not transferred (iscertmine).. 
-		// if it IS transferred then skip over this cert whenever it is found(above vNamesI check) in your mapwallet
-		// check for cert existence in DB
-		// will only read the cert from the db once per name to ensure that it is not mine.
 		vector<CCert> vtxPos;
-		if (vNamesI.find(vchName) == vNamesI.end() && pcertdb->ReadCert(vchName, vtxPos))
-		{
-			if (vtxPos.size() > 0)
-			{
-				// get transaction pointed to by cert
-				uint256 txHash = vtxPos.back().txHash;
-				if(GetTransaction(txHash, dbtx, blockHash, true))
-				{
-				
-					nHeight = GetCertTxHashHeight(txHash);
-					// Is the latest cert in the db transferred?
-					if(!IsCertMine(dbtx))
-					{	
-						// by setting this to -1, subsequent aliases with the same name won't be read from disk (optimization) 
-						// because the latest cert tx doesn't belong to us anymore
-						vNamesI[vchName] = -1;
-						continue;
-					}
-					else
-					{
-						// get the value of the cert txn of the latest cert (from db)
-						GetValueOfCertTx(dbtx, vchValue);
-					}
-				}
-				
-			}
-		}
-		else
-		{
-			GetValueOfCertTx(tx, vchValue);
-		}
-		CCert cert(tx);
+		if (!pcertdb->ReadCert(vchName, vtxPos))
+			continue;
+		CCert cert = vtxPos.back();
+		if (!GetTransaction(cert.txHash, tx, blockHash, true))
+			continue;
+		if(!IsCertMine(tx))
+			continue;
         // build the output object
         Object oName;
         oName.push_back(Pair("cert", stringFromVch(vchName)));
-        vchValue = cert.vchTitle;
-        string value = stringFromVch(vchValue);
-        oName.push_back(Pair("title", value));
-		oName.push_back(Pair("data", stringFromVch(cert.vchData)));
-        string strAddress = "";
-        GetCertAddress(tx, strAddress);
-        oName.push_back(Pair("address", strAddress));
+        oName.push_back(Pair("title", stringFromVch(cert.vchTitle)));
+
+		string strData = stringFromVch(cert.vchData);
+		string strDecrypted = "";
+		if(cert.bPrivate)
+		{
+			strData = string("Encrypted for owner of certificate");
+			if(DecryptMessage(stringFromVch(cert.vchAddress), cert.vchData, strDecrypted))
+				strData = strDecrypted;
+			
+		}
+
+		oName.push_back(Pair("data", strData));
+        oName.push_back(Pair("address", stringFromVch(cert.vchAddress)));
 		expired_block = nHeight + GetCertDisplayExpirationDepth();
 		if(nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 		{
@@ -1700,9 +1800,21 @@ Value certfilter(const Array& params, bool fHelp) {
 		vector<unsigned char> vchValue = txCert.vchTitle;
         string value = stringFromVch(vchValue);
         oCert.push_back(Pair("title", value));
-		oCert.push_back(Pair("data", stringFromVch(txCert.vchData)));
+
+		string strData = stringFromVch(txCert.vchData);
+		string strDecrypted = "";
+		if(txCert.bPrivate)
+		{
+			strData = string("Encrypted for owner of certificate");
+			if(DecryptMessage(stringFromVch(txCert.vchAddress), txCert.vchData, strDecrypted))
+				strData = strDecrypted;
+			
+		}
+
+		oCert.push_back(Pair("data", strData));
+
 		expired_block = nHeight + GetCertDisplayExpirationDepth();
-        if(nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight <= 0)
+		if(nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 		{
 			expired = 1;
 		}  

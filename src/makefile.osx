@@ -7,19 +7,18 @@
 # Originally by Laszlo Hanyecz (solar@heliacal.net)
 
 CXX=llvm-g++
-DEPSDIR=/usr/local
+DEPSDIR=/opt/local
 
 INCLUDEPATHS= \
  -I"$(CURDIR)" \
  -I"$(CURDIR)"/obj \
  -I"$(DEPSDIR)/include" \
- -I"$(DEPSDIR)/Cellar/boost/1.55.0_2/include" \
- -I"$(DEPSDIR)/Cellar/berkeley-db4/4.8.30/include"
+ -I"$(DEPSDIR)/include/db48" \
+ -I"$(DEPSDIR)/include/boost"
 
 LIBPATHS= \
  -L"$(DEPSDIR)/lib" \
- -L"$(DEPSDIR)/Cellar/boost/1.55.0_2/lib" \
- -L"$(DEPSDIR)/Cellar/berkeley-db4/4.8.30/lib"
+ -L"$(DEPSDIR)/lib/db48"
 
 USE_UPNP:=1
 USE_IPV6:=1
@@ -79,6 +78,7 @@ CFLAGS += -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter \
     $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 
 OBJS= \
+	cryptopp/libcryptopp.a \
     leveldb/libleveldb.a \
     obj/auxpow.o \
     obj/alert.o \
@@ -87,6 +87,7 @@ OBJS= \
     obj/netbase.o \
     obj/addrman.o \
     obj/crypter.o \
+    obj/messagecrypter.o \ 
     obj/key.o \
     obj/db.o \
     obj/init.o \
@@ -147,7 +148,7 @@ test check: test_syscoin FORCE
 #
 # LevelDB support
 #
-LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
+LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a $(CURDIR)/cryptopp/libcryptopp.a
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/include)
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
 leveldb/libleveldb.a:
@@ -178,6 +179,9 @@ obj/%.o: %.cpp
 
 syscoind: $(OBJS:obj/%=obj/%)
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
+	
+cryptopp/libcryptopp.a:
+	cd cryptopp && $(MAKE) static && cd ..
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 
@@ -199,5 +203,6 @@ clean:
 	-rm -f obj-test/*.P
 	-rm -f obj/build.h
 	-cd leveldb && $(MAKE) clean || true
+	-cd cryptopp && $(MAKE) clean || true	
 
 FORCE:

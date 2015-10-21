@@ -32,6 +32,10 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
 	ui->certDataEdit->setEnabled(true);
 	ui->certDataLabel->setVisible(true);
 	ui->certDataEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
+	ui->privateLabel->setVisible(true);
+	ui->privateBox->setVisible(true);
+	ui->privateBox->addItem(tr("Yes"));
+	ui->privateBox->addItem(tr("No"));
     switch(mode)
     {
     case NewCert:
@@ -50,6 +54,8 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
 		ui->certDataEdit->setVisible(false);
 		ui->certDataEdit->setEnabled(false);
 		ui->certDataLabel->setVisible(false);
+		ui->privateLabel->setVisible(false);
+		ui->privateBox->setVisible(false);
         break;
     }
     mapper = new QDataWidgetMapper(this);
@@ -115,8 +121,10 @@ bool EditCertDialog::saveCurrentRow()
 			return false;
 		}
 		strMethod = string("certnew");
+		
 		params.push_back(ui->nameEdit->text().toStdString());
 		params.push_back(ui->certDataEdit->toPlainText().toStdString());
+		params.push_back(ui->privateBox->currentText() == QString("Yes")? "1": "0");
 		try {
             Value result = tableRPC.execute(strMethod, params);
 			if (result.type() != null_type)
@@ -164,6 +172,7 @@ bool EditCertDialog::saveCurrentRow()
 			params.push_back(ui->certEdit->text().toStdString());
 			params.push_back(ui->nameEdit->text().toStdString());
 			params.push_back(ui->certDataEdit->toPlainText().toStdString());
+			params.push_back(ui->privateBox->currentText() == QString("Yes")? "1": "0");
 			
 			try {
 				Value result = tableRPC.execute(strMethod, params);

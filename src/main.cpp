@@ -822,11 +822,11 @@ bool CTransaction::CheckTransaction(CValidationState &state) const {
 			case OP_CERT_ACTIVATE:
 				if (vvch[1].size() > 20)
 					err = error("cert tx with rand too big");
-				if (vvch[2].size() > MAX_VALUE_LENGTH)
+				if (vvch[2].size() > MAX_NAME_LENGTH)
 					err = error("cert tx with value too long");
 				break;
 			case OP_CERT_UPDATE:
-				if (vvch[1].size() > MAX_VALUE_LENGTH)
+				if (vvch[1].size() > MAX_NAME_LENGTH)
 					err = error("cert tx with value too long");
 				break;
 			case OP_CERT_TRANSFER:

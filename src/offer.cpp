@@ -9,6 +9,7 @@
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_writer_template.h"
 #include <boost/xpressive/xpressive_dynamic.hpp>
+
 using namespace std;
 using namespace json_spirit;
 extern const CRPCTable tableRPC;
@@ -1186,7 +1187,38 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		COfferAccept theOfferAccept;
 		if (theOffer.IsNull())
 			error("CheckOfferInputs() : null offer object");
-
+		if(theOffer.sDescription.size() > 1024 * 64)
+		{
+			return error("offer description too big");
+		}
+		if(theOffer.sTitle.size() > MAX_NAME_LENGTH)
+		{
+			return error("offer title too big");
+		}
+		if(theOffer.sCategory.size() > MAX_NAME_LENGTH)
+		{
+			return error("offer category too big");
+		}
+		if(theOffer.vchRand.size() > 20)
+		{
+			return error("offer rand too big");
+		}
+		if(theOffer.vchPaymentAddress.size() > MAX_NAME_LENGTH)
+		{
+			return error("offer payment address too big");
+		}
+		if(theOffer.vchLinkOffer.size() > MAX_NAME_LENGTH)
+		{
+			return error("offer link guid too big");
+		}
+		if(theOffer.vchPubKey.size() > MAX_NAME_LENGTH)
+		{
+			return error("offer pub key too big");
+		}
+		if(theOffer.sCurrencyCode.size() > MAX_NAME_LENGTH)
+		{
+			return error("offer currency code too big");
+		}
 		if (vvchArgs[0].size() > MAX_NAME_LENGTH)
 			return error("offer hex guid too long");
 
@@ -1754,11 +1786,23 @@ Value offernew(const Array& params, bool fHelp) {
 	vector<unsigned char> vchOffer = vchFromString(HexStr(vchRand));
 
 	EnsureWalletIsUnlocked();
+
+
+    CPubKey PubKey;
+	CBitcoinAddress paymentAddress(stringFromVch(vchPaymentAddress));
+	CKeyID pubKeyID;
+	if(!paymentAddress.GetKeyID(pubKeyID))
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot Get Key ID from payment address, is this address yours?!\n");
+    if(!pwalletMain->GetPubKey(pubKeyID, PubKey))
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot Get Public Key from payment address, is this address yours?!\n");
+	std::vector<unsigned char> vchPubKey(PubKey.begin(), PubKey.end());
+
 	// calculate network fees
 	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_ACTIVATE, nBestHeight);	
 	// unserialize offer object from txn, serialize back
 	// build offer object
 	COffer newOffer;
+	newOffer.vchPubKey = vchPubKey;
 	newOffer.vchRand = vchOffer;
 	newOffer.vchPaymentAddress = vchPaymentAddress;
 	newOffer.sCategory = vchCat;
@@ -1773,8 +1817,8 @@ Value offernew(const Array& params, bool fHelp) {
 	
 	//create offeractivate txn keys
 	CPubKey newDefaultKey;
-	pwalletMain->GetKeyFromPool(newDefaultKey, false);
 	CScript scriptPubKeyOrig;
+	pwalletMain->GetKeyFromPool(newDefaultKey, false);
 	scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer
@@ -1951,6 +1995,7 @@ Value offerlink(const Array& params, bool fHelp) {
 	// unserialize offer object from txn, serialize back
 	// build offer object
 	COffer newOffer;
+	newOffer.vchPubKey = linkOffer.vchPubKey;
 	newOffer.vchRand = vchOffer;
 	newOffer.vchPaymentAddress = vchPaymentAddress;
 	newOffer.sCategory = vchCat;
@@ -2467,7 +2512,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 	CBitcoinAddress refundAddr;	
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	vector<unsigned char> vchLinkOfferAccept = vchFromValue(params.size()>= 5? params[4]:"");
-	vector<unsigned char> vchMessage = vchFromValue(params.size()>=3?params[2]:params[0]);
+	vector<unsigned char> vchMessage = vchFromValue(params.size()>=3?params[2]:" ");
 	int64 nQty = 1;
 	if (params.size() >= 2) {
 		try {
@@ -2582,10 +2627,14 @@ Value offeraccept(const Array& params, bool fHelp) {
 		throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
 	int precision = 2;
 	int64 nPrice = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(foundCert), nBestHeight, precision);
+	string strCipherText;
+	if(!EncryptMessage(theOffer.vchPubKey, vchMessage, strCipherText))
+		throw runtime_error("could not encrypt message to seller");
+
 	// create accept object
 	COfferAccept txAccept;
 	txAccept.vchRand = vchAcceptRand;
-    txAccept.vchMessage = vchMessage;
+    txAccept.vchMessage = vchFromString(strCipherText);
 	txAccept.nQty = nQty;
 	txAccept.nPrice = theOffer.GetPrice(foundCert);
 	txAccept.nDiscountPct = foundCert.nDiscountPct;
@@ -2728,7 +2777,11 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("is_mine", IsOfferMine(txA) ? "true" : "false"));
 			if(ca.bPaid) {
 				oOfferAccept.push_back(Pair("paid","true"));
-				oOfferAccept.push_back(Pair("pay_message", stringFromVch(ca.vchMessage)));
+				string strMessage = string("");
+				if(!DecryptMessage(stringFromVch(theOffer.vchPaymentAddress), ca.vchMessage, strMessage))
+					strMessage = string("Encrypted for owner of offer");
+				oOfferAccept.push_back(Pair("pay_message", strMessage));
+
 			}
 			else
 			{
@@ -2761,9 +2814,6 @@ Value offerinfo(const Array& params, bool fHelp) {
         if (GetValueOfOfferTxHash(txHash, vchValue, offerHash, nHeight)) {
 			oOffer.push_back(Pair("offer", offer));
 			oOffer.push_back(Pair("txid", tx.GetHash().GetHex()));
-			string strAddress = "";
-			GetOfferAddress(tx, strAddress);
-			oOffer.push_back(Pair("address", strAddress));
 			expired_block = nHeight + GetOfferDisplayExpirationDepth();
             if(nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 			{
@@ -2777,7 +2827,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOffer.push_back(Pair("expired_block", expired_block));
 			oOffer.push_back(Pair("expired", expired));
 
-			oOffer.push_back(Pair("payment_address", stringFromVch(theOffer.vchPaymentAddress)));
+			oOffer.push_back(Pair("address", stringFromVch(theOffer.vchPaymentAddress)));
 			oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
 			oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
 			oOffer.push_back(Pair("quantity", strprintf("%llu", theOffer.nQty)));
@@ -3063,9 +3113,6 @@ Value offerhistory(const Array& params, bool fHelp) {
 				string value = stringFromVch(vchValue);
 				oOffer.push_back(Pair("value", value));
 				oOffer.push_back(Pair("txid", tx.GetHash().GetHex()));
-				string strAddress = "";
-				GetOfferAddress(tx, strAddress);
-				oOffer.push_back(Pair("address", strAddress));
 				expired_block = nHeight + GetOfferDisplayExpirationDepth();
 				if(nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 				{

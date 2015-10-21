@@ -351,7 +351,10 @@ bool CheckAliasInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 		if (theAlias.IsNull())
 			error("CheckAliasInputs() : null alias object");
-
+		if(theAlias.vValue.size() > MAX_VALUE_LENGTH)
+		{
+			return error("alias value too big");
+		}
 		if (vvchArgs[0].size() > MAX_NAME_LENGTH)
 			return error("alias hex guid too long");
 		switch (op) {

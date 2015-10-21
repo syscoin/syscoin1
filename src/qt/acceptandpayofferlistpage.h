@@ -18,6 +18,7 @@ class QMenu;
 class QModelIndex;
 class QUrl;
 class QNetworkAccessManager;
+class QPixmap;
 QT_END_NAMESPACE
 
 /** Widget that shows a list of owned offeres.
@@ -52,6 +53,7 @@ private:
     QMenu *contextMenu;
     QAction *deleteAction; // to be able to explicitly disable it
 	QNetworkAccessManager* m_netwManager;
+	QPixmap m_placeholderImage;
 	
 };
 

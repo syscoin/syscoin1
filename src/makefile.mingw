@@ -21,22 +21,24 @@ USE_UPNP:=-
 USE_IPV6:=1
 
 DEPSDIR?=/usr/local
-BOOST_SUFFIX?=-mgw48-mt-s-1_55
+BOOST_SUFFIX?=-mgw48-mt-s-1_54
 
 INCLUDEPATHS= \
  -I"$(CURDIR)" \
  -I"$(DEPSDIR)/include" \
- -I"c:/deps/boost_1_55_0" \
+ -I"c:/deps/boost_1_54_0" \
  -I"c:/deps/db-4.8.30.NC/build_unix" \
- -I"c:/deps/openssl-1.0.1g/include"
+ -I"c:/deps/openssl-1.0.1l/include" \
  
 LIBPATHS= \
+ -L"$(CURDIR)/cryptopp" \
  -L"$(CURDIR)/leveldb" \
- -L"c:/deps/boost_1_55_0/stage/lib" \
+ -L"c:/deps/boost_1_54_0/stage/lib" \
  -L"c:/deps/db-4.8.30.NC/build_unix" \
- -L"c:/deps/openssl-1.0.1g"
+ -L"c:/deps/openssl-1.0.1l"
 
 LIBS= \
+ -l cryptopp \
  -l leveldb \
  -l memenv \
  -l boost_system$(BOOST_SUFFIX) \
@@ -47,7 +49,7 @@ LIBS= \
  -l db_cxx \
  -l ssl \
  -l crypto
-
+ 
 DEFS=-D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE
 DEBUGFLAGS=-g
 CFLAGS=-mthreads -O2 -w -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
@@ -74,6 +76,7 @@ LIBS += -l mingwthrd -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l w
 HEADERS = $(wildcard *.h)
 
 OBJS= \
+	cryptopp/libcryptopp.a \
     leveldb/libleveldb.a \
     obj/auxpow.o \
     obj/alert.o \
@@ -82,6 +85,7 @@ OBJS= \
     obj/netbase.o \
     obj/addrman.o \
     obj/crypter.o \
+    obj/messagecrypter.o \
     obj/key.o \
     obj/db.o \
     obj/init.o \
@@ -133,6 +137,9 @@ DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
 leveldb/libleveldb.a:
 	cd leveldb && $(MAKE) CC=$(CC) CXX=$(CXX) OPT="$(CFLAGS)" TARGET_OS=NATIVE_WINDOWS libleveldb.a libmemenv.a && cd ..
 
+cryptopp/libcryptopp.a:
+	cd cryptopp $(MAKE) CC=$(CC) CXX=$(CXX) OPT="$(CFLAGS)" TARGET_OS=NATIVE_WINDOWS static && cd ..
+
 obj/%-sse2.o: %-sse2.cpp
 	$(CXX) -c $(CFLAGS) -msse2 -mstackrealign -o $@ $<
 
@@ -155,5 +162,6 @@ clean:
 	rm -f obj/*
 	rm -f obj-test/*
 	cd leveldb && $(MAKE) TARGET_OS=NATIVE_WINDOWS clean && cd ..
+	cd cryptopp && $(MAKE) TARGET_OS=NATIVE_WINDOWS clean && cd ..
 
 FORCE:

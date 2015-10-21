@@ -38,7 +38,8 @@ int64 GetCertNetworkFee(opcodetype seed, unsigned int nHeight);
 int64 GetCertNetFee(const CTransaction& tx);
 bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue);
 bool ExtractCertAddress(const CScript& script, std::string& address);
-
+bool EncryptMessage(const std::vector<unsigned char> &vchPublicAddress, const std::vector<unsigned char> &vchMessage, std::string &strCipherText);
+bool DecryptMessage(const std::string &vchPublicAddress, const std::vector<unsigned char> &vchCipherText, std::string &strMessage);
 std::string certFromOp(int op);
 
 
@@ -47,11 +48,13 @@ class CBitcoinAddress;
 class CCert {
 public:
     std::vector<unsigned char> vchRand;
+	std::vector<unsigned char> vchAddress;
+	std::vector<unsigned char> vchPubKey;
     std::vector<unsigned char> vchTitle;
     std::vector<unsigned char> vchData;
     uint256 txHash;
     uint64 nHeight;
-
+	bool bPrivate;
     CCert() {
         SetNull();
     }
@@ -65,6 +68,10 @@ public:
         READWRITE(vchData);
         READWRITE(txHash);
         READWRITE(nHeight);
+		READWRITE(vchPubKey);
+		READWRITE(bPrivate);
+		READWRITE(vchAddress);
+		
     )
 
     friend bool operator==(const CCert &a, const CCert &b) {
@@ -74,6 +81,9 @@ public:
         && a.vchData == b.vchData
         && a.txHash == b.txHash
         && a.nHeight == b.nHeight
+		&& a.vchPubKey == b.vchPubKey
+		&& a.bPrivate == b.bPrivate
+		&& a.vchAddress == b.vchAddress
         );
     }
 
@@ -83,6 +93,9 @@ public:
         vchData = b.vchData;
         txHash = b.txHash;
         nHeight = b.nHeight;
+		vchPubKey = b.vchPubKey;
+		bPrivate = b.bPrivate;
+		vchAddress = b.vchAddress;
         return *this;
     }
 
@@ -90,7 +103,7 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { nHeight = 0; txHash = 0;  vchRand.clear(); }
+    void SetNull() { nHeight = 0; txHash = 0;  vchRand.clear(); vchPubKey.clear(); vchAddress.clear(); bPrivate = false;}
     bool IsNull() const { return (txHash == 0 &&  nHeight == 0 && vchRand.size() == 0); }
     bool UnserializeFromTx(const CTransaction &tx);
     std::string SerializeToString();
