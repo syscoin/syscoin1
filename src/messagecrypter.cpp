@@ -25,7 +25,6 @@ bool CMessageCrypter::Encrypt(const string& vchPubKey, const string& vchPlaintex
     }
     catch(const CryptoPP::Exception& ex)
     {
-        printf(ex.what());
 		return false;
     }
 
@@ -60,7 +59,6 @@ bool CMessageCrypter::Decrypt(const string& vchPrivKey, const string& vchCiphert
     }
     catch(const CryptoPP::Exception& ex)
     {
-		printf(ex.what());
 		return false;
     }
     return true;
