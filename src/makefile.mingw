@@ -138,7 +138,7 @@ leveldb/libleveldb.a:
 	cd leveldb && $(MAKE) CC=$(CC) CXX=$(CXX) OPT="$(CFLAGS)" TARGET_OS=NATIVE_WINDOWS libleveldb.a libmemenv.a && cd ..
 
 cryptopp/libcryptopp.a:
-	cd cryptopp $(MAKE) CC=$(CC) CXX=$(CXX) OPT="$(CFLAGS)" TARGET_OS=NATIVE_WINDOWS static && cd ..
+	cd cryptopp && $(MAKE) CC=$(CC) CXX=$(CXX) OPT="$(CFLAGS)" TARGET_OS=NATIVE_WINDOWS static && cd ..
 
 obj/%-sse2.o: %-sse2.cpp
 	$(CXX) -c $(CFLAGS) -msse2 -mstackrealign -o $@ $<

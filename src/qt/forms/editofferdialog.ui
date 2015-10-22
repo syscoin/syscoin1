@@ -22,7 +22,7 @@
      <item row="0" column="0">
       <widget class="QLabel" name="offerLabel">
        <property name="text">
-        <string>Offer</string>
+        <string>Offer:</string>
        </property>
        <property name="buddy">
         <cstring>offerEdit</cstring>
@@ -39,7 +39,7 @@
      <item row="1" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Title</string>
+        <string>Title:</string>
        </property>
        <property name="buddy">
         <cstring>nameEdit</cstring>
@@ -56,7 +56,7 @@
      <item row="2" column="0">
       <widget class="QLabel" name="categoryLabel">
        <property name="text">
-        <string>Category</string>
+        <string>Category:</string>
        </property>
       </widget>
      </item>
@@ -66,7 +66,7 @@
      <item row="3" column="0">
       <widget class="QLabel" name="priceLabel">
        <property name="text">
-        <string>Price</string>
+        <string>Price:</string>
        </property>
       </widget>
      </item>
@@ -76,7 +76,7 @@
      <item row="4" column="0">
       <widget class="QLabel" name="currencyLabel">
        <property name="text">
-        <string>Currency</string>
+        <string>Currency:</string>
        </property>
       </widget>
      </item>
@@ -100,7 +100,7 @@
      <item row="7" column="0">
       <widget class="QLabel" name="descriptionLabel">
        <property name="text">
-        <string>Description</string>
+        <string>Description:</string>
        </property>
       </widget>
      </item>
@@ -110,7 +110,7 @@
      <item row="6" column="0">
       <widget class="QLabel" name="qtyLabel">
        <property name="text">
-        <string>Quantity</string>
+        <string>Quantity:</string>
        </property>
       </widget>
      </item>

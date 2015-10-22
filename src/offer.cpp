@@ -2344,7 +2344,7 @@ Value offerwhitelist(const Array& params, bool fHelp) {
 				expires_in = nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight;
 			}  
 			oList.push_back(Pair("cert_expiresin",expires_in));
-			oList.push_back(Pair("offer_discount_percentage", strprintf("%d%%%", entry.nDiscountPct)));
+			oList.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
 			oRes.push_back(oList);
 		}  
     }
@@ -2640,17 +2640,22 @@ Value offeraccept(const Array& params, bool fHelp) {
 		throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
 	int precision = 2;
 	int64 nPrice = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(foundCert), nBestHeight, precision);
-	string strCipherText;
-	if(!EncryptMessage(theOffer.vchPubKey, vchMessage, strCipherText))
-		throw runtime_error("could not encrypt message to seller");
+	string strCipherText = "";
+	if(vchLinkOfferAccept.size() <= 0)
+	{
+		if(!EncryptMessage(theOffer.vchPubKey, vchMessage, strCipherText))
+			throw runtime_error("could not encrypt message to seller");
+	}
 
 	// create accept object
 	COfferAccept txAccept;
 	txAccept.vchRand = vchAcceptRand;
-    txAccept.vchMessage = vchFromString(strCipherText);
+	if(strCipherText.length() > 0)
+		txAccept.vchMessage = vchFromString(strCipherText);
+	else
+		txAccept.vchMessage = vchMessage;
 	txAccept.nQty = nQty;
 	txAccept.nPrice = theOffer.GetPrice(foundCert);
-	txAccept.nDiscountPct = foundCert.nDiscountPct;
 	txAccept.vchLinkOfferAccept = vchLinkOfferAccept;
 	txAccept.vchRefundAddress = vchRefundAddress;
 	txAccept.nHeight = nBestHeight;
@@ -2787,7 +2792,12 @@ Value offerinfo(const Array& params, bool fHelp) {
 			convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, 0, nBestHeight, precision);
 			convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, 0, nBestHeight, precision);
 			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ca.nPrice ))); 
-			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ca.nPrice * ca.nQty ))); 
+			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ca.nPrice * ca.nQty )));
+			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ca.nPrice * ca.nQty )));
+			COfferLinkWhitelistEntry entry;
+			if(IsOfferMine(tx)) 
+				theOffer.linkWhitelist.GetLinkEntryByHash(ca.vchCertLink, entry);
+			oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
 			oOfferAccept.push_back(Pair("is_mine", IsOfferMine(txA) ? "true" : "false"));
 			if(ca.bPaid) {
 				oOfferAccept.push_back(Pair("paid","true"));

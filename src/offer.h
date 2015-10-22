@@ -59,7 +59,6 @@ public:
 	uint64 nTime;
 	uint64 nQty;
 	float nPrice;
-	int nDiscountPct;
 	bool bPaid;
 	bool bRefunded;
 	uint256 txRefundId;
@@ -83,7 +82,6 @@ public:
 		READWRITE(txRefundId);
 		READWRITE(vchRefundAddress);
 		READWRITE(vchLinkOfferAccept);
-		READWRITE(nDiscountPct);
 		READWRITE(vchCertLink);
 		
     )
@@ -102,7 +100,6 @@ public:
 		&& a.txRefundId == b.txRefundId
 		&& a.vchRefundAddress == b.vchRefundAddress
 		&& a.vchLinkOfferAccept == b.vchLinkOfferAccept
-		&& a.nDiscountPct == b.nDiscountPct
 		&& a.vchCertLink == b.vchCertLink
         );
     }
@@ -120,7 +117,6 @@ public:
 		txRefundId = b.txRefundId;
 		vchRefundAddress = b.vchRefundAddress;
 		vchLinkOfferAccept = b.vchLinkOfferAccept;
-		nDiscountPct = b.nDiscountPct;
 		vchCertLink = b.vchCertLink;
         return *this;
     }
@@ -129,8 +125,8 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { nHeight = nTime = nPrice = nQty = 0; txHash = 0; bPaid = false; txRefundId=0; bRefunded=false;vchRefundAddress.clear();vchLinkOfferAccept.clear();nDiscountPct=0;vchCertLink.clear(); }
-    bool IsNull() const { return (nTime == 0 && txHash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 && bPaid == 0 && bRefunded == false && txRefundId == 0 && nDiscountPct == 0); }
+    void SetNull() { nHeight = nTime = nPrice = nQty = 0; txHash = 0; bPaid = false; txRefundId=0; bRefunded=false;vchRefundAddress.clear();vchLinkOfferAccept.clear();vchCertLink.clear(); }
+    bool IsNull() const { return (nTime == 0 && txHash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 && bPaid == 0 && bRefunded == false && txRefundId == 0); }
 
 };
 class COfferLinkWhitelistEntry {

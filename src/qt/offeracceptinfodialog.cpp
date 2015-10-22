@@ -92,6 +92,7 @@ bool OfferAcceptInfoDialog::lookup()
 				ui->currencyEdit->setText(QString::fromStdString(find_value(acceptObj, "currency").get_str()));
 				ui->priceEdit->setText(QString::fromStdString(find_value(acceptObj, "price").get_str()));
 				ui->totalEdit->setText(QString::fromStdString(find_value(acceptObj, "total").get_str()));
+				ui->discountEdit->setText(QString::fromStdString(find_value(acceptObj, "offer_discount_percentage").get_str()));
 				ui->paidEdit->setText(QString::fromStdString(find_value(acceptObj, "paid").get_str()));
 				
 				QString refundedStr = QString::fromStdString(find_value(acceptObj, "refunded").get_str());	
