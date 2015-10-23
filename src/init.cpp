@@ -576,7 +576,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 3: parameter-to-internal-flags
 
-    fDebug = GetBoolArg("-debug", true);
+    fDebug = GetBoolArg("-debug", false);
     fBenchmark = GetBoolArg("-benchmark");
 
     // -par=0 means autodetect, but nScriptCheckThreads==0 means no concurrency
