@@ -933,10 +933,9 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
         int prevOp;
         vector<vector<unsigned char> > vvchPrevArgs;
+		vvchPrevArgs.clear();
         // Strict check - bug disallowed
 		for (int i = 0; i < (int) tx.vin.size(); i++) {
-			if(found)
-				break;
 			vector<vector<unsigned char> > vvch, vvch2;
 			prevOutput = &tx.vin[i].prevout;
 			prevCoins = &inputs.GetCoins(prevOutput->hash);
@@ -952,10 +951,10 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				vvchPrevArgs = vvch2;
 				break;
 			}
-			
+			if(!found)vvchPrevArgs.clear();
 			
 		}
-		if(!found)vvchPrevArgs.clear();
+		
         // Make sure cert outputs are not spent by a regular transaction, or the cert would be lost
         if (tx.nVersion != SYSCOIN_TX_VERSION) {
             if (found)

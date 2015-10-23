@@ -185,7 +185,7 @@ string makeOfferLinkAcceptTX(COfferAccept& theOfferAccept, const vector<unsigned
 
 }
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
-string makeOfferRefundTX(const CTransaction& prevTx, const COffer& theOffer, const COfferAccept& theOfferAccept, const vector<unsigned char> &refundCode)
+string makeOfferRefundTX(const CTransaction& prevTx, COffer& theOffer, const COfferAccept& theOfferAccept, const vector<unsigned char> &refundCode)
 {
 	if(!pwalletMain)
 	{
@@ -213,9 +213,13 @@ string makeOfferRefundTX(const CTransaction& prevTx, const COffer& theOffer, con
 
 	if(refundCode == OFFER_REFUND_COMPLETE)
 	{
+		int precision = 2;
+		COfferLinkWhitelistEntry entry;
+		theOffer.linkWhitelist.GetLinkEntryByHash(theOfferAccept.vchCertLink, entry);
+		// lookup the price of the offer in syscoin based on pegged alias at the block # when accept was made (sets nHeight in offeraccept serialized object in tx)
+		nTotalValue = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(entry), theOfferAccept.nHeight, precision)*theOfferAccept.nQty;
 		set<pair<const CWalletTx*,unsigned int> > setCoins;
 		int64 nValueIn = 0;
-		nTotalValue = ( theOfferAccept.nPrice * theOfferAccept.nQty );
 		if (!pwalletMain->SelectCoins(nTotalValue, setCoins, nValueIn))
 		{
 			return string("insufficient funds to pay for offer refund");
@@ -1148,22 +1152,26 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		const CCoins *prevCoins = NULL;
 		int prevOp;
 		vector<vector<unsigned char> > vvchPrevArgs;
+		vvchPrevArgs.clear();
 		int nIn = -1;
 		// Strict check - bug disallowed
 		for (int i = 0; i < (int) tx.vin.size(); i++) {
 			prevOutput = &tx.vin[i].prevout;
 			prevCoins = &inputs.GetCoins(prevOutput->hash);
-			if (DecodeOfferScript(prevCoins->vout[prevOutput->n].scriptPubKey, prevOp, vvchPrevArgs)) {
+			vector<vector<unsigned char> > vvch, vvch2;
+			if (DecodeOfferScript(prevCoins->vout[prevOutput->n].scriptPubKey, prevOp, vvch)) {
 				found = true; 
+				vvchPrevArgs = vvch;
 				break;
 			}
-			else if (DecodeCertScript(prevCoins->vout[prevOutput->n].scriptPubKey, prevOp, vvchPrevArgs))
+			else if (DecodeCertScript(prevCoins->vout[prevOutput->n].scriptPubKey, prevOp, vvch2))
 			{
 				found = true; 
+				vvchPrevArgs = vvch2;
 				break;
 			}
+			if(!found)vvchPrevArgs.clear();
 		}
-		if(!found)vvchPrevArgs.clear();
 
 		// Make sure offer outputs are not spent by a regular transaction, or the offer would be lost
 		if (tx.nVersion != SYSCOIN_TX_VERSION) {
@@ -1312,6 +1320,10 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				// check for existence of offeraccept in txn offer obj
 				if(!theOffer.GetAcceptByHash(vchAcceptRand, theOfferAccept))
 					return error("OP_OFFER_ACCEPT could not read accept from offer txn");
+				if(found && theOfferAccept.vchCertLink != vvchPrevArgs[0])
+				{
+					return error("theOfferAccept.vchCertlink and vvchPrevArgs[0] don't match");
+				}
 	   		}
 			break;
 
@@ -1443,8 +1455,9 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						COfferLinkWhitelistEntry entry;
 						if(IsCertOp(prevOp) && found)
 						{	
-							theOffer.linkWhitelist.GetLinkEntryByHash(vvchPrevArgs[0], entry);						
+							theOffer.linkWhitelist.GetLinkEntryByHash(theOfferAccept.vchCertLink, entry);						
 						}
+
 						int precision = 2;
 						// lookup the price of the offer in syscoin based on pegged alias at the block # when accept was made (sets nHeight in offeraccept serialized object in tx)
 						int64 nPrice = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(entry), theOfferAccept.nHeight, precision)*theOfferAccept.nQty;
@@ -2331,7 +2344,7 @@ Value offerwhitelist(const Array& params, bool fHelp) {
 				expires_in = nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight;
 			}  
 			oList.push_back(Pair("cert_expiresin",expires_in));
-			oList.push_back(Pair("offer_discount_percentage", strprintf("%d%%%", entry.nDiscountPct)));
+			oList.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
 			oRes.push_back(oList);
 		}  
     }
@@ -2617,8 +2630,8 @@ Value offeraccept(const Array& params, bool fHelp) {
 		}
 
 	}
-	// if this is an accept for a linked offer and the whitelist is non-empty and you dont have a cert in the whitelist, you cannot accept this offer
-	if(vchLinkOfferAccept.size() > 0 && !foundCert.IsNull() && theOffer.linkWhitelist.bExclusiveResell && theOffer.linkWhitelist.entries.size() > 0)
+	// if this is an accept for a linked offer, the offer is set to exclusive mode and you dont have a cert in the whitelist, you cannot accept this offer
+	if(vchLinkOfferAccept.size() > 0 && foundCert.IsNull() && theOffer.linkWhitelist.bExclusiveResell)
 	{
 		throw runtime_error("cannot pay for this linked offer because you don't own a cert from its whitelist");
 	}
@@ -2627,21 +2640,27 @@ Value offeraccept(const Array& params, bool fHelp) {
 		throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
 	int precision = 2;
 	int64 nPrice = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(foundCert), nBestHeight, precision);
-	string strCipherText;
-	if(!EncryptMessage(theOffer.vchPubKey, vchMessage, strCipherText))
-		throw runtime_error("could not encrypt message to seller");
+	string strCipherText = "";
+	if(vchLinkOfferAccept.size() <= 0)
+	{
+		if(!EncryptMessage(theOffer.vchPubKey, vchMessage, strCipherText))
+			throw runtime_error("could not encrypt message to seller");
+	}
 
 	// create accept object
 	COfferAccept txAccept;
 	txAccept.vchRand = vchAcceptRand;
-    txAccept.vchMessage = vchFromString(strCipherText);
+	if(strCipherText.length() > 0)
+		txAccept.vchMessage = vchFromString(strCipherText);
+	else
+		txAccept.vchMessage = vchMessage;
 	txAccept.nQty = nQty;
 	txAccept.nPrice = theOffer.GetPrice(foundCert);
-	txAccept.nDiscountPct = foundCert.nDiscountPct;
 	txAccept.vchLinkOfferAccept = vchLinkOfferAccept;
 	txAccept.vchRefundAddress = vchRefundAddress;
 	txAccept.nHeight = nBestHeight;
 	txAccept.bPaid = true;
+	txAccept.vchCertLink = foundCert.certLinkVchRand;
 	theOffer.accepts.clear();
 	theOffer.PutOfferAccept(txAccept);
 	
@@ -2773,7 +2792,12 @@ Value offerinfo(const Array& params, bool fHelp) {
 			convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, 0, nBestHeight, precision);
 			convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, 0, nBestHeight, precision);
 			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ca.nPrice ))); 
-			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ca.nPrice * ca.nQty ))); 
+			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ca.nPrice * ca.nQty )));
+			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ca.nPrice * ca.nQty )));
+			COfferLinkWhitelistEntry entry;
+			if(IsOfferMine(tx)) 
+				theOffer.linkWhitelist.GetLinkEntryByHash(ca.vchCertLink, entry);
+			oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
 			oOfferAccept.push_back(Pair("is_mine", IsOfferMine(txA) ? "true" : "false"));
 			if(ca.bPaid) {
 				oOfferAccept.push_back(Pair("paid","true"));

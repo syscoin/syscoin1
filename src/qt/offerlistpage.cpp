@@ -41,7 +41,7 @@ OfferListPage::OfferListPage(OfferView *parent) :
 	ui->purchaseButton->setIcon(QIcon());
 #endif
 
-    ui->labelExplanation->setText(tr("Search for Syscoin Offers"));
+    ui->labelExplanation->setText(tr("Search for Syscoin Offers (double click on one to purchase)"));
 	
     // Context menu actions
     QAction *copyOfferAction = new QAction(ui->copyOffer->text(), this);

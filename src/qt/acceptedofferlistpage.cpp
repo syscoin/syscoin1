@@ -32,7 +32,7 @@ AcceptedOfferListPage::AcceptedOfferListPage(QWidget *parent) :
 
 	ui->buttonBox->setVisible(false);
 
-    ui->labelExplanation->setText(tr("These are offers you have purchased. Offer operations take 1 confirmation to appear in this table."));
+    ui->labelExplanation->setText(tr("These are offers you have purchased. Offer operations take 1 confirmation to appear in this table. Right click on an offer to view more info such as the message you sent to the seller, quantity, date, etc."));
 	
 	connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(info()));
     // Context menu actions

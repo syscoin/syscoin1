@@ -22,7 +22,7 @@
      <item row="0" column="0">
       <widget class="QLabel" name="certLabel">
        <property name="text">
-        <string>Certificate</string>
+        <string>Certificate:</string>
        </property>
        <property name="buddy">
         <cstring>certEdit</cstring>
@@ -39,7 +39,7 @@
      <item row="1" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Title</string>
+        <string>Title:</string>
        </property>
        <property name="buddy">
         <cstring>nameEdit</cstring>
@@ -56,7 +56,10 @@
      <item row="2" column="0">
       <widget class="QLabel" name="transferLabel">
        <property name="text">
-        <string>Transfer Address</string>
+        <string>Transfer Address or Alias:</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -66,7 +69,7 @@
      <item row="3" column="0">
       <widget class="QLabel" name="certDataLabel">
        <property name="text">
-        <string>Data</string>
+        <string>Data:</string>
        </property>
       </widget>
      </item>

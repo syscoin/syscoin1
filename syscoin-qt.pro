@@ -128,23 +128,24 @@ LIBS += $$PWD/src/leveldb/libleveldb.a $$PWD/src/leveldb/libmemenv.a $$PWD/src/c
 }
 genleveldb.target = $$PWD/src/leveldb/libleveldb.a
 genleveldb.depends = FORCE
+PRE_TARGETDEPS += $$PWD/src/leveldb/libleveldb.a
+QMAKE_EXTRA_TARGETS += genleveldb
+# Gross ugly hack that depends on qmake internals, unfortunately there is no other way to do it.
+QMAKE_CLEAN += $$PWD/src/leveldb/libleveldb.a; cd $$PWD/src/leveldb; $(MAKE) clean
 !win32 {
     # we use QMAKE_CXXFLAGS_RELEASE even without RELEASE=1 because we use RELEASE to indicate linking preferences not -O preferences
-    gencryptopp.commands = cd $$PWD/src/cryptopp && CC=$$QMAKE_CC CXX=$$QMAKE_CXX $(MAKE) -C cryptopp static
+    gencryptopp.commands = cd $$PWD/src/cryptopp && CC=$$QMAKE_CC CXX=$$QMAKE_CXX $(MAKE) static
 } else {
     # make an educated guess about what the ranlib command is called
     isEmpty(QMAKE_RANLIB) {
         QMAKE_RANLIB = $$replace(QMAKE_STRIP, strip, ranlib)
     }
-    gencryptopp.commands = cd $$PWD/src/cryptopp && CC=$$QMAKE_CC CXX=$$QMAKE_CXX TARGET_OS=NATIVE_WINDOWS $(MAKE) -C cryptopp static $$QMAKE_RANLIB $$PWD/src/cryptopp/libcryptopp.a
+    gencryptopp.commands = cd $$PWD/src/cryptopp && CC=$$QMAKE_CC CXX=$$QMAKE_CXX TARGET_OS=NATIVE_WINDOWS $(MAKE) static $$QMAKE_RANLIB $$PWD/src/cryptopp/libcryptopp.a
 }
 gencryptopp.target = $$PWD/src/cryptopp/libcryptopp.a
 gencryptopp.depends = FORCE
-PRE_TARGETDEPS += $$PWD/src/leveldb/libleveldb.a $$PWD/src/cryptopp/libcryptopp.a
-QMAKE_EXTRA_TARGETS += genleveldb
+PRE_TARGETDEPS += $$PWD/src/cryptopp/libcryptopp.a
 QMAKE_EXTRA_TARGETS += gencryptopp
-# Gross ugly hack that depends on qmake internals, unfortunately there is no other way to do it.
-QMAKE_CLEAN += $$PWD/src/leveldb/libleveldb.a; cd $$PWD/src/leveldb; $(MAKE) clean
 QMAKE_CLEAN += $$PWD/src/cryptopp/libcryptopp.a; cd $$PWD/src/cryptopp; $(MAKE) clean
 # regenerate src/build.h
 !win32|contains(USE_BUILD_INFO, 1) {
