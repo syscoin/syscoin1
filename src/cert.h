@@ -30,9 +30,9 @@ bool DecodeCertScript(const CScript& script, int& op, std::vector<std::vector<un
 bool IsCertOp(int op);
 int IndexOfCertOutput(const CTransaction& tx);
 bool GetValueOfCertTxHash(const uint256 &txHash, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
-int64 GetCertTxHashHeight(const uint256 txHash);
-int GetCertTxPosHeight(const CDiskTxPos& txPos);
-int GetCertTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
+int64 GetTxHashHeight(const uint256 txHash);
+int GetTxPosHeight(const CDiskTxPos& txPos);
+int GetTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
 int GetCertDisplayExpirationDepth();
 int64 GetCertNetworkFee(opcodetype seed, unsigned int nHeight);
 int64 GetCertNetFee(const CTransaction& tx);

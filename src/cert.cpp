@@ -34,6 +34,12 @@ extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey,
 extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
         const CTransaction& txTo, unsigned int nIn, unsigned int flags,
         int nHashType);
+extern int CheckTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
+		const CCoins *txindex, int maxDepth);
+extern int GetOfferExpirationDepth();
+extern int GetTxPosHeight(const CDiskTxPos& txPos);
+extern int GetTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
+extern int64 GetTxHashHeight(const uint256 txHash);
 extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision);
 bool EncryptMessage(const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchMessage, string &strCipherText)
 {
@@ -305,23 +311,6 @@ bool CCertDB::ReconstructCertIndex(CBlockIndex *pindexRescan) {
     return true;
 }
 
-// get the depth of transaction txnindex relative to block at index pIndexBlock, looking
-// up to maxdepth. Return relative depth if found, or -1 if not found and maxdepth reached.
-int CheckCertTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
-        const CCoins *txindex, int maxDepth) {
-    for (CBlockIndex* pindex = pindexBlock;
-            pindex && pindexBlock->nHeight - pindex->nHeight < maxDepth;
-            pindex = pindex->pprev)
-        if (pindex->nHeight == (int) txindex->nHeight)
-            return pindexBlock->nHeight - pindex->nHeight;
-    return -1;
-}
-
-int64 GetCertTxHashHeight(const uint256 txHash) {
-	CDiskTxPos postx;
-	pblocktree->ReadTxIndex(txHash, postx);
-	return GetCertTxPosHeight(postx);
-}
 
 
 int64 GetCertNetFee(const CTransaction& tx) {
@@ -368,28 +357,6 @@ bool GetNameOfCertTx(const CTransaction& tx, vector<unsigned char>& cert) {
         case OP_CERT_UPDATE:
         case OP_CERT_TRANSFER:
             cert = vvchArgs[0];
-            return true;
-    }
-    return false;
-}
-
-//TODO come back here check to see how / where this is used
-bool IsConflictedCertTx(CBlockTreeDB& txdb, const CTransaction& tx,
-        vector<unsigned char>& cert) {
-    if (tx.nVersion != SYSCOIN_TX_VERSION)
-        return false;
-    vector<vector<unsigned char> > vvchArgs;
-    int op, nOut, nPrevHeight;
-    if (!DecodeCertTx(tx, op, nOut, vvchArgs, -1))
-        return error("IsConflictedCertTx() : could not decode a syscoin tx");
-
-    switch (op) {
-    case OP_CERT_UPDATE:
-        nPrevHeight = GetCertHeight(vvchArgs[0]);
-        cert = vvchArgs[0];
-        if (nPrevHeight >= 0
-                && pindexBest->nHeight - nPrevHeight
-                        < GetCertExpirationDepth())
             return true;
     }
     return false;
@@ -463,7 +430,7 @@ bool IsCertMine(const CTransaction& tx, const CTxOut& txout) {
 
 bool GetValueOfCertTxHash(const uint256 &txHash,
         vector<unsigned char>& vchValue, uint256& hash, int& nHeight) {
-    nHeight = GetCertTxHashHeight(txHash);
+    nHeight = GetTxHashHeight(txHash);
     CTransaction tx;
     uint256 blockHash;
     if (!GetTransaction(txHash, tx, blockHash, true))
@@ -1027,12 +994,22 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 return error("certupdate tx title too long");
 
 			if (fBlock && !fJustCheck) {
-				// TODO CPU intensive
-				nDepth = CheckCertTransactionAtRelativeDepth(pindexBlock,
-						prevCoins, GetCertExpirationDepth());
-				if ((fBlock || fMiner) && nDepth < 0)
-					return error(
-							"CheckCertInputs() : certupdate on an expired cert, or there is a pending transaction on the cert");		  
+				if(vvchPrevArgs.size() > 0)
+				{
+					nDepth = CheckTransactionAtRelativeDepth(pindexBlock,
+							prevCoins, GetOfferExpirationDepth());
+					if ((fBlock || fMiner) && nDepth < 0)
+						return error(
+								"CheckCertInputs() : certupdate on an expired offer previous tx, or there is a pending transaction on the offer");		  
+				}
+				else
+				{
+					nDepth = CheckTransactionAtRelativeDepth(pindexBlock,
+							prevCoins, GetCertExpirationDepth());
+					if ((fBlock || fMiner) && nDepth < 0)
+						return error(
+								"CheckCertInputs() : certupdate on an expired cert, or there is a pending transaction on the cert");		  
+				}
 				// check for enough fees
 				nNetFee = GetCertNetFee(tx);
 				if (nNetFee < GetCertNetworkFee(OP_CERT_UPDATE, theCert.nHeight))
@@ -1060,9 +1037,9 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                 const vector<unsigned char> &vchCert = vvchArgs[0];
 
                 // check for previous Cert
-                nDepth = CheckCertTransactionAtRelativeDepth(pindexBlock,
-                        prevCoins, pindexBlock->nHeight);
-                if (nDepth == -1)
+                nDepth = CheckTransactionAtRelativeDepth(pindexBlock,
+                        prevCoins, GetCertExpirationDepth());
+                if ((fBlock || fMiner) && nDepth < 0)
                     return error(
                             "CheckCertInputs() : certtransfer cannot be mined if Cert/certtransfer is not already in chain");
 
@@ -1177,22 +1154,6 @@ void rescanforcerts(CBlockIndex *pindexRescan) {
     pcertdb->ReconstructCertIndex(pindexRescan);
 }
 
-int GetCertTxPosHeight(const CDiskTxPos& txPos) {
-    // Read block header
-    CBlock block;
-    if (!block.ReadFromDisk(txPos)) return 0;
-    // Find the block in the index
-    map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(block.GetHash());
-    if (mi == mapBlockIndex.end()) return 0;
-    CBlockIndex* pindex = (*mi).second;
-    if (!pindex || !pindex->IsInMainChain()) return 0;
-    return pindex->nHeight;
-}
-
-int GetCertTxPosHeight2(const CDiskTxPos& txPos, int nHeight) {
-    nHeight = GetCertTxPosHeight(txPos);
-    return nHeight;
-}
 
 Value getcertfees(const Array& params, bool fHelp) {
     if (fHelp || 0 != params.size())
@@ -1602,7 +1563,7 @@ Value certlist(const Array& params, bool fHelp) {
 		if (!DecodeCertTx(tx, op, nOut, vvch, -1) || !IsCertOp(op))
 			continue;
 		// get the txn height
-		nHeight = GetCertTxHashHeight(hash);
+		nHeight = GetTxHashHeight(hash);
 
 		// get the txn cert name
 		if (!GetNameOfCertTx(tx, vchName))
@@ -1913,62 +1874,4 @@ Value certscan(const Array& params, bool fHelp) {
 }
 
 
- Value certclean(const Array& params, bool fHelp)
- {
-     if (fHelp || params.size())
-     throw runtime_error("cert_clean\nClean unsatisfiable transactions from the wallet\n");
-
-
-
-     map<uint256, CWalletTx> mapRemove;
-
-     printf("-----------------------------\n");
-
-     {
-         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-         {
-             CWalletTx& wtx = item.second;
-             vector<unsigned char> vchCert;
-             if (wtx.GetDepthInMainChain() < 1 && IsConflictedCertTx(*pblocktree, wtx, vchCert))
-             {
-                 uint256 hash = wtx.GetHash();
-                 mapRemove[hash] = wtx;
-             }
-         }
-     }
-
-     bool fRepeat = true;
-     while (fRepeat)
-     {
-         fRepeat = false;
-         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
-         {
-             CWalletTx& wtx = item.second;
-             BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-             {
-                 uint256 hash = wtx.GetHash();
-
-                 // If this tx depends on a tx to be removed, remove it too
-                 if (mapRemove.count(txin.prevout.hash) && !mapRemove.count(hash))
-                 {
-                     mapRemove[hash] = wtx;
-                     fRepeat = true;
-                 }
-             }
-         }
-     }
-
-     BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapRemove)
-     {
-         CWalletTx& wtx = item.second;
-
-         EraseCert(wtx);
-         wtx.print();
-     }
-
-     printf("-----------------------------\n");
- 
-
-     return true;
- }
 

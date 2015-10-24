@@ -284,7 +284,6 @@ static const CRPCCommand vRPCCommands[] =
     { "aliashistory",      &aliashistory,      false,      true,      true },
     { "aliasfilter",       &aliasfilter,       false,      true,      true },
     { "aliasscan",         &aliasscan,         false,      true,      true },
-    { "aliasclean",        &aliasclean,         false,      true,      true },
     { "getaliasfees",      &getaliasfees,         false,      true,      true },
 
 
@@ -303,7 +302,6 @@ static const CRPCCommand vRPCCommands[] =
     { "offerinfo",        &offerinfo,      false,      true,      true },
     { "offerhistory",     &offerhistory,   false,      true,      true },
     { "offerscan",        &offerscan,      false,      true,      true },
-    { "offerclean",       &offerclean,     false,      true,      true },
     { "offerfilter",      &offerfilter,    false,      true,      true },
     { "getofferfees",      &getofferfees,         false,      true,      true },
 
@@ -315,7 +313,6 @@ static const CRPCCommand vRPCCommands[] =
   { "certinfo",              &certinfo,          false,      true,      true },
   { "certhistory",     &certhistory, false,      true,      true },
   { "certscan",        &certscan,    false,      true,      true },
-  { "certclean",       &certclean,   false,      true,      true },
   { "certfilter",      &certfilter,  false,      true,      true },
   { "getcertfees",           &getcertfees,        false,      true,      true },
 

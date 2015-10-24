@@ -94,9 +94,9 @@ bool IsAliasMine(const CTransaction& tx);
 bool IsAliasMine(const CTransaction& tx, const CTxOut& txout);
 bool IsAliasOp(int op);
 
-int GetNameTxPosHeight(const CAliasIndex& txPos);
-int GetNameTxPosHeight(const CDiskTxPos& txPos);
-int GetNameTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
+int GetTxPosHeight(const CAliasIndex& txPos);
+int GetTxPosHeight(const CDiskTxPos& txPos);
+int GetTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
 
 bool GetTxOfAlias(CAliasDB& dbName, const std::vector<unsigned char> &vchName, CTransaction& tx);
 int IndexOfNameOutput(const CTransaction& tx);

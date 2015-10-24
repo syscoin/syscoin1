@@ -62,9 +62,7 @@ extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
 		const CTransaction& txTo, unsigned int nIn, unsigned int flags,
 		int nHashType);
 
-extern int64 GetAliasTxHashHeight(const uint256 txHash);
-extern int64 GetOfferTxHashHeight(const uint256 txHash);
-extern int64 GetCertTxHashHeight(const uint256 txHash);
+extern int64 GetTxHashHeight(const uint256 txHash);
 //todo go back and address fees
 /** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
 int64 CTransaction::nMinTxFee = 100000;
@@ -114,7 +112,7 @@ bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 					string vvchFirstStr = stringFromVch(vvch[0]);
 					if(vvchFirstStr == vchToFindStr)
 					{
-						if (GetAliasTxHashHeight(tx.GetHash()) <= 0) 
+						if (GetTxHashHeight(tx.GetHash()) <= 0) 
 							return true;
 					}
 					if(vvch.size() > 1)
@@ -122,7 +120,7 @@ bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 						string vvchSecondStr = HexStr(vvch[1]);
 						if(vvchSecondStr == vchToFindStr)
 						{
-							if (GetAliasTxHashHeight(tx.GetHash()) <= 0) 
+							if (GetTxHashHeight(tx.GetHash()) <= 0) 
 								return true;
 						}
 					}
@@ -141,7 +139,7 @@ bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 					string vvchFirstStr = stringFromVch(vvch[0]);
 					if(vvchFirstStr == vchToFindStr)
 					{
-						if (GetOfferTxHashHeight(tx.GetHash()) <= 0) 
+						if (GetTxHashHeight(tx.GetHash()) <= 0) 
 							return true;
 					}
 					if(vvch.size() > 1)
@@ -149,7 +147,7 @@ bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 						string vvchSecondStr = HexStr(vvch[1]);
 						if(vvchSecondStr == vchToFindStr)
 						{
-							if (GetOfferTxHashHeight(tx.GetHash()) <= 0)
+							if (GetTxHashHeight(tx.GetHash()) <= 0)
 								return true;
 						}
 					}
@@ -168,7 +166,7 @@ bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 					string vvchFirstStr = stringFromVch(vvch[0]);
 					if(vvchFirstStr == vchToFindStr)
 					{
-						if (GetCertTxHashHeight(tx.GetHash()) <= 0)
+						if (GetTxHashHeight(tx.GetHash()) <= 0)
 								return true;
 					}
 					if(vvch.size() > 1)
@@ -176,7 +174,7 @@ bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 						string vvchSecondStr = HexStr(vvch[1]);
 						if(vvchSecondStr == vchToFindStr)
 						{
-							if (GetCertTxHashHeight(tx.GetHash()) <= 0) 
+							if (GetTxHashHeight(tx.GetHash()) <= 0) 
 								return true;
 						}
 					}

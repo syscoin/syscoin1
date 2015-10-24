@@ -33,9 +33,9 @@ bool DecodeOfferScript(const CScript& script, int& op, std::vector<std::vector<u
 bool IsOfferOp(int op);
 int IndexOfOfferOutput(const CTransaction& tx);
 bool GetValueOfOfferTxHash(const uint256 &txHash, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
-int64 GetOfferTxHashHeight(const uint256 txHash);
-int GetOfferTxPosHeight(const CDiskTxPos& txPos);
-int GetOfferTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
+int64 GetTxHashHeight(const uint256 txHash);
+int GetTxPosHeight(const CDiskTxPos& txPos);
+int GetTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
 int GetOfferDisplayExpirationDepth();
 int64 GetOfferNetworkFee(const std::vector<unsigned char>& vchCurrency, opcodetype seed, unsigned int nHeight);
 int64 GetOfferNetFee(const CTransaction& tx);

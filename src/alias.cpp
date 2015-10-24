@@ -33,8 +33,6 @@ extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo,
 bool GetValueOfAliasTxHash(const uint256 &txHash,
 		vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
 
-//static const bool NAME_DEBUG = false;
-//extern int64 AmountFromValue(const Value& value);
 extern Object JSONRPCError(int code, const string& message);
 
 /** Global variable that points to the active block tree (protected by cs_main) */
@@ -52,16 +50,18 @@ extern bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey,
 extern bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey,
 		const CTransaction& txTo, unsigned int nIn, unsigned int flags,
 		int nHashType);
-extern bool IsConflictedAliasTx(CBlockTreeDB& txdb, const CTransaction& tx,
-		vector<unsigned char>& name);
-extern void rescanforaliases(CBlockIndex *pindexRescan);
-extern void rescanforoffers(CBlockIndex *pindexRescan);
+
+extern int GetTxPosHeight(const CDiskTxPos& txPos);
+extern int GetTxPosHeight2(const CDiskTxPos& txPos, int nHeight);
+extern int64 GetTxHashHeight(const uint256 txHash);
+extern int CheckTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
+		const CCoins *txindex, int maxDepth);
 //extern Value sendtoaddress(const Array& params, bool fHelp);
 
 CScript RemoveAliasScriptPrefix(const CScript& scriptIn);
 int GetAliasExpirationDepth();
 int64 GetAliasNetFee(const CTransaction& tx);
-bool CheckAliasTxPos(const vector<CAliasIndex> &vtxPos, const int txPos);
+
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
 string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision)
 {
@@ -214,17 +214,6 @@ string aliasFromOp(int op) {
 		return "<unknown alias op>";
 	}
 }
-// get the depth of transaction txnindex relative to block at index pIndexBlock, looking
-// up to maxdepth. Return relative depth if found, or -1 if not found and maxdepth reached.
-int CheckTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
-		const CCoins *txindex, int maxDepth) {
-	for (CBlockIndex* pindex = pindexBlock;
-			pindex && pindexBlock->nHeight - pindex->nHeight < maxDepth;
-			pindex = pindex->pprev)
-		if (pindex->nHeight == (int) txindex->nHeight)
-			return pindexBlock->nHeight - pindex->nHeight;
-	return -1;
-}
 
 int64 GetAliasNetFee(const CTransaction& tx) {
 	int64 nFee = 0;
@@ -249,12 +238,6 @@ int GetAliasHeight(vector<unsigned char> vchName) {
 	return -1;
 }
 
-// Check that the last entry in name history matches the given tx pos
-bool CheckAliasTxPos(const vector<CAliasIndex> &vtxPos, const int txPos) {
-	if (vtxPos.empty())
-		return false;
-	return vtxPos.back().nHeight == txPos;
-}
 
 /**
  * [IsAliasMine description]
@@ -700,27 +683,6 @@ int GetAliasDisplayExpirationDepth() {
 	return GetAliasExpirationDepth();
 }
 
-int GetNameTxPosHeight(const CDiskTxPos& txPos) {
-	// Read block header
-	CBlock block;
-	if (!block.ReadFromDisk(txPos))
-		return 0;
-	// Find the block in the index
-	map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(
-			block.GetHash());
-	if (mi == mapBlockIndex.end())
-		return 0;
-	CBlockIndex* pindex = (*mi).second;
-	if (!pindex || !pindex->IsInMainChain())
-		return 0;
-	return pindex->nHeight;
-}
-
-int GetNameTxPosHeight2(const CDiskTxPos& txPos, int nHeight) {
-	nHeight = GetNameTxPosHeight(txPos);
-	return nHeight;
-}
-
 CScript RemoveAliasScriptPrefix(const CScript& scriptIn) {
 	int op;
 	vector<vector<unsigned char> > vvch;
@@ -960,14 +922,9 @@ string SendMoneyWithInputTx(CScript scriptPubKey, int64 nValue, int64 nNetFee,
 	return "";
 }
 
-int64 GetAliasTxHashHeight(const uint256 txHash) {
-	CDiskTxPos postx;
-	pblocktree->ReadTxIndex(txHash, postx);
-	return GetNameTxPosHeight(postx);
-}
 
 bool GetValueOfAliasTxHash(const uint256 &txHash, vector<unsigned char>& vchValue, uint256& hash, int& nHeight) {
-	nHeight = GetAliasTxHashHeight(txHash);
+	nHeight = GetTxHashHeight(txHash);
 	CTransaction tx;
 	uint256 blockHash;
 
@@ -1093,30 +1050,6 @@ bool GetAliasOfTx(const CTransaction& tx, vector<unsigned char>& name) {
 	return false;
 }
 
-bool IsConflictedAliasTx(CBlockTreeDB& txdb, const CTransaction& tx,
-		vector<unsigned char>& name) {
-	if (tx.nVersion != SYSCOIN_TX_VERSION)
-		return false;
-	vector<vector<unsigned char> > vvchArgs;
-	int op;
-	int nOut;
-
-	bool good = DecodeAliasTx(tx, op, nOut, vvchArgs, -1);
-	if (!good)
-		return error("IsConflictedAliasTx() : could not decode a syscoin tx");
-	int nPrevHeight;
-
-	switch (op) {
-	case OP_ALIAS_ACTIVATE:
-		nPrevHeight = GetAliasHeight(vvchArgs[0]);
-		name = vvchArgs[0];
-		if (nPrevHeight >= 0
-				&& pindexBest->nHeight - nPrevHeight
-						< GetAliasExpirationDepth())
-			return true;
-	}
-	return false;
-}
 
 bool GetValueOfAliasTx(const CTransaction& tx, vector<unsigned char>& value) {
 	vector<vector<unsigned char> > vvch;
@@ -1447,7 +1380,7 @@ Value aliaslist(const Array& params, bool fHelp) {
 			if (!DecodeAliasTx(tx, op, nOut, vvch, -1) || !IsAliasOp(op))
 				continue;
 			// get the txn height
-			nHeight = GetAliasTxHashHeight(hash);
+			nHeight = GetTxHashHeight(hash);
 
 			// get the txn alias name
 			if (!GetAliasOfTx(tx, vchName))
@@ -1474,7 +1407,7 @@ Value aliaslist(const Array& params, bool fHelp) {
 					if(GetTransaction(txHash, dbtx, blockHash, true))
 					{
 					
-						nHeight = GetAliasTxHashHeight(txHash);
+						nHeight = GetTxHashHeight(txHash);
 						// Is the latest alais in the db transferred?
 						if(!IsAliasMine(dbtx))
 						{	
@@ -1876,55 +1809,6 @@ void UnspendInputs(CWalletTx& wtx) {
 	}
 }
 
-Value aliasclean(const Array& params, bool fHelp) {
-	if (fHelp || params.size())
-		throw runtime_error(
-				"aliasclean\nClean unsatisfiable alias transactions from the wallet - including aliasactivate on an already taken alias\n");
-	{
-		EnsureWalletIsUnlocked();
-		map<uint256, CWalletTx> mapRemove;
-
-		printf("-----------------------------\n");
-		{
-			BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
-				CWalletTx& wtx = item.second;
-				vector<unsigned char> vchName;
-				if (wtx.GetDepthInMainChain() < 1
-						&& IsConflictedAliasTx(*pblocktree, wtx, vchName)) {
-					uint256 hash = wtx.GetHash();
-					mapRemove[hash] = wtx;
-				}
-			}
-		}
-
-		bool fRepeat = true;
-		while (fRepeat) {
-			fRepeat = false;
-			BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
-				CWalletTx& wtx = item.second;
-				BOOST_FOREACH(const CTxIn& txin, wtx.vin) {
-					uint256 hash = wtx.GetHash();
-
-					// If this tx depends on a tx to be removed, remove it too
-					if (mapRemove.count(txin.prevout.hash)
-							&& !mapRemove.count(hash)) {
-						mapRemove[hash] = wtx;
-						fRepeat = true;
-					}
-				}
-			}
-		}
-
-		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapRemove) {
-			CWalletTx& wtx = item.second;
-
-			EraseAlias(wtx);
-			wtx.print();
-		}
-		printf("-----------------------------\n");
-	}
-	return true;
-}
 
 /**
  * [aliasscan description]

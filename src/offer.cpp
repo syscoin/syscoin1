@@ -15,8 +15,6 @@ using namespace json_spirit;
 extern const CRPCTable tableRPC;
 template<typename T> void ConvertTo(Value& value, bool fAllowNull = false);
 
-
-
 extern bool ExistsInMempool(std::vector<unsigned char> vchNameOrRand, opcodetype type);
 extern bool HasReachedMainNetForkB2();
 
@@ -24,7 +22,9 @@ extern COfferDB *pofferdb;
 extern CCertDB *pcertdb;
 extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo,
 		unsigned int nIn, int nHashType);
-
+extern int CheckTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
+        const CCoins *txindex, int maxDepth);
+extern int GetCertExpirationDepth();
 CScript RemoveOfferScriptPrefix(const CScript& scriptIn);
 extern CScript RemoveCertScriptPrefix(const CScript& scriptIn);
 bool DecodeOfferScript(const CScript& script, int& op,
@@ -133,7 +133,7 @@ uint64 QtyOfPendingAcceptsInMempool(const vector<unsigned char>& vchToFind)
 					if (theOffer.IsNull())
 						continue;
 					// if offer is already confirmed dont account for it in the mempool
-					if (GetOfferTxHashHeight(tx.GetHash()) > 0) 
+					if (GetTxHashHeight(tx.GetHash()) > 0) 
 						continue;
 					if(theOffer.GetAcceptByHash(vvch[1], theOfferAccept))
 					{
@@ -549,7 +549,7 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 
 // get the depth of transaction txnindex relative to block at index pIndexBlock, looking
 // up to maxdepth. Return relative depth if found, or -1 if not found and maxdepth reached.
-int CheckOfferTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
+int CheckTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
 		const CCoins *txindex, int maxDepth) {
 	for (CBlockIndex* pindex = pindexBlock;
 			pindex && pindexBlock->nHeight - pindex->nHeight < maxDepth;
@@ -559,10 +559,10 @@ int CheckOfferTransactionAtRelativeDepth(CBlockIndex* pindexBlock,
 	return -1;
 }
 
-int64 GetOfferTxHashHeight(const uint256 txHash) {
+int64 GetTxHashHeight(const uint256 txHash) {
 	CDiskTxPos postx;
 	pblocktree->ReadTxIndex(txHash, postx);
-	return GetOfferTxPosHeight(postx);
+	return GetTxPosHeight(postx);
 }
 
 int64 GetOfferNetFee(const CTransaction& tx) {
@@ -615,27 +615,6 @@ bool GetNameOfOfferTx(const CTransaction& tx, vector<unsigned char>& offer) {
 	return false;
 }
 
-//TODO come back here check to see how / where this is used
-bool IsConflictedOfferTx(CBlockTreeDB& txdb, const CTransaction& tx,
-		vector<unsigned char>& offer) {
-	if (tx.nVersion != SYSCOIN_TX_VERSION)
-		return false;
-	vector<vector<unsigned char> > vvchArgs;
-	int op, nOut, nPrevHeight;
-	if (!DecodeOfferTx(tx, op, nOut, vvchArgs, -1))
-		return error("IsConflictedOfferTx() : could not decode a syscoin tx");
-
-	switch (op) {
-	case OP_OFFER_UPDATE:
-		nPrevHeight = GetOfferHeight(vvchArgs[0]);
-		offer = vvchArgs[0];
-		if (nPrevHeight >= 0
-				&& pindexBest->nHeight - nPrevHeight
-						< GetOfferExpirationDepth())
-			return true;
-	}
-	return false;
-}
 
 bool GetValueOfOfferTx(const CTransaction& tx, vector<unsigned char>& value) {
 	vector<vector<unsigned char> > vvch;
@@ -707,7 +686,7 @@ bool IsOfferMine(const CTransaction& tx, const CTxOut& txout) {
 
 bool GetValueOfOfferTxHash(const uint256 &txHash,
 		vector<unsigned char>& vchValue, uint256& hash, int& nHeight) {
-	nHeight = GetOfferTxHashHeight(txHash);
+	nHeight = GetTxHashHeight(txHash);
 	CTransaction tx;
 	uint256 blockHash;
 	if (!GetTransaction(txHash, tx, blockHash, true))
@@ -1263,8 +1242,26 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 			if (vvchPrevArgs[0] != vvchArgs[0])
 				return error("CheckOfferInputs() : offerupdate offer mismatch");
 			if (fBlock && !fJustCheck) {
+				if(vvchPrevArgs.size() > 0)
+				{
+					nDepth = CheckTransactionAtRelativeDepth(pindexBlock,
+							prevCoins, GetCertExpirationDepth());
+					if ((fBlock || fMiner) && nDepth < 0)
+						return error(
+								"CheckOfferInputs() : offerupdate on an expired offer, or there is a pending transaction on the offer");	
+	  
+				}
+				else
+				{
+					nDepth = CheckTransactionAtRelativeDepth(pindexBlock,
+							prevCoins, GetOfferExpirationDepth());
+					if ((fBlock || fMiner) && nDepth < 0)
+						return error(
+								"CheckOfferInputs() : offerupdate on an expired cert previous tx, or there is a pending transaction on the cert");		  
+				}
+
 				// TODO CPU intensive
-				nDepth = CheckOfferTransactionAtRelativeDepth(pindexBlock,
+				nDepth = CheckTransactionAtRelativeDepth(pindexBlock,
 						prevCoins, GetOfferExpirationDepth());
 				if ((fBlock || fMiner) && nDepth < 0)
 					return error(
@@ -1299,7 +1296,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				if(!theOffer.GetAcceptByHash(vchAcceptRand, theOfferAccept))
 					return error("OP_OFFER_REFUND could not read accept from offer txn");
 				// TODO CPU intensive
-				nDepth = CheckOfferTransactionAtRelativeDepth(pindexBlock,
+				nDepth = CheckTransactionAtRelativeDepth(pindexBlock,
 						prevCoins, GetOfferExpirationDepth());
 				if ((fBlock || fMiner) && nDepth < 0)
 					return error(
@@ -1677,7 +1674,7 @@ void rescanforoffers(CBlockIndex *pindexRescan) {
     pofferdb->ReconstructOfferIndex(pindexRescan);
 }
 
-int GetOfferTxPosHeight(const CDiskTxPos& txPos) {
+int GetTxPosHeight(const CDiskTxPos& txPos) {
     // Read block header
     CBlock block;
     if (!block.ReadFromDisk(txPos)) return 0;
@@ -1689,8 +1686,8 @@ int GetOfferTxPosHeight(const CDiskTxPos& txPos) {
     return pindex->nHeight;
 }
 
-int GetOfferTxPosHeight2(const CDiskTxPos& txPos, int nHeight) {
-    nHeight = GetOfferTxPosHeight(txPos);
+int GetTxPosHeight2(const CDiskTxPos& txPos, int nHeight) {
+    nHeight = GetTxPosHeight(txPos);
     return nHeight;
 }
 
@@ -2338,7 +2335,7 @@ Value offerwhitelist(const Array& params, bool fHelp) {
 			GetCertAddress(txCert, strAddress);
 			oList.push_back(Pair("cert_address", strAddress));
 			int expires_in = 0;
-			int64 nHeight = GetCertTxHashHeight(txCert.GetHash());
+			int64 nHeight = GetTxHashHeight(txCert.GetHash());
             if(nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight > 0)
 			{
 				expires_in = nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight;
@@ -2500,7 +2497,10 @@ Value offerrefund(const Array& params, bool fHelp) {
 	// check for existence of offeraccept in txn offer obj
 	if(!theOffer.GetAcceptByHash(vchAcceptRand, theOfferAccept))
 		throw runtime_error("could not read accept from offer txn");
-
+	// check if this offer is linked to another offer
+	if (!theOffer.vchLinkOffer.empty())
+		throw runtime_error("You cannot refund an offer that is linked to another offer, only the owner of the original offer can issue a refund.");
+	
 	string strError = makeOfferRefundTX(txOffer, theOffer, theOfferAccept, OFFER_REFUND_PAYMENT_INPROGRESS);
 	if (strError != "")
 	{
@@ -2922,7 +2922,7 @@ Value offeracceptlist(const Array& params, bool fHelp) {
                 continue;
 
             // get the txn height
-            nHeight = GetOfferTxHashHeight(hash);
+            nHeight = GetTxHashHeight(hash);
 
             // get the txn alias name
             if(!GetNameOfOfferTx(tx, vchName))
@@ -3026,7 +3026,7 @@ Value offerlist(const Array& params, bool fHelp) {
                 continue;
 
             // get the txn height
-            nHeight = GetOfferTxHashHeight(hash);
+            nHeight = GetTxHashHeight(hash);
 
             // get the txn alias name
             if(!GetNameOfOfferTx(tx, vchName))
@@ -3334,61 +3334,3 @@ Value offerscan(const Array& params, bool fHelp) {
 	return oRes;
 }
 
-
- Value offerclean(const Array& params, bool fHelp)
- {
-	if(!HasReachedMainNetForkB2())
-		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
-	if (fHelp || params.size())
-	throw runtime_error("offer_clean\nClean unsatisfiable transactions from the wallet - including offer_update on an already taken offer\n");
-
-
-	map<uint256, CWalletTx> mapRemove;
-
-	printf("-----------------------------\n");
-
-	{
-		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet){
- 			CWalletTx& wtx = item.second;
-		 	vector<unsigned char> vchOffer;
- 			if (wtx.GetDepthInMainChain() < 1 && IsConflictedOfferTx(*pblocktree, wtx, vchOffer))
- 			{
- 				uint256 hash = wtx.GetHash();
- 				mapRemove[hash] = wtx;
- 			}
- 		}
- 	}
-
- 	bool fRepeat = true;
- 	while (fRepeat)
- 	{
- 		fRepeat = false;
- 		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
- 		{
- 			CWalletTx& wtx = item.second;
- 			BOOST_FOREACH(const CTxIn& txin, wtx.vin)
- 			{
- 				uint256 hash = wtx.GetHash();
-
- 				// If this tx depends on a tx to be removed, remove it too
- 				if (mapRemove.count(txin.prevout.hash) && !mapRemove.count(hash))
- 				{
- 					mapRemove[hash] = wtx;
- 					fRepeat = true;
- 				}
- 			}
- 		}
- 	}
-
-	BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapRemove)
-	{
-	 	CWalletTx& wtx = item.second;
-
-	 	EraseOffer(wtx);
-	 	wtx.print();
-	}
-
-	printf("-----------------------------\n");
-
-	return true;
- }
