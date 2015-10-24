@@ -38,7 +38,7 @@ CertListPage::CertListPage(QWidget *parent) :
     ui->exportButton->setIcon(QIcon());
 #endif
 
-    ui->labelExplanation->setText(tr("Search for Syscoin Certificates"));
+    ui->labelExplanation->setText(tr("Search for Syscoin Certificates. Select the number of results desired from the dropdown box and click Search."));
 	
     // Context menu actions
     QAction *copyCertAction = new QAction(ui->copyCert->text(), this);
@@ -57,7 +57,7 @@ CertListPage::CertListPage(QWidget *parent) :
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
 
-	ui->lineEditCertSearch->setPlaceholderText(tr("Enter search term, regex accepted (ie: ^name returns all Certificates starting with 'name')"));
+	ui->lineEditCertSearch->setPlaceholderText(tr("Enter search term, regex accepted (ie: ^name returns all Certificates starting with 'name'). Empty will search for all."));
 }
 
 CertListPage::~CertListPage()
@@ -216,13 +216,6 @@ void CertListPage::selectNewCert(const QModelIndex &parent, int begin, int /*end
 void CertListPage::on_searchCert_clicked()
 {
     if(!walletModel) return;
-    if(ui->lineEditCertSearch->text().trimmed().isEmpty())
-    {
-        QMessageBox::warning(this, tr("Error Searching Certificates"),
-            tr("Please enter search term"),
-            QMessageBox::Ok, QMessageBox::Ok);
-        return;
-    }
        Array params;
         Value valError;
         Object ret ;
@@ -244,6 +237,8 @@ void CertListPage::on_searchCert_clicked()
 		int expires_on = 0; 
         params.push_back(ui->lineEditCertSearch->text().toStdString());
         params.push_back(GetCertDisplayExpirationDepth());
+		params.push_back(0);
+		params.push_back(ui->comboBox->currentText().toInt());
 
         try {
             result = tableRPC.execute(strMethod, params);

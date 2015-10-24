@@ -38,7 +38,7 @@ AliasListPage::AliasListPage(QWidget *parent) :
     ui->exportButton->setIcon(QIcon());
 #endif
 
-    ui->labelExplanation->setText(tr("Search for Syscoin Aliases"));
+    ui->labelExplanation->setText(tr("Search for Syscoin Aliases. Select the number of results desired from the dropdown box and click Search."));
 	
     // Context menu actions
     QAction *copyAliasAction = new QAction(ui->copyAlias->text(), this);
@@ -57,7 +57,7 @@ AliasListPage::AliasListPage(QWidget *parent) :
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
 
-	ui->lineEditAliasSearch->setPlaceholderText(tr("Enter search term, regex accepted (ie: ^name returns all Aliases starting with 'name')"));
+	ui->lineEditAliasSearch->setPlaceholderText(tr("Enter search term, regex accepted (ie: ^name returns all Aliases starting with 'name'). Empty will search for all."));
 }
 
 AliasListPage::~AliasListPage()
@@ -215,13 +215,6 @@ void AliasListPage::selectNewAlias(const QModelIndex &parent, int begin, int /*e
 void AliasListPage::on_searchAlias_clicked()
 {
     if(!walletModel) return;
-    if(ui->lineEditAliasSearch->text().trimmed().isEmpty())
-    {
-        QMessageBox::warning(this, tr("Error Searching Alias"),
-            tr("Please enter search term"),
-            QMessageBox::Ok, QMessageBox::Ok);
-        return;
-    }
        Array params;
         Value valError;
         Object ret ;
@@ -244,6 +237,8 @@ void AliasListPage::on_searchAlias_clicked()
 		int lastupdate_height = 0;    
         params.push_back(ui->lineEditAliasSearch->text().toStdString());
         params.push_back(GetAliasDisplayExpirationDepth());
+		params.push_back(0);
+		params.push_back(ui->comboBox->currentText().toInt());
 
         try {
             result = tableRPC.execute(strMethod, params);
