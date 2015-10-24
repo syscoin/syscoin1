@@ -31,14 +31,15 @@ extern const std::string CLIENT_DATE;
 //70005 =  r0.1.4       =   (mandatory update)
 //70005 =  r0.1.5       =   r0.1.5.1 (non-mandatory update - no protocol version change)
 //700051 = r1.5.2 beta4 =   dropped leading "0." on versioning, locked to cakenet. BETA not to be used on mainnet
-//700052 = r1.5.3 beta =    Locked to cakenet for testing. BETA not to be used on mainnet
-static const int PROTOCOL_VERSION = 700052;
+//700052 = r1.5.3 beta - 1.6b2 =    Locked to cakenet for testing. BETA not to be used on mainnet
+//700053 = 1.6b3 =    Locked to cakenet for testing. BETA not to be used on mainnet
+static const int PROTOCOL_VERSION = 700053;
 
 // intial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
 
 // disconnect from peers older than this proto version
-static const int MIN_PEER_PROTO_VERSION = 70005;
+static const int MIN_PEER_PROTO_VERSION = 700053;
 
 // nTime field added to CAddress, starting with this version;
 // if possible, avoid requesting addresses nodes older than this
