@@ -56,7 +56,7 @@ EditWhitelistOfferDialog::EditWhitelistOfferDialog(QModelIndex *idx, QWidget *pa
 	
 	ui->buttonBox->setVisible(false);
 	ui->removeAllButton->setEnabled(false);
-    ui->labelExplanation->setText(tr("These are the whitelist entries for your offer. Whitelist operations take 1 confirmation to appear in this table. You may specify discount levels for each whitelist entry or control who may resell your offer if you are in Exclusive Resell Mode. If Exclusive Resell Mode is off anyone can resell your offers, although discounts will still be applied if they own a certificate that you've added to your whitelist. Click the button at the bottom of this dialog to toggle the exclusive mode."));
+    ui->labelExplanation->setText(tr("These are the whitelist entries for your offer. Whitelist operations take 2-5 minutes to become active. You may specify discount levels for each whitelist entry or control who may resell your offer if you are in Exclusive Resell Mode. If Exclusive Resell Mode is off anyone can resell your offers, although discounts will still be applied if they own a certificate that you've added to your whitelist. Click the button at the bottom of this dialog to toggle the exclusive mode."));
 	
     // Context menu actions
     QAction *removeAction = new QAction(tr("&Remove"), this);

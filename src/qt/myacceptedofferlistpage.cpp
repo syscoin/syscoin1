@@ -37,7 +37,7 @@ MyAcceptedOfferListPage::MyAcceptedOfferListPage(QWidget *parent) :
 
 	ui->buttonBox->setVisible(false);
 
-    ui->labelExplanation->setText(tr("These are offers you have sold to others. Offer operations take 1 confirmation to appear in this table. Right click on an offer for more info including buyer message, quantity, date, etc."));
+    ui->labelExplanation->setText(tr("These are offers you have sold to others. Offer operations take 2-5 minutes to become active. Right click on an offer for more info including buyer message, quantity, date, etc."));
 	
 	connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(info()));	
     // Context menu actions

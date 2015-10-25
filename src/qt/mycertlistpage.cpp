@@ -33,7 +33,7 @@ MyCertListPage::MyCertListPage(QWidget *parent) :
 
 	ui->buttonBox->setVisible(false);
 
-    ui->labelExplanation->setText(tr("These are your registered Syscoin Certificates. Certificate operations (create, update, transfer) take 1 confirmation to appear in this table."));
+    ui->labelExplanation->setText(tr("These are your registered Syscoin Certificates. Certificate operations (create, update, transfer) take 2-5 minutes to become active."));
 	
 	
     // Context menu actions

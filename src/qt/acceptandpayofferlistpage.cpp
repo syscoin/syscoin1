@@ -23,11 +23,7 @@
 #include <QNetworkReply>
 #include <QRegExp>
 #include <QStringList>
-#if QT_VERSION >= 0x050000
-#include <QUrlQuery>
-#else
-#include <QUrl>
-#endif
+#include <QDesktopServices>
 
 using namespace std;
 using namespace json_spirit;
@@ -50,7 +46,17 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
 
 	m_netwManager = new QNetworkAccessManager(this);
 	m_placeholderImage.load(":/images/image");
-	ui->labelImage->setPixmap(m_placeholderImage);
+
+	QIcon ButtonIcon(m_placeholderImage);
+	ui->imageButton->setToolTip(tr("Click to open image in browser..."));
+	ui->imageButton->setIcon(ButtonIcon);
+	ui->imageButton->setIconSize(m_placeholderImage.rect().size());
+	ui->imageButton->setFixedSize(m_placeholderImage.rect().size());
+}
+void AcceptandPayOfferListPage::on_imageButton_clicked()
+{
+	if(m_url.isValid())
+		QDesktopServices::openUrl(QUrl(m_url.toString(),QUrl::TolerantMode));
 }
 void AcceptandPayOfferListPage::netwManagerFinished()
 {
@@ -64,10 +70,14 @@ void AcceptandPayOfferListPage::netwManagerFinished()
 		return;
 	}
 
-	QByteArray jpegData = reply->readAll();
+	QByteArray imageData = reply->readAll();
 	QPixmap pixmap;
-	pixmap.loadFromData(jpegData);
-	ui->labelImage->setPixmap(pixmap);
+	pixmap.loadFromData(imageData);
+	QIcon ButtonIcon(pixmap);
+	ui->imageButton->setIcon(ButtonIcon);
+	ui->imageButton->setIconSize(pixmap.rect().size());
+	ui->imageButton->setFixedSize(pixmap.rect().size());
+
 	reply->deleteLater();
 }
 AcceptandPayOfferListPage::~AcceptandPayOfferListPage()
@@ -122,6 +132,14 @@ void AcceptandPayOfferListPage::acceptOffer()
 			QMessageBox::Ok, QMessageBox::Ok);
 		return;
 	}
+	if(ui->notesEdit->toPlainText().size() <= 0)
+	{
+		QMessageBox::critical(this, windowTitle(),
+			tr("Please enter pertinent information required to the offer in the <b>Notes</b> field (address, e-mail address, shipping notes, etc)."),
+			QMessageBox::Ok, QMessageBox::Ok);
+		return;
+	}
+	
 	this->offerPaid = false;
 	ui->labelExplanation->setText(tr("Waiting for confirmation on the purchase of this offer"));
 	OpenPayDialog();
@@ -284,14 +302,18 @@ void AcceptandPayOfferListPage::setValue(COffer &offer)
 	QRegExp rx("(?:https?|ftp)://\\S+");
     rx.indexIn(ui->infoDescription->text());
     QStringList list = rx.capturedTexts();
-	ui->labelImage->setPixmap(m_placeholderImage);
+	QIcon ButtonIcon(m_placeholderImage);
+	ui->imageButton->setIcon(ButtonIcon);
+	ui->imageButton->setIconSize(m_placeholderImage.rect().size());
+	ui->imageButton->setFixedSize(m_placeholderImage.rect().size());
+
 	if(list.size() > 0 && list[0] != QString(""))
 	{
 		QString parsedURL = list[0].simplified();
-		QUrl url(parsedURL);
-		if(url.isValid())
+		m_url = QUrl(parsedURL);
+		if(m_url.isValid())
 		{
-			QNetworkRequest request(url);
+			QNetworkRequest request(m_url);
 			request.setRawHeader("Accept", "q=0.9,image/webp,*/*;q=0.8");
 			request.setRawHeader("Cache-Control", "no-cache");
 			request.setRawHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.71 Safari/537.36");

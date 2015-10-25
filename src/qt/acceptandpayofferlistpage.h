@@ -2,7 +2,11 @@
 #define ACCEPTANDPAYOFFERLISTPAGE_H
 
 #include <QDialog>
-
+#if QT_VERSION >= 0x050000
+#include <QUrlQuery>
+#else
+#include <QUrl>
+#endif
 namespace Ui {
     class AcceptandPayOfferListPage;
 }
@@ -19,6 +23,7 @@ class QModelIndex;
 class QUrl;
 class QNetworkAccessManager;
 class QPixmap;
+class QUrl;
 QT_END_NAMESPACE
 
 /** Widget that shows a list of owned offeres.
@@ -44,6 +49,7 @@ public slots:
 	bool lookup(QString id = QString(""));
 	void resetState();
 	void netwManagerFinished();
+	void on_imageButton_clicked();
 
 private:
     Ui::AcceptandPayOfferListPage *ui;
@@ -54,6 +60,7 @@ private:
     QAction *deleteAction; // to be able to explicitly disable it
 	QNetworkAccessManager* m_netwManager;
 	QPixmap m_placeholderImage;
+	QUrl m_url;
 	
 };
 
