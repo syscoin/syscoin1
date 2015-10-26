@@ -1413,6 +1413,18 @@ Value certtransfer(const Array& params, bool fHelp) {
 	// if cert is private, decrypt the data
 	if(theCert.bPrivate)
 	{
+		std::vector<unsigned char> vchPubKeyByte;
+		std::vector<unsigned char> vchPubKey = vchFromString(strPubKey);
+		boost::algorithm::unhex(vchPubKey.begin(), vchPubKey.end(), std::back_inserter(vchPubKeyByte));
+		CPubKey PubKey(vchPubKeyByte);
+		CKeyID pubKeyID = PubKey.GetID();
+		CBitcoinAddress xferAddress(pubKeyID);
+		if(!xferAddress.IsValid())
+			throw JSONRPCError(RPC_WALLET_ERROR, "Public key is invalid!");
+
+		if(xferAddress.ToString() != stringFromVch(vchAddress))
+			throw JSONRPCError(RPC_WALLET_ERROR, "The public key must be the public key of the address you are transfering to!");
+
 		string strData;
 		string strCipherText;
 		if(strPubKey.length() <= 0)
@@ -1429,7 +1441,7 @@ Value certtransfer(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "Could not encrypt certificate data!");
 		}
 		theCert.vchData = vchFromString(strCipherText);
-		theCert.vchPubKey = vchFromString(strPubKey);
+		theCert.vchPubKey = vchPubKey;
 	}	
 
 	theCert.nHeight = nBestHeight;
