@@ -9,6 +9,7 @@
 #include "walletmodel.h"
 #include "bitcoingui.h"
 #include "editcertdialog.h"
+#include "pubkeydialog.h"
 #include "csvmodelwriter.h"
 #include "guiutil.h"
 
@@ -29,6 +30,7 @@ MyCertListPage::MyCertListPage(QWidget *parent) :
     ui->copyCert->setIcon(QIcon());
     ui->exportButton->setIcon(QIcon());
 	ui->refreshButton->setIcon(QIcon());
+	ui->pubKeyButton->setIcon(QIcon());
 #endif
 
 	ui->buttonBox->setVisible(false);
@@ -61,7 +63,11 @@ MyCertListPage::MyCertListPage(QWidget *parent) :
     // Pass through accept action from button box
     connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
 }
-
+void MyCertListPage::on_pubKeyButton_clicked()
+{
+	PubKeyDialog dlg;
+	dlg.exec();
+}
 MyCertListPage::~MyCertListPage()
 {
     delete ui;

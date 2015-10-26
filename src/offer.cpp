@@ -1091,7 +1091,9 @@ bool GetOfferAddress(const CTransaction& tx, std::string& strAddress) {
 	const CTxOut& txout = tx.vout[nOut];
 
 	const CScript& scriptPubKey = RemoveOfferScriptPrefix(txout.scriptPubKey);
-	strAddress = CBitcoinAddress(scriptPubKey.GetID()).ToString();
+	CTxDestination dest;
+	ExtractDestination(scriptPubKey, dest);
+	strAddress = CBitcoinAddress(dest).ToString();
 	return true;
 }
 
@@ -1189,10 +1191,6 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		if(theOffer.vchRand.size() > 20)
 		{
 			return error("offer rand too big");
-		}
-		if(theOffer.vchPaymentAddress.size() > MAX_NAME_LENGTH)
-		{
-			return error("offer payment address too big");
 		}
 		if(theOffer.vchLinkOffer.size() > MAX_NAME_LENGTH)
 		{
@@ -1705,9 +1703,9 @@ Value getofferfees(const Array& params, bool fHelp) {
 }
 
 Value offernew(const Array& params, bool fHelp) {
-	if (fHelp || params.size() < 6 || params.size() > 8)
+	if (fHelp || params.size() < 6 || params.size() > 6)
 		throw runtime_error(
-		"offernew <category> <title> <quantity> <price> <description> <currency> [exclusive resell=1] [address]\n"
+		"offernew <category> <title> <quantity> <price> <description> <currency> [exclusive resell=1]\n"
 						"<category> category, 255 chars max.\n"
 						"<title> title, 255 chars max.\n"
 						"<quantity> quantity, > 0\n"
@@ -1715,7 +1713,6 @@ Value offernew(const Array& params, bool fHelp) {
 						"<description> description, 64 KB max.\n"
 						"<currency> The currency code that you want your offer to be in ie: USD.\n"
 						"<exclusive resell> set to 1 if you only want those who control the whitelist certificates to be able to resell this offer via offerlink. Defaults to 1.\n"
-						"<address> offeraccept receive alias or address. Defaults to an address in your wallet.\n"
 						+ HelpRequiringPassphrase());
 	if(!HasReachedMainNetForkB2())
 		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
@@ -1724,7 +1721,6 @@ Value offernew(const Array& params, bool fHelp) {
 	uint64 nQty;
 	float nPrice;
 	bool bExclusiveResell = true;
-	vector<unsigned char> vchPaymentAddress;
 	vector<unsigned char> vchCat = vchFromValue(params[0]);
 	vector<unsigned char> vchTitle = vchFromValue(params[1]);
 	vector<unsigned char> vchCurrency = vchFromValue(params[5]);
@@ -1757,21 +1753,8 @@ Value offernew(const Array& params, bool fHelp) {
 	{
 		bExclusiveResell = atoi(params[6].get_str().c_str()) == 1? true: false;
 	}
-	if(params.size() == 8)
-	{
-		vchPaymentAddress = vchFromValue(params[7]);
-		CBitcoinAddress payAddr = CBitcoinAddress(stringFromVch(vchPaymentAddress));
-		if (!payAddr.IsValid())
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-					"Invalid syscoin address");
-	}
-	else
-	{
-		CPubKey newDefaultKey;
-		pwalletMain->GetKeyFromPool(newDefaultKey, false);
-		CBitcoinAddress payAddr = CBitcoinAddress(newDefaultKey.GetID());
-		vchPaymentAddress = vchFromString(payAddr.ToString());
-	}
+
+	
 	int64 nRate;
 	vector<string> rateList;
 	int precision;
@@ -1798,23 +1781,18 @@ Value offernew(const Array& params, bool fHelp) {
 	EnsureWalletIsUnlocked();
 
 
-    CPubKey PubKey;
-	CBitcoinAddress paymentAddress(stringFromVch(vchPaymentAddress));
-	CKeyID pubKeyID;
-	if(!paymentAddress.GetKeyID(pubKeyID))
-		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot Get Key ID from payment address, is this address yours?!\n");
-    if(!pwalletMain->GetPubKey(pubKeyID, PubKey))
-		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot Get Public Key from payment address, is this address yours?!\n");
-	std::vector<unsigned char> vchPubKey(PubKey.begin(), PubKey.end());
-
+  	CPubKey newDefaultKey;
+	CScript scriptPubKeyOrig;
+	pwalletMain->GetKeyFromPool(newDefaultKey, false); 
+	std::vector<unsigned char> vchPubKey(newDefaultKey.begin(), newDefaultKey.end());
+	string strPubKey = HexStr(vchPubKey);
 	// calculate network fees
 	int64 nNetFee = GetOfferNetworkFee(OP_OFFER_ACTIVATE, nBestHeight);	
 	// unserialize offer object from txn, serialize back
 	// build offer object
 	COffer newOffer;
-	newOffer.vchPubKey = vchPubKey;
+	newOffer.vchPubKey = vchFromString(strPubKey);
 	newOffer.vchRand = vchOffer;
-	newOffer.vchPaymentAddress = vchPaymentAddress;
 	newOffer.sCategory = vchCat;
 	newOffer.sTitle = vchTitle;
 	newOffer.sDescription = vchDesc;
@@ -1825,10 +1803,6 @@ Value offernew(const Array& params, bool fHelp) {
 	newOffer.sCurrencyCode = vchCurrency;
 	string bdata = newOffer.SerializeToString();
 	
-	//create offeractivate txn keys
-	CPubKey newDefaultKey;
-	CScript scriptPubKeyOrig;
-	pwalletMain->GetKeyFromPool(newDefaultKey, false);
 	scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
 	CScript scriptPubKey;
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer
@@ -1862,12 +1836,11 @@ Value offernew(const Array& params, bool fHelp) {
 }
 
 Value offerlink(const Array& params, bool fHelp) {
-	if (fHelp || params.size() < 2 || params.size() > 4)
+	if (fHelp || params.size() < 2 || params.size() > 3)
 		throw runtime_error(
-		"offerlink <guid> <commission> [description] [address]\n"
+		"offerlink <guid> <commission> [description]\n"
 						"<guid> offer guid that you are linking to\n"
 						"<commission> percentage of profit desired over original offer price, > 0, ie: 5 for 5%\n"
-						"<address> new offeraccept receive address or alias. Defaults to an address in your wallet. Leave as '' to use default.\n"
 						"<description> description, 64 KB max. Defaults to original description. Leave as '' to use default.\n"
 						+ HelpRequiringPassphrase());
 	if(!HasReachedMainNetForkB2())
@@ -1877,7 +1850,6 @@ Value offerlink(const Array& params, bool fHelp) {
 	uint64 nQty;
 	CWalletTx wtxCertIn;
 	COfferLinkWhitelistEntry whiteListEntry;
-	vector<unsigned char> vchPaymentAddress;
 
 	vector<unsigned char> vchLinkOffer = vchFromValue(params[0]);
 	vector<unsigned char> vchTitle;
@@ -1921,32 +1893,7 @@ Value offerlink(const Array& params, bool fHelp) {
 	}	
 
 
-	if(params.size() == 4)
-	{
-		vchPaymentAddress = vchFromValue(params[3]);
-		if(vchPaymentAddress.size() > 0)
-		{
-			CBitcoinAddress payAddr = CBitcoinAddress(stringFromVch(vchPaymentAddress));
-			if (!payAddr.IsValid())
-				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-						"Invalid syscoin address");
-		}
-		else
-		{
-			CPubKey newDefaultKey;
-			pwalletMain->GetKeyFromPool(newDefaultKey, false);
-			CBitcoinAddress payAddr = CBitcoinAddress(newDefaultKey.GetID());
-			vchPaymentAddress = vchFromString(payAddr.ToString());
-		}
-
-	}
-	else
-	{
-		CPubKey newDefaultKey;
-		pwalletMain->GetKeyFromPool(newDefaultKey, false);
-		CBitcoinAddress payAddr = CBitcoinAddress(newDefaultKey.GetID());
-		vchPaymentAddress = vchFromString(payAddr.ToString());
-	}
+	
 	COfferLinkWhitelistEntry foundEntry;
 
 	// go through the whitelist and see if you own any of the certs to apply to this offer for a discount
@@ -2007,7 +1954,6 @@ Value offerlink(const Array& params, bool fHelp) {
 	COffer newOffer;
 	newOffer.vchPubKey = linkOffer.vchPubKey;
 	newOffer.vchRand = vchOffer;
-	newOffer.vchPaymentAddress = vchPaymentAddress;
 	newOffer.sCategory = vchCat;
 	newOffer.sTitle = vchTitle;
 	newOffer.sDescription = vchDesc;
@@ -2681,7 +2627,13 @@ Value offeraccept(const Array& params, bool fHelp) {
     
 
     CScript scriptPayment;
-	CBitcoinAddress address(stringFromVch(theOffer.vchPaymentAddress));
+	string strAddress = "";
+    GetOfferAddress(tx, strAddress);
+	CBitcoinAddress address(strAddress);
+	if(!address.IsValid())
+	{
+		throw runtime_error("payment to invalid address");
+	}
     scriptPayment.SetDestination(address.Get());
 
     vecSend.push_back(make_pair(scriptPayment, nTotalValue));
@@ -2802,7 +2754,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 			if(ca.bPaid) {
 				oOfferAccept.push_back(Pair("paid","true"));
 				string strMessage = string("");
-				if(!DecryptMessage(stringFromVch(theOffer.vchPaymentAddress), ca.vchMessage, strMessage))
+				if(!DecryptMessage(theOffer.vchPubKey, ca.vchMessage, strMessage))
 					strMessage = string("Encrypted for owner of offer");
 				oOfferAccept.push_back(Pair("pay_message", strMessage));
 
@@ -2851,7 +2803,9 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOffer.push_back(Pair("expired_block", expired_block));
 			oOffer.push_back(Pair("expired", expired));
 
-			oOffer.push_back(Pair("address", stringFromVch(theOffer.vchPaymentAddress)));
+			string strAddress = "";
+            GetOfferAddress(tx, strAddress);
+            oOffer.push_back(Pair("address", strAddress));
 			oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
 			oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
 			oOffer.push_back(Pair("quantity", strprintf("%llu", theOffer.nQty)));
@@ -3069,7 +3023,9 @@ Value offerlist(const Array& params, bool fHelp) {
 			oName.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode) ) );
 			oName.push_back(Pair("commission", strprintf("%d%%", theOfferA.nCommission)));
             oName.push_back(Pair("quantity", strprintf("%llu", theOfferA.nQty)));
-            oName.push_back(Pair("address", stringFromVch(theOfferA.vchPaymentAddress)));
+			string strAddress = "";
+            GetOfferAddress(tx, strAddress);
+            oName.push_back(Pair("address", strAddress));
 			oName.push_back(Pair("exclusive_resell", theOfferA.linkWhitelist.bExclusiveResell ? "ON" : "OFF"));
 			expired_block = nHeight + GetOfferDisplayExpirationDepth();
             if(pending == 0 && (nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight <= 0))

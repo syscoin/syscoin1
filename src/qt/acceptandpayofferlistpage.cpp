@@ -50,8 +50,6 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
 	QIcon ButtonIcon(m_placeholderImage);
 	ui->imageButton->setToolTip(tr("Click to open image in browser..."));
 	ui->imageButton->setIcon(ButtonIcon);
-	ui->imageButton->setIconSize(m_placeholderImage.rect().size());
-	ui->imageButton->setFixedSize(m_placeholderImage.rect().size());
 }
 void AcceptandPayOfferListPage::on_imageButton_clicked()
 {
@@ -75,8 +73,7 @@ void AcceptandPayOfferListPage::netwManagerFinished()
 	pixmap.loadFromData(imageData);
 	QIcon ButtonIcon(pixmap);
 	ui->imageButton->setIcon(ButtonIcon);
-	ui->imageButton->setIconSize(pixmap.rect().size());
-	ui->imageButton->setFixedSize(pixmap.rect().size());
+
 
 	reply->deleteLater();
 }
@@ -304,8 +301,7 @@ void AcceptandPayOfferListPage::setValue(COffer &offer)
     QStringList list = rx.capturedTexts();
 	QIcon ButtonIcon(m_placeholderImage);
 	ui->imageButton->setIcon(ButtonIcon);
-	ui->imageButton->setIconSize(m_placeholderImage.rect().size());
-	ui->imageButton->setFixedSize(m_placeholderImage.rect().size());
+
 
 	if(list.size() > 0 && list[0] != QString(""))
 	{

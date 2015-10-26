@@ -66,7 +66,7 @@ private slots:
     /** New entry/entries were added to Cert table */
     void selectNewCert(const QModelIndex &parent, int begin, int /*end*/);
 
-
+	void on_pubKeyButton_clicked();
 };
 
 #endif // CERTLISTPAGE_H

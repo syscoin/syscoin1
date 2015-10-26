@@ -72,7 +72,7 @@ private slots:
     void contextualMenu(const QPoint &point);
     /** New entry/entries were added to cert table */
     void selectNewCert(const QModelIndex &parent, int begin, int /*end*/);
-
+	void on_pubKeyButton_clicked();
 signals:
     void transferCert(QString addr);
 };

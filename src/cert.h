@@ -38,8 +38,8 @@ int64 GetCertNetworkFee(opcodetype seed, unsigned int nHeight);
 int64 GetCertNetFee(const CTransaction& tx);
 bool InsertCertFee(CBlockIndex *pindex, uint256 hash, uint64 nValue);
 bool ExtractCertAddress(const CScript& script, std::string& address);
-bool EncryptMessage(const std::vector<unsigned char> &vchPublicAddress, const std::vector<unsigned char> &vchMessage, std::string &strCipherText);
-bool DecryptMessage(const std::string &vchPublicAddress, const std::vector<unsigned char> &vchCipherText, std::string &strMessage);
+bool EncryptMessage(const std::vector<unsigned char> &vchPublicKey, const std::vector<unsigned char> &vchMessage, std::string &strCipherText);
+bool DecryptMessage(const std::vector<unsigned char> &vchPublicKey, const std::vector<unsigned char> &vchCipherText, std::string &strMessage);
 std::string certFromOp(int op);
 
 
@@ -48,7 +48,6 @@ class CBitcoinAddress;
 class CCert {
 public:
     std::vector<unsigned char> vchRand;
-	std::vector<unsigned char> vchAddress;
 	std::vector<unsigned char> vchPubKey;
     std::vector<unsigned char> vchTitle;
     std::vector<unsigned char> vchData;
@@ -70,7 +69,6 @@ public:
         READWRITE(nHeight);
 		READWRITE(vchPubKey);
 		READWRITE(bPrivate);
-		READWRITE(vchAddress);
 		
     )
 
@@ -83,7 +81,6 @@ public:
         && a.nHeight == b.nHeight
 		&& a.vchPubKey == b.vchPubKey
 		&& a.bPrivate == b.bPrivate
-		&& a.vchAddress == b.vchAddress
         );
     }
 
@@ -95,7 +92,6 @@ public:
         nHeight = b.nHeight;
 		vchPubKey = b.vchPubKey;
 		bPrivate = b.bPrivate;
-		vchAddress = b.vchAddress;
         return *this;
     }
 
@@ -103,7 +99,7 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { nHeight = 0; txHash = 0;  vchRand.clear(); vchPubKey.clear(); vchAddress.clear(); bPrivate = false;}
+    void SetNull() { nHeight = 0; txHash = 0;  vchRand.clear(); vchPubKey.clear(); bPrivate = false;}
     bool IsNull() const { return (txHash == 0 &&  nHeight == 0 && vchRand.size() == 0); }
     bool UnserializeFromTx(const CTransaction &tx);
     std::string SerializeToString();

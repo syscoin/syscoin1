@@ -8,7 +8,7 @@
 #include "messagecrypter.h"
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_writer_template.h"
-
+#include <boost/algorithm/hex.hpp>
 #include <boost/xpressive/xpressive_dynamic.hpp>
 using namespace std;
 using namespace json_spirit;
@@ -44,18 +44,18 @@ extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency
 bool EncryptMessage(const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchMessage, string &strCipherText)
 {
 	CMessageCrypter crypter;
-	if(!crypter.Encrypt(HexStr(vchPubKey), stringFromVch(vchMessage), strCipherText))
+	if(!crypter.Encrypt(stringFromVch(vchPubKey), stringFromVch(vchMessage), strCipherText))
 		return false;
 
 	return true;
 }
-bool DecryptMessage(const string &vchPublicAddress, const vector<unsigned char> &vchCipherText, string &strMessage)
+bool DecryptMessage(const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchCipherText, string &strMessage)
 {
+	std::vector<unsigned char> vchPubKeyByte;
 	CKey PrivateKey;
-	CBitcoinAddress paymentAddress(vchPublicAddress);
-	CKeyID pubKeyID;
-	if(!paymentAddress.GetKeyID(pubKeyID))
-		return false;
+    boost::algorithm::unhex(vchPubKey.begin(), vchPubKey.end(), std::back_inserter(vchPubKeyByte));
+	CPubKey PubKey(vchPubKeyByte);
+	CKeyID pubKeyID = PubKey.GetID();
 	if (!pwalletMain->GetKey(pubKeyID, PrivateKey))
         return false;
 	CBitcoinSecret Secret(PrivateKey);
@@ -861,7 +861,9 @@ bool GetCertAddress(const CTransaction& tx, std::string& strAddress) {
     const CTxOut& txout = tx.vout[nOut];
 
     const CScript& scriptPubKey = RemoveCertScriptPrefix(txout.scriptPubKey);
-    strAddress = CBitcoinAddress(scriptPubKey.GetID()).ToString();
+	CTxDestination dest;
+	ExtractDestination(scriptPubKey, dest);
+	strAddress = CBitcoinAddress(dest).ToString();
     return true;
 }
 
@@ -952,10 +954,6 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 		if(theCert.vchRand.size() > 20)
 		{
 			return error("cert rand too big");
-		}
-		if(theCert.vchAddress.size() > MAX_NAME_LENGTH)
-		{
-			return error("cert address too big");
 		}
 		if(theCert.vchPubKey.size() > MAX_VALUE_LENGTH)
 		{
@@ -1079,28 +1077,6 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 							"CheckCertInputs() : failed to read from cert DB");
 			}
             if (!fMiner && !fJustCheck && pindexBlock->nHeight != pindexBest->nHeight) {
-				if(op == OP_CERT_TRANSFER)
-				{
-					CBitcoinAddress sendAddr(stringFromVch(theCert.vchAddress));
-					CKeyID pubKeyID;
-					// if my newly transferred cert is private, encrypt the data
-					if(theCert.bPrivate && sendAddr.IsValid() && IsCertMine(tx) && sendAddr.GetKeyID(pubKeyID))
-					{
-						CPubKey PubKey;
-						if(pwalletMain->GetPubKey(pubKeyID, PubKey))
-						{
-							string strCipherText;
-							std::vector<unsigned char> vchPubKey(PubKey.begin(), PubKey.end());
-							if(EncryptMessage(vchPubKey, theCert.vchData, strCipherText))
-							{
-								theCert.vchData = vchFromString(strCipherText);
-								theCert.vchPubKey = vchPubKey;
-							}
-						}
-					}
-
-				}
-
                 int nHeight = pindexBlock->nHeight;     
 				
                 // set the cert's txn-dependent values
@@ -1220,10 +1196,11 @@ Value certnew(const Array& params, bool fHelp) {
 	// calculate network fees
 	int64 nNetFee = GetCertNetworkFee(OP_CERT_ACTIVATE, nBestHeight);
 	std::vector<unsigned char> vchPubKey(newDefaultKey.begin(), newDefaultKey.end());
+	string strPubKey = HexStr(vchPubKey);
 	if(bPrivate)
 	{
 		string strCipherText;
-		if(!EncryptMessage(vchPubKey, vchData, strCipherText))
+		if(!EncryptMessage(vchFromString(strPubKey), vchData, strCipherText))
 		{
 			throw JSONRPCError(RPC_WALLET_ERROR, "Could not encrypt certificate data!");
 		}
@@ -1236,10 +1213,8 @@ Value certnew(const Array& params, bool fHelp) {
     newCert.vchTitle = vchTitle;
 	newCert.vchData = vchData;
 	newCert.nHeight = nBestHeight;
-	newCert.vchPubKey = vchPubKey;
+	newCert.vchPubKey = vchFromString(strPubKey);
 	newCert.bPrivate = bPrivate;
-	CBitcoinAddress certAddr = CBitcoinAddress(newDefaultKey.GetID());
-	newCert.vchAddress = vchFromString(certAddr.ToString());
     string bdata = newCert.SerializeToString();
 
     scriptPubKey << CScript::EncodeOP_N(OP_CERT_ACTIVATE) << vchCert
@@ -1374,18 +1349,23 @@ Value certupdate(const Array& params, bool fHelp) {
 
 
 Value certtransfer(const Array& params, bool fHelp) {
-    if (fHelp || 2 != params.size())
-        throw runtime_error("certtransfer <certkey> <address>\n"
-                "Transfer a certificate to a syscoin address.\n"
+ if (fHelp || params.size() < 2 || params.size() > 3)
+        throw runtime_error(
+		"certtransfer <certkey> <address> [pubkey]\n"
                 "<certkey> certificate guidkey.\n"
                 "<address> receiver syscoin address.\n"
-                + HelpRequiringPassphrase());
+				"<pubkey> Full pubkey of the reciever if the certificate is private.\n"
+                 + HelpRequiringPassphrase());
+
 	if(!HasReachedMainNetForkB2())
 		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
     // gather & validate inputs
     vector<unsigned char> vchCertKey = ParseHex(params[0].get_str());
 	vector<unsigned char> vchCert = vchFromValue(params[0]);
     vector<unsigned char> vchAddress = vchFromValue(params[1]);
+	string strPubKey;
+	if(params.size() >= 3)
+		strPubKey = params[2].get_str();
     CBitcoinAddress sendAddr(stringFromVch(vchAddress));
     if(!sendAddr.IsValid())
         throw runtime_error("Invalid Syscoin address.");
@@ -1434,16 +1414,25 @@ Value certtransfer(const Array& params, bool fHelp) {
 	if(theCert.bPrivate)
 	{
 		string strData;
+		string strCipherText;
+		if(strPubKey.length() <= 0)
+			throw JSONRPCError(RPC_WALLET_ERROR, "Transfer of private certificate needs a reciever's full public key!");
+
 		// decrypt using old key
-		if(!DecryptMessage(stringFromVch(theCert.vchAddress), theCert.vchData, strData))
+		if(!DecryptMessage(theCert.vchPubKey, theCert.vchData, strData))
 		{
 			throw JSONRPCError(RPC_WALLET_ERROR, "Could not decrypt certificate data!");
 		}
-		theCert.vchData = vchFromString(strData);
+		// encrypt using new key
+		if(!EncryptMessage(vchFromString(strPubKey), vchFromString(strData), strCipherText))
+		{
+			throw JSONRPCError(RPC_WALLET_ERROR, "Could not encrypt certificate data!");
+		}
+		theCert.vchData = vchFromString(strCipherText);
+		theCert.vchPubKey = vchFromString(strPubKey);
 	}	
 
 	theCert.nHeight = nBestHeight;
-	theCert.vchAddress = vchFromString(sendAddr.ToString());
     // send the cert pay txn
     string strError = SendCertMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
             wtxIn, wtx, false, theCert.SerializeToString());
@@ -1493,7 +1482,7 @@ Value certinfo(const Array& params, bool fHelp) {
 	if(ca.bPrivate)
 	{
 		strData = string("Encrypted for owner of certificate");
-		if(DecryptMessage(stringFromVch(ca.vchAddress), ca.vchData, strDecrypted))
+		if(DecryptMessage(ca.vchPubKey, ca.vchData, strDecrypted))
 			strData = strDecrypted;
 		
 	}
@@ -1504,7 +1493,9 @@ Value certinfo(const Array& params, bool fHelp) {
     int nHeight;
     uint256 certHash;
     if (GetValueOfCertTxHash(ca.txHash, vchValue, certHash, nHeight)) {
-        oCert.push_back(Pair("address", stringFromVch(ca.vchAddress)));
+        string strAddress = "";
+        GetCertAddress(tx, strAddress);
+        oCert.push_back(Pair("address", strAddress));
 		expired_block = nHeight + GetCertDisplayExpirationDepth();
 		if(nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 		{
@@ -1593,13 +1584,15 @@ Value certlist(const Array& params, bool fHelp) {
 		if(cert.bPrivate)
 		{
 			strData = string("Encrypted for owner of certificate");
-			if(DecryptMessage(stringFromVch(cert.vchAddress), cert.vchData, strDecrypted))
+			if(DecryptMessage(cert.vchPubKey, cert.vchData, strDecrypted))
 				strData = strDecrypted;
 			
 		}
 
 		oName.push_back(Pair("data", strData));
-        oName.push_back(Pair("address", stringFromVch(cert.vchAddress)));
+        string strAddress = "";
+        GetCertAddress(tx, strAddress);
+        oName.push_back(Pair("address", strAddress));
 		expired_block = nHeight + GetCertDisplayExpirationDepth();
 		if(nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 		{
@@ -1768,7 +1761,7 @@ Value certfilter(const Array& params, bool fHelp) {
 		if(txCert.bPrivate)
 		{
 			strData = string("Encrypted for owner of certificate");
-			if(DecryptMessage(stringFromVch(txCert.vchAddress), txCert.vchData, strDecrypted))
+			if(DecryptMessage(txCert.vchPubKey, txCert.vchData, strDecrypted))
 				strData = strDecrypted;
 			
 		}

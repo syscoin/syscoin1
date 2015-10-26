@@ -34,6 +34,8 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
 	ui->certDataEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
 	ui->privateLabel->setVisible(true);
 	ui->privateBox->setVisible(true);
+	ui->pubKeyLabel->setVisible(false);
+	ui->pubKeyEdit->setVisible(false);
 	ui->privateBox->addItem(tr("Yes"));
 	ui->privateBox->addItem(tr("No"));
     switch(mode)
@@ -56,6 +58,8 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
 		ui->certDataLabel->setVisible(false);
 		ui->privateLabel->setVisible(false);
 		ui->privateBox->setVisible(false);
+		ui->pubKeyLabel->setVisible(true);
+		ui->pubKeyEdit->setVisible(true);
         break;
     }
     mapper = new QDataWidgetMapper(this);
@@ -220,6 +224,7 @@ bool EditCertDialog::saveCurrentRow()
 			strMethod = string("certtransfer");
 			params.push_back(ui->certEdit->text().toStdString());
 			params.push_back(ui->transferEdit->text().toStdString());
+			params.push_back(ui->pubKeyEdit->text().toStdString());
 			try {
 				Value result = tableRPC.execute(strMethod, params);
 				if (result.type() != null_type)

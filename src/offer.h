@@ -230,7 +230,6 @@ class COffer {
 public:
 	std::vector<unsigned char> vchRand;
 	std::vector<unsigned char> vchPubKey;
-    std::vector<unsigned char> vchPaymentAddress;
     uint256 txHash;
     uint64 nHeight;
     uint64 nTime;
@@ -256,7 +255,6 @@ public:
 
     IMPLEMENT_SERIALIZE (
         READWRITE(vchRand);
-        READWRITE(vchPaymentAddress);
         READWRITE(sCategory);
         READWRITE(sTitle);
         READWRITE(sDescription);
@@ -350,7 +348,6 @@ public:
         && a.nHeight == b.nHeight
         && a.nTime == b.nTime
         && a.accepts == b.accepts
-        && a.vchPaymentAddress == b.vchPaymentAddress
 		&& a.vchLinkOffer == b.vchLinkOffer
 		&& a.linkWhitelist == b.linkWhitelist
 		&& a.sCurrencyCode == b.sCurrencyCode
@@ -371,7 +368,6 @@ public:
         nHeight = b.nHeight;
         nTime = b.nTime;
         accepts = b.accepts;
-        vchPaymentAddress = b.vchPaymentAddress;
 		vchLinkOffer = b.vchLinkOffer;
 		linkWhitelist = b.linkWhitelist;
 		sCurrencyCode = b.sCurrencyCode;
