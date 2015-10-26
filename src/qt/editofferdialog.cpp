@@ -53,7 +53,7 @@ EditOfferDialog::EditOfferDialog(Mode mode, QWidget *parent) :
         break;
     case EditOffer:
 		ui->currencyEdit->setEnabled(false);
-		ui->currencyDisclaimer->setVisible(false);
+		ui->currencyDisclaimer->setVisible(false);		
         setWindowTitle(tr("Edit Offer"));
         break;
 	}

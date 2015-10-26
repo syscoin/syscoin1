@@ -73,21 +73,21 @@
      <item row="3" column="1">
       <widget class="QLineEdit" name="priceEdit"/>
      </item>
-     <item row="4" column="0">
+     <item row="5" column="0">
       <widget class="QLabel" name="currencyLabel">
        <property name="text">
         <string>Currency:</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
+     <item row="5" column="1">
       <widget class="QComboBox" name="currencyEdit">
        <property name="editable">
         <bool>false</bool>
        </property>
       </widget>
      </item>
-     <item row="5" column="1">
+     <item row="6" column="1">
       <widget class="QLabel" name="currencyDisclaimer">
        <property name="text">
         <string/>
@@ -97,28 +97,32 @@
        </property>
       </widget>
      </item>
-     <item row="7" column="0">
+      <item row="4" column="0">
+        <widget class="QLabel" name="qtyLabel">
+          <property name="text">
+            <string>Quantity:</string>
+          </property>
+        </widget>
+      </item>
+      <item row="4" column="1">
+        <widget class="QLineEdit" name="qtyEdit"/>
+      </item>
+    </layout>
+  </item>      
+     <item row="8" column="0">
       <widget class="QLabel" name="descriptionLabel">
        <property name="text">
         <string>Description:</string>
        </property>
       </widget>
      </item>
-     <item row="7" column="1">
-      <widget class="QPlainTextEdit" name="descriptionEdit"/>
-     </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="qtyLabel">
-       <property name="text">
-        <string>Quantity:</string>
+     <item row="8" column="1">
+      <widget class="QPlainTextEdit" name="descriptionEdit">
+       <property name="tabChangesFocus">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
-     <item row="6" column="1">
-      <widget class="QLineEdit" name="qtyEdit"/>
-     </item>
-    </layout>
-   </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
