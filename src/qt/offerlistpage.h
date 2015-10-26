@@ -58,7 +58,7 @@ private slots:
     void on_copyOffer_clicked();
     /** Copy value of currently selected Offer entry to clipboard (no button) */
     void onCopyOfferValueAction();
-
+	void onCopyOfferDescriptionAction();
     /** Export button clicked */
     void on_exportButton_clicked();
 

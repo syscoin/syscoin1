@@ -45,7 +45,8 @@ OfferListPage::OfferListPage(OfferView *parent) :
 	
     // Context menu actions
     QAction *copyOfferAction = new QAction(ui->copyOffer->text(), this);
-    QAction *copyOfferValueAction = new QAction(tr("&Copy Value"), this);
+    QAction *copyOfferValueAction = new QAction(tr("&Copy Title"), this);
+	QAction *copyOfferDescriptionAction = new QAction(tr("&Copy Description"), this);
 	QAction *resellAction = new QAction(tr("&Resell Offer"), this);
 	QAction *purchaseAction = new QAction(tr("&Purchase Offer"), this);
 
@@ -53,12 +54,14 @@ OfferListPage::OfferListPage(OfferView *parent) :
     contextMenu = new QMenu();
     contextMenu->addAction(copyOfferAction);
     contextMenu->addAction(copyOfferValueAction);
+	contextMenu->addAction(copyOfferDescriptionAction);
 	contextMenu->addSeparator();
 	contextMenu->addAction(resellAction);
 	contextMenu->addAction(purchaseAction);
     // Connect signals for context menu actions
     connect(copyOfferAction, SIGNAL(triggered()), this, SLOT(on_copyOffer_clicked()));
     connect(copyOfferValueAction, SIGNAL(triggered()), this, SLOT(onCopyOfferValueAction()));
+	connect(copyOfferDescriptionAction, SIGNAL(triggered()), this, SLOT(onCopyOfferDescriptionAction()));
 	connect(resellAction, SIGNAL(triggered()), this, SLOT(on_resellButton_clicked()));
 	connect(purchaseAction, SIGNAL(triggered()), this, SLOT(on_purchaseButton_clicked()));
 	connect(ui->tableView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_purchaseButton_clicked()));
@@ -189,6 +192,11 @@ void OfferListPage::on_purchaseButton_clicked()
 	QString URI = QString("syscoin:///") + offerGUID;
 	offerView->handleURI(URI);
 }
+void OfferListPage::onCopyOfferDescriptionAction()
+{
+    GUIUtil::copyEntryData(ui->tableView, OfferTableModel::Description);
+}
+
 
 void OfferListPage::onCopyOfferValueAction()
 {

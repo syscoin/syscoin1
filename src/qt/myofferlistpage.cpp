@@ -42,12 +42,14 @@ MyOfferListPage::MyOfferListPage(QWidget *parent) :
     // Context menu actions
     QAction *copyOfferAction = new QAction(ui->copyOffer->text(), this);
     QAction *copyOfferValueAction = new QAction(tr("&Copy Title"), this);
+	QAction *copyOfferDescriptionAction = new QAction(tr("&Copy Description"), this);
     QAction *editAction = new QAction(tr("&Edit"), this);
 	QAction *editWhitelistAction = new QAction(tr("&Manage Whitelist"), this);
     // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyOfferAction);
     contextMenu->addAction(copyOfferValueAction);
+	contextMenu->addAction(copyOfferDescriptionAction);
     contextMenu->addSeparator();
 	contextMenu->addAction(editAction);
 	contextMenu->addAction(editWhitelistAction);
@@ -55,6 +57,7 @@ MyOfferListPage::MyOfferListPage(QWidget *parent) :
     // Connect signals for context menu actions
     connect(copyOfferAction, SIGNAL(triggered()), this, SLOT(on_copyOffer_clicked()));
     connect(copyOfferValueAction, SIGNAL(triggered()), this, SLOT(onCopyOfferValueAction()));
+	connect(copyOfferDescriptionAction, SIGNAL(triggered()), this, SLOT(onCopyOfferDescriptionAction()));
     connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
 	connect(editWhitelistAction, SIGNAL(triggered()), this, SLOT(onEditWhitelistAction()));
 
@@ -146,6 +149,11 @@ void MyOfferListPage::on_copyOffer_clicked()
 {
     GUIUtil::copyEntryData(ui->tableView, OfferTableModel::Name);
 }
+void MyOfferListPage::onCopyOfferDescriptionAction()
+{
+    GUIUtil::copyEntryData(ui->tableView, OfferTableModel::Description);
+}
+
 
 void MyOfferListPage::onCopyOfferValueAction()
 {

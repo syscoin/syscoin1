@@ -59,7 +59,7 @@ private slots:
     void on_newOffer_clicked();
     /** Copy cert of currently selected cert entry to clipboard */
     void on_copyOffer_clicked();
-
+	void onCopyOfferDescriptionAction();
     /** Copy value of currently selected cert entry to clipboard (no button) */
     void onCopyOfferValueAction();
     /** Edit currently selected cert entry (no button) */
