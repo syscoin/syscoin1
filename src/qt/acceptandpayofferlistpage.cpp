@@ -106,7 +106,7 @@ void AcceptandPayOfferListPage::OpenPayDialog()
 	string currencyCode = ui->infoCurrency->text().toStdString();
 	int precision;
 	int64 iPrice = convertCurrencyCodeToSyscoin(vchFromString(currencyCode), ui->infoPrice->text().toDouble(), nBestHeight, precision);
-	QString price = QString::number(ValueFromAmount(iPrice).get_real()*ui->qtyEdit->text().toLong());
+	QString price = QString::number(ValueFromAmount(iPrice).get_real()*ui->qtyEdit->text().toUInt());
 	OfferAcceptDialog dlg(ui->infoTitle->text(), price, ui->qtyEdit->text(), ui->offeridEdit->text(), ui->notesEdit->toPlainText(), this);
 	if(dlg.exec())
 	{
@@ -122,7 +122,7 @@ void AcceptandPayOfferListPage::OpenPayDialog()
 // send offeraccept with offer guid/qty as params and then send offerpay with wtxid (first param of response) as param, using RPC commands.
 void AcceptandPayOfferListPage::acceptOffer()
 {
-	if(ui->qtyEdit->text().toInt() <= 0)
+	if(ui->qtyEdit->text().toUInt() <= 0)
 	{
 		QMessageBox::critical(this, windowTitle(),
 			tr("Invalid quantity when trying to accept this offer!"),
@@ -167,7 +167,7 @@ bool AcceptandPayOfferListPage::lookup(QString id)
 			offerOut.sCategory = vchFromString(find_value(offerObj, "category").get_str());
 			offerOut.sCurrencyCode = vchFromString(find_value(offerObj, "currency").get_str());
 			offerOut.SetPrice(QString::fromStdString(find_value(offerObj, "price").get_str()).toFloat());
-			offerOut.nQty = QString::fromStdString(find_value(offerObj, "quantity").get_str()).toLong();	
+			offerOut.nQty = QString::fromStdString(find_value(offerObj, "quantity").get_str()).toUInt();	
 			string descString = find_value(offerObj, "description").get_str();
 			offerOut.sDescription = vchFromString(descString);
 			Value outerDescValue;
@@ -235,13 +235,13 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 		QUrlQuery uriQuery(uri);
 		QList<QPair<QString, QString> > items = uriQuery.queryItems();
 	#endif
-		long qty = 0;
+		unsigned int qty = 0;
 		for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
 		{
 			
 			if (i->first == "quantity" || i->first == "qty")
 			{
-				qty = i->second.toLong();
+				qty = i->second.toUInt();
 				ui->qtyEdit->setText(QString::number(qty));
 				foundQtyParam = true;
 			}
@@ -296,6 +296,7 @@ void AcceptandPayOfferListPage::setValue(COffer &offer)
 	ui->infoQty->setText(QString::number(offer.nQty));
 	ui->infoDescription->setText(QString::fromStdString(stringFromVch(offer.sDescription)));
 	ui->qtyEdit->setText(QString("1"));
+	ui->notesEdit->setPlainText(QString(""));
 	QRegExp rx("(?:https?|ftp)://\\S+");
     rx.indexIn(ui->infoDescription->text());
     QStringList list = rx.capturedTexts();

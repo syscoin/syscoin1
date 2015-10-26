@@ -57,7 +57,7 @@ public:
 	uint256 txHash;
 	uint64 nHeight;
 	uint64 nTime;
-	uint64 nQty;
+	unsigned int nQty;
 	float nPrice;
 	bool bPaid;
 	bool bRefunded;
@@ -238,7 +238,7 @@ public:
 	std::vector<unsigned char> sDescription;
 	float nPrice;
 	int nCommission;
-	uint64 nQty;
+	unsigned int nQty;
 	std::vector<COfferAccept>accepts;
 	std::vector<unsigned char> vchLinkOffer;
 	std::vector<unsigned char> sCurrencyCode;

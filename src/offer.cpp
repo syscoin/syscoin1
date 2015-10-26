@@ -112,9 +112,9 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
 	}
 	return false;
 }
-uint64 QtyOfPendingAcceptsInMempool(const vector<unsigned char>& vchToFind)
+unsigned int QtyOfPendingAcceptsInMempool(const vector<unsigned char>& vchToFind)
 {
-	uint64 nQty = 0;
+	unsigned int nQty = 0;
 	for (map<uint256, CTransaction>::iterator mi = mempool.mapTx.begin();
 		mi != mempool.mapTx.end(); ++mi) {
 		CTransaction& tx = (*mi).second;
@@ -530,7 +530,7 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
 	                return error("ReconstructOfferIndex() : failed to write to offer DB");
 			
 			if(fDebug)
-				printf( "RECONSTRUCT OFFER: op=%s offer=%s title=%s qty=%llu hash=%s height=%d\n",
+				printf( "RECONSTRUCT OFFER: op=%s offer=%s title=%s qty=%u hash=%s height=%d\n",
 					offerFromOp(op).c_str(),
 					stringFromVch(vvchArgs[0]).c_str(),
 					stringFromVch(txOffer.sTitle).c_str(),
@@ -1506,7 +1506,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						}
 						if(fDebug)
 							printf("txn %s accepted but offer not fulfilled because desired"
-							" qty %llu is more than available qty %llu for offer accept %s\n", 
+							" qty %u is more than available qty %u for offer accept %s\n", 
 							tx.GetHash().GetHex().c_str(), 
 							theOfferAccept.nQty, 
 							theOffer.nQty, 
@@ -1634,7 +1634,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
                				
 				// debug
 				if (fDebug)
-					printf( "CONNECTED OFFER: op=%s offer=%s title=%s qty=%llu hash=%s height=%d\n",
+					printf( "CONNECTED OFFER: op=%s offer=%s title=%s qty=%u hash=%s height=%d\n",
 						offerFromOp(op).c_str(),
 						stringFromVch(vvchArgs[0]).c_str(),
 						stringFromVch(theOffer.sTitle).c_str(),
@@ -1718,19 +1718,19 @@ Value offernew(const Array& params, bool fHelp) {
 		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
 	// gather inputs
 	string baSig;
-	uint64 nQty;
+	unsigned int nQty;
 	float nPrice;
 	bool bExclusiveResell = true;
 	vector<unsigned char> vchCat = vchFromValue(params[0]);
 	vector<unsigned char> vchTitle = vchFromValue(params[1]);
 	vector<unsigned char> vchCurrency = vchFromValue(params[5]);
 	vector<unsigned char> vchDesc;
-	int64 qty = atoi64(params[2].get_str().c_str());
+	int qty = atoi(params[2].get_str().c_str());
 	if(qty < 0)
 	{
 		throw runtime_error("invalid quantity value.");
 	}
-	nQty = (uint64)qty;
+	nQty = (unsigned int)qty;
 	nPrice = atof(params[3].get_str().c_str());
 	if(nPrice <= 0)
 	{
@@ -1847,7 +1847,7 @@ Value offerlink(const Array& params, bool fHelp) {
 		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
 	// gather inputs
 	string baSig;
-	uint64 nQty;
+	unsigned int nQty;
 	CWalletTx wtxCertIn;
 	COfferLinkWhitelistEntry whiteListEntry;
 
@@ -2308,12 +2308,12 @@ Value offerupdate(const Array& params, bool fHelp) {
 	vector<unsigned char> vchTitle = vchFromValue(params[2]);
 	vector<unsigned char> vchDesc;
 	bool bExclusiveResell = true;
-	uint64 nQty;
+	unsigned int nQty;
 	float price;
 	if (params.size() >= 6) vchDesc = vchFromValue(params[5]);
 	if(params.size() == 7) bExclusiveResell = atoi(params[6].get_str().c_str()) == 1? true: false;
 	try {
-		nQty = (uint64)atoi64(params[3].get_str().c_str());
+		nQty = (unsigned int)atoi(params[3].get_str().c_str());
 		price = atof(params[4].get_str().c_str());
 
 	} catch (std::exception &e) {
@@ -2389,7 +2389,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 	theOffer.sCategory = vchCat;
 	theOffer.sTitle = vchTitle;
 	theOffer.sDescription = vchDesc;
-	uint64 memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
+	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if((nQty-memPoolQty) < 0)
 		throw runtime_error("not enough remaining quantity to fulfill this offerupdate"); // SS i think needs better msg
 	
@@ -2581,7 +2581,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 	{
 		throw runtime_error("cannot pay for this linked offer because you don't own a cert from its whitelist");
 	}
-	uint64 memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
+	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if(theOffer.nQty < (nQty+memPoolQty))
 		throw runtime_error("not enough remaining quantity to fulfill this orderaccept");
 	int precision = 2;
@@ -2738,7 +2738,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("txid", ca.txHash.GetHex()));
 			oOfferAccept.push_back(Pair("height", sHeight));
 			oOfferAccept.push_back(Pair("time", sTime));
-			oOfferAccept.push_back(Pair("quantity", strprintf("%llu", ca.nQty)));
+			oOfferAccept.push_back(Pair("quantity", strprintf("%u", ca.nQty)));
 			oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 			int precision = 2;
 			convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, 0, nBestHeight, precision);
@@ -2808,7 +2808,7 @@ Value offerinfo(const Array& params, bool fHelp) {
             oOffer.push_back(Pair("address", strAddress));
 			oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
 			oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
-			oOffer.push_back(Pair("quantity", strprintf("%llu", theOffer.nQty)));
+			oOffer.push_back(Pair("quantity", strprintf("%u", theOffer.nQty)));
 			oOffer.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 			
 			
@@ -2895,12 +2895,12 @@ Value offeracceptlist(const Array& params, bool fHelp) {
 			if(!theOffer.GetAcceptByHash(vchAcceptRand, theOfferAccept))
 				continue;
 			string offer = stringFromVch(vchName);
-			string sHeight = strprintf("%llu", theOfferAccept.nHeight);
+			string sHeight = strprintf("%u", theOfferAccept.nHeight);
 			oOfferAccept.push_back(Pair("offer", offer));
 			oOfferAccept.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
 			oOfferAccept.push_back(Pair("id", HexStr(theOfferAccept.vchRand)));
 			oOfferAccept.push_back(Pair("height", sHeight));
-			oOfferAccept.push_back(Pair("quantity", strprintf("%llu", theOfferAccept.nQty)));
+			oOfferAccept.push_back(Pair("quantity", strprintf("%u", theOfferAccept.nQty)));
 			oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 			int precision = 2;
 			convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, 0, nBestHeight, precision);
@@ -3022,7 +3022,7 @@ Value offerlist(const Array& params, bool fHelp) {
 
 			oName.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode) ) );
 			oName.push_back(Pair("commission", strprintf("%d%%", theOfferA.nCommission)));
-            oName.push_back(Pair("quantity", strprintf("%llu", theOfferA.nQty)));
+            oName.push_back(Pair("quantity", strprintf("%u", theOfferA.nQty)));
 			string strAddress = "";
             GetOfferAddress(tx, strAddress);
             oName.push_back(Pair("address", strAddress));
@@ -3201,7 +3201,7 @@ Value offerfilter(const Array& params, bool fHelp) {
 		oOffer.push_back(Pair("price", strprintf("%.*f", precision, txOffer.GetPrice() ))); 	
 		oOffer.push_back(Pair("currency", stringFromVch(txOffer.sCurrencyCode)));
 		oOffer.push_back(Pair("commission", strprintf("%d%%", txOffer.nCommission)));
-        oOffer.push_back(Pair("quantity", strprintf("%llu", txOffer.nQty)));
+        oOffer.push_back(Pair("quantity", strprintf("%u", txOffer.nQty)));
 		oOffer.push_back(Pair("exclusive_resell", txOffer.linkWhitelist.bExclusiveResell ? "ON" : "OFF"));
 		expired_block = nHeight + GetOfferDisplayExpirationDepth();
 		if(nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight <= 0)

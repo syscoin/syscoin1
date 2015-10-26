@@ -155,7 +155,7 @@ void OfferListPage::on_resellButton_clicked()
     {
         return;
     }
-	int qtyRemain = selection.at(0).data(OfferTableModel::QtyRole).toInt();
+	unsigned int qtyRemain = selection.at(0).data(OfferTableModel::QtyRole).toUInt();
 	if(qtyRemain <= 0)
 	{
         QMessageBox::critical(this, windowTitle(),
@@ -177,7 +177,7 @@ void OfferListPage::on_purchaseButton_clicked()
     {
         return;
     }
-	int qtyRemain = selection.at(0).data(OfferTableModel::QtyRole).toInt();
+	unsigned int qtyRemain = selection.at(0).data(OfferTableModel::QtyRole).toUInt();
 	if(qtyRemain <= 0)
 	{
         QMessageBox::critical(this, windowTitle(),
