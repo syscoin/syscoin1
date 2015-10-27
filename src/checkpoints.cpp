@@ -142,8 +142,7 @@ namespace Checkpoints
 
     bool CheckBlock(int nHeight, const uint256& hash)
     {
-        if (fTestNet||fCakeNet) return true; // Testnet has no checkpoints
-        if (!GetBoolArg("-checkpoints", false))
+        if (!GetBoolArg("-checkpoints", true))
             return true;
 
         const MapCheckpoints& checkpoints = *Checkpoints().mapCheckpoints;
@@ -186,8 +185,7 @@ namespace Checkpoints
 
     int GetTotalBlocksEstimate()
     {
-        if (fTestNet||fCakeNet) return 0; // Testnet has no checkpoints
-        if (!GetBoolArg("-checkpoints", false))
+        if (!GetBoolArg("-checkpoints", true))
             return 0;
 
         const MapCheckpoints& checkpoints = *Checkpoints().mapCheckpoints;
@@ -197,8 +195,7 @@ namespace Checkpoints
 
     CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex)
     {
-        if (fTestNet||fCakeNet) return NULL; // Testnet has no checkpoints
-        if (!GetBoolArg("-checkpoints", false))
+        if (!GetBoolArg("-checkpoints", true))
             return NULL;
 
         const MapCheckpoints& checkpoints = *Checkpoints().mapCheckpoints;

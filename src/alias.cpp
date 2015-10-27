@@ -654,25 +654,6 @@ int64 GetAliasNetworkFee(opcodetype seed, unsigned int nHeight) {
 	return nFee;
 }
 
-// int64 GetAliasNetworkFee(int nType, int nHeight) {
-//     // Speed up network fee decrease 4x starting at 174720
-//     if (nHeight >= 174720) nHeight += (nHeight - 174720) * 3;
-//     //if ((nHeight >> 13) >= 60) return 0;
-//     int64 nStart = 50 * COIN;
-//     if (fTestNet) nStart = 10 * CENT;
-//     else if(fCakeNet) return CENT;
-//     int64 nRes = nStart >> (nHeight >> 13);
-//     nRes -= (nRes >> 14) * (nHeight % 8192);
-//     return nRes;
-// }
-
-// 10080 blocks = 1 week
-// alias expiration time is ~ 6 months or 26 weeks
-// expiration blocks is 262080 (final)
-// expiration starts at 87360, increases by 1 per block starting at
-// block 174721 until block 349440
-
-//
 
 int GetAliasExpirationDepth() {
 	return 525600;

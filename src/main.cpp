@@ -1491,7 +1491,8 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast,
 
 unsigned int static GetNextWorkRequired1(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
-    unsigned int nProofOfWorkLimit = bnProofOfWorkLimit.GetCompact();
+	CBigNum bnPOWLimit = fCakeNet ? bnProofOfWorkLimitCake : bnProofOfWorkLimit;
+    unsigned int nProofOfWorkLimit = bnPOWLimit.GetCompact();
 
     // Genesis block
     if (pindexLast == NULL)
@@ -1501,9 +1502,9 @@ unsigned int static GetNextWorkRequired1(const CBlockIndex* pindexLast, const CB
     if ((pindexLast->nHeight+1) % nInterval != 0)
     {
         // Special difficulty rule for testnet:
-        if (fTestNet)
+        if (fTestNet || fCakeNet)
         {
-            // If the new block's timestamp is more than 2* 10 minutes
+            // If the new block's timestamp is more than 2 minutes
             // then allow mining of a min-difficulty block.
             if (pblock->nTime > pindexLast->nTime + nTargetSpacing*2)
                 return nProofOfWorkLimit;
@@ -1520,7 +1521,7 @@ unsigned int static GetNextWorkRequired1(const CBlockIndex* pindexLast, const CB
         return pindexLast->nBits;
     }
 
-    // Go back by what we want to be 14 days worth of blocks
+    // Go back by what we want to be 1 day worth of blocks
     const CBlockIndex* pindexFirst = pindexLast;
     for (int i = 0; pindexFirst && i < nInterval-1; i++)
         pindexFirst = pindexFirst->pprev;
@@ -1528,7 +1529,8 @@ unsigned int static GetNextWorkRequired1(const CBlockIndex* pindexLast, const CB
 
     // Limit adjustment step
     int64 nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
-    printf("  nActualTimespan = %"PRI64d"  before bounds\n", nActualTimespan);
+	if(fDebug)
+		printf("  nActualTimespan = %"PRI64d"  before bounds\n", nActualTimespan);
     if (nActualTimespan < nTargetTimespan/4)
         nActualTimespan = nTargetTimespan/4;
     if (nActualTimespan > nTargetTimespan*4)
@@ -1540,14 +1542,17 @@ unsigned int static GetNextWorkRequired1(const CBlockIndex* pindexLast, const CB
     bnNew *= nActualTimespan;
     bnNew /= nTargetTimespan;
 
-    if (bnNew > bnProofOfWorkLimit)
-        bnNew = bnProofOfWorkLimit;
+    if (bnNew > bnPOWLimit)
+        bnNew = bnPOWLimit;
 
     /// debug print
-    printf("GetNextWorkRequired RETARGET\n");
-    printf("nTargetTimespan = %"PRI64d"    nActualTimespan = %"PRI64d"\n", nTargetTimespan, nActualTimespan);
-    printf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString().c_str());
-    printf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
+	if(fDebug)
+	{
+		printf("GetNextWorkRequired RETARGET\n");
+		printf("nTargetTimespan = %"PRI64d"    nActualTimespan = %"PRI64d"\n", nTargetTimespan, nActualTimespan);
+		printf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString().c_str());
+		printf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
+	}
 
     return bnNew.GetCompact();
 }

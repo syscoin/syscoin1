@@ -126,20 +126,6 @@ int64 GetCertNetworkFee(opcodetype seed, unsigned int nHeight) {
 	return nFee;
 }
 
-// int nCStartHeight = 161280;
-// int64 GetCertNetworkFee(int seed, int nHeight) {
-//     int nComputedHeight = nHeight - nCStartHeight < 0 ? 1 : ( nHeight - nCStartHeight ) + 1;
-//     if (nComputedHeight >= 13440) nComputedHeight += (nComputedHeight - 13440) * 3;
-//     //if ((nComputedHeight >> 13) >= 60) return 0;
-//     int64 nStart = seed * COIN;
-//     if (fTestNet) nStart = 10 * CENT;
-//     else if(fCakeNet) return CENT;
-//     int64 nRes = nStart >> (nComputedHeight >> 13);
-//     nRes -= (nRes >> 14) * (nComputedHeight % 8192);
-//     nRes += CENT - 1;
-//     nRes = (nRes / CENT) * CENT;
-//     return nRes;
-// }
 
 // Increase expiration to 36000 gradually starting at block 24000.
 // Use for validation purposes and pass the chain height.
