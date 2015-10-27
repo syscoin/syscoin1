@@ -1790,7 +1790,7 @@ Value offernew(const Array& params, bool fHelp) {
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description cannot exceed 65536 bytes!");
 	if(params.size() >= 7)
 	{
-		nQty = 1;
+		
 		vchCert = vchFromValue(params[6]);
 		CTransaction txCert;
 		CWalletTx wtxCertIn;
@@ -1799,10 +1799,10 @@ Value offernew(const Array& params, bool fHelp) {
 		if (GetTxOfCert(*pcertdb, vchCert, theCert, txCert))
 		{
 			// make sure its in your wallet (you control this cert)		
-			if (!IsCertMine(txCert) || !pwalletMain->GetTransaction(txCert.GetHash(), wtxCertIn)) 
-			{
+			if (IsCertMine(txCert) && pwalletMain->GetTransaction(txCert.GetHash(), wtxCertIn)) 
+				nQty = 1;
+			else
 				throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot sell this certificate, it is not yours or it is expired!");
-			}
 			
 		}
 	}
