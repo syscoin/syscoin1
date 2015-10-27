@@ -107,6 +107,7 @@ void MyOfferListPage::setModel(WalletModel *walletModel, OfferTableModel *model)
     // Set column widths
 #if QT_VERSION < 0x050000
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Name, QHeaderView::ResizeToContents);
+	ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Cert, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Title, QHeaderView::Stretch);
 	ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Description, QHeaderView::Stretch);
     ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Category, QHeaderView::ResizeToContents);
@@ -117,6 +118,7 @@ void MyOfferListPage::setModel(WalletModel *walletModel, OfferTableModel *model)
 	ui->tableView->horizontalHeader()->setResizeMode(OfferTableModel::Expired, QHeaderView::ResizeToContents);
 #else
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Name, QHeaderView::ResizeToContents);
+	ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Cert, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Title, QHeaderView::Stretch);
 	ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Description, QHeaderView::Stretch);
     ui->tableView->horizontalHeader()->setSectionResizeMode(OfferTableModel::Category, QHeaderView::ResizeToContents);
@@ -209,7 +211,7 @@ void MyOfferListPage::on_newOffer_clicked()
     if(!model)
         return;
 
-    EditOfferDialog dlg(EditOfferDialog::NewOffer, this);
+    EditOfferDialog dlg(EditOfferDialog::NewOffer, "", this);
     dlg.setModel(walletModel,model);
     if(dlg.exec())
     {
@@ -274,6 +276,7 @@ void MyOfferListPage::on_exportButton_clicked()
     // name, column, role
     writer.setModel(proxyModel);
     writer.addColumn("Offer", OfferTableModel::Name, Qt::EditRole);
+	writer.addColumn("Cert", OfferTableModel::Name, Qt::EditRole);
     writer.addColumn("Title", OfferTableModel::Title, Qt::EditRole);
 	writer.addColumn("Description", OfferTableModel::Description, Qt::EditRole);
 	writer.addColumn("Category", OfferTableModel::Category, Qt::EditRole);

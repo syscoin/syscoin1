@@ -147,8 +147,32 @@ unsigned int QtyOfPendingAcceptsInMempool(const vector<unsigned char>& vchToFind
 
 }
 
+// transfer cert if its linked to offer
+string makeTransferCertTX(COffer& theOffer)
+{
+	string strError;
+	string strMethod = string("certtransfer");
+	Array params;
+	Value result;
+
+	params.push_back(stringFromVch(theOffer.vchCert));
+	params.push_back(stringFromVch(theOffer.vchPubKey));	
+    try {
+        tableRPC.execute(strMethod, params);
+	}
+	catch (Object& objError)
+	{
+		return find_value(objError, "message").get_str().c_str();
+	}
+	catch(std::exception& e)
+	{
+		return string(e.what()).c_str();
+	}
+	return "";
+
+}
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
-string makeOfferLinkAcceptTX(COfferAccept& theOfferAccept, const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchOfferAcceptLink)
+string makeOfferLinkAcceptTX(COfferAccept& theOfferAccept, const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchOfferAcceptLink)
 {
 	string strError;
 	string strMethod = string("offeraccept");
@@ -166,6 +190,7 @@ string makeOfferLinkAcceptTX(COfferAccept& theOfferAccept, const vector<unsigned
 	CBitcoinAddress refundAddr = CBitcoinAddress(newDefaultKey.GetID());
 	const vector<unsigned char> vchRefundAddress = vchFromString(refundAddr.ToString());
 	params.push_back(stringFromVch(vchOffer));
+	params.push_back(stringFromVch(vchPubKey));
 	params.push_back(static_cast<ostringstream*>( &(ostringstream() << theOfferAccept.nQty) )->str());
 	params.push_back(stringFromVch(theOfferAccept.vchMessage));
 	params.push_back(stringFromVch(vchRefundAddress));
@@ -1516,6 +1541,18 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					if(theOffer.vchLinkOffer.empty())
 					{
 						theOffer.nQty -= theOfferAccept.nQty;
+						// purchased a cert so xfer it
+						if(!fInit && IsOfferMine(offerTx) && !theOffer.vchCert.empty())
+						{
+							string strError = makeTransferCertTX(serializedOffer);
+							if(strError != "")
+							{
+								if(fDebug)
+								{
+									printf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeTransferCertTX %s\n", strError.c_str());
+								}
+							}
+						}
 						// go through the linked offers, if any, and update the linked offer qty based on the this qty
 						for(unsigned int i=0;i<theOffer.offerLinks.size();i++) {
 							vector<COffer> myVtxPos;
@@ -1537,10 +1574,11 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					}
 					if (!fInit && pwalletMain && !linkOffer.IsNull() && IsOfferMine(offerTx))
 					{	
+						// vchPubKey is for when transfering cert after an offer accept, the pubkey is the transfer-to address and encryption key for cert data
 						// myOffer.vchLinkOffer is the linked offer guid
 						// vvchArgs[1] is this offer accept rand used to walk back up and refund offers in the linked chain
 						// we are now accepting the linked	 offer, up the link offer stack.
-						string strError = makeOfferLinkAcceptTX(theOfferAccept, myOffer.vchLinkOffer, vvchArgs[1]);
+						string strError = makeOfferLinkAcceptTX(theOfferAccept, theOffer.vchPubKey, myOffer.vchLinkOffer, vvchArgs[1]);
 						if(strError != "")
 						{
 							if(fDebug)
@@ -1703,15 +1741,16 @@ Value getofferfees(const Array& params, bool fHelp) {
 }
 
 Value offernew(const Array& params, bool fHelp) {
-	if (fHelp || params.size() < 6 || params.size() > 6)
+	if (fHelp || params.size() < 6 || params.size() > 8)
 		throw runtime_error(
-		"offernew <category> <title> <quantity> <price> <description> <currency> [exclusive resell=1]\n"
+		"offernew <category> <title> <quantity> <price> <description> <currency> [cert. guid] [exclusive resell=1]\n"
 						"<category> category, 255 chars max.\n"
 						"<title> title, 255 chars max.\n"
 						"<quantity> quantity, > 0\n"
 						"<price> price in <currency>, > 0\n"
 						"<description> description, 64 KB max.\n"
 						"<currency> The currency code that you want your offer to be in ie: USD.\n"
+						"<cert. guid> Set this to the guid of a certificate you wish to sell\n"
 						"<exclusive resell> set to 1 if you only want those who control the whitelist certificates to be able to resell this offer via offerlink. Defaults to 1.\n"
 						+ HelpRequiringPassphrase());
 	if(!HasReachedMainNetForkB2())
@@ -1725,6 +1764,7 @@ Value offernew(const Array& params, bool fHelp) {
 	vector<unsigned char> vchTitle = vchFromValue(params[1]);
 	vector<unsigned char> vchCurrency = vchFromValue(params[5]);
 	vector<unsigned char> vchDesc;
+	vector<unsigned char> vchCert;
 	int qty = atoi(params[2].get_str().c_str());
 	if(qty < 0)
 	{
@@ -1748,12 +1788,28 @@ Value offernew(const Array& params, bool fHelp) {
     // 64Kbyte offer desc. maxlen
 	if (vchDesc.size() > 1024 * 64)
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description cannot exceed 65536 bytes!");
-
 	if(params.size() >= 7)
 	{
-		bExclusiveResell = atoi(params[6].get_str().c_str()) == 1? true: false;
+		nQty = 1;
+		vchCert = vchFromValue(params[6]);
+		CTransaction txCert;
+		CWalletTx wtxCertIn;
+		CCert theCert;
+		// make sure this cert is still valid
+		if (GetTxOfCert(*pcertdb, vchCert, theCert, txCert))
+		{
+			// make sure its in your wallet (you control this cert)		
+			if (!IsCertMine(txCert) || !pwalletMain->GetTransaction(txCert.GetHash(), wtxCertIn)) 
+			{
+				throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot sell this certificate, it is not yours or it is expired!");
+			}
+			
+		}
 	}
-
+	if(params.size() >= 8)
+	{
+		bExclusiveResell = atoi(params[7].get_str().c_str()) == 1? true: false;
+	}
 	
 	int64 nRate;
 	vector<string> rateList;
@@ -1799,6 +1855,7 @@ Value offernew(const Array& params, bool fHelp) {
 	newOffer.nQty = nQty;
 	newOffer.nHeight = nBestHeight;
 	newOffer.SetPrice(nPrice);
+	newOffer.vchCert = vchCert;
 	newOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
 	newOffer.sCurrencyCode = vchCurrency;
 	string bdata = newOffer.SerializeToString();
@@ -2294,9 +2351,9 @@ Value offerwhitelist(const Array& params, bool fHelp) {
     return oRes;
 }
 Value offerupdate(const Array& params, bool fHelp) {
-	if (fHelp || params.size() < 5 || params.size() > 7)
+	if (fHelp || params.size() < 5 || params.size() > 8)
 		throw runtime_error(
-		"offerupdate <guid> <category> <title> <quantity> <price> [description] [exclusive resell=1]\n"
+		"offerupdate <guid> <category> <title> <quantity> <price> [description] [cert. guid] [exclusive resell=1]\n"
 						"Perform an update on an offer you control.\n"
 						+ HelpRequiringPassphrase());
 
@@ -2307,11 +2364,13 @@ Value offerupdate(const Array& params, bool fHelp) {
 	vector<unsigned char> vchCat = vchFromValue(params[1]);
 	vector<unsigned char> vchTitle = vchFromValue(params[2]);
 	vector<unsigned char> vchDesc;
+	vector<unsigned char> vchCert;
 	bool bExclusiveResell = true;
 	unsigned int nQty;
 	float price;
 	if (params.size() >= 6) vchDesc = vchFromValue(params[5]);
-	if(params.size() == 7) bExclusiveResell = atoi(params[6].get_str().c_str()) == 1? true: false;
+	if (params.size() >= 7) vchCert = vchFromValue(params[6]);
+	if(params.size() >= 8) bExclusiveResell = atoi(params[7].get_str().c_str()) == 1? true: false;
 	try {
 		nQty = (unsigned int)atoi(params[3].get_str().c_str());
 		price = atof(params[4].get_str().c_str());
@@ -2319,10 +2378,12 @@ Value offerupdate(const Array& params, bool fHelp) {
 	} catch (std::exception &e) {
 		throw runtime_error("invalid price and/or quantity values.");
 	}
+	if (params.size() >= 6) vchDesc = vchFromValue(params[5]);
 	if(price <= 0)
 	{
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer price must be greater than 0!");
 	}
+	
 	if(vchCat.size() < 1)
         throw runtime_error("offer category cannot by empty!");
 	if(vchTitle.size() < 1)
@@ -2392,8 +2453,30 @@ Value offerupdate(const Array& params, bool fHelp) {
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if((nQty-memPoolQty) < 0)
 		throw runtime_error("not enough remaining quantity to fulfill this offerupdate"); // SS i think needs better msg
-	
-	theOffer.nQty = nQty;
+	if(theOffer.vchCert.empty() && vchCert.empty())
+	{
+		theOffer.nQty = nQty;
+	}	
+	else
+	{
+		theOffer.nQty = 1;
+		if(!vchCert.empty())
+			theOffer.vchCert = vchCert;
+		CTransaction txCert;
+		CWalletTx wtxCertIn;
+		CCert theCert;
+		// make sure this cert is still valid
+		if (GetTxOfCert(*pcertdb, theOffer.vchCert, theCert, txCert))
+		{
+			// make sure its in your wallet (you control this cert)		
+			if (!IsCertMine(txCert) || !pwalletMain->GetTransaction(txCert.GetHash(), wtxCertIn)) 
+			{
+				throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot update this offer because this certificate is not yours, it is expired or has been transferred!");
+			}			
+		}
+		else
+			throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot find this certificate!");
+	}
 	theOffer.nHeight = nBestHeight;
 	theOffer.SetPrice(price);
 	theOffer.accepts.clear();
@@ -2456,10 +2539,11 @@ Value offerrefund(const Array& params, bool fHelp) {
 }
 
 Value offeraccept(const Array& params, bool fHelp) {
-	if (fHelp || 1 > params.size() || params.size() > 5)
-		throw runtime_error("offeraccept <guid> [quantity] [message] [refund address] [linkedguid]\n"
+	if (fHelp || 1 > params.size() || params.size() > 6)
+		throw runtime_error("offeraccept <guid> [pubkey] [quantity] [message] [refund address] [linkedguid]\n"
 				"Accept&Pay for a confirmed offer.\n"
 				"<guid> guidkey from offer.\n"
+				"<pubkey> Public key of address to transfer certificate if this offer is for a certificate.\n"
 				"<quantity> quantity to buy. Defaults to 1.\n"
 				"<message> payment message to seller, 1KB max.\n"
 				"<refund address> In case offer not accepted refund to this address. Leave empty to use a new address from your wallet. \n"
@@ -2470,22 +2554,26 @@ Value offeraccept(const Array& params, bool fHelp) {
 	vector<unsigned char> vchRefundAddress;	
 	CBitcoinAddress refundAddr;	
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
-	vector<unsigned char> vchLinkOfferAccept = vchFromValue(params.size()>= 5? params[4]:"");
-	vector<unsigned char> vchMessage = vchFromValue(params.size()>=3?params[2]:" ");
-	int64 nQty = 1;
-	if (params.size() >= 2) {
+	vector<unsigned char> vchPubKey = vchFromValue(params.size()>=2?params[1]:"");
+	vector<unsigned char> vchLinkOfferAccept = vchFromValue(params.size()>= 6? params[5]:"");
+	vector<unsigned char> vchMessage = vchFromValue(params.size()>=4?params[3]:" ");
+	unsigned int nQty = 1;
+	if (params.size() >= 3) {
 		try {
-			nQty=atoi64(params[1].get_str().c_str());
+			int qty = atoi(params[2].get_str().c_str());
+			if(qty < 0)
+			{
+				qty = 0;
+			}
+			nQty = (unsigned int)qty;
 		} catch (std::exception &e) {
-			throw runtime_error("invalid price and/or quantity values.");
-		}
-		if(nQty < 0)
-		{
-			throw runtime_error("invalid quantity value.");
+			throw runtime_error("invalid quantity value");
 		}
 
 	}
-	if(params.size() < 4)
+	if(!vchPubKey.empty())
+		nQty = 1;
+	if(params.size() < 5)
 	{
 		CPubKey newDefaultKey;
 		pwalletMain->GetKeyFromPool(newDefaultKey, false);
@@ -2494,7 +2582,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 	}
 	else
 	{
-		vchRefundAddress = vchFromValue(params[3]);
+		vchRefundAddress = vchFromValue(params[4]);
 		refundAddr = CBitcoinAddress(stringFromVch(vchRefundAddress));
 	}
 	if (!refundAddr.IsValid())
@@ -2592,7 +2680,18 @@ Value offeraccept(const Array& params, bool fHelp) {
 		if(!EncryptMessage(theOffer.vchPubKey, vchMessage, strCipherText))
 			throw runtime_error("could not encrypt message to seller");
 	}
-
+	if(!theOffer.vchCert.empty())
+	{
+		CTransaction txCert;
+		CCert theCert;
+		// make sure this cert is still valid
+		if (!GetTxOfCert(*pcertdb, theOffer.vchCert, theCert, txCert))
+		{
+			// make sure its in your wallet (you control this cert)		
+			throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot purchase this certificate, it may be expired!");
+			
+		}
+	}
 	// create accept object
 	COfferAccept txAccept;
 	txAccept.vchRand = vchAcceptRand;
@@ -2608,6 +2707,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 	txAccept.bPaid = true;
 	txAccept.vchCertLink = foundCert.certLinkVchRand;
 	theOffer.accepts.clear();
+	theOffer.vchPubKey = vchPubKey;
 	theOffer.PutOfferAccept(txAccept);
 	
 	
@@ -2789,6 +2889,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 		expired_block = 0;
         if (GetValueOfOfferTxHash(txHash, vchValue, offerHash, nHeight)) {
 			oOffer.push_back(Pair("offer", offer));
+			oOffer.push_back(Pair("cert", stringFromVch(theOffer.vchCert)));
 			oOffer.push_back(Pair("txid", tx.GetHash().GetHex()));
 			expired_block = nHeight + GetOfferDisplayExpirationDepth();
             if(nHeight + GetOfferDisplayExpirationDepth() - pindexBest->nHeight <= 0)
@@ -3013,6 +3114,7 @@ Value offerlist(const Array& params, bool fHelp) {
             // build the output object
             Object oName;
             oName.push_back(Pair("offer", stringFromVch(vchName)));
+			oName.push_back(Pair("cert", stringFromVch(theOfferA.vchCert)));
             oName.push_back(Pair("title", stringFromVch(theOfferA.sTitle)));
             oName.push_back(Pair("category", stringFromVch(theOfferA.sCategory)));
             oName.push_back(Pair("description", stringFromVch(theOfferA.sDescription)));
@@ -3193,6 +3295,7 @@ Value offerfilter(const Array& params, bool fHelp) {
 
 		Object oOffer;
 		oOffer.push_back(Pair("offer", offer));
+		oOffer.push_back(Pair("cert", stringFromVch(txOffer.vchCert)));
         oOffer.push_back(Pair("title", stringFromVch(txOffer.sTitle)));
 		oOffer.push_back(Pair("description", stringFromVch(txOffer.sDescription)));
         oOffer.push_back(Pair("category", stringFromVch(txOffer.sCategory)));

@@ -51,6 +51,7 @@ private:
     QString newCertToSelect;
 
 private slots:
+	void on_sellCertButton_clicked();
     /** Create a new cert */
     void on_newCert_clicked();
     /** Copy cert of currently selected cert entry to clipboard */

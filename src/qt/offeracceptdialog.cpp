@@ -44,6 +44,11 @@ void OfferAcceptDialog::acceptOffer()
 		Value result ;
 		string strReply;
 		string strError;
+  		CPubKey newDefaultKey;
+		pwalletMain->GetKeyFromPool(newDefaultKey, false); 
+		std::vector<unsigned char> vchPubKey(newDefaultKey.begin(), newDefaultKey.end());
+		string strPubKey = HexStr(vchPubKey);
+
 		string strMethod = string("offeraccept");
 		if(this->quantity.toLong() <= 0)
 		{
@@ -54,6 +59,7 @@ void OfferAcceptDialog::acceptOffer()
 		}
 		this->offerPaid = false;
 		params.push_back(this->offerAcceptGUID.toStdString());
+		params.push_back(strPubKey);
 		params.push_back(this->quantity.toStdString());
 		if(this->notes != QString(""))
 		{

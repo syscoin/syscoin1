@@ -50,6 +50,7 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
 	QIcon ButtonIcon(m_placeholderImage);
 	ui->imageButton->setToolTip(tr("Click to open image in browser..."));
 	ui->imageButton->setIcon(ButtonIcon);
+	ui->infoCert->setVisible(false);
 }
 void AcceptandPayOfferListPage::on_imageButton_clicked()
 {
@@ -163,6 +164,7 @@ bool AcceptandPayOfferListPage::lookup(QString id)
 			offerObj = result.get_obj();
 			COffer offerOut;
 			offerOut.vchRand = vchFromString(find_value(offerObj, "offer").get_str());
+			offerOut.vchCert = vchFromString(find_value(offerObj, "cert").get_str());
 			offerOut.sTitle = vchFromString(find_value(offerObj, "title").get_str());
 			offerOut.sCategory = vchFromString(find_value(offerObj, "category").get_str());
 			offerOut.sCurrencyCode = vchFromString(find_value(offerObj, "currency").get_str());
@@ -289,6 +291,13 @@ void AcceptandPayOfferListPage::setValue(COffer &offer)
 {
 
     ui->offeridEdit->setText(QString::fromStdString(stringFromVch(offer.vchRand)));
+	if(!offer.vchCert.empty())
+	{
+		ui->infoCert->setVisible(true);
+		ui->infoCert->setText(QString::fromStdString(stringFromVch(offer.vchCert)));
+
+	}
+
 	ui->infoTitle->setText(QString::fromStdString(stringFromVch(offer.sTitle)));
 	ui->infoCategory->setText(QString::fromStdString(stringFromVch(offer.sCategory)));
 	ui->infoCurrency->setText(QString::fromStdString(stringFromVch(offer.sCurrencyCode)));

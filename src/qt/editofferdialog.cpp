@@ -18,7 +18,7 @@ extern const CRPCTable tableRPC;
 extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision);
 extern vector<unsigned char> vchFromString(const std::string &str);
 int64 GetOfferNetworkFee(opcodetype seed, unsigned int nHeight);
-EditOfferDialog::EditOfferDialog(Mode mode, QWidget *parent) :
+EditOfferDialog::EditOfferDialog(Mode mode, const QString &cert, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::EditOfferDialog), mapper(0), mode(mode), model(0)
 {
@@ -42,6 +42,8 @@ EditOfferDialog::EditOfferDialog(Mode mode, QWidget *parent) :
 		ui->currencyEdit->addItem(QString::fromStdString(rateList[i]));
 	}
 	
+	loadCerts();
+	ui->certEdit->setEditText(cert);
 	ui->descriptionEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
     switch(mode)
     {
@@ -56,11 +58,80 @@ EditOfferDialog::EditOfferDialog(Mode mode, QWidget *parent) :
 		ui->currencyDisclaimer->setVisible(false);		
         setWindowTitle(tr("Edit Offer"));
         break;
+    case NewCertOffer:
+		ui->offerLabel->setVisible(false);
+		ui->offerEdit->setVisible(false);
+        setWindowTitle(tr("New Offer(Certificate)"));
+		ui->qtyEdit->setText("1");
+		ui->qtyEdit->setEnabled(false);
+		
+		ui->currencyDisclaimer->setText(tr("<font color='red'>You will receive payment in Syscoin equivalent to the Market-value of the currency you have selected.</font>"));
+        break;
 	}
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 }
+void EditOfferDialog::loadCerts()
+{
+	string strMethod = string("certlist");
+    Array params; 
+	Value result ;
+	string name_str;
+	int expired = 0;
+	
+	try {
+		result = tableRPC.execute(strMethod, params);
 
+		if (result.type() == array_type)
+		{
+			name_str = "";
+			expired = 0;
+
+
+	
+			Array arr = result.get_array();
+			BOOST_FOREACH(Value& input, arr)
+			{
+				if (input.type() != obj_type)
+					continue;
+				Object& o = input.get_obj();
+				name_str = "";
+
+				expired = 0;
+
+
+		
+				const Value& name_value = find_value(o, "cert");
+				if (name_value.type() == str_type)
+					name_str = name_value.get_str();
+				
+				const Value& expired_value = find_value(o, "expired");
+				if (expired_value.type() == int_type)
+					expired = expired_value.get_int();
+				
+				if(expired == 0)
+				{
+					ui->certEdit->addItem(QString::fromStdString(name_str));
+				}
+				
+			}
+		}
+	}
+	catch (Object& objError)
+	{
+		string strError = find_value(objError, "message").get_str();
+		QMessageBox::critical(this, windowTitle(),
+			tr("Could not refresh cert list: %1").arg(QString::fromStdString(strError)),
+				QMessageBox::Ok, QMessageBox::Ok);
+	}
+	catch(std::exception& e)
+	{
+		QMessageBox::critical(this, windowTitle(),
+			tr("There was an exception trying to refresh the cert list: ") + QString::fromStdString(e.what()),
+				QMessageBox::Ok, QMessageBox::Ok);
+	}         
+ 
+}
 EditOfferDialog::~EditOfferDialog()
 {
     delete ui;
@@ -74,6 +145,7 @@ void EditOfferDialog::setModel(WalletModel* walletModel, OfferTableModel *model)
 
     mapper->setModel(model);
 	mapper->addMapping(ui->offerEdit, OfferTableModel::Name);
+	mapper->addMapping(ui->certEdit, OfferTableModel::Cert);
     mapper->addMapping(ui->nameEdit, OfferTableModel::Title);
 	mapper->addMapping(ui->categoryEdit, OfferTableModel::Category);
     mapper->addMapping(ui->priceEdit, OfferTableModel::Price);
@@ -91,11 +163,12 @@ void EditOfferDialog::loadRow(int row)
 bool EditOfferDialog::saveCurrentRow()
 {
 
-    if(!model || !walletModel) return false;
+    if(!walletModel) return false;
     WalletModel::UnlockContext ctx(walletModel->requestUnlock());
     if(!ctx.isValid())
     {
-		model->editStatus = OfferTableModel::WALLET_UNLOCK_FAILURE;
+		if(model)
+			model->editStatus = OfferTableModel::WALLET_UNLOCK_FAILURE;
         return false;
     }
 	Array params;
@@ -106,6 +179,7 @@ bool EditOfferDialog::saveCurrentRow()
     switch(mode)
     {
     case NewOffer:
+	case NewCertOffer:
         if (ui->nameEdit->text().trimmed().isEmpty()) {
             ui->nameEdit->setText("");
             QMessageBox::information(this, windowTitle(),
@@ -130,6 +204,7 @@ bool EditOfferDialog::saveCurrentRow()
 		params.push_back(ui->priceEdit->text().toStdString());
 		params.push_back(ui->descriptionEdit->toPlainText().toStdString());
 		params.push_back(ui->currencyEdit->currentText().toStdString());
+		params.push_back(ui->certEdit->currentText().toStdString());
 		try {
             Value result = tableRPC.execute(strMethod, params);
 			Array arr = result.get_array();
@@ -179,7 +254,8 @@ bool EditOfferDialog::saveCurrentRow()
 			params.push_back(ui->qtyEdit->text().toStdString());
 			params.push_back(ui->priceEdit->text().toStdString());
 			params.push_back(ui->descriptionEdit->toPlainText().toStdString());
-			
+			params.push_back(ui->certEdit->currentText().toStdString());
+
 			try {
 				Value result = tableRPC.execute(strMethod, params);
 				if (result.type() != null_type)
@@ -216,36 +292,37 @@ bool EditOfferDialog::saveCurrentRow()
 
 void EditOfferDialog::accept()
 {
-    if(!model) return;
-
     if(!saveCurrentRow())
     {
-        switch(model->getEditStatus())
-        {
-        case OfferTableModel::OK:
-            // Failed with unknown reason. Just reject.
-            break;
-        case OfferTableModel::NO_CHANGES:
-            // No changes were made during edit operation. Just reject.
-            break;
-        case OfferTableModel::INVALID_OFFER:
-            QMessageBox::warning(this, windowTitle(),
-                tr("The entered offer \"%1\" is not a valid Syscoin Offer.").arg(ui->offerEdit->text()),
-                QMessageBox::Ok, QMessageBox::Ok);
-            break;
-        case OfferTableModel::DUPLICATE_OFFER:
-            QMessageBox::warning(this, windowTitle(),
-                tr("The entered offer \"%1\" is already taken.").arg(ui->offerEdit->text()),
-                QMessageBox::Ok, QMessageBox::Ok);
-            break;
-        case OfferTableModel::WALLET_UNLOCK_FAILURE:
-            QMessageBox::critical(this, windowTitle(),
-                tr("Could not unlock wallet."),
-                QMessageBox::Ok, QMessageBox::Ok);
-            break;
+		if(model)
+		{
+			switch(model->getEditStatus())
+			{
+			case OfferTableModel::OK:
+				// Failed with unknown reason. Just reject.
+				break;
+			case OfferTableModel::NO_CHANGES:
+				// No changes were made during edit operation. Just reject.
+				break;
+			case OfferTableModel::INVALID_OFFER:
+				QMessageBox::warning(this, windowTitle(),
+					tr("The entered offer \"%1\" is not a valid Syscoin Offer.").arg(ui->offerEdit->text()),
+					QMessageBox::Ok, QMessageBox::Ok);
+				break;
+			case OfferTableModel::DUPLICATE_OFFER:
+				QMessageBox::warning(this, windowTitle(),
+					tr("The entered offer \"%1\" is already taken.").arg(ui->offerEdit->text()),
+					QMessageBox::Ok, QMessageBox::Ok);
+				break;
+			case OfferTableModel::WALLET_UNLOCK_FAILURE:
+				QMessageBox::critical(this, windowTitle(),
+					tr("Could not unlock wallet."),
+					QMessageBox::Ok, QMessageBox::Ok);
+				break;
 
-        }
-        return;
+			}
+			return;
+		}
     }
     QDialog::accept();
 }

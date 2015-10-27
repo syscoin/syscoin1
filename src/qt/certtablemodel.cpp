@@ -297,6 +297,10 @@ QVariant CertTableModel::data(const QModelIndex &index, int role) const
         }
         return font;
     }
+    else if (role == NameRole)
+    {
+        return rec->cert;
+    }
     else if (role == TypeRole)
     {
         switch(rec->type)

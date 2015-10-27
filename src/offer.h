@@ -242,6 +242,7 @@ public:
 	std::vector<COfferAccept>accepts;
 	std::vector<unsigned char> vchLinkOffer;
 	std::vector<unsigned char> sCurrencyCode;
+	std::vector<unsigned char> vchCert;
 	COfferLinkWhitelist linkWhitelist;
 	std::vector<std::vector<unsigned char> > offerLinks;
 	COffer() { 
@@ -269,6 +270,8 @@ public:
 		READWRITE(nCommission);
 		READWRITE(offerLinks);
 		READWRITE(vchPubKey);
+		READWRITE(vchCert);
+		
 		
 		
 	)
@@ -353,6 +356,7 @@ public:
 		&& a.sCurrencyCode == b.sCurrencyCode
 		&& a.nCommission == b.nCommission
 		&& a.vchPubKey == b.vchPubKey
+		&& a.vchCert == b.vchCert
 		
         );
     }
@@ -374,6 +378,7 @@ public:
 		offerLinks = b.offerLinks;
 		nCommission = b.nCommission;
 		vchPubKey = b.vchPubKey;
+		vchCert = b.vchCert;
         return *this;
     }
 
@@ -381,7 +386,7 @@ public:
         return !(a == b);
     }
     
-    void SetNull() { nHeight = nPrice = nQty = 0; txHash = 0; accepts.clear(); vchRand.clear(); sTitle.clear(); sDescription.clear();vchLinkOffer.clear();linkWhitelist.SetNull();sCurrencyCode.clear();offerLinks.clear();nCommission=0;vchPubKey.clear();}
+    void SetNull() { nHeight = nPrice = nQty = 0; txHash = 0; accepts.clear(); vchRand.clear(); sTitle.clear(); sDescription.clear();vchLinkOffer.clear();linkWhitelist.SetNull();sCurrencyCode.clear();offerLinks.clear();nCommission=0;vchPubKey.clear();vchCert.clear();}
     bool IsNull() const { return (txHash == 0 && nHeight == 0 && nPrice == 0 && nQty == 0 &&  linkWhitelist.IsNull() && offerLinks.empty() && nCommission == 0); }
 
     bool UnserializeFromTx(const CTransaction &tx);

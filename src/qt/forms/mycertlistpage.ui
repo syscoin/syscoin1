@@ -86,6 +86,17 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="sellCertButton">
+       <property name="text">
+        <string>Sell Certificate</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/cart</normaloff>:/icons/cart</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="copyCert">
        <property name="toolTip">
         <string>Copy the currently selected alias to the system clipboard</string>

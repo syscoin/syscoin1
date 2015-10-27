@@ -274,6 +274,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/offeracceptdialog.h \  
     src/qt/acceptandpayofferlistpage.h \
     src/qt/editcertdialog.h \
+    src/qt/pubkeydialog.h \
     src/qt/certlistpage.h \
     src/qt/certtablemodel.h
 
@@ -377,6 +378,7 @@ SOURCES += src/qt/bitcoin.cpp \
     src/qt/acceptandpayofferlistpage.cpp \    
     src/qt/certtablemodel.cpp \
     src/qt/editcertdialog.cpp \
+    src/qt/pubkeydialog.cpp \
     src/qt/mycertlistpage.cpp \
     src/qt/certlistpage.cpp
 
@@ -411,6 +413,7 @@ FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/offerpaydialog.ui \
     src/qt/forms/offeracceptdialog.ui \        
     src/qt/forms/editcertdialog.ui \
+    src/qt/forms/pubkeydialog.ui \
     src/qt/forms/certlistpage.ui
 
 contains(USE_QRCODE, 1) {

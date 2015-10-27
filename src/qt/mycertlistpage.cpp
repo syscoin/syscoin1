@@ -9,6 +9,7 @@
 #include "walletmodel.h"
 #include "bitcoingui.h"
 #include "editcertdialog.h"
+#include "editofferdialog.h"
 #include "pubkeydialog.h"
 #include "csvmodelwriter.h"
 #include "guiutil.h"
@@ -31,6 +32,7 @@ MyCertListPage::MyCertListPage(QWidget *parent) :
     ui->exportButton->setIcon(QIcon());
 	ui->refreshButton->setIcon(QIcon());
 	ui->pubKeyButton->setIcon(QIcon());
+	ui->sellCertButton->setIcon(QIcon());
 #endif
 
 	ui->buttonBox->setVisible(false);
@@ -43,6 +45,7 @@ MyCertListPage::MyCertListPage(QWidget *parent) :
     QAction *copyCertValueAction = new QAction(tr("&Copy Title"), this);
     QAction *editAction = new QAction(tr("&Edit"), this);
     QAction *transferCertAction = new QAction(tr("&Transfer Certificate"), this);
+	QAction *sellCertAction = new QAction(tr("&Sell Certificate"), this);
 
     // Build context menu
     contextMenu = new QMenu();
@@ -51,12 +54,14 @@ MyCertListPage::MyCertListPage(QWidget *parent) :
     contextMenu->addAction(editAction);
     contextMenu->addSeparator();
     contextMenu->addAction(transferCertAction);
+	contextMenu->addAction(sellCertAction);
 
     // Connect signals for context menu actions
     connect(copyCertAction, SIGNAL(triggered()), this, SLOT(on_copyCert_clicked()));
     connect(copyCertValueAction, SIGNAL(triggered()), this, SLOT(onCopyCertValueAction()));
     connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
     connect(transferCertAction, SIGNAL(triggered()), this, SLOT(onTransferCertAction()));
+	connect(sellCertAction, SIGNAL(triggered()), this, SLOT(on_sellCertButton_clicked()));
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
@@ -71,6 +76,21 @@ void MyCertListPage::on_pubKeyButton_clicked()
 MyCertListPage::~MyCertListPage()
 {
     delete ui;
+}
+void MyCertListPage::on_sellCertButton_clicked()
+{
+    if(!model || !walletModel)
+        return;
+    if(!ui->tableView->selectionModel())
+        return;
+    QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows();
+    if(indexes.isEmpty())
+        return;
+
+	QString certGUID = indexes.at(0).data(CertTableModel::NameRole).toString();
+    EditOfferDialog dlg(EditOfferDialog::NewCertOffer, certGUID, this);
+    dlg.setModel(walletModel,0);
+    dlg.exec();
 }
 void MyCertListPage::showEvent ( QShowEvent * event )
 {
@@ -203,10 +223,12 @@ void MyCertListPage::selectionChanged()
     if(table->selectionModel()->hasSelection())
     {
         ui->copyCert->setEnabled(true);
+		ui->sellCertButton->setEnabled(true);
     }
     else
     {
         ui->copyCert->setEnabled(false);
+		ui->sellCertButton->setEnabled(false);
     }
 }
 

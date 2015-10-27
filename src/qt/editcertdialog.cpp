@@ -23,8 +23,6 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
     ui->setupUi(this);
 
     GUIUtil::setupAddressWidget(ui->nameEdit, this);
-	ui->transferEdit->setVisible(false);
-	ui->transferLabel->setVisible(false);
 	ui->certLabel->setVisible(true);
 	ui->certEdit->setVisible(true);
 	ui->certEdit->setEnabled(false);
@@ -51,8 +49,6 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
     case TransferCert:
         setWindowTitle(tr("Transfer Cert"));
 		ui->nameEdit->setEnabled(false);
-		ui->transferEdit->setVisible(true);
-		ui->transferLabel->setVisible(true);
 		ui->certDataEdit->setVisible(false);
 		ui->certDataEdit->setEnabled(false);
 		ui->certDataLabel->setVisible(false);
@@ -223,7 +219,6 @@ bool EditCertDialog::saveCurrentRow()
 			}
 			strMethod = string("certtransfer");
 			params.push_back(ui->certEdit->text().toStdString());
-			params.push_back(ui->transferEdit->text().toStdString());
 			params.push_back(ui->pubKeyEdit->text().toStdString());
 			try {
 				Value result = tableRPC.execute(strMethod, params);
@@ -231,7 +226,7 @@ bool EditCertDialog::saveCurrentRow()
 				{
 					string strResult = result.get_str();
 
-					cert = ui->certEdit->text()+ui->transferEdit->text();
+					cert = ui->certEdit->text()+ui->pubKeyEdit->text();
 
 					QMessageBox::information(this, windowTitle(),
                     tr("Certificate transferred successfully! TXID: \"%1\"").arg(QString::fromStdString(strResult)),

@@ -21,19 +21,21 @@ public:
 
     enum ColumnIndex {
         Name = 0,   /**< offer name */
-        Title = 1,  /**< Offer value */
-		Description = 2,
-		Category = 3,
-		Price = 4,
-		Currency = 5,
-		Qty = 6,
-		Expired = 7,
-		ExclusiveResell = 8
+		Cert = 1, 
+        Title = 2,  /**< Offer value */
+		Description = 3,
+		Category = 4,
+		Price = 5,
+		Currency = 6,
+		Qty = 7,
+		Expired = 8,
+		ExclusiveResell = 9
     };
 
     enum RoleIndex {
         TypeRole = Qt::UserRole,/**< Type of offer (#Send or #Receive) */
         /** Offer name */
+		CertRole,
         NameRole,
 		CategoryRole,
 		TitleRole,
@@ -68,7 +70,7 @@ public:
     /* Add an offer to the model.
        Returns the added offer on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &offer, const QString &value, const QString &description, const QString &category,const QString &price, const QString &currency, const QString &qty, const QString &expired, const QString &exclusive_resell);
+    QString addRow(const QString &type, const QString &offer, const QString &cert, const QString &value, const QString &description, const QString &category,const QString &price, const QString &currency, const QString &qty, const QString &expired, const QString &exclusive_resell);
 
     /* Look up row index of an offer in the model.
        Return -1 if not found.
@@ -90,7 +92,7 @@ private:
 public slots:
     /* Update offer list from core.
      */
-    void updateEntry(const QString &offer, const QString &value, const QString &description, const QString &category, const QString &price, const QString &currency, const QString &qty, const QString &expired, const QString &exclusive_resell, OfferModelType type, int status);
+    void updateEntry(const QString &offer, const QString &cert, const QString &value, const QString &description, const QString &category, const QString &price, const QString &currency, const QString &qty, const QString &expired, const QString &exclusive_resell, OfferModelType type, int status);
 
     friend class OfferTablePriv;
 };

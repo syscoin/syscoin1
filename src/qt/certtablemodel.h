@@ -29,7 +29,8 @@ public:
     };
 
     enum RoleIndex {
-        TypeRole = Qt::UserRole /**< Type of cert (#Send or #Receive) */
+        TypeRole = Qt::UserRole, /**< Type of cert (#Send or #Receive) */
+		NameRole
     };
 
     /** Return status of edit/insert operation */

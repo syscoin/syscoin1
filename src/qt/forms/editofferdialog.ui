@@ -73,6 +73,16 @@
      <item row="3" column="1">
       <widget class="QLineEdit" name="priceEdit"/>
      </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="qtyLabel">
+       <property name="text">
+        <string>Quantity:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QLineEdit" name="qtyEdit"/>
+     </item>
      <item row="5" column="0">
       <widget class="QLabel" name="currencyLabel">
        <property name="text">
@@ -87,6 +97,30 @@
        </property>
       </widget>
      </item>
+     <item row="11" column="0">
+      <widget class="QLabel" name="descriptionLabel">
+       <property name="text">
+        <string>Description:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="1">
+      <widget class="QPlainTextEdit" name="descriptionEdit">
+       <property name="tabChangesFocus">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QComboBox" name="certEdit"/>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="certLabel">
+       <property name="text">
+        <string>Certificate:</string>
+       </property>
+      </widget>
+     </item>
      <item row="6" column="1">
       <widget class="QLabel" name="currencyDisclaimer">
        <property name="text">
@@ -97,32 +131,8 @@
        </property>
       </widget>
      </item>
-      <item row="4" column="0">
-        <widget class="QLabel" name="qtyLabel">
-          <property name="text">
-            <string>Quantity:</string>
-          </property>
-        </widget>
-      </item>
-      <item row="4" column="1">
-        <widget class="QLineEdit" name="qtyEdit"/>
-      </item>
     </layout>
-  </item>      
-     <item row="8" column="0">
-      <widget class="QLabel" name="descriptionLabel">
-       <property name="text">
-        <string>Description:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="1">
-      <widget class="QPlainTextEdit" name="descriptionEdit">
-       <property name="tabChangesFocus">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
+   </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">

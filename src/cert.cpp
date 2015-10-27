@@ -1349,12 +1349,11 @@ Value certupdate(const Array& params, bool fHelp) {
 
 
 Value certtransfer(const Array& params, bool fHelp) {
- if (fHelp || params.size() < 2 || params.size() > 3)
+ if (fHelp || params.size() != 2)
         throw runtime_error(
-		"certtransfer <certkey> <address> [pubkey]\n"
+		"certtransfer <certkey> <pubkey>\n"
                 "<certkey> certificate guidkey.\n"
-                "<address> receiver syscoin address.\n"
-				"<pubkey> Full pubkey of the reciever if the certificate is private.\n"
+				"<pubkey> Public key of the address you wish to transfer this certificate to.\n"
                  + HelpRequiringPassphrase());
 
 	if(!HasReachedMainNetForkB2())
@@ -1362,13 +1361,17 @@ Value certtransfer(const Array& params, bool fHelp) {
     // gather & validate inputs
     vector<unsigned char> vchCertKey = ParseHex(params[0].get_str());
 	vector<unsigned char> vchCert = vchFromValue(params[0]);
-    vector<unsigned char> vchAddress = vchFromValue(params[1]);
-	string strPubKey;
-	if(params.size() >= 3)
-		strPubKey = params[2].get_str();
-    CBitcoinAddress sendAddr(stringFromVch(vchAddress));
-    if(!sendAddr.IsValid())
-        throw runtime_error("Invalid Syscoin address.");
+	vector<unsigned char> vchPubKey = vchFromValue(params[1]);
+
+
+	std::vector<unsigned char> vchPubKeyByte;
+	boost::algorithm::unhex(vchPubKey.begin(), vchPubKey.end(), std::back_inserter(vchPubKeyByte));
+	CPubKey PubKey(vchPubKeyByte);
+	CKeyID pubKeyID = PubKey.GetID();
+	CBitcoinAddress sendAddr(pubKeyID);
+	if(!sendAddr.IsValid())
+		throw JSONRPCError(RPC_WALLET_ERROR, "Public key is invalid!");
+
 
     // this is a syscoin txn
     CWalletTx wtx, wtxIn;
@@ -1413,30 +1416,15 @@ Value certtransfer(const Array& params, bool fHelp) {
 	// if cert is private, decrypt the data
 	if(theCert.bPrivate)
 	{
-		std::vector<unsigned char> vchPubKeyByte;
-		std::vector<unsigned char> vchPubKey = vchFromString(strPubKey);
-		boost::algorithm::unhex(vchPubKey.begin(), vchPubKey.end(), std::back_inserter(vchPubKeyByte));
-		CPubKey PubKey(vchPubKeyByte);
-		CKeyID pubKeyID = PubKey.GetID();
-		CBitcoinAddress xferAddress(pubKeyID);
-		if(!xferAddress.IsValid())
-			throw JSONRPCError(RPC_WALLET_ERROR, "Public key is invalid!");
-
-		if(xferAddress.ToString() != stringFromVch(vchAddress))
-			throw JSONRPCError(RPC_WALLET_ERROR, "The public key must be the public key of the address you are transfering to!");
-
 		string strData;
 		string strCipherText;
-		if(strPubKey.length() <= 0)
-			throw JSONRPCError(RPC_WALLET_ERROR, "Transfer of private certificate needs a reciever's full public key!");
-
 		// decrypt using old key
 		if(!DecryptMessage(theCert.vchPubKey, theCert.vchData, strData))
 		{
 			throw JSONRPCError(RPC_WALLET_ERROR, "Could not decrypt certificate data!");
 		}
 		// encrypt using new key
-		if(!EncryptMessage(vchFromString(strPubKey), vchFromString(strData), strCipherText))
+		if(!EncryptMessage(vchPubKey, vchFromString(strData), strCipherText))
 		{
 			throw JSONRPCError(RPC_WALLET_ERROR, "Could not encrypt certificate data!");
 		}

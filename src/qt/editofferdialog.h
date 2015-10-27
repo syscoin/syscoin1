@@ -10,6 +10,7 @@ class OfferTableModel;
 class WalletModel;
 QT_BEGIN_NAMESPACE
 class QDataWidgetMapper;
+class QString;
 QT_END_NAMESPACE
 
 /** Dialog for editing an offer
@@ -21,10 +22,11 @@ class EditOfferDialog : public QDialog
 public:
     enum Mode {
         NewOffer,
-        EditOffer
+        EditOffer,
+		NewCertOffer
     };
 
-    explicit EditOfferDialog(Mode mode, QWidget *parent = 0);
+    explicit EditOfferDialog(Mode mode, const QString &cert="", QWidget *parent = 0);
     ~EditOfferDialog();
 
     void setModel(WalletModel*,OfferTableModel *model);
@@ -38,7 +40,7 @@ public slots:
 
 private:
     bool saveCurrentRow();
-
+	void loadCerts();
     Ui::EditOfferDialog *ui;
     QDataWidgetMapper *mapper;
     Mode mode;
