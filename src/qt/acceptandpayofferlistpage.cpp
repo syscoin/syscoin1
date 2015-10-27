@@ -51,6 +51,7 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
 	ui->imageButton->setToolTip(tr("Click to open image in browser..."));
 	ui->imageButton->setIcon(ButtonIcon);
 	ui->infoCert->setVisible(false);
+	ui->certLabel->setVisible(false);
 }
 void AcceptandPayOfferListPage::on_imageButton_clicked()
 {
@@ -294,8 +295,14 @@ void AcceptandPayOfferListPage::setValue(COffer &offer)
 	if(!offer.vchCert.empty())
 	{
 		ui->infoCert->setVisible(true);
+		ui->certLabel->setVisible(true);
 		ui->infoCert->setText(QString::fromStdString(stringFromVch(offer.vchCert)));
 
+	}
+	else
+	{
+		ui->infoCert->setVisible(false);
+		ui->certLabel->setVisible(false);
 	}
 
 	ui->infoTitle->setText(QString::fromStdString(stringFromVch(offer.sTitle)));
