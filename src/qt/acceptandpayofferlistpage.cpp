@@ -310,11 +310,11 @@ void AcceptandPayOfferListPage::setValue(COffer &offer)
 	ui->infoCurrency->setText(QString::fromStdString(stringFromVch(offer.sCurrencyCode)));
 	ui->infoPrice->setText(QString::number(offer.GetPrice()));
 	ui->infoQty->setText(QString::number(offer.nQty));
-	ui->infoDescription->setText(QString::fromStdString(stringFromVch(offer.sDescription)));
+	ui->infoDescription->setPlainText(QString::fromStdString(stringFromVch(offer.sDescription)));
 	ui->qtyEdit->setText(QString("1"));
 	ui->notesEdit->setPlainText(QString(""));
 	QRegExp rx("(?:https?|ftp)://\\S+");
-    rx.indexIn(ui->infoDescription->text());
+    rx.indexIn(ui->infoDescription->toPlainText());
     QStringList list = rx.capturedTexts();
 	QIcon ButtonIcon(m_placeholderImage);
 	ui->imageButton->setIcon(ButtonIcon);
