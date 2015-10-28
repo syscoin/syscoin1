@@ -47,6 +47,7 @@ private:
     OfferTableModel *model;
 	WalletModel* walletModel;
     QString offer;
+	QString cert;
 };
 
 #endif // EDITOFFERDIALOG_H

@@ -44,6 +44,7 @@ void NewWhitelistDialog::loadCerts()
     Array params; 
 	Value result ;
 	string name_str;
+	string title_str;
 	int expired = 0;
 	
 	try {
@@ -63,7 +64,7 @@ void NewWhitelistDialog::loadCerts()
 					continue;
 				Object& o = input.get_obj();
 				name_str = "";
-
+				title_str = "";
 				expired = 0;
 
 
@@ -71,14 +72,19 @@ void NewWhitelistDialog::loadCerts()
 				const Value& name_value = find_value(o, "cert");
 				if (name_value.type() == str_type)
 					name_str = name_value.get_str();
-				
+				const Value& title_value = find_value(o, "title");
+				if (title_value.type() == str_type)
+					title_str = title_value.get_str();					
 				const Value& expired_value = find_value(o, "expired");
 				if (expired_value.type() == int_type)
 					expired = expired_value.get_int();
 				
 				if(expired == 0)
 				{
-					ui->certEdit->addItem(QString::fromStdString(name_str));
+					QString name = QString::fromStdString(name_str);
+					QString title = QString::fromStdString(title_str);
+					QString certText = name + " - " + title;
+					ui->certEdit->addItem(certText,name);
 				}
 				
 			}
@@ -128,12 +134,14 @@ bool NewWhitelistDialog::saveCurrentRow()
 	}
 	strMethod = string("offeraddwhitelist");
 	params.push_back(ui->offerGUIDLabel->text().toStdString());
-	params.push_back(ui->certEdit->currentText().toStdString());
+	if(ui->certEdit->currentIndex() >= 0)
+		params.push_back(ui->certEdit->itemData(ui->certEdit->currentIndex()).toString().toStdString());
 	params.push_back(ui->discountEdit->text().toStdString());
 
 	try {
         Value result = tableRPC.execute(strMethod, params);
-		entry = ui->certEdit->currentText();
+		if(ui->certEdit->currentIndex() >= 0)
+			entry = ui->certEdit->itemData(ui->certEdit->currentIndex()).toString();
 
 		QMessageBox::information(this, windowTitle(),
         tr("New whitelist entry added successfully!"),
