@@ -15,7 +15,7 @@ class OfferAcceptDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit OfferAcceptDialog(QString title, QString price,  QString quantity, QString offerAcceptGUID, QString notes, QWidget *parent=0);
+    explicit OfferAcceptDialog(COffer* offer, QString quantity, QString notes, QWidget *parent=0);
     ~OfferAcceptDialog();
 
     bool getPaymentStatus();
@@ -23,11 +23,10 @@ public:
 private:
     Ui::OfferAcceptDialog *ui;
 	QString quantity;
-	QString title;
-	QString price;
 	QString notes;
-	QString offerAcceptGUID;
+	QString price;
 	bool offerPaid; 
+	COffer* m_offer;
 
 private slots:
 	void on_cancelButton_clicked();

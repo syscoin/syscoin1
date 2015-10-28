@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>457</width>
-    <height>337</height>
+    <height>524</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -36,7 +36,7 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
+     <item row="2" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
         <string>Title:</string>
@@ -46,82 +46,82 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
+     <item row="2" column="1">
       <widget class="QLineEdit" name="nameEdit">
        <property name="toolTip">
         <string>The certificate name.</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
+     <item row="4" column="0">
       <widget class="QLabel" name="categoryLabel">
        <property name="text">
         <string>Category:</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
+     <item row="4" column="1">
       <widget class="QLineEdit" name="categoryEdit"/>
      </item>
-     <item row="3" column="0">
+     <item row="6" column="0">
       <widget class="QLabel" name="priceLabel">
        <property name="text">
         <string>Price:</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
+     <item row="6" column="1">
       <widget class="QLineEdit" name="priceEdit"/>
      </item>
-     <item row="4" column="0">
+     <item row="8" column="0">
       <widget class="QLabel" name="qtyLabel">
        <property name="text">
         <string>Quantity:</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
+     <item row="8" column="1">
       <widget class="QLineEdit" name="qtyEdit"/>
      </item>
-     <item row="5" column="0">
+     <item row="10" column="0">
       <widget class="QLabel" name="currencyLabel">
        <property name="text">
         <string>Currency:</string>
        </property>
       </widget>
      </item>
-     <item row="5" column="1">
+     <item row="10" column="1">
       <widget class="QComboBox" name="currencyEdit">
        <property name="editable">
         <bool>false</bool>
        </property>
       </widget>
      </item>
-     <item row="11" column="0">
+     <item row="17" column="0">
       <widget class="QLabel" name="descriptionLabel">
        <property name="text">
         <string>Description:</string>
        </property>
       </widget>
      </item>
-     <item row="11" column="1">
+     <item row="17" column="1">
       <widget class="QPlainTextEdit" name="descriptionEdit">
        <property name="tabChangesFocus">
         <bool>true</bool>
        </property>
       </widget>
      </item>
-     <item row="7" column="1">
+     <item row="13" column="1">
       <widget class="QComboBox" name="certEdit"/>
      </item>
-     <item row="7" column="0">
+     <item row="13" column="0">
       <widget class="QLabel" name="certLabel">
        <property name="text">
         <string>Certificate:</string>
        </property>
       </widget>
      </item>
-     <item row="6" column="1">
+     <item row="12" column="1">
       <widget class="QLabel" name="currencyDisclaimer">
        <property name="text">
         <string/>
@@ -130,6 +130,30 @@
         <bool>true</bool>
        </property>
       </widget>
+     </item>
+     <item row="1" column="1">
+      <layout class="QVBoxLayout" name="verticalLayout_2"/>
+     </item>
+     <item row="3" column="1">
+      <layout class="QVBoxLayout" name="verticalLayout_3"/>
+     </item>
+     <item row="5" column="1">
+      <layout class="QVBoxLayout" name="verticalLayout_4"/>
+     </item>
+     <item row="7" column="1">
+      <layout class="QVBoxLayout" name="verticalLayout_5"/>
+     </item>
+     <item row="9" column="1">
+      <layout class="QVBoxLayout" name="verticalLayout_6"/>
+     </item>
+     <item row="11" column="1">
+      <layout class="QVBoxLayout" name="verticalLayout_7"/>
+     </item>
+     <item row="14" column="1">
+      <layout class="QVBoxLayout" name="verticalLayout_8"/>
+     </item>
+     <item row="18" column="1">
+      <layout class="QVBoxLayout" name="verticalLayout_9"/>
      </item>
     </layout>
    </item>

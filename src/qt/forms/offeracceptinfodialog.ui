@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>530</width>
-    <height>565</height>
+    <height>670</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -145,6 +145,16 @@
      <item row="9" column="1">
       <widget class="QLineEdit" name="commissionEdit"/>
      </item>
+     <item row="10" column="0">
+      <widget class="QLabel" name="discountLabel">
+       <property name="text">
+        <string>Discount:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="1">
+      <widget class="QLineEdit" name="discountEdit"/>
+     </item>
      <item row="11" column="0">
       <widget class="QLabel" name="label_13">
        <property name="text">
@@ -229,16 +239,6 @@
       <widget class="QTextEdit" name="paymessageEdit">
        <property name="enabled">
         <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="10" column="1">
-      <widget class="QLineEdit" name="discountEdit"/>
-     </item>
-     <item row="10" column="0">
-      <widget class="QLabel" name="discountLabel">
-       <property name="text">
-        <string>Discount:</string>
        </property>
       </widget>
      </item>

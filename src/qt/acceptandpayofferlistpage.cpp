@@ -29,13 +29,13 @@ using namespace std;
 using namespace json_spirit;
 extern const CRPCTable tableRPC;
 extern string JSONRPCReply(const Value& result, const Value& error, const Value& id);
-extern int64 convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchCurrencyCode, const double &nPrice, const unsigned int &nHeight, int &precision);
-extern int nBestHeight;
+
 AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AcceptandPayOfferListPage)
 {
     ui->setupUi(this);
+	m_offer = new COffer();
 	this->offerPaid = false;
 	this->URIHandled = false;	
     ui->labelExplanation->setText(tr("Purchase an offer, Syscoin will be used from your balance to complete the transaction"));
@@ -47,11 +47,11 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
 	m_netwManager = new QNetworkAccessManager(this);
 	m_placeholderImage.load(":/images/image");
 
-	QIcon ButtonIcon(m_placeholderImage);
 	ui->imageButton->setToolTip(tr("Click to open image in browser..."));
-	ui->imageButton->setIcon(ButtonIcon);
 	ui->infoCert->setVisible(false);
 	ui->certLabel->setVisible(false);
+	RefreshImage();
+
 }
 void AcceptandPayOfferListPage::on_imageButton_clicked()
 {
@@ -82,6 +82,7 @@ void AcceptandPayOfferListPage::netwManagerFinished()
 AcceptandPayOfferListPage::~AcceptandPayOfferListPage()
 {
     delete ui;
+	delete m_offer;
 	this->URIHandled = false;
 }
 void AcceptandPayOfferListPage::resetState()
@@ -105,11 +106,8 @@ void AcceptandPayOfferListPage::updateCaption()
 }
 void AcceptandPayOfferListPage::OpenPayDialog()
 {
-	string currencyCode = ui->infoCurrency->text().toStdString();
-	int precision;
-	int64 iPrice = convertCurrencyCodeToSyscoin(vchFromString(currencyCode), ui->infoPrice->text().toDouble(), nBestHeight, precision);
-	QString price = QString::number(ValueFromAmount(iPrice).get_real()*ui->qtyEdit->text().toUInt());
-	OfferAcceptDialog dlg(ui->infoTitle->text(), price, ui->qtyEdit->text(), ui->offeridEdit->text(), ui->notesEdit->toPlainText(), this);
+	
+	OfferAcceptDialog dlg(m_offer, ui->qtyEdit->text(), ui->notesEdit->toPlainText(), this);
 	if(dlg.exec())
 	{
 		this->offerPaid = dlg.getPaymentStatus();
@@ -290,7 +288,7 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 }
 void AcceptandPayOfferListPage::setValue(COffer &offer)
 {
-
+	m_offer[0] = offer;
     ui->offeridEdit->setText(QString::fromStdString(stringFromVch(offer.vchRand)));
 	if(!offer.vchCert.empty())
 	{
@@ -314,15 +312,21 @@ void AcceptandPayOfferListPage::setValue(COffer &offer)
 	ui->qtyEdit->setText(QString("1"));
 	ui->notesEdit->setPlainText(QString(""));
 	QRegExp rx("(?:https?|ftp)://\\S+");
-    rx.indexIn(ui->infoDescription->toPlainText());
-    QStringList list = rx.capturedTexts();
+
+    rx.indexIn(QString::fromStdString(stringFromVch(offer.sDescription)));
+    m_imageList = rx.capturedTexts();
+	RefreshImage();
+
+}
+
+void AcceptandPayOfferListPage::RefreshImage()
+{
 	QIcon ButtonIcon(m_placeholderImage);
 	ui->imageButton->setIcon(ButtonIcon);
-
-
-	if(list.size() > 0 && list[0] != QString(""))
+	
+	if(m_imageList.size() > 0 && m_imageList.at(0) != QString(""))
 	{
-		QString parsedURL = list[0].simplified();
+		QString parsedURL = m_imageList.at(0).simplified();
 		m_url = QUrl(parsedURL);
 		if(m_url.isValid())
 		{
