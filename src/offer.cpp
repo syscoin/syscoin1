@@ -9,7 +9,7 @@
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_writer_template.h"
 #include <boost/xpressive/xpressive_dynamic.hpp>
-
+#include <boost/lexical_cast.hpp>
 using namespace std;
 using namespace json_spirit;
 extern const CRPCTable tableRPC;
@@ -1757,7 +1757,6 @@ Value offernew(const Array& params, bool fHelp) {
 		throw runtime_error("Please wait until B2 hardfork starts in before executing this command.");
 	// gather inputs
 	string baSig;
-	unsigned int nQty;
 	float nPrice;
 	bool bExclusiveResell = true;
 	vector<unsigned char> vchCat = vchFromValue(params[0]);
@@ -1765,12 +1764,14 @@ Value offernew(const Array& params, bool fHelp) {
 	vector<unsigned char> vchCurrency = vchFromValue(params[5]);
 	vector<unsigned char> vchDesc;
 	vector<unsigned char> vchCert;
-	int qty = atoi(params[2].get_str().c_str());
-	if(qty < 0)
-	{
-		throw runtime_error("invalid quantity value.");
+	unsigned int nQty;
+	if(atof(params[2].get_str().c_str()) < 0)
+		throw runtime_error("invalid quantity value, must be greator than 0");
+	try {
+		nQty = boost::lexical_cast<unsigned int>(params[2].get_str());
+	} catch (std::exception &e) {
+		throw runtime_error("invalid quantity value, must be less than 4294967296");
 	}
-	nQty = (unsigned int)qty;
 	nPrice = atof(params[3].get_str().c_str());
 	if(nPrice <= 0)
 	{
@@ -2371,12 +2372,15 @@ Value offerupdate(const Array& params, bool fHelp) {
 	if (params.size() >= 6) vchDesc = vchFromValue(params[5]);
 	if (params.size() >= 7) vchCert = vchFromValue(params[6]);
 	if(params.size() >= 8) bExclusiveResell = atoi(params[7].get_str().c_str()) == 1? true: false;
+	if(atof(params[3].get_str().c_str()) < 0)
+		throw runtime_error("invalid quantity value, must be greator than 0");
+	
 	try {
-		nQty = (unsigned int)atoi(params[3].get_str().c_str());
+		nQty = boost::lexical_cast<unsigned int>(params[3].get_str());
 		price = atof(params[4].get_str().c_str());
 
 	} catch (std::exception &e) {
-		throw runtime_error("invalid price and/or quantity values.");
+		throw runtime_error("invalid price and/or quantity values. Quantity must be less than 4294967296.");
 	}
 	if (params.size() >= 6) vchDesc = vchFromValue(params[5]);
 	if(price <= 0)
@@ -2559,17 +2563,14 @@ Value offeraccept(const Array& params, bool fHelp) {
 	vector<unsigned char> vchMessage = vchFromValue(params.size()>=4?params[3]:" ");
 	unsigned int nQty = 1;
 	if (params.size() >= 3) {
+		if(atof(params[2].get_str().c_str()) < 0)
+			throw runtime_error("invalid quantity value, must be greator than 0");
+	
 		try {
-			int qty = atoi(params[2].get_str().c_str());
-			if(qty < 0)
-			{
-				qty = 0;
-			}
-			nQty = (unsigned int)qty;
+			nQty = boost::lexical_cast<unsigned int>(params[2].get_str());
 		} catch (std::exception &e) {
-			throw runtime_error("invalid quantity value");
+			throw runtime_error("invalid quantity value. Quantity must be less than 4294967296.");
 		}
-
 	}
 	if(!vchPubKey.empty())
 		nQty = 1;
