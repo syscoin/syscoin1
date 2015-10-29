@@ -3293,7 +3293,9 @@ Value offerfilter(const Array& params, bool fHelp) {
         uint256 blockHash;
 		if (!GetTransaction(txOffer.txHash, tx, blockHash, true))
 			continue;
-
+		// dont return sold out offers
+		if(txOffer.nQty <= 0)
+			continue;
 		Object oOffer;
 		oOffer.push_back(Pair("offer", offer));
 		oOffer.push_back(Pair("cert", stringFromVch(txOffer.vchCert)));
