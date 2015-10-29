@@ -41,7 +41,9 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &cert, QWidget *parent
 	{
 		ui->currencyEdit->addItem(QString::fromStdString(rateList[i]));
 	}
-	
+	ui->certEdit->clear();
+	ui->certEdit->addItem(tr("Select Certificate (optional)"));
+	connect(ui->certEdit, SIGNAL(activated(int)), this, SLOT(certChanged(int)));
 	loadCerts();
 	ui->descriptionEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
     switch(mode)
@@ -69,6 +71,18 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &cert, QWidget *parent
 	}
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
+}
+void EditOfferDialog::certChanged(int index)
+{
+	if(index > 0)
+	{
+		ui->qtyEdit->setText("1");
+		ui->qtyEdit->setEnabled(false);
+	}
+	else if(index == 0)
+	{
+		ui->qtyEdit->setEnabled(true);
+	}
 }
 void EditOfferDialog::loadCerts()
 {
@@ -118,8 +132,13 @@ void EditOfferDialog::loadCerts()
 					QString title = QString::fromStdString(title_str);
 					QString certText = name + " - " + title;
 					ui->certEdit->addItem(certText,name);
+
 					if(name == cert)
-						ui->certEdit->setEditText(certText);
+					{
+						int index = ui->certEdit->findData(name);
+						if ( index != -1 ) 
+						   ui->certEdit->setCurrentIndex(index);
+					}
 				}
 				
 			}
@@ -212,7 +231,7 @@ bool EditOfferDialog::saveCurrentRow()
 		params.push_back(ui->priceEdit->text().toStdString());
 		params.push_back(ui->descriptionEdit->toPlainText().toStdString());
 		params.push_back(ui->currencyEdit->currentText().toStdString());
-		if(ui->certEdit->currentIndex() >= 0)
+		if(ui->certEdit->currentIndex() > 0)
 			params.push_back(ui->certEdit->itemData(ui->certEdit->currentIndex()).toString().toStdString());
 		try {
             Value result = tableRPC.execute(strMethod, params);
@@ -263,7 +282,7 @@ bool EditOfferDialog::saveCurrentRow()
 			params.push_back(ui->qtyEdit->text().toStdString());
 			params.push_back(ui->priceEdit->text().toStdString());
 			params.push_back(ui->descriptionEdit->toPlainText().toStdString());
-			if(ui->certEdit->currentIndex() >= 0)
+			if(ui->certEdit->currentIndex() > 0)
 				params.push_back(ui->certEdit->itemData(ui->certEdit->currentIndex()).toString().toStdString());
 			try {
 				Value result = tableRPC.execute(strMethod, params);

@@ -211,7 +211,7 @@ void MyOfferListPage::on_newOffer_clicked()
     if(!model)
         return;
 
-    EditOfferDialog dlg(EditOfferDialog::NewOffer, "", this);
+    EditOfferDialog dlg(EditOfferDialog::NewOffer, "");
     dlg.setModel(walletModel,model);
     if(dlg.exec())
     {

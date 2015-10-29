@@ -180,7 +180,7 @@ void MyAliasListPage::on_newAlias_clicked()
     if(!model)
         return;
 
-    EditAliasDialog dlg(EditAliasDialog::NewAlias, this);
+    EditAliasDialog dlg(EditAliasDialog::NewAlias);
     dlg.setModel(walletModel,model);
     if(dlg.exec())
     {

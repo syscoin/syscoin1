@@ -37,7 +37,7 @@ public:
 
 public slots:
     void accept();
-
+	void certChanged(int);
 private:
     bool saveCurrentRow();
 	void loadCerts();

@@ -206,7 +206,7 @@ void MyCertListPage::on_newCert_clicked()
     if(!model)
         return;
 
-    EditCertDialog dlg(EditCertDialog::NewCert, this);
+    EditCertDialog dlg(EditCertDialog::NewCert);
     dlg.setModel(walletModel,model);
     if(dlg.exec())
     {

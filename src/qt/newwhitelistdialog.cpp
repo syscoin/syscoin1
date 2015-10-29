@@ -23,7 +23,8 @@ NewWhitelistDialog::NewWhitelistDialog(const QString &offerGUID, QWidget *parent
     ui->setupUi(this);
 	ui->offerGUIDLabel->setText(offerGUID);
 	ui->discountDisclaimer->setText(tr("<font color='red'>This is a percentage of price for your offer you want to allow your reseller to purchase your offer for. Typically given to wholesalers or for special arrangements with a reseller.</font>"));
-	ui->certEdit->setEditText(tr("Choose or enter GUID of a Certificate you own"));
+	ui->certEdit->clear();
+	ui->certEdit->addItem(tr("Select Certificate"));
 	loadCerts();
 }
 
@@ -134,13 +135,13 @@ bool NewWhitelistDialog::saveCurrentRow()
 	}
 	strMethod = string("offeraddwhitelist");
 	params.push_back(ui->offerGUIDLabel->text().toStdString());
-	if(ui->certEdit->currentIndex() >= 0)
+	if(ui->certEdit->currentIndex() > 0)
 		params.push_back(ui->certEdit->itemData(ui->certEdit->currentIndex()).toString().toStdString());
 	params.push_back(ui->discountEdit->text().toStdString());
 
 	try {
         Value result = tableRPC.execute(strMethod, params);
-		if(ui->certEdit->currentIndex() >= 0)
+		if(ui->certEdit->currentIndex() > 0)
 			entry = ui->certEdit->itemData(ui->certEdit->currentIndex()).toString();
 
 		QMessageBox::information(this, windowTitle(),
