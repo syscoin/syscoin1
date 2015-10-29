@@ -1467,7 +1467,6 @@ Value certinfo(const Array& params, bool fHelp) {
 	string strDecrypted = "";
 	if(ca.bPrivate)
 	{
-		strData = string("Encrypted for owner of certificate");
 		if(DecryptMessage(ca.vchPubKey, ca.vchData, strDecrypted))
 			strData = strDecrypted;
 		
