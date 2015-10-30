@@ -169,8 +169,8 @@ void MyOfferListPage::onEditAction()
     QModelIndexList indexes = ui->tableView->selectionModel()->selectedRows();
     if(indexes.isEmpty())
         return;
-
-    EditOfferDialog dlg(EditOfferDialog::EditOffer);
+	QString certGUID = indexes.at(0).data(OfferTableModel::CertRole).toString();
+    EditOfferDialog dlg(EditOfferDialog::EditOffer, certGUID);
     dlg.setModel(walletModel, model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
     dlg.loadRow(origIndex.row());
@@ -276,7 +276,7 @@ void MyOfferListPage::on_exportButton_clicked()
     // name, column, role
     writer.setModel(proxyModel);
     writer.addColumn("Offer", OfferTableModel::Name, Qt::EditRole);
-	writer.addColumn("Cert", OfferTableModel::Name, Qt::EditRole);
+	writer.addColumn("Cert", OfferTableModel::Cert, Qt::EditRole);
     writer.addColumn("Title", OfferTableModel::Title, Qt::EditRole);
 	writer.addColumn("Description", OfferTableModel::Description, Qt::EditRole);
 	writer.addColumn("Category", OfferTableModel::Category, Qt::EditRole);

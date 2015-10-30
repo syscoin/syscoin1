@@ -19,7 +19,7 @@ template<typename T> void ConvertTo(Value& value, bool fAllowNull = false);
 extern bool ExistsInMempool(std::vector<unsigned char> vchNameOrRand, opcodetype type);
 extern bool HasReachedMainNetForkB2();
 extern CCertDB *pcertdb;
-
+extern COfferDB *pofferdb;
 extern uint256 SignatureHash(CScript scriptCode, const CTransaction& txTo,
         unsigned int nIn, int nHashType);
 
@@ -1351,10 +1351,18 @@ Value certtransfer(const Array& params, bool fHelp) {
 
 
 	std::vector<unsigned char> vchPubKeyByte;
-	boost::algorithm::unhex(vchPubKey.begin(), vchPubKey.end(), std::back_inserter(vchPubKeyByte));
-	CPubKey PubKey(vchPubKeyByte);
-	CKeyID pubKeyID = PubKey.GetID();
-	CBitcoinAddress sendAddr(pubKeyID);
+	CBitcoinAddress sendAddr;
+	try
+	{
+		boost::algorithm::unhex(vchPubKey.begin(), vchPubKey.end(), std::back_inserter(vchPubKeyByte));
+		CPubKey PubKey(vchPubKeyByte);
+		CKeyID pubKeyID = PubKey.GetID();
+		sendAddr = CBitcoinAddress(pubKeyID);
+	}
+	catch(std::exception &e)
+	{
+		throw JSONRPCError(RPC_WALLET_ERROR, "Public key is in a valid format!");
+	}
 	if(!sendAddr.IsValid())
 		throw JSONRPCError(RPC_WALLET_ERROR, "Public key is invalid!");
 
@@ -1417,7 +1425,18 @@ Value certtransfer(const Array& params, bool fHelp) {
 		theCert.vchData = vchFromString(strCipherText);
 		theCert.vchPubKey = vchPubKey;
 	}	
-
+	// check the offer links in the cert, can't xfer a cert thats linked to another offer
+   if(!theCert.vchOfferLink.empty())
+   {
+		COffer myOffer;
+		CTransaction txMyOffer;
+		// if offer is still valid then we cannot xfer this cert
+		if (GetTxOfOffer(*pofferdb, theCert.vchOfferLink, myOffer, txMyOffer))
+		{
+			string strError = strprintf("Cannot transfer this certificate, it is linked to offer: %s", stringFromVch(theCert.vchOfferLink).c_str());
+			throw JSONRPCError(RPC_INVALID_PARAMETER, strError);
+		}
+   }
 	theCert.nHeight = nBestHeight;
     // send the cert pay txn
     string strError = SendCertMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
@@ -1467,6 +1486,7 @@ Value certinfo(const Array& params, bool fHelp) {
 	string strDecrypted = "";
 	if(ca.bPrivate)
 	{
+		strData = string("Encrypted for owner of certificate");
 		if(DecryptMessage(ca.vchPubKey, ca.vchData, strDecrypted))
 			strData = strDecrypted;
 		

@@ -190,8 +190,8 @@ string makeOfferLinkAcceptTX(COfferAccept& theOfferAccept, const vector<unsigned
 	CBitcoinAddress refundAddr = CBitcoinAddress(newDefaultKey.GetID());
 	const vector<unsigned char> vchRefundAddress = vchFromString(refundAddr.ToString());
 	params.push_back(stringFromVch(vchOffer));
-	params.push_back(stringFromVch(vchPubKey));
 	params.push_back(static_cast<ostringstream*>( &(ostringstream() << theOfferAccept.nQty) )->str());
+	params.push_back(stringFromVch(vchPubKey));
 	params.push_back(stringFromVch(theOfferAccept.vchMessage));
 	params.push_back(stringFromVch(vchRefundAddress));
 	params.push_back(stringFromVch(vchOfferAcceptLink));
@@ -1542,7 +1542,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 					{
 						theOffer.nQty -= theOfferAccept.nQty;
 						// purchased a cert so xfer it
-						if(!fInit && IsOfferMine(offerTx) && !theOffer.vchCert.empty())
+						if(!fInit && pwalletMain && IsOfferMine(offerTx) && !theOffer.vchCert.empty())
 						{
 							string strError = makeTransferCertTX(serializedOffer);
 							if(strError != "")
@@ -1789,13 +1789,15 @@ Value offernew(const Array& params, bool fHelp) {
     // 64Kbyte offer desc. maxlen
 	if (vchDesc.size() > 1024 * 64)
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "offer description cannot exceed 65536 bytes!");
+	CWalletTx wtxCertIn;
+	CCert theCert;
 	if(params.size() >= 7)
 	{
 		
 		vchCert = vchFromValue(params[6]);
 		CTransaction txCert;
-		CWalletTx wtxCertIn;
-		CCert theCert;
+		
+		
 		// make sure this cert is still valid
 		if (GetTxOfCert(*pcertdb, vchCert, theCert, txCert))
 		{
@@ -1803,8 +1805,19 @@ Value offernew(const Array& params, bool fHelp) {
 			if (IsCertMine(txCert) && pwalletMain->GetTransaction(txCert.GetHash(), wtxCertIn)) 
 				nQty = 1;
 			else
-				throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot sell this certificate, it is not yours or it is expired!");
-			
+				throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot sell this certificate, it is not yours!");
+			// check the offer links in the cert, can't sell a cert thats already linked to another offer
+			if(!theCert.vchOfferLink.empty())
+			{
+				COffer myOffer;
+				CTransaction txMyOffer;
+				// if offer is still valid then we cannot xfer this cert
+				if (GetTxOfOffer(*pofferdb, theCert.vchOfferLink, myOffer, txMyOffer))
+				{
+					string strError = strprintf("Cannot sell this certificate, it is already linked to offer: %s", stringFromVch(theCert.vchOfferLink).c_str());
+					throw JSONRPCError(RPC_INVALID_PARAMETER, strError);
+				}
+		    }
 		}
 	}
 	if(params.size() >= 8)
@@ -1890,6 +1903,27 @@ Value offernew(const Array& params, bool fHelp) {
 	vector<Value> res;
 	res.push_back(wtx.GetHash().GetHex());
 	res.push_back(HexStr(vchRand));
+	if(!theCert.IsNull())
+	{
+		// get a key from our wallet set dest as ourselves
+		CPubKey newDefaultKey;
+		pwalletMain->GetKeyFromPool(newDefaultKey, false);
+		scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
+
+		// create CERTUPDATE txn keys
+		CScript scriptPubKey;
+		scriptPubKey << CScript::EncodeOP_N(OP_CERT_UPDATE) << theCert.vchRand << theCert.vchTitle
+				<< OP_2DROP << OP_DROP;
+		scriptPubKey += scriptPubKeyOrig;
+
+		int64 nNetFee = GetCertNetworkFee(OP_CERT_UPDATE, nBestHeight);
+		theCert.nHeight = nBestHeight;
+		theCert.vchOfferLink = vchOffer;
+		strError = SendCertMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
+				wtxCertIn, wtx, false, theCert.SerializeToString());
+		if (strError != "")
+			throw JSONRPCError(RPC_WALLET_ERROR, strError);
+	}
 	return res;
 }
 
@@ -2095,6 +2129,7 @@ Value offeraddwhitelist(const Array& params, bool fHelp) {
 	// check to see if certificate in wallet
 	if (!pwalletMain->GetTransaction(txCert.GetHash(), wtxCertIn)) 
 		throw runtime_error("this certificate is not in your wallet");
+
 
 	// this is a syscoind txn
 	wtx.nVersion = SYSCOIN_TX_VERSION;
@@ -2454,20 +2489,25 @@ Value offerupdate(const Array& params, bool fHelp) {
 	theOffer.sCategory = vchCat;
 	theOffer.sTitle = vchTitle;
 	theOffer.sDescription = vchDesc;
+
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if((nQty-memPoolQty) < 0)
 		throw runtime_error("not enough remaining quantity to fulfill this offerupdate"); // SS i think needs better msg
-	if(theOffer.vchCert.empty() && vchCert.empty())
+	if(vchCert.empty())
 	{
 		theOffer.nQty = nQty;
 	}	
 	else
 	{
 		theOffer.nQty = 1;
-		if(!vchCert.empty())
-			theOffer.vchCert = vchCert;
+		theOffer.vchCert = vchCert;
+	}
+	// update cert if offer has a cert
+	if(!theOffer.vchCert.empty())
+	{
 		CTransaction txCert;
-		CWalletTx wtxCertIn;
+		CWalletTx wtx, wtxCertIn;
+		wtx.nVersion = SYSCOIN_TX_VERSION;
 		CCert theCert;
 		// make sure this cert is still valid
 		if (GetTxOfCert(*pcertdb, theOffer.vchCert, theCert, txCert))
@@ -2475,11 +2515,49 @@ Value offerupdate(const Array& params, bool fHelp) {
 			// make sure its in your wallet (you control this cert)		
 			if (!IsCertMine(txCert) || !pwalletMain->GetTransaction(txCert.GetHash(), wtxCertIn)) 
 			{
-				throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot update this offer because this certificate is not yours, it is expired or has been transferred!");
+				throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot update this offer because this certificate is not yours!");
 			}			
 		}
 		else
 			throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot find this certificate!");
+		
+		if(!theCert.vchOfferLink.empty() && theCert.vchOfferLink != vchOffer)
+		{
+			COffer myOffer;
+			CTransaction txMyOffer;
+			// if offer is still valid then we cannot xfer this cert
+			if (GetTxOfOffer(*pofferdb, theCert.vchOfferLink, myOffer, txMyOffer))
+			{
+				string strError = strprintf("Cannot update this offer because this certificate is linked to another offer: %s", stringFromVch(theCert.vchOfferLink).c_str());
+				throw JSONRPCError(RPC_INVALID_PARAMETER, strError);
+			}
+		}
+
+		// get a key from our wallet set dest as ourselves
+		CPubKey newDefaultKey;
+		pwalletMain->GetKeyFromPool(newDefaultKey, false);
+		scriptPubKeyOrig.SetDestination(newDefaultKey.GetID());
+
+		// create CERTUPDATE txn keys
+		CScript scriptPubKey;
+		scriptPubKey << CScript::EncodeOP_N(OP_CERT_UPDATE) << theCert.vchRand << theCert.vchTitle
+				<< OP_2DROP << OP_DROP;
+		scriptPubKey += scriptPubKeyOrig;
+
+		int64 nNetFee = GetCertNetworkFee(OP_CERT_UPDATE, nBestHeight);
+		theCert.nHeight = nBestHeight;
+		if(vchCert.empty())
+		{
+			theOffer.vchCert.clear();
+			theCert.vchOfferLink.clear();
+		}
+		else
+			theCert.vchOfferLink = vchOffer;
+
+		string strError = SendCertMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,
+				wtxCertIn, wtx, false, theCert.SerializeToString());
+		if (strError != "")
+			throw JSONRPCError(RPC_WALLET_ERROR, strError);
 	}
 	theOffer.nHeight = nBestHeight;
 	theOffer.SetPrice(price);
@@ -2544,7 +2622,7 @@ Value offerrefund(const Array& params, bool fHelp) {
 
 Value offeraccept(const Array& params, bool fHelp) {
 	if (fHelp || 1 > params.size() || params.size() > 6)
-		throw runtime_error("offeraccept <guid> [pubkey] [quantity] [message] [refund address] [linkedguid]\n"
+		throw runtime_error("offeraccept <guid> [quantity] [pubkey] [message] [refund address] [linkedguid]\n"
 				"Accept&Pay for a confirmed offer.\n"
 				"<guid> guidkey from offer.\n"
 				"<pubkey> Public key of address to transfer certificate if this offer is for a certificate.\n"
@@ -2558,16 +2636,16 @@ Value offeraccept(const Array& params, bool fHelp) {
 	vector<unsigned char> vchRefundAddress;	
 	CBitcoinAddress refundAddr;	
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
-	vector<unsigned char> vchPubKey = vchFromValue(params.size()>=2?params[1]:"");
+	vector<unsigned char> vchPubKey = vchFromValue(params.size()>=3?params[2]:"");
 	vector<unsigned char> vchLinkOfferAccept = vchFromValue(params.size()>= 6? params[5]:"");
 	vector<unsigned char> vchMessage = vchFromValue(params.size()>=4?params[3]:" ");
 	unsigned int nQty = 1;
-	if (params.size() >= 3) {
-		if(atof(params[2].get_str().c_str()) < 0)
+	if (params.size() >= 2) {
+		if(atof(params[1].get_str().c_str()) < 0)
 			throw runtime_error("invalid quantity value, must be greator than 0");
 	
 		try {
-			nQty = boost::lexical_cast<unsigned int>(params[2].get_str());
+			nQty = boost::lexical_cast<unsigned int>(params[1].get_str());
 		} catch (std::exception &e) {
 			throw runtime_error("invalid quantity value. Quantity must be less than 4294967296.");
 		}
@@ -2768,7 +2846,6 @@ Value offeraccept(const Array& params, bool fHelp) {
 		scriptPubKey << CScript::EncodeOP_N(OP_CERT_UPDATE) << cert.vchRand << cert.vchTitle
 				<< OP_2DROP << OP_DROP;
 		scriptPubKey += scriptPubKeyOrig;
-
 		int64 nNetFee = GetCertNetworkFee(OP_CERT_UPDATE, nBestHeight);
 		cert.nHeight = nBestHeight;
 		strError = SendOfferMoneyWithInputTx(scriptPubKey, MIN_AMOUNT, nNetFee,

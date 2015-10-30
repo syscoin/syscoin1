@@ -67,8 +67,8 @@ void OfferAcceptDialog::acceptOffer()
 		}
 		this->offerPaid = false;
 		params.push_back(stringFromVch(m_offer->vchRand));
-		params.push_back(strPubKey);
 		params.push_back(this->quantity.toStdString());
+		params.push_back(strPubKey);
 		if(this->notes != QString(""))
 		{
 			params.push_back(this->notes.toStdString());

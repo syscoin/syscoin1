@@ -88,7 +88,7 @@ void MyCertListPage::on_sellCertButton_clicked()
         return;
 
 	QString certGUID = indexes.at(0).data(CertTableModel::NameRole).toString();
-    EditOfferDialog dlg(EditOfferDialog::NewCertOffer, certGUID, this);
+    EditOfferDialog dlg(EditOfferDialog::NewCertOffer, certGUID);
     dlg.setModel(walletModel,0);
     dlg.exec();
 }

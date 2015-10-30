@@ -18,9 +18,10 @@ extern const CRPCTable tableRPC;
 extern string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, int64 &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision);
 extern vector<unsigned char> vchFromString(const std::string &str);
 int64 GetOfferNetworkFee(opcodetype seed, unsigned int nHeight);
-EditOfferDialog::EditOfferDialog(Mode mode, const QString &cert, QWidget *parent) :
+int64 GetCertNetworkFee(opcodetype seed, unsigned int nHeight);
+EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::EditOfferDialog), mapper(0), mode(mode), model(0), cert(cert)
+    ui(new Ui::EditOfferDialog), mapper(0), mode(mode), model(0)
 {
     ui->setupUi(this);
 	int64 nFee;
@@ -41,6 +42,7 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &cert, QWidget *parent
 	{
 		ui->currencyEdit->addItem(QString::fromStdString(rateList[i]));
 	}
+	cert = strCert;
 	ui->certEdit->clear();
 	ui->certEdit->addItem(tr("Select Certificate (optional)"));
 	connect(ui->certEdit, SIGNAL(activated(int)), this, SLOT(certChanged(int)));
@@ -132,12 +134,13 @@ void EditOfferDialog::loadCerts()
 					QString title = QString::fromStdString(title_str);
 					QString certText = name + " - " + title;
 					ui->certEdit->addItem(certText,name);
-
 					if(name == cert)
 					{
 						int index = ui->certEdit->findData(name);
 						if ( index != -1 ) 
+						{
 						   ui->certEdit->setCurrentIndex(index);
+						}
 					}
 				}
 				
@@ -215,6 +218,8 @@ bool EditOfferDialog::saveCurrentRow()
             return false;
         }
 		activateFee = (double)GetOfferNetworkFee(OP_OFFER_ACTIVATE, nBestHeight)/(double)COIN;
+		if(ui->certEdit->currentIndex() > 0)
+			activateFee += (double)GetCertNetworkFee(OP_CERT_UPDATE, nBestHeight)/(double)COIN;
 		activateFeeStr = strprintf("%.2f", activateFee);
         retval = QMessageBox::question(this, tr("Confirm Offer Activation"),
             tr("Warning: New offer will cost ") + QString::fromStdString(activateFeeStr) + " SYS<br><br>" + tr("Are you sure you want to create this offer?"),
@@ -266,6 +271,8 @@ bool EditOfferDialog::saveCurrentRow()
         if(mapper->submit())
         {
 			updateFee = (double)GetOfferNetworkFee(OP_OFFER_UPDATE, nBestHeight)/(double)COIN;
+			if(ui->certEdit->currentIndex() > 0)
+				updateFee += (double)GetCertNetworkFee(OP_CERT_UPDATE, nBestHeight)/(double)COIN;
 			updateFeeStr = strprintf("%.2f", updateFee);
             retval = QMessageBox::question(this, tr("Confirm Offer Update"),
                 tr("Warning: Updating a offer will cost ") + QString::fromStdString(updateFeeStr) + " SYS<br><br>" + tr("Are you sure you wish update this offer?"),
