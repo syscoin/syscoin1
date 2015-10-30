@@ -15,7 +15,7 @@ class OfferPayDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit OfferPayDialog(QString offerAcceptGUID, QString offerAcceptTXID, QString notes, QWidget *parent = 0);
+    explicit OfferPayDialog(QString title, QString quantity, QString price, QWidget *parent = 0);
     ~OfferPayDialog();
 
 

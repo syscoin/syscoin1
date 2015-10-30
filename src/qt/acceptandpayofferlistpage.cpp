@@ -35,7 +35,6 @@ AcceptandPayOfferListPage::AcceptandPayOfferListPage(QWidget *parent) :
     ui(new Ui::AcceptandPayOfferListPage)
 {
     ui->setupUi(this);
-	m_offer = new COffer();
 	this->offerPaid = false;
 	this->URIHandled = false;	
     ui->labelExplanation->setText(tr("Purchase an offer, Syscoin will be used from your balance to complete the transaction"));
@@ -82,7 +81,6 @@ void AcceptandPayOfferListPage::netwManagerFinished()
 AcceptandPayOfferListPage::~AcceptandPayOfferListPage()
 {
     delete ui;
-	delete m_offer;
 	this->URIHandled = false;
 }
 void AcceptandPayOfferListPage::resetState()
@@ -106,15 +104,14 @@ void AcceptandPayOfferListPage::updateCaption()
 }
 void AcceptandPayOfferListPage::OpenPayDialog()
 {
-	
-	OfferAcceptDialog dlg(m_offer, ui->qtyEdit->text(), ui->notesEdit->toPlainText(), this);
+	OfferAcceptDialog dlg(ui->offeridEdit->text(), ui->qtyEdit->text(), ui->notesEdit->toPlainText(), ui->infoTitle->text(), ui->infoCurrency->text(), ui->infoPrice->text(),  this);
 	if(dlg.exec())
 	{
 		this->offerPaid = dlg.getPaymentStatus();
 		if(this->offerPaid)
 		{
 			COffer offer;
-			setValue(offer);
+			setValue(offer, "");
 		}
 	}
 	updateCaption();
@@ -167,7 +164,6 @@ bool AcceptandPayOfferListPage::lookup(QString id)
 			offerOut.sTitle = vchFromString(find_value(offerObj, "title").get_str());
 			offerOut.sCategory = vchFromString(find_value(offerObj, "category").get_str());
 			offerOut.sCurrencyCode = vchFromString(find_value(offerObj, "currency").get_str());
-			offerOut.SetPrice(QString::fromStdString(find_value(offerObj, "price").get_str()).toFloat());
 			offerOut.nQty = QString::fromStdString(find_value(offerObj, "quantity").get_str()).toUInt();	
 			string descString = find_value(offerObj, "description").get_str();
 			offerOut.sDescription = vchFromString(descString);
@@ -185,7 +181,7 @@ bool AcceptandPayOfferListPage::lookup(QString id)
 				}
 
 			}
-			setValue(offerOut);
+			setValue(offerOut, QString::fromStdString(find_value(offerObj, "price").get_str()));
 			return true;
 		}
 		 
@@ -286,9 +282,8 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri)
 
     return true;
 }
-void AcceptandPayOfferListPage::setValue(COffer &offer)
+void AcceptandPayOfferListPage::setValue(COffer &offer, QString price)
 {
-	m_offer[0] = offer;
     ui->offeridEdit->setText(QString::fromStdString(stringFromVch(offer.vchRand)));
 	if(!offer.vchCert.empty())
 	{
@@ -306,7 +301,7 @@ void AcceptandPayOfferListPage::setValue(COffer &offer)
 	ui->infoTitle->setText(QString::fromStdString(stringFromVch(offer.sTitle)));
 	ui->infoCategory->setText(QString::fromStdString(stringFromVch(offer.sCategory)));
 	ui->infoCurrency->setText(QString::fromStdString(stringFromVch(offer.sCurrencyCode)));
-	ui->infoPrice->setText(QString::number(offer.GetPrice()));
+	ui->infoPrice->setText(price);
 	ui->infoQty->setText(QString::number(offer.nQty));
 	ui->infoDescription->setPlainText(QString::fromStdString(stringFromVch(offer.sDescription)));
 	ui->qtyEdit->setText(QString("1"));

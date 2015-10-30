@@ -12,20 +12,21 @@ using namespace json_spirit;
 extern const CRPCTable tableRPC;
 extern int64 convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchCurrencyCode, const double &nPrice, const unsigned int &nHeight, int &precision);
 extern int nBestHeight;
-OfferAcceptDialog::OfferAcceptDialog(COffer* offer, QString quantity, QString notes, QWidget *parent) :
+OfferAcceptDialog::OfferAcceptDialog(QString offer, QString quantity, QString notes, QString title, QString currencyCode, QString qstrPrice, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::OfferAcceptDialog), notes(notes), quantity(quantity)
+    ui(new Ui::OfferAcceptDialog), offer(offer), notes(notes), quantity(quantity), title(title)
 {
     ui->setupUi(this);
-	m_offer = new COffer();
-	m_offer[0] = offer[0];
 	int precision;
-	int64 iPrice = convertCurrencyCodeToSyscoin(m_offer->sCurrencyCode, m_offer->GetPrice(), nBestHeight, precision);
-	price = QString::number(ValueFromAmount(iPrice).get_real()*quantity.toUInt());
+	double dblPrice = qstrPrice.toDouble();
+	string strCurrencyCode = currencyCode.toStdString();
+	int64 iPrice = convertCurrencyCodeToSyscoin(vchFromString(strCurrencyCode), dblPrice, nBestHeight, precision);
+	iPrice = ValueFromAmount(iPrice).get_real()*quantity.toUInt();
+	string strPrice = strprintf("%llu", iPrice);
+	price = QString::fromStdString(strPrice);
 
 	ui->acceptMessage->setText(tr("There was a problem accepting this offer, please try again..."));
-
-	ui->acceptMessage->setText(tr("Are you sure you want to purchase %1 of '%2'? You will be charged %3 SYS").arg(quantity).arg(QString::fromStdString(stringFromVch(offer->sTitle))).arg(price));
+	ui->acceptMessage->setText(tr("Are you sure you want to purchase %1 of '%2'? You will be charged %3 SYS").arg(quantity).arg(title).arg(price));
 	
 	this->offerPaid = false;
 	connect(ui->acceptButton, SIGNAL(clicked()), this, SLOT(acceptOffer()));
@@ -37,7 +38,6 @@ void OfferAcceptDialog::on_cancelButton_clicked()
 OfferAcceptDialog::~OfferAcceptDialog()
 {
     delete ui;
-	delete m_offer;
 }
 // send offeraccept with offer guid/qty as params and then send offerpay with wtxid (first param of response) as param, using RPC commands.
 void OfferAcceptDialog::acceptOffer()
@@ -66,7 +66,7 @@ void OfferAcceptDialog::acceptOffer()
 			return;
 		}
 		this->offerPaid = false;
-		params.push_back(stringFromVch(m_offer->vchRand));
+		params.push_back(this->offer.toStdString());
 		params.push_back(this->quantity.toStdString());
 		params.push_back(strPubKey);
 		if(this->notes != QString(""))
@@ -82,7 +82,7 @@ void OfferAcceptDialog::acceptOffer()
 				QString offerAcceptTXID = QString::fromStdString(strResult);
 				if(offerAcceptTXID != QString(""))
 				{
-					OfferPayDialog dlg(QString::fromStdString(stringFromVch(m_offer->sTitle)), this->quantity, this->price, this);
+					OfferPayDialog dlg(this->title, this->quantity, this->price, this);
 					dlg.exec();
 					this->offerPaid = true;
 					OfferAcceptDialog::accept();
@@ -115,4 +115,3 @@ bool OfferAcceptDialog::getPaymentStatus()
 {
 	return this->offerPaid;
 }
-

@@ -2920,9 +2920,7 @@ Value offerinfo(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 			int precision = 2;
 			convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, 0, nBestHeight, precision);
-			convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, 0, nBestHeight, precision);
 			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ca.nPrice ))); 
-			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ca.nPrice * ca.nQty )));
 			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, ca.nPrice * ca.nQty )));
 			COfferLinkWhitelistEntry entry;
 			if(IsOfferMine(tx)) 
@@ -3082,7 +3080,6 @@ Value offeracceptlist(const Array& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("quantity", strprintf("%u", theOfferAccept.nQty)));
 			oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 			int precision = 2;
-			convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, 0, nBestHeight, precision);
 			convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, 0, nBestHeight, precision);
 			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, theOfferAccept.nPrice ))); 
 			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, theOfferAccept.nPrice * theOfferAccept.nQty ))); 

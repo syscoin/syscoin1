@@ -42,7 +42,7 @@ public:
     const QString &getReturnValue() const { return returnValue; }
 	bool handleURI(const QUrl &uri);
 	bool handleURI(const QString& strURI);
-	void setValue(COffer &offer);
+	void setValue(COffer &offer, QString price);
 	void updateCaption();
 	void OpenPayDialog();
 	void RefreshImage();
@@ -63,7 +63,6 @@ private:
 	QPixmap m_placeholderImage;
 	QUrl m_url;
 	QStringList m_imageList;
-	COffer *m_offer;
 	
 };
 
