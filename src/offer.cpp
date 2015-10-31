@@ -156,7 +156,8 @@ string makeTransferCertTX(COffer& theOffer)
 	Value result;
 
 	params.push_back(stringFromVch(theOffer.vchCert));
-	params.push_back(stringFromVch(theOffer.vchPubKey));	
+	params.push_back(stringFromVch(theOffer.vchPubKey));
+	params.push_back("1");	
     try {
         tableRPC.execute(strMethod, params);
 	}
@@ -2650,8 +2651,6 @@ Value offeraccept(const Array& params, bool fHelp) {
 			throw runtime_error("invalid quantity value. Quantity must be less than 4294967296.");
 		}
 	}
-	if(!vchPubKey.empty())
-		nQty = 1;
 	if(params.size() < 5)
 	{
 		CPubKey newDefaultKey;
@@ -2761,6 +2760,8 @@ Value offeraccept(const Array& params, bool fHelp) {
 	}
 	if(!theOffer.vchCert.empty())
 	{
+		if(vchPubKey.empty())
+			throw JSONRPCError(RPC_INVALID_PARAMETER, "In order to purchase a certificate you must provide a pubkey to transfer the cert to!");
 		CTransaction txCert;
 		CCert theCert;
 		// make sure this cert is still valid
@@ -2770,6 +2771,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot purchase this certificate, it may be expired!");
 			
 		}
+		nQty = 1;
 	}
 	// create accept object
 	COfferAccept txAccept;

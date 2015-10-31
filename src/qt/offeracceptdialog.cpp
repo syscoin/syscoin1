@@ -25,7 +25,6 @@ OfferAcceptDialog::OfferAcceptDialog(QString offer, QString quantity, QString no
 	string strPrice = strprintf("%llu", iPrice);
 	price = QString::fromStdString(strPrice);
 
-	ui->acceptMessage->setText(tr("There was a problem accepting this offer, please try again..."));
 	ui->acceptMessage->setText(tr("Are you sure you want to purchase %1 of '%2'? You will be charged %3 SYS").arg(quantity).arg(title).arg(price));
 	
 	this->offerPaid = false;

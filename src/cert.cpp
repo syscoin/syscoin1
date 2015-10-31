@@ -1335,9 +1335,9 @@ Value certupdate(const Array& params, bool fHelp) {
 
 
 Value certtransfer(const Array& params, bool fHelp) {
- if (fHelp || params.size() != 2)
+ if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
-		"certtransfer <certkey> <pubkey>\n"
+		"certtransfer <certkey> <pubkey> [offerpurchase=0]\n"
                 "<certkey> certificate guidkey.\n"
 				"<pubkey> Public key of the address you wish to transfer this certificate to.\n"
                  + HelpRequiringPassphrase());
@@ -1348,8 +1348,9 @@ Value certtransfer(const Array& params, bool fHelp) {
     vector<unsigned char> vchCertKey = ParseHex(params[0].get_str());
 	vector<unsigned char> vchCert = vchFromValue(params[0]);
 	vector<unsigned char> vchPubKey = vchFromValue(params[1]);
-
-
+	bool offerpurchase = false;
+	if(params.size() >= 3)
+		offerpurchase = atoi(params[2].get_str().c_str()) == 1? true: false;
 	std::vector<unsigned char> vchPubKeyByte;
 	CBitcoinAddress sendAddr;
 	try
@@ -1426,7 +1427,7 @@ Value certtransfer(const Array& params, bool fHelp) {
 		theCert.vchPubKey = vchPubKey;
 	}	
 	// check the offer links in the cert, can't xfer a cert thats linked to another offer
-   if(!theCert.vchOfferLink.empty())
+   if(!theCert.vchOfferLink.empty() && !offerpurchase)
    {
 		COffer myOffer;
 		CTransaction txMyOffer;
@@ -1480,18 +1481,13 @@ Value certinfo(const Array& params, bool fHelp) {
     oCert.push_back(Pair("txid", ca.txHash.GetHex()));
     oCert.push_back(Pair("height", sHeight));
     oCert.push_back(Pair("title", stringFromVch(ca.vchTitle)));
-
-
 	string strData = stringFromVch(ca.vchData);
 	string strDecrypted = "";
 	if(ca.bPrivate)
 	{
-		strData = string("Encrypted for owner of certificate");
 		if(DecryptMessage(ca.vchPubKey, ca.vchData, strDecrypted))
-			strData = strDecrypted;
-		
+			strData = strDecrypted;		
 	}
-
     oCert.push_back(Pair("data", strData));
     oCert.push_back(Pair("is_mine", IsCertMine(tx) ? "true" : "false"));
 
