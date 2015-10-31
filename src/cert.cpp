@@ -1584,10 +1584,8 @@ Value certlist(const Array& params, bool fHelp) {
 		string strDecrypted = "";
 		if(cert.bPrivate)
 		{
-			strData = string("Encrypted for owner of certificate");
 			if(DecryptMessage(cert.vchPubKey, cert.vchData, strDecrypted))
-				strData = strDecrypted;
-			
+                strData = strDecrypted;
 		}
 
 		oName.push_back(Pair("data", strData));
