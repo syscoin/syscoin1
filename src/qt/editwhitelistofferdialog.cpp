@@ -158,6 +158,7 @@ void EditWhitelistOfferDialog::on_exclusiveButton_clicked()
 			params.push_back(offerQty.toStdString());
 			params.push_back(offerPrice.toStdString());
 			params.push_back(offerDescription.toStdString());
+			params.push_back("");
 			if(tmpExclusiveWhitelist == QString("ON"))
 				params.push_back("0");
 			else 

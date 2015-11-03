@@ -96,6 +96,7 @@ void CertListPage::setModel(WalletModel* walletModel, CertTableModel *model)
     ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::Title, QHeaderView::Stretch);
 	ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::Data, QHeaderView::Stretch);
+	ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::Private, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::ExpiresOn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::ExpiresIn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::Expired, QHeaderView::ResizeToContents);
@@ -103,6 +104,7 @@ void CertListPage::setModel(WalletModel* walletModel, CertTableModel *model)
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::Title, QHeaderView::Stretch);
 	ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::Data, QHeaderView::Stretch);
+	ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::Private, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::ExpiresOn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::ExpiresIn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::Expired, QHeaderView::ResizeToContents);
@@ -185,6 +187,7 @@ void CertListPage::on_exportButton_clicked()
     writer.addColumn("Certificate", CertTableModel::Name, Qt::EditRole);
     writer.addColumn("Title", CertTableModel::Title, Qt::EditRole);
 	writer.addColumn("Data", CertTableModel::Data, Qt::EditRole);
+	writer.addColumn("Private", CertTableModel::Private, Qt::EditRole);
 	writer.addColumn("Expires On", CertTableModel::ExpiresOn, Qt::EditRole);
 	writer.addColumn("Expires In", CertTableModel::ExpiresIn, Qt::EditRole);
 	writer.addColumn("Expired", CertTableModel::Expired, Qt::EditRole);
@@ -236,6 +239,7 @@ void CertListPage::on_searchCert_clicked()
 		string expires_in_str;
 		string expires_on_str;
 		string expired_str;
+		string private_str;
 		int expired = 0;
 		int expires_in = 0;
 		int expires_on = 0; 
@@ -277,6 +281,7 @@ void CertListPage::on_searchCert_clicked()
 				data_str = "";
 				expires_in_str = "";
 				expires_on_str = "";
+				private_str = "";
 				expired = 0;
 				expires_in = 0;
 				expires_on = 0;
@@ -290,6 +295,9 @@ void CertListPage::on_searchCert_clicked()
 					const Value& data_value = find_value(o, "data");
 					if (data_value.type() == str_type)
 						data_str = data_value.get_str();
+					const Value& private_value = find_value(o, "private");
+					if (private_value.type() == str_type)
+						private_str = private_value.get_str();
 					const Value& expires_on_value = find_value(o, "expires_on");
 					if (expires_on_value.type() == int_type)
 						expires_on = expires_on_value.get_int();
@@ -318,13 +326,15 @@ void CertListPage::on_searchCert_clicked()
 						QString::fromStdString(data_str),
 						QString::fromStdString(expires_on_str),
 						QString::fromStdString(expires_in_str),
-						QString::fromStdString(expired_str));
+						QString::fromStdString(expired_str),
+						QString::fromStdString(private_str));
 					this->model->updateEntry(QString::fromStdString(name_str),
 						QString::fromStdString(value_str),
 						QString::fromStdString(data_str),
 						QString::fromStdString(expires_on_str),
 						QString::fromStdString(expires_in_str),
-						QString::fromStdString(expired_str), AllCert, CT_NEW);	
+						QString::fromStdString(expired_str), 
+						QString::fromStdString(private_str), AllCert, CT_NEW);	
 			  }
 
             

@@ -139,7 +139,7 @@ void EditOfferDialog::loadCerts()
 						int index = ui->certEdit->findData(name);
 						if ( index != -1 ) 
 						{
-						   ui->certEdit->setCurrentIndex(index);
+						    ui->certEdit->setCurrentIndex(index);
 						}
 					}
 				}

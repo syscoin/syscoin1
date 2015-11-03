@@ -29,7 +29,7 @@ public:
     ~EditCertDialog();
 
     void setModel(WalletModel*,CertTableModel *model);
-    void loadRow(int row);
+    void loadRow(int row, const QString &privatecert="");
 
     QString getCert() const;
     void setCert(const QString &cert);

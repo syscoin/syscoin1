@@ -929,7 +929,7 @@ bool CheckCertInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
         theCert.UnserializeFromTx(tx);
         if (theCert.IsNull())
             error("CheckCertInputs() : null cert object");
-		if(theCert.vchData.size() > MAX_VALUE_LENGTH)
+		if(theCert.vchData.size() > MAX_VALUE_LENGTH*2)
 		{
 			return error("cert data too big");
 		}
@@ -1337,9 +1337,9 @@ Value certupdate(const Array& params, bool fHelp) {
 Value certtransfer(const Array& params, bool fHelp) {
  if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
-		"certtransfer <certkey> <pubkey> [offerpurchase=0]\n"
+		"certtransfer <certkey> <pubkey/address> [offerpurchase=0]\n"
                 "<certkey> certificate guidkey.\n"
-				"<pubkey> Public key of the address you wish to transfer this certificate to.\n"
+				"<pubkey/address> Public key(if cert. is private) or address you wish to transfer this certificate to.\n"
                  + HelpRequiringPassphrase());
 
 	if(!HasReachedMainNetForkB2())
@@ -1347,27 +1347,11 @@ Value certtransfer(const Array& params, bool fHelp) {
     // gather & validate inputs
     vector<unsigned char> vchCertKey = ParseHex(params[0].get_str());
 	vector<unsigned char> vchCert = vchFromValue(params[0]);
-	vector<unsigned char> vchPubKey = vchFromValue(params[1]);
+	vector<unsigned char> vchPubKeyOrAddress = vchFromValue(params[1]);
 	bool offerpurchase = false;
 	if(params.size() >= 3)
 		offerpurchase = atoi(params[2].get_str().c_str()) == 1? true: false;
-	std::vector<unsigned char> vchPubKeyByte;
 	CBitcoinAddress sendAddr;
-	try
-	{
-		boost::algorithm::unhex(vchPubKey.begin(), vchPubKey.end(), std::back_inserter(vchPubKeyByte));
-		CPubKey PubKey(vchPubKeyByte);
-		CKeyID pubKeyID = PubKey.GetID();
-		sendAddr = CBitcoinAddress(pubKeyID);
-	}
-	catch(std::exception &e)
-	{
-		throw JSONRPCError(RPC_WALLET_ERROR, "Public key is in a valid format!");
-	}
-	if(!sendAddr.IsValid())
-		throw JSONRPCError(RPC_WALLET_ERROR, "Public key is invalid!");
-
-
     // this is a syscoin txn
     CWalletTx wtx, wtxIn;
     wtx.nVersion = SYSCOIN_TX_VERSION;
@@ -1401,16 +1385,28 @@ Value certtransfer(const Array& params, bool fHelp) {
 		throw runtime_error("could not read cert from DB");
 	theCert = vtxPos.back();
 
-    scriptPubKeyOrig.SetDestination(sendAddr.Get());
-    CScript scriptPubKey;
-    scriptPubKey << CScript::EncodeOP_N(OP_CERT_TRANSFER) << theCert.vchRand << vchCertKey << OP_2DROP << OP_DROP;
-    scriptPubKey += scriptPubKeyOrig;
-
     // calculate network fees
     int64 nNetFee = GetCertNetworkFee(OP_CERT_TRANSFER, nBestHeight);
 	// if cert is private, decrypt the data
 	if(theCert.bPrivate)
 	{
+		try
+		{
+			std::vector<unsigned char> vchPubKeyByte;
+			boost::algorithm::unhex(vchPubKeyOrAddress.begin(), vchPubKeyOrAddress.end(), std::back_inserter(vchPubKeyByte));
+			CPubKey PubKey(vchPubKeyByte);
+			CKeyID pubKeyID = PubKey.GetID();
+			sendAddr = CBitcoinAddress(pubKeyID);
+		}
+		catch(std::exception &e)
+		{
+			throw JSONRPCError(RPC_WALLET_ERROR, "Public key is in a valid format!");
+		}
+		if(!sendAddr.IsValid())
+			throw JSONRPCError(RPC_WALLET_ERROR, "Public key is invalid!");
+
+
+
 		string strData;
 		string strCipherText;
 		// decrypt using old key
@@ -1419,13 +1415,21 @@ Value certtransfer(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "Could not decrypt certificate data!");
 		}
 		// encrypt using new key
-		if(!EncryptMessage(vchPubKey, vchFromString(strData), strCipherText))
+		if(!EncryptMessage(vchPubKeyOrAddress, vchFromString(strData), strCipherText))
 		{
 			throw JSONRPCError(RPC_WALLET_ERROR, "Could not encrypt certificate data!");
 		}
 		theCert.vchData = vchFromString(strCipherText);
-		theCert.vchPubKey = vchPubKey;
+		theCert.vchPubKey = vchPubKeyOrAddress;
 	}	
+	else
+	{
+		sendAddr = CBitcoinAddress(stringFromVch(vchPubKeyOrAddress));
+	}
+    scriptPubKeyOrig.SetDestination(sendAddr.Get());
+    CScript scriptPubKey;
+    scriptPubKey << CScript::EncodeOP_N(OP_CERT_TRANSFER) << theCert.vchRand << vchCertKey << OP_2DROP << OP_DROP;
+    scriptPubKey += scriptPubKeyOrig;
 	// check the offer links in the cert, can't xfer a cert thats linked to another offer
    if(!theCert.vchOfferLink.empty() && !offerpurchase)
    {
@@ -1489,6 +1493,7 @@ Value certinfo(const Array& params, bool fHelp) {
 			strData = strDecrypted;		
 	}
     oCert.push_back(Pair("data", strData));
+	oCert.push_back(Pair("private", ca.bPrivate? "Yes": "No"));
     oCert.push_back(Pair("is_mine", IsCertMine(tx) ? "true" : "false"));
 
     int nHeight;
@@ -1587,7 +1592,7 @@ Value certlist(const Array& params, bool fHelp) {
 			if(DecryptMessage(cert.vchPubKey, cert.vchData, strDecrypted))
                 strData = strDecrypted;
 		}
-
+		oName.push_back(Pair("private", cert.bPrivate? "Yes": "No"));
 		oName.push_back(Pair("data", strData));
         string strAddress = "";
         GetCertAddress(tx, strAddress);
@@ -1766,7 +1771,7 @@ Value certfilter(const Array& params, bool fHelp) {
 		}
 
 		oCert.push_back(Pair("data", strData));
-
+		oCert.push_back(Pair("private", txCert.bPrivate? "Yes": "No"));
 		expired_block = nHeight + GetCertDisplayExpirationDepth();
 		if(nHeight + GetCertDisplayExpirationDepth() - pindexBest->nHeight <= 0)
 		{

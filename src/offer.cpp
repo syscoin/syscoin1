@@ -148,26 +148,33 @@ unsigned int QtyOfPendingAcceptsInMempool(const vector<unsigned char>& vchToFind
 }
 
 // transfer cert if its linked to offer
-string makeTransferCertTX(COffer& theOffer)
+string makeTransferCertTX(COffer& theOffer, COfferAccept& theOfferAccept)
 {
+
+	string strMessage = string("");
+	if(!DecryptMessage(theOffer.vchPubKey, theOfferAccept.vchMessage, strMessage))
+		return string("makeTransferCertTX(): Could not decrypt my offer message");
+	if(strMessage.size() < 66)
+		return string("makeTransferCertTX(): offer payment message does not contain the certificate transfer public key");
+	string strPubKey = strMessage.substr(strMessage.size() - 66);
 	string strError;
 	string strMethod = string("certtransfer");
 	Array params;
 	Value result;
-
+	
 	params.push_back(stringFromVch(theOffer.vchCert));
-	params.push_back(stringFromVch(theOffer.vchPubKey));
+	params.push_back(strPubKey);
 	params.push_back("1");	
     try {
         tableRPC.execute(strMethod, params);
 	}
 	catch (Object& objError)
 	{
-		return find_value(objError, "message").get_str().c_str();
+		return string("makeTransferCertTX(): ") + find_value(objError, "message").get_str();
 	}
 	catch(std::exception& e)
 	{
-		return string(e.what()).c_str();
+		return string("makeTransferCertTX(): ") + string(e.what());
 	}
 	return "";
 
@@ -1235,7 +1242,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 
 		switch (op) {
 		case OP_OFFER_ACTIVATE:
-			if ( found && ( prevOp != OP_CERT_ACTIVATE && prevOp != OP_CERT_UPDATE  ) )
+			if (found && !IsCertOp(prevOp) )
 				return error("offeractivate previous op is invalid");		
 			if (found && vvchPrevArgs[0] != vvchArgs[0])
 				return error("CheckOfferInputs() : offernew cert mismatch");
@@ -1333,14 +1340,12 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 				return error("CheckOfferInputs() : offeraccept cert mismatch");
 			if (vvchArgs[1].size() > 20)
 				return error("offeraccept tx with guid too big");
-
+			// check for existence of offeraccept in txn offer obj
+			if(!theOffer.GetAcceptByHash(vvchArgs[1], theOfferAccept))
+				return error("OP_OFFER_ACCEPT could not read accept from offer txn");
+			if (theOfferAccept.vchMessage.size() > MAX_VALUE_LENGTH*2)
+				return error("OP_OFFER_ACCEPT message field too big");
 			if (fBlock && !fJustCheck) {
-				// Check hash
-				const vector<unsigned char> &vchAcceptRand = vvchArgs[1];
-				
-				// check for existence of offeraccept in txn offer obj
-				if(!theOffer.GetAcceptByHash(vchAcceptRand, theOfferAccept))
-					return error("OP_OFFER_ACCEPT could not read accept from offer txn");
 				if(found && theOfferAccept.vchCertLink != vvchPrevArgs[0])
 				{
 					return error("theOfferAccept.vchCertlink and vvchPrevArgs[0] don't match");
@@ -1545,7 +1550,7 @@ bool CheckOfferInputs(CBlockIndex *pindexBlock, const CTransaction &tx,
 						// purchased a cert so xfer it
 						if(!fInit && pwalletMain && IsOfferMine(offerTx) && !theOffer.vchCert.empty())
 						{
-							string strError = makeTransferCertTX(serializedOffer);
+							string strError = makeTransferCertTX(theOffer, theOfferAccept);
 							if(strError != "")
 							{
 								if(fDebug)
@@ -2563,7 +2568,7 @@ Value offerupdate(const Array& params, bool fHelp) {
 	theOffer.nHeight = nBestHeight;
 	theOffer.SetPrice(price);
 	theOffer.accepts.clear();
-	if(params.size() == 7)
+	if(params.size() == 8)
 		theOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
 	// serialize offer object
 	string bdata = theOffer.SerializeToString();
@@ -2639,7 +2644,7 @@ Value offeraccept(const Array& params, bool fHelp) {
 	vector<unsigned char> vchOffer = vchFromValue(params[0]);
 	vector<unsigned char> vchPubKey = vchFromValue(params.size()>=3?params[2]:"");
 	vector<unsigned char> vchLinkOfferAccept = vchFromValue(params.size()>= 6? params[5]:"");
-	vector<unsigned char> vchMessage = vchFromValue(params.size()>=4?params[3]:" ");
+	vector<unsigned char> vchMessage = vchFromValue(params.size()>=4?params[3]:"");
 	unsigned int nQty = 1;
 	if (params.size() >= 2) {
 		if(atof(params[1].get_str().c_str()) < 0)
@@ -2668,10 +2673,10 @@ Value offeraccept(const Array& params, bool fHelp) {
 				"Invalid syscoin address");
 
 
-    if (vchMessage.size() < 1)
+    if (vchMessage.size() <= 0 && vchPubKey.empty())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "offeraccept message data cannot be empty!");
     if (vchMessage.size() > MAX_VALUE_LENGTH)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "offeraccept message data cannot exceed 16384 bytes!");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "offeraccept message data cannot exceed 1023 bytes!");
 
 	// this is a syscoin txn
 	CWalletTx wtx;
@@ -2755,6 +2760,13 @@ Value offeraccept(const Array& params, bool fHelp) {
 	string strCipherText = "";
 	if(vchLinkOfferAccept.size() <= 0)
 	{
+		// encrypt transfer address of certificate if we are buying a cert
+		if(!vchPubKey.empty())
+		{
+			vector<unsigned char> vchTransferMessage = vchFromString("Transfer Certificate to: ");
+			vchMessage.insert(vchMessage.end(), vchTransferMessage.begin(),vchTransferMessage.end());
+			vchMessage.insert(vchMessage.end(), vchPubKey.begin(),vchPubKey.end());
+		}
 		if(!EncryptMessage(theOffer.vchPubKey, vchMessage, strCipherText))
 			throw runtime_error("could not encrypt message to seller");
 	}
@@ -2788,7 +2800,6 @@ Value offeraccept(const Array& params, bool fHelp) {
 	txAccept.bPaid = true;
 	txAccept.vchCertLink = foundCert.certLinkVchRand;
 	theOffer.accepts.clear();
-	theOffer.vchPubKey = vchPubKey;
 	theOffer.PutOfferAccept(txAccept);
 	
 	

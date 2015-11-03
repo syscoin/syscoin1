@@ -129,6 +129,7 @@ void MyCertListPage::setModel(WalletModel *walletModel, CertTableModel *model)
     ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::Title, QHeaderView::Stretch);
 	ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::Data, QHeaderView::Stretch);
+	ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::Private, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::ExpiresOn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::ExpiresIn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setResizeMode(CertTableModel::Expired, QHeaderView::ResizeToContents);
@@ -136,6 +137,7 @@ void MyCertListPage::setModel(WalletModel *walletModel, CertTableModel *model)
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::Name, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::Title, QHeaderView::Stretch);
 	ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::Data, QHeaderView::Stretch);
+	ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::Private, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::ExpiresOn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::ExpiresIn, QHeaderView::ResizeToContents);
     ui->tableView->horizontalHeader()->setSectionResizeMode(CertTableModel::Expired, QHeaderView::ResizeToContents);
@@ -177,7 +179,7 @@ void MyCertListPage::onEditAction()
     EditCertDialog dlg(EditCertDialog::EditCert);
     dlg.setModel(walletModel, model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
-    dlg.loadRow(origIndex.row());
+    dlg.loadRow(origIndex.row(), indexes.at(0).data(CertTableModel::PrivateRole).toString());
     dlg.exec();
 }
 
@@ -273,6 +275,7 @@ void MyCertListPage::on_exportButton_clicked()
     writer.addColumn("Cert", CertTableModel::Name, Qt::EditRole);
     writer.addColumn("Title", CertTableModel::Title, Qt::EditRole);
 	writer.addColumn("Data", CertTableModel::Data, Qt::EditRole);
+	writer.addColumn("Private", CertTableModel::Data, Qt::EditRole);
 	writer.addColumn("Expires On", CertTableModel::ExpiresOn, Qt::EditRole);
 	writer.addColumn("Expires In", CertTableModel::ExpiresIn, Qt::EditRole);
 	writer.addColumn("Expired", CertTableModel::Expired, Qt::EditRole);

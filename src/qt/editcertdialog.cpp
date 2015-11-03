@@ -32,11 +32,14 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
 	ui->certDataEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
 	ui->privateLabel->setVisible(true);
 	ui->privateBox->setVisible(true);
-	ui->pubKeyLabel->setVisible(false);
-	ui->pubKeyEdit->setVisible(false);
-	ui->privateBox->addItem(tr("Yes"));
+	ui->transferLabel->setVisible(false);
+	ui->transferEdit->setVisible(false);
 	ui->privateBox->addItem(tr("No"));
-    switch(mode)
+	ui->privateBox->addItem(tr("Yes"));
+	
+	ui->transferDisclaimer->setText(tr("<font color='red'>Enter the address of the recipient for public certificates and the public key of the recipient for private certificates. The recipient can find the public key from the <b>Copy Public Key</b> button in the <b>Certificates</b> tab. The recipient must communicate this key to you.</font>"));
+    ui->transferDisclaimer->setVisible(false);
+	switch(mode)
     {
     case NewCert:
 		ui->certLabel->setVisible(false);
@@ -54,12 +57,14 @@ EditCertDialog::EditCertDialog(Mode mode, QWidget *parent) :
 		ui->certDataLabel->setVisible(false);
 		ui->privateLabel->setVisible(false);
 		ui->privateBox->setVisible(false);
-		ui->pubKeyLabel->setVisible(true);
-		ui->pubKeyEdit->setVisible(true);
+		ui->transferLabel->setVisible(true);
+		ui->transferEdit->setVisible(true);
+		ui->transferDisclaimer->setVisible(true);
         break;
     }
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
+	
 }
 
 EditCertDialog::~EditCertDialog()
@@ -80,9 +85,13 @@ void EditCertDialog::setModel(WalletModel* walletModel, CertTableModel *model)
     
 }
 
-void EditCertDialog::loadRow(int row)
+void EditCertDialog::loadRow(int row, const QString &privatecert)
 {
     mapper->setCurrentIndex(row);
+	if(privatecert == tr("Yes"))
+		ui->privateBox->setCurrentIndex(1);
+	else
+		ui->privateBox->setCurrentIndex(0);
 }
 
 bool EditCertDialog::saveCurrentRow()
@@ -219,14 +228,14 @@ bool EditCertDialog::saveCurrentRow()
 			}
 			strMethod = string("certtransfer");
 			params.push_back(ui->certEdit->text().toStdString());
-			params.push_back(ui->pubKeyEdit->text().toStdString());
+			params.push_back(ui->transferEdit->text().toStdString());
 			try {
 				Value result = tableRPC.execute(strMethod, params);
 				if (result.type() != null_type)
 				{
 					string strResult = result.get_str();
 
-					cert = ui->certEdit->text()+ui->pubKeyEdit->text();
+					cert = ui->certEdit->text()+ui->transferEdit->text();
 
 					QMessageBox::information(this, windowTitle(),
                     tr("Certificate transferred successfully! TXID: \"%1\"").arg(QString::fromStdString(strResult)),
