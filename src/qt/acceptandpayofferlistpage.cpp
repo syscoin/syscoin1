@@ -18,6 +18,9 @@
 #include <QMenu>
 #include <QString>
 #include <QUrl>
+#if QT_VERSION >= 0x050000
+#include <QUrlQuery>
+#endif
 using namespace std;
 using namespace json_spirit;
 extern const CRPCTable tableRPC;
@@ -157,7 +160,7 @@ bool AcceptandPayOfferListPage::handleURI(const QUrl &uri, COffer* offerOut)
 	#if QT_VERSION < 0x050000
 		QList<QPair<QString, QString> > items = uri.queryItems();
 	#else
-		QUrlQuery uriQuery(uri);
+		QUrlQuery uriQuery = QUrlQuery(uri);
 		QList<QPair<QString, QString> > items = uriQuery.queryItems();
 	#endif
 		for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
