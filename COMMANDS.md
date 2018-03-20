@@ -50,7 +50,7 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
 
 ####**aliasinfo** < aliasName >
 - **parameters:**
-  -< aliasName > alias name.
+  - < aliasName > alias name.
 - **returns:**
   - aliasName
   - value
@@ -58,7 +58,7 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
   - address
   - expires_in
 - **example:**
-  - *$ syscoind aliasinfo “microsoft”*
+  - *$ syscoind aliasinfo "microsoft"*
 
 ###aliashistory *List all stored values of an alias*
 
@@ -72,7 +72,7 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
   - address
   - expires_in
 - **example:**
-  - *$ syscoind aliashistory “microsoft”*
+  - *$ syscoind aliashistory "microsoft"*
 
 ###aliasfilter *Scan and filter aliases*
 
@@ -86,7 +86,7 @@ All commands use a 'register-activate' pattern, whereby an object is first laid 
   - address
   - expires_in
 - **example:** 
-  - *$ syscoind aliasfilter “micro”*
+  - *$ syscoind aliasfilter "micro"*
 
 ## Data alias commands
 
@@ -215,8 +215,8 @@ Same functionality as aliasscan (Use aliasscan for now)
   - txid
   - guid
 - **example:**
-  - $ syscoind offeraccept 8d0dabf5e7f2a4a300 5 
-  - [ "e229b2ef75807a4d5ceaa46b92677647de6363e45a5374670e500522bf1f2e71", "24579dbfc4b4c3eb00" ]
+  - *$ syscoind offeraccept 8d0dabf5e7f2a4a300 5*
+  - *[ "e229b2ef75807a4d5ceaa46b92677647de6363e45a5374670e500522bf1f2e71", "24579dbfc4b4c3eb00" ]*
 
 ###offerpay  *Sends seller payment in Syscoin, and also pays all syscoin service fees and marks the offer as ‘paid’*
 
@@ -252,7 +252,7 @@ Same functionality as aliasscan (Use aliasscan for now)
   - accepts
 - **example:**
   - *$ syscoind offerinfo 8d0dabf5e7f2a4a300*
-  - *{ "id" : "8d0dabf5e7f2a4a300" , "txid" : "3d99e7650dfb60b377717ac4328f13bda92610a8e7076d3e065e231281f13d76" , "address" : "3F1282vJVPhVz5dxDJ5r3SPNy61kWDy7SF" , "expires_in" : 111947 , "payment_address" : "SbxUr7CVa4UYfxn1pkT1SNqQEAM3bzrYvX" , "category" : "General/Widgets" , "title" : "Model T Widget Manifolds" , "quantity" : 30 , "price" : 249.00000000 , "fee" : 24.45000000, "description" : "One brand new model T widget manifold, still in original packaging.", "accepts" : [ { "id" : "24579dbfc4b4c3eb00", "txid" : "3d99e7650dfb60b377717ac4328f13bda92610a8e7076d3e065e231281f13d76" , "height" : "444", "time" : "1396853158", "quantity" : 5, "price" : 249.00000000, "paid" : "true", "fee" : 10.22500000, "paytxid" : "31215b19260474d41c0627778e2ccf5a3974551ca396e2a9bb9dea5209251061", "message" : "Please ship to: John Smith, 123 Main Street, Anytown CA 91111" } ] } *
+  - *{ "id" : "8d0dabf5e7f2a4a300" , "txid" : "3d99e7650dfb60b377717ac4328f13bda92610a8e7076d3e065e231281f13d76" , "address" : "3F1282vJVPhVz5dxDJ5r3SPNy61kWDy7SF" , "expires_in" : 111947 , "payment_address" : "SbxUr7CVa4UYfxn1pkT1SNqQEAM3bzrYvX" , "category" : "General/Widgets" , "title" : "Model T Widget Manifolds" , "quantity" : 30 , "price" : 249.00000000 , "fee" : 24.45000000, "description" : "One brand new model T widget manifold, still in original packaging.", "accepts" : [ { "id" : "24579dbfc4b4c3eb00", "txid" : "3d99e7650dfb60b377717ac4328f13bda92610a8e7076d3e065e231281f13d76" , "height" : "444", "time" : "1396853158", "quantity" : 5, "price" : 249.00000000, "paid" : "true", "fee" : 10.22500000, "paytxid" : "31215b19260474d41c0627778e2ccf5a3974551ca396e2a9bb9dea5209251061", "message" : "Please ship to: John Smith, 123 Main Street, Anytown CA 91111" } ] }*
 
 
 ###offerhistory
@@ -309,10 +309,10 @@ Same functionality as aliasscan
 
 ####**certnew** < guid > < destaddress > < title > < data >
 - **parameters:**
-	- <guid> guid from certissuernew 
-	- <destaddress> destination Syscoin address
-	- <title>: certificate title. max 255 chars.
-	- <data>: certificate data, max 64 kB
+  - < guid > guid from certissuernew 
+  - < destaddress > destination Syscoin address
+  - < title >: certificate title. max 255 chars.
+  - < data >: certificate data, max 64 kB
 - **returns**
   - txid,
   - guid
@@ -324,8 +324,8 @@ Same functionality as aliasscan
 
 ####**certtransfer** < cert guid > < destaddress >
 - **parameters:**
-	- <guid> guid of certificate
-	- <destaddress> destination Syscoin address
+  - < guid > guid of certificate
+  - < destaddress > destination Syscoin address
 - **returns:**
   - txid 
 
@@ -333,7 +333,7 @@ Same functionality as aliasscan
 
 ####**certissuerinfo** < guid >
 - **parameters:**
-	- <guid> certissuer guid
+  - < guid > certissuer guid
 - **returns:**
   - guid
   - txid
@@ -344,8 +344,8 @@ Same functionality as aliasscan
   - certificates
 
 - **example:**
-  - *$ syscoind certissuerinfo d9d333abf5d9714f
-{
+  - *$ syscoind certissuerinfo d9d333abf5d9714f*
+  - *{
     "id" : "d9d333abf5d9714f",
     "txid" : "6b79eaf9c171fb92a5873f86e0b1069dbd79359b0f0cce14c201fc8fd2863587",
     "address" : "33h59NnTq48hgrFUXYBrpL6pGhgmE8Fdjk",
@@ -363,13 +363,13 @@ Same functionality as aliasscan
             "data" : "Owner has achieved Nerd Mastery."
         }
     ]
-}
+}*
 
 ###certinfo *List all details about a specific cert*
 
 ####**certinfo** < guid >
 - **parameters:**
-	- <guid> cert guid
+  - < guid > cert guid
 - **returns:**
   - id
   - txid
@@ -381,8 +381,8 @@ Same functionality as aliasscan
   - issuer
 
 - **example:**
-  - *$ syscoind certinfo d532408da773032a
-{
+  - *$ syscoind certinfo d532408da773032a*
+  - *{
     "id" : "d532408da773032a",
     "txid" : "6b79eaf9c171fb92a5873f86e0b1069dbd79359b0f0cce14c201fc8fd2863587",
     "height" : "483",
@@ -398,7 +398,7 @@ Same functionality as aliasscan
         "title" : "Nerd Academy - We Teach you the Art of Nerd",
         "data" : "This certificate issuer is used to generate certificate of accreditations for our students. These are lifetime certificate and not honored if transferred or stolen."
     }
-}
+}*
 
 ###certissuerhistory
 Same functionality as aliashistory
