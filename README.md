@@ -3,41 +3,37 @@ Syscoin integration/staging tree
 
 [![Join the chat at https://gitter.im/syscoin/syscoin](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/syscoin/syscoin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-http://www.syscoin.org
+https://www.syscoin.org
 
 Copyright (c) 2009-2014 Bitcoin Developers
-Copyright (c) 2011-2014 Syscoin Developers
+Copyright (c) 2013-2018 Syscoin Developers
 
 What is Syscoin?
 ----------------
 
-Syscoin is a merge-minable scrypt coin which provides an array of useful services
+Syscoin is a merge-minable SHA256 coin which provides an array of useful services
 which leverage the bitcoin protocol and blockchain technology.
 
  - 1 minute block targets, diff retarget each block using KGW(7/98) 
- - 128 SysCoin and regenerated network services fees (block reward decays on fixed schedule until rewards fixate at 32 Syscoin until 2bil coin, after which rewards are purely network and service fees). Please see https://bitcointalk.org/index.php?topic=587080.0 for the rewards schedule table in a nice to read table format.
- - 2 billion total coins
- - Scrypt Proof-of-Work
+ - Flexible rewards schedule paying 25% to miners and 75% to masternodes
+ - 888 million total coins
+ - SHA256 Proof of Work
  - Fast-response KGW difficulty adjustment algorithm
- - Merge mineable with any scrypt coin
+ - Merge mineable with any PoW coin
  - Minable either exclusively or via merge-mining 
- - Network service fees regenerated as subsidies
+ - Network service fees burned
 
 Services include:
 
-- Alias reservation, ownership & exchange
-- Data storage
-- Digital document storage, ownership & exchange
+- Decentralized Identity reservation, ownership & exchange
+- Digital certificate storage, ownership & exchange
 - Distributed marketplate & exchange
 - Digital Services Provider marketplace & platform
-- Digital Asset Creation and Management (alpha)
-- (soon) Escrow
-- (soon) Distributed gaming
-- (soon) Distributed elections and polls
-- (soon) Distributed encrypted communication & shared content storage
+- Digital Asset Creation and Management
+- Decentralized Escrow service
 
 For more information, as well as an immediately useable, binary version of
-the Syscoin client sofware, see http://www.syscoin.org.
+the Syscoin client sofware, see https://www.syscoin.org.
 
 License
 -------
@@ -82,11 +78,5 @@ submit new unit tests for old code.
 
 Unit tests for the core code are in `src/test/`. To compile and run them:
 
-    cd src; make -f makefile.unix test
-
-Unit tests for the GUI code are in `src/qt/test/`. To compile and run them:
-
-    qmake BITCOIN_QT_TEST=1 -o Makefile.test bitcoin-qt.pro
-    make -f Makefile.test
-    ./syscoin-qt_test
+    make; cd src/test; ./test_syscoin;
 
